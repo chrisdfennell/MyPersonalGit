@@ -18,15 +18,17 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user and the repos directory
+# Create a non-root user and the repos/data directories
 RUN groupadd -r appuser && useradd -r -g appuser -m appuser \
-    && mkdir /repos && chown appuser:appuser /repos
+    && mkdir /repos && chown appuser:appuser /repos \
+    && mkdir /data && chown appuser:appuser /data
 
 COPY --from=build /app/publish .
 
 # Configure credentials via environment variables at runtime:
 #   docker run -e Git__Users__fennell=secret -e Git__RequireAuth=true ...
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080
+ENV ConnectionStrings__Default="Data Source=/data/mypersonalgit.db"
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
