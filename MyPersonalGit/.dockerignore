@@ -3,10 +3,22 @@
 **/.git
 **/.vs
 **/.vscode
+**/.idea
 **/node_modules/
 **/*.user
 **/*.suo
 **/Thumbs.db
-*.md
-.gitignore
+**/.DS_Store
+
+# SQLite databases (regenerated on first run)
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/*.db-journal
+
+# Repos directory (user data)
+**/repos/
+
+# Docker/CI
 .dockerignore
+.gitignore

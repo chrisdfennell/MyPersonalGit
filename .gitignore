@@ -1,0 +1,35 @@
+## .NET / Visual Studio
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+[Bb]in/
+[Oo]bj/
+
+## SQLite databases (regenerated on first run)
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+## Rider / JetBrains
+.idea/
+*.sln.iml
+
+## VS Code
+.vscode/
+
+## OS files
+Thumbs.db
+.DS_Store
+
+## Repos directory (user data)
+repos/
