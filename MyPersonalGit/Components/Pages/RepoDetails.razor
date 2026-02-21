@@ -1292,8 +1292,11 @@ else
     private string GetRepoFullPath()
     {
         var path = System.IO.Path.Combine(RootPath, RepoName);
-        if (!Repository.IsValid(path) && Repository.IsValid(path + ".git"))
-            return path + ".git";
+        if (Repository.IsValid(path)) return path;
+        if (Repository.IsValid(path + ".git")) return path + ".git";
+        // Check for nested repo (e.g., /repos/RepoName/RepoName.git)
+        var nested = System.IO.Path.Combine(path, RepoName + ".git");
+        if (Repository.IsValid(nested)) return nested;
         return path;
     }
 

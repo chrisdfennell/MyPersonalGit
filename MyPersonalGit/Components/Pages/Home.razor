@@ -1,6 +1,8 @@
 @page "/"
 @using LibGit2Sharp
 @using System.IO
+@using System.IO.Compression
+@using Microsoft.AspNetCore.Components.Forms
 @using MyPersonalGit.Data
 @inject IConfiguration Config
 @inject NavigationManager Nav
@@ -182,10 +184,58 @@
                         <div class="form-text">Full path where the bare repository will be created.</div>
                     </div>
                     <p class="text-muted mt-2 x-small">Will be created at: <code>@GetFullRepoPath()</code></p>
+
+                    <hr class="my-3 opacity-25" />
+                    <label class="form-label small fw-semibold">Initialize with files <span class="fw-normal text-muted">(optional)</span></label>
+
+                    @if (initFiles.Any())
+                    {
+                        <div class="alert alert-success py-2 px-3 small d-flex align-items-center justify-content-between mb-2">
+                            <span><i class="bi bi-folder-fill me-1"></i> @initFiles.Count file(s) selected from folder</span>
+                            <button class="btn btn-sm btn-outline-secondary py-0 px-2" @onclick="ClearInitFiles"><i class="bi bi-x"></i></button>
+                        </div>
+                    }
+                    else if (initZipFile != null)
+                    {
+                        <div class="alert alert-success py-2 px-3 small d-flex align-items-center justify-content-between mb-2">
+                            <span><i class="bi bi-file-earmark-zip-fill me-1"></i> @initZipFile.Name (@FormatFileSize(initZipFile.Size))</span>
+                            <button class="btn btn-sm btn-outline-secondary py-0 px-2" @onclick="ClearInitFiles"><i class="bi bi-x"></i></button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex gap-2">
+                            <label class="btn btn-light btn-sm border flex-fill text-center" style="cursor: pointer;">
+                                <i class="bi bi-folder-plus me-1"></i> Upload Folder
+                                <InputFile id="initFolderInput" OnChange="HandleInitFolderSelected" multiple style="display: none;" />
+                            </label>
+                            <label class="btn btn-light btn-sm border flex-fill text-center" style="cursor: pointer;">
+                                <i class="bi bi-file-earmark-zip me-1"></i> Upload Zip
+                                <InputFile OnChange="HandleInitZipSelected" accept=".zip" style="display: none;" />
+                            </label>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(createError))
+                    {
+                        <div class="alert alert-danger py-2 px-3 small mt-2 mb-0">
+                            <i class="bi bi-exclamation-triangle me-1"></i>@createError
+                        </div>
+                    }
                 </div>
                 <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showModal = false">Cancel</button>
-                    <button type="button" class="btn btn-gh-primary btn-sm shadow-sm" @onclick="CreateNewRepository" disabled="@string.IsNullOrWhiteSpace(newRepoName)">Create repository</button>
+                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showModal = false" disabled="@isCreating">Cancel</button>
+                    <button type="button" class="btn btn-gh-primary btn-sm shadow-sm" @onclick="CreateNewRepository" disabled="@(string.IsNullOrWhiteSpace(newRepoName) || isCreating)">
+                        @if (isCreating)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            <span>Creating...</span>
+                        }
+                        else
+                        {
+                            <span>Create repository</span>
+                        }
+                    </button>
                 </div>
             </div>
         </div>
@@ -201,6 +251,14 @@
     private string newRepoName = "";
     private string customRepoPath = "";
 
+    // Upload-on-create state
+    private const long maxFileSize = 50 * 1024 * 1024; // 50MB
+    private List<IBrowserFile> initFiles = new();
+    private IBrowserFile? initZipFile;
+    private Dictionary<int, string> initFilePaths = new();
+    private string createError = "";
+    private bool isCreating = false;
+
     private IEnumerable<RepoSummary> FilteredRepos =>
         repositories.Where(r => string.IsNullOrEmpty(searchTerm) || r.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                    .OrderByDescending(r => r.LastCommitDate);
@@ -208,6 +266,29 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadRepositories();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Session is initialized by MainLayout via JS interop (localStorage),
+            // but this page renders before that completes. Re-render once ready.
+            try
+            {
+                var sessionId = await JS.InvokeAsync<string>("sessionHelper.get", "sessionId");
+                if (!string.IsNullOrEmpty(sessionId))
+                {
+                    await UserService.InitializeFromSessionAsync(sessionId);
+                    StateHasChanged();
+                }
+            }
+            catch { }
+        }
+        if (showModal)
+        {
+            try { await JS.InvokeVoidAsync("folderUpload.setWebkitDirectory", "initFolderInput"); } catch { }
+        }
     }
 
     private async Task LoadRepositories()
@@ -323,6 +404,95 @@
 
     private void ResetRepoPath() => customRepoPath = RootPath;
 
+    private async Task HandleInitFolderSelected(InputFileChangeEventArgs e)
+    {
+        createError = "";
+        initZipFile = null;
+        initFiles = e.GetMultipleFiles(10000).ToList();
+        initFilePaths.Clear();
+
+        try
+        {
+            var paths = await JS.InvokeAsync<string[]>("folderUpload.getRelativePaths", "initFolderInput");
+            if (paths != null && paths.Length > 0)
+            {
+                // Read .gitignore from uploaded folder if present
+                var gitignorePatterns = new List<string>();
+                for (int i = 0; i < paths.Length && i < initFiles.Count; i++)
+                {
+                    var fileName = System.IO.Path.GetFileName(paths[i]);
+                    if (fileName.Equals(".gitignore", StringComparison.OrdinalIgnoreCase))
+                    {
+                        try
+                        {
+                            using var stream = initFiles[i].OpenReadStream(maxFileSize);
+                            using var reader = new StreamReader(stream);
+                            var content = await reader.ReadToEndAsync();
+                            gitignorePatterns = content.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList();
+                        }
+                        catch { }
+                        break;
+                    }
+                }
+
+                // Strip the top-level folder prefix and filter ignored files
+                var filteredFiles = new List<IBrowserFile>();
+                var filteredPaths = new Dictionary<int, string>();
+                for (int i = 0; i < paths.Length && i < initFiles.Count; i++)
+                {
+                    var relativePath = paths[i];
+                    // Remove top-level folder (e.g., "MyProject/src/file.cs" → "src/file.cs")
+                    var slashIdx = relativePath.IndexOf('/');
+                    if (slashIdx >= 0) relativePath = relativePath.Substring(slashIdx + 1);
+                    if (string.IsNullOrEmpty(relativePath)) continue;
+
+                    if (!ShouldIgnoreFile(relativePath, gitignorePatterns))
+                    {
+                        filteredPaths[filteredFiles.Count] = relativePath;
+                        filteredFiles.Add(initFiles[i]);
+                    }
+                }
+                initFiles = filteredFiles;
+                initFilePaths = filteredPaths;
+            }
+            else
+            {
+                for (int i = 0; i < initFiles.Count; i++)
+                    initFilePaths[i] = initFiles[i].Name;
+            }
+        }
+        catch
+        {
+            for (int i = 0; i < initFiles.Count; i++)
+                initFilePaths[i] = initFiles[i].Name;
+        }
+        StateHasChanged();
+    }
+
+    private void HandleInitZipSelected(InputFileChangeEventArgs e)
+    {
+        createError = "";
+        initFiles.Clear();
+        initFilePaths.Clear();
+        initZipFile = e.File;
+        StateHasChanged();
+    }
+
+    private void ClearInitFiles()
+    {
+        initFiles.Clear();
+        initFilePaths.Clear();
+        initZipFile = null;
+        createError = "";
+    }
+
+    private static string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / (1024.0 * 1024.0):F1} MB";
+    }
+
     private string GetFullRepoPath()
     {
         var basePath = string.IsNullOrWhiteSpace(customRepoPath) ? RootPath : customRepoPath;
@@ -336,37 +506,164 @@
         if (!UserService.IsLoggedIn) return;
         if (string.IsNullOrWhiteSpace(newRepoName)) return;
 
+        isCreating = true;
+        createError = "";
+        StateHasChanged();
+
         try
         {
             var basePath = string.IsNullOrWhiteSpace(customRepoPath) ? RootPath : customRepoPath;
+            var repoNameClean = newRepoName.EndsWith(".git") ? newRepoName[..^4] : newRepoName;
+            var folderName = $"{repoNameClean}.git";
+
+            // Prevent double-nesting: if basePath already ends with the repo name, use parent
+            var baseDir = Path.GetFileName(basePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            if (baseDir.Equals(repoNameClean, StringComparison.OrdinalIgnoreCase) ||
+                baseDir.Equals(folderName, StringComparison.OrdinalIgnoreCase))
+            {
+                basePath = Path.GetDirectoryName(basePath)!;
+            }
 
             // Ensure the base directory exists
             if (!Directory.Exists(basePath))
                 Directory.CreateDirectory(basePath);
 
-            var folderName = newRepoName.EndsWith(".git") ? newRepoName : $"{newRepoName}.git";
             var fullPath = Path.Combine(basePath, folderName);
 
-            if (!Directory.Exists(fullPath))
+            if (Directory.Exists(fullPath))
             {
-                Repository.Init(fullPath, isBare: true);
-
-                // If using a non-default path, add it to tracked paths
-                if (basePath != RootPath)
-                {
-                    await SaveTrackedPathAsync(basePath);
-                }
-
-                showModal = false;
-                var repoNameWithoutGit = newRepoName.Replace(".git", "");
-                newRepoName = "";
-                Nav.NavigateTo($"/repo/{repoNameWithoutGit}");
+                createError = "A repository with that name already exists.";
+                return;
             }
+
+            Repository.Init(fullPath, isBare: true);
+
+            // Commit uploaded files if any
+            if (initFiles.Any())
+            {
+                await CommitFolderToNewRepo(fullPath);
+            }
+            else if (initZipFile != null)
+            {
+                await CommitZipToNewRepo(fullPath);
+            }
+
+            // If using a non-default path, add it to tracked paths
+            if (basePath != RootPath)
+            {
+                await SaveTrackedPathAsync(basePath);
+            }
+
+            showModal = false;
+            var repoNameWithoutGit = newRepoName.Replace(".git", "");
+            newRepoName = "";
+            ClearInitFiles();
+            Nav.NavigateTo($"/repo/{repoNameWithoutGit}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error creating repo: {ex.Message}");
+            createError = $"Error creating repository: {ex.Message}";
         }
+        finally
+        {
+            isCreating = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CommitFolderToNewRepo(string repoPath)
+    {
+        using var repo = new Repository(repoPath);
+        var author = new Signature(UserService.Username, UserService.Email, DateTimeOffset.Now);
+        var treeDef = new TreeDefinition();
+
+        for (int i = 0; i < initFiles.Count; i++)
+        {
+            var file = initFiles[i];
+            if (file.Size > maxFileSize) continue;
+
+            using var stream = file.OpenReadStream(maxFileSize);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            ms.Position = 0;
+
+            var blob = repo.ObjectDatabase.CreateBlob(ms);
+            var relativePath = initFilePaths.ContainsKey(i) ? initFilePaths[i] : file.Name;
+            treeDef.Add(relativePath, blob, Mode.NonExecutableFile);
+        }
+
+        var tree = repo.ObjectDatabase.CreateTree(treeDef);
+        var commit = repo.ObjectDatabase.CreateCommit(author, author, "Initial commit", tree, Array.Empty<Commit>(), true);
+        repo.Branches.Add("main", commit);
+        repo.Refs.UpdateTarget("HEAD", "refs/heads/main");
+    }
+
+    private async Task CommitZipToNewRepo(string repoPath)
+    {
+        using var repo = new Repository(repoPath);
+        var author = new Signature(UserService.Username, UserService.Email, DateTimeOffset.Now);
+        var treeDef = new TreeDefinition();
+
+        using var zipStream = initZipFile!.OpenReadStream(maxFileSize * 20); // allow up to ~1GB zip
+        using var zipMs = new MemoryStream();
+        await zipStream.CopyToAsync(zipMs);
+        zipMs.Position = 0;
+
+        using var archive = new ZipArchive(zipMs, ZipArchiveMode.Read);
+
+        // Detect if all entries share a common root folder (typical for GitHub zip downloads)
+        var entries = archive.Entries.Where(e => !string.IsNullOrEmpty(e.Name)).ToList();
+        var commonPrefix = "";
+        if (entries.Count > 0)
+        {
+            var firstPath = entries[0].FullName;
+            var slashIdx = firstPath.IndexOf('/');
+            if (slashIdx > 0)
+            {
+                var candidate = firstPath.Substring(0, slashIdx + 1);
+                if (entries.All(e => e.FullName.StartsWith(candidate)))
+                    commonPrefix = candidate;
+            }
+        }
+
+        var gitignorePatterns = new List<string>();
+        // Check for .gitignore in the archive
+        var gitignoreEntry = entries.FirstOrDefault(e =>
+        {
+            var path = e.FullName;
+            if (!string.IsNullOrEmpty(commonPrefix)) path = path.Substring(commonPrefix.Length);
+            return path.Equals(".gitignore", StringComparison.OrdinalIgnoreCase);
+        });
+        if (gitignoreEntry != null)
+        {
+            using var gs = gitignoreEntry.Open();
+            using var reader = new StreamReader(gs);
+            var content = await reader.ReadToEndAsync();
+            gitignorePatterns = content.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList();
+        }
+
+        foreach (var entry in entries)
+        {
+            var relativePath = entry.FullName;
+            if (!string.IsNullOrEmpty(commonPrefix))
+                relativePath = relativePath.Substring(commonPrefix.Length);
+
+            if (string.IsNullOrEmpty(relativePath)) continue;
+            if (ShouldIgnoreFile(relativePath, gitignorePatterns)) continue;
+
+            using var entryStream = entry.Open();
+            using var ms = new MemoryStream();
+            await entryStream.CopyToAsync(ms);
+            ms.Position = 0;
+
+            var blob = repo.ObjectDatabase.CreateBlob(ms);
+            treeDef.Add(relativePath, blob, Mode.NonExecutableFile);
+        }
+
+        var tree = repo.ObjectDatabase.CreateTree(treeDef);
+        var commit = repo.ObjectDatabase.CreateCommit(author, author, "Initial commit", tree, Array.Empty<Commit>(), true);
+        repo.Branches.Add("main", commit);
+        repo.Refs.UpdateTarget("HEAD", "refs/heads/main");
     }
 
     private async Task SaveTrackedPathAsync(string path)
@@ -419,6 +716,75 @@
         if (span.TotalHours > 1) return $"{(int)span.TotalHours} hours ago";
         if (span.TotalMinutes > 1) return $"{(int)span.TotalMinutes} minutes ago";
         return "just now";
+    }
+
+    private static readonly string[] DefaultIgnorePatterns = new[]
+    {
+        ".git/", "bin/", "obj/", "node_modules/", ".vs/", ".idea/",
+        "__pycache__/", ".DS_Store", "Thumbs.db",
+        "*.suo", "*.user", "*.userosscache", "*.sln.docstates",
+        "packages/", "dist/", "build/", ".next/"
+    };
+
+    private static bool ShouldIgnoreFile(string relativePath, List<string> gitignorePatterns)
+    {
+        var normalized = relativePath.Replace('\\', '/');
+        var segments = normalized.Split('/');
+
+        foreach (var pattern in DefaultIgnorePatterns)
+        {
+            var p = pattern.Replace('\\', '/');
+            if (p.EndsWith("/"))
+            {
+                var dirName = p.TrimEnd('/');
+                if (segments.Any(s => s.Equals(dirName, StringComparison.OrdinalIgnoreCase)))
+                    return true;
+            }
+            else if (p.StartsWith("*."))
+            {
+                var ext = p.Substring(1);
+                if (normalized.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            else
+            {
+                var fileName = segments.Last();
+                if (fileName.Equals(p, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+        }
+
+        foreach (var pattern in gitignorePatterns)
+        {
+            var p = pattern.Trim();
+            if (string.IsNullOrEmpty(p) || p.StartsWith("#")) continue;
+
+            var cleanPattern = p.TrimEnd('/');
+            if (p.EndsWith("/"))
+            {
+                if (segments.Any(s => s.Equals(cleanPattern, StringComparison.OrdinalIgnoreCase)))
+                    return true;
+            }
+            else if (p.StartsWith("*."))
+            {
+                var ext = p.Substring(1);
+                if (normalized.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            else if (p.Contains('/'))
+            {
+                if (normalized.StartsWith(cleanPattern, StringComparison.OrdinalIgnoreCase) ||
+                    normalized.Contains("/" + cleanPattern, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            else
+            {
+                if (segments.Any(s => s.Equals(cleanPattern, StringComparison.OrdinalIgnoreCase)))
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     public class RepoSummary
