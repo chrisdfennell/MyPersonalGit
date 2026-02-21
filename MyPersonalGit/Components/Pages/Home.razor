@@ -188,17 +188,17 @@
                     <hr class="my-3 opacity-25" />
                     <label class="form-label small fw-semibold">Initialize with files <span class="fw-normal text-muted">(optional)</span></label>
 
-                    @if (initFiles.Any())
+                    @if (initFileData.Any())
                     {
                         <div class="alert alert-success py-2 px-3 small d-flex align-items-center justify-content-between mb-2">
-                            <span><i class="bi bi-folder-fill me-1"></i> @initFiles.Count file(s) selected from folder</span>
+                            <span><i class="bi bi-folder-fill me-1"></i> @initFileData.Count file(s) selected from folder</span>
                             <button class="btn btn-sm btn-outline-secondary py-0 px-2" @onclick="ClearInitFiles"><i class="bi bi-x"></i></button>
                         </div>
                     }
-                    else if (initZipFile != null)
+                    else if (initZipData != null)
                     {
                         <div class="alert alert-success py-2 px-3 small d-flex align-items-center justify-content-between mb-2">
-                            <span><i class="bi bi-file-earmark-zip-fill me-1"></i> @initZipFile.Name (@FormatFileSize(initZipFile.Size))</span>
+                            <span><i class="bi bi-file-earmark-zip-fill me-1"></i> @initZipName (@FormatFileSize(initZipData.Length))</span>
                             <button class="btn btn-sm btn-outline-secondary py-0 px-2" @onclick="ClearInitFiles"><i class="bi bi-x"></i></button>
                         </div>
                     }
@@ -253,9 +253,9 @@
 
     // Upload-on-create state
     private const long maxFileSize = 50 * 1024 * 1024; // 50MB
-    private List<IBrowserFile> initFiles = new();
-    private IBrowserFile? initZipFile;
-    private Dictionary<int, string> initFilePaths = new();
+    private List<(string Path, byte[] Data)> initFileData = new();
+    private byte[]? initZipData;
+    private string initZipName = "";
     private string createError = "";
     private bool isCreating = false;
 
@@ -407,25 +407,28 @@
     private async Task HandleInitFolderSelected(InputFileChangeEventArgs e)
     {
         createError = "";
-        initZipFile = null;
-        initFiles = e.GetMultipleFiles(10000).ToList();
-        initFilePaths.Clear();
+        initZipData = null;
+        initZipName = "";
+        initFileData.Clear();
+
+        var files = e.GetMultipleFiles(10000).ToList();
 
         try
         {
             var paths = await JS.InvokeAsync<string[]>("folderUpload.getRelativePaths", "initFolderInput");
+
+            // Read .gitignore from uploaded folder if present
+            var gitignorePatterns = new List<string>();
             if (paths != null && paths.Length > 0)
             {
-                // Read .gitignore from uploaded folder if present
-                var gitignorePatterns = new List<string>();
-                for (int i = 0; i < paths.Length && i < initFiles.Count; i++)
+                for (int i = 0; i < paths.Length && i < files.Count; i++)
                 {
                     var fileName = System.IO.Path.GetFileName(paths[i]);
                     if (fileName.Equals(".gitignore", StringComparison.OrdinalIgnoreCase))
                     {
                         try
                         {
-                            using var stream = initFiles[i].OpenReadStream(maxFileSize);
+                            using var stream = files[i].OpenReadStream(maxFileSize);
                             using var reader = new StreamReader(stream);
                             var content = await reader.ReadToEndAsync();
                             gitignorePatterns = content.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -434,55 +437,61 @@
                         break;
                     }
                 }
-
-                // Strip the top-level folder prefix and filter ignored files
-                var filteredFiles = new List<IBrowserFile>();
-                var filteredPaths = new Dictionary<int, string>();
-                for (int i = 0; i < paths.Length && i < initFiles.Count; i++)
-                {
-                    var relativePath = paths[i];
-                    // Remove top-level folder (e.g., "MyProject/src/file.cs" → "src/file.cs")
-                    var slashIdx = relativePath.IndexOf('/');
-                    if (slashIdx >= 0) relativePath = relativePath.Substring(slashIdx + 1);
-                    if (string.IsNullOrEmpty(relativePath)) continue;
-
-                    if (!ShouldIgnoreFile(relativePath, gitignorePatterns))
-                    {
-                        filteredPaths[filteredFiles.Count] = relativePath;
-                        filteredFiles.Add(initFiles[i]);
-                    }
-                }
-                initFiles = filteredFiles;
-                initFilePaths = filteredPaths;
             }
-            else
+
+            // Read all file data into memory immediately (before any re-render)
+            for (int i = 0; i < files.Count; i++)
             {
-                for (int i = 0; i < initFiles.Count; i++)
-                    initFilePaths[i] = initFiles[i].Name;
+                var relativePath = (paths != null && i < paths.Length) ? paths[i] : files[i].Name;
+
+                // Strip top-level folder prefix
+                var slashIdx = relativePath.IndexOf('/');
+                if (slashIdx >= 0) relativePath = relativePath.Substring(slashIdx + 1);
+                if (string.IsNullOrEmpty(relativePath)) continue;
+
+                if (ShouldIgnoreFile(relativePath, gitignorePatterns)) continue;
+                if (files[i].Size > maxFileSize) continue;
+
+                using var stream = files[i].OpenReadStream(maxFileSize);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                initFileData.Add((relativePath, ms.ToArray()));
             }
         }
-        catch
+        catch (Exception ex)
         {
-            for (int i = 0; i < initFiles.Count; i++)
-                initFilePaths[i] = initFiles[i].Name;
+            createError = $"Error reading files: {ex.Message}";
         }
         StateHasChanged();
     }
 
-    private void HandleInitZipSelected(InputFileChangeEventArgs e)
+    private async Task HandleInitZipSelected(InputFileChangeEventArgs e)
     {
         createError = "";
-        initFiles.Clear();
-        initFilePaths.Clear();
-        initZipFile = e.File;
+        initFileData.Clear();
+
+        try
+        {
+            initZipName = e.File.Name;
+            using var stream = e.File.OpenReadStream(maxFileSize * 20);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            initZipData = ms.ToArray();
+        }
+        catch (Exception ex)
+        {
+            createError = $"Error reading zip: {ex.Message}";
+            initZipData = null;
+            initZipName = "";
+        }
         StateHasChanged();
     }
 
     private void ClearInitFiles()
     {
-        initFiles.Clear();
-        initFilePaths.Clear();
-        initZipFile = null;
+        initFileData.Clear();
+        initZipData = null;
+        initZipName = "";
         createError = "";
     }
 
@@ -539,13 +548,13 @@
             Repository.Init(fullPath, isBare: true);
 
             // Commit uploaded files if any
-            if (initFiles.Any())
+            if (initFileData.Any())
             {
-                await CommitFolderToNewRepo(fullPath);
+                CommitFolderToNewRepo(fullPath);
             }
-            else if (initZipFile != null)
+            else if (initZipData != null)
             {
-                await CommitZipToNewRepo(fullPath);
+                CommitZipToNewRepo(fullPath);
             }
 
             // If using a non-default path, add it to tracked paths
@@ -571,24 +580,16 @@
         }
     }
 
-    private async Task CommitFolderToNewRepo(string repoPath)
+    private void CommitFolderToNewRepo(string repoPath)
     {
         using var repo = new Repository(repoPath);
         var author = new Signature(UserService.Username, UserService.Email, DateTimeOffset.Now);
         var treeDef = new TreeDefinition();
 
-        for (int i = 0; i < initFiles.Count; i++)
+        foreach (var (relativePath, data) in initFileData)
         {
-            var file = initFiles[i];
-            if (file.Size > maxFileSize) continue;
-
-            using var stream = file.OpenReadStream(maxFileSize);
-            using var ms = new MemoryStream();
-            await stream.CopyToAsync(ms);
-            ms.Position = 0;
-
+            using var ms = new MemoryStream(data);
             var blob = repo.ObjectDatabase.CreateBlob(ms);
-            var relativePath = initFilePaths.ContainsKey(i) ? initFilePaths[i] : file.Name;
             treeDef.Add(relativePath, blob, Mode.NonExecutableFile);
         }
 
@@ -598,17 +599,13 @@
         repo.Refs.UpdateTarget("HEAD", "refs/heads/main");
     }
 
-    private async Task CommitZipToNewRepo(string repoPath)
+    private void CommitZipToNewRepo(string repoPath)
     {
         using var repo = new Repository(repoPath);
         var author = new Signature(UserService.Username, UserService.Email, DateTimeOffset.Now);
         var treeDef = new TreeDefinition();
 
-        using var zipStream = initZipFile!.OpenReadStream(maxFileSize * 20); // allow up to ~1GB zip
-        using var zipMs = new MemoryStream();
-        await zipStream.CopyToAsync(zipMs);
-        zipMs.Position = 0;
-
+        using var zipMs = new MemoryStream(initZipData!);
         using var archive = new ZipArchive(zipMs, ZipArchiveMode.Read);
 
         // Detect if all entries share a common root folder (typical for GitHub zip downloads)
@@ -627,7 +624,6 @@
         }
 
         var gitignorePatterns = new List<string>();
-        // Check for .gitignore in the archive
         var gitignoreEntry = entries.FirstOrDefault(e =>
         {
             var path = e.FullName;
@@ -638,7 +634,7 @@
         {
             using var gs = gitignoreEntry.Open();
             using var reader = new StreamReader(gs);
-            var content = await reader.ReadToEndAsync();
+            var content = reader.ReadToEnd();
             gitignorePatterns = content.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList();
         }
 
@@ -653,7 +649,7 @@
 
             using var entryStream = entry.Open();
             using var ms = new MemoryStream();
-            await entryStream.CopyToAsync(ms);
+            entryStream.CopyTo(ms);
             ms.Position = 0;
 
             var blob = repo.ObjectDatabase.CreateBlob(ms);
