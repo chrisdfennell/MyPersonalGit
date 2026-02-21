@@ -1,0 +1,434 @@
+@page "/"
+@using LibGit2Sharp
+@using System.IO
+@using MyPersonalGit.Data
+@inject IConfiguration Config
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject IRepositoryService RepoService
+@inject IAdminService AdminService
+@using MyPersonalGit.Services
+@inject CurrentUserService UserService
+@rendermode InteractiveServer
+
+<PageTitle>Repositories · Personal Git</PageTitle>
+
+<div class="row g-4">
+    <!-- Left Sidebar -->
+    <div class="col-lg-3 d-none d-lg-block">
+        <div class="d-flex align-items-center mb-3">
+            <div class="gh-avatar rounded-circle bg-light border p-1 me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                <i class="bi bi-person text-secondary"></i>
+            </div>
+            <span class="fw-semibold small">@UserService.Username</span>
+        </div>
+        <hr class="my-3 opacity-10" />
+        <h6 class="fw-bold x-small text-uppercase text-muted mb-3" style="font-size: 12px;">Recent Repositories</h6>
+        <ul class="list-unstyled small">
+            @if (repositories.Any())
+            {
+                @foreach (var repo in repositories.OrderByDescending(r => r.LastCommitDate).Take(7))
+                {
+                    <li class="mb-2 text-truncate">
+                        <a href="/repo/@repo.DisplayName" class="text-decoration-none text-dark d-flex align-items-center">
+                            <i class="bi bi-journal-bookmark text-muted me-2"></i>
+                            <span>@repo.DisplayName</span>
+                        </a>
+                    </li>
+                }
+            }
+            else
+            {
+                <li class="text-muted fst-italic">No repos yet</li>
+            }
+        </ul>
+    </div>
+
+    <!-- Main Feed -->
+    <div class="col-lg-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 fw-bold mb-0">Repositories</h2>
+            @if (UserService.IsLoggedIn)
+            {
+                <button class="btn btn-gh-primary shadow-sm" @onclick="ShowCreateModal">
+                    <i class="bi bi-journal-plus me-1"></i> New
+                </button>
+            }
+        </div>
+
+        <div class="mb-4">
+            <div class="input-group shadow-sm rounded-2">
+                <input type="text"
+                       class="form-control form-control-sm border-secondary-subtle py-2 shadow-none"
+                       placeholder="Find a repository..."
+                       @bind="searchTerm"
+                       @bind:event="oninput" />
+                @if (!string.IsNullOrEmpty(searchTerm))
+                {
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="() => searchTerm = string.Empty">
+                        <i class="bi bi-x"></i>
+                    </button>
+                }
+            </div>
+            <div class="mt-2 text-muted small">
+                <i class="bi bi-folder2-open me-1"></i> Current Path: <code>@RootPath</code>
+            </div>
+        </div>
+
+        @if (repositories == null)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+            </div>
+        }
+        else if (!FilteredRepos.Any())
+        {
+            <div class="p-5 border rounded-3 bg-light text-center shadow-sm">
+                <div class="mb-3 text-secondary">
+                    @if (string.IsNullOrEmpty(searchTerm))
+                    {
+                        <i class="bi bi-journal-x" style="font-size: 3rem;"></i>
+                    }
+                    else
+                    {
+                        <i class="bi bi-search" style="font-size: 3rem;"></i>
+                    }
+                </div>
+                <h3 class="h5 fw-bold">@(string.IsNullOrEmpty(searchTerm) ? "No repositories found" : "No matching results")</h3>
+                <p class="text-muted mb-4 small">
+                    @(string.IsNullOrEmpty(searchTerm)
+                                    ? $"Initialize a repository in {RootPath} to get started."
+                                    : $"We couldn't find any repositories matching '{searchTerm}'")
+                </p>
+
+                @if (string.IsNullOrEmpty(searchTerm))
+                {
+                    <div class="bg-dark text-white p-3 rounded-2 text-start font-monospace small mx-auto" style="max-width: 450px;">
+                        <span class="text-success"># Create a new bare repository</span><br />
+                        mkdir project.git && cd project.git<br />
+                        git init --bare
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="list-group list-group-flush border rounded-3 overflow-hidden shadow-sm">
+                @foreach (var repo in FilteredRepos)
+                {
+                    <div class="list-group-item p-3 py-4 position-relative">
+                        <div class="d-flex justify-content-between">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-1">
+                                    <a href="/repo/@repo.DisplayName" class="h5 text-decoration-none fw-bold text-primary mb-0 me-2">@repo.DisplayName</a>
+                                    <span class="badge rounded-pill border text-muted fw-normal px-2" style="font-size: 12px;">Public</span>
+                                </div>
+                                <p class="text-muted small mb-3">@repo.LastCommitMessage</p>
+                                <div class="d-flex align-items-center gap-3" style="font-size: 12px;">
+                                    <span class="d-flex align-items-center">
+                                        <span class="rounded-circle bg-primary me-1" style="width: 12px; height: 12px;"></span>
+                                        Git
+                                    </span>
+                                    @if (repo.Stars > 0)
+                                    {
+                                        <span class="d-flex align-items-center text-muted">
+                                            <i class="bi bi-star-fill text-warning me-1"></i>
+                                            @repo.Stars
+                                        </span>
+                                    }
+                                    <span class="text-muted">
+                                        Updated @GetRelativeTime(repo.LastCommitDate)
+                                    </span>
+                                </div>
+                            </div>
+                            @if (UserService.IsLoggedIn)
+                            {
+                                <div class="d-flex flex-column gap-2">
+                                    <button class="btn @(repo.IsStarred ? "btn-warning" : "btn-light") btn-sm border px-3" @onclick="() => ToggleStar(repo)">
+                                        <i class="bi @(repo.IsStarred ? "bi-star-fill" : "bi-star") me-1"></i>@(repo.IsStarred ? "Starred" : "Star")
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@if (showModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">Create a new repository</h5>
+                    <button type="button" class="btn-close shadow-none" @onclick="() => showModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Repository name</label>
+                        <input type="text" class="form-control shadow-none" @bind="newRepoName" @bind:event="oninput" placeholder="my-awesome-project" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Storage location</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control shadow-none font-monospace" @bind="customRepoPath" @bind:event="oninput" />
+                            <button class="btn btn-outline-secondary" type="button" @onclick="ResetRepoPath" title="Reset to default">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">Full path where the bare repository will be created.</div>
+                    </div>
+                    <p class="text-muted mt-2 x-small">Will be created at: <code>@GetFullRepoPath()</code></p>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showModal = false">Cancel</button>
+                    <button type="button" class="btn btn-gh-primary btn-sm shadow-sm" @onclick="CreateNewRepository" disabled="@string.IsNullOrWhiteSpace(newRepoName)">Create repository</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<RepoSummary> repositories = new();
+    private string searchTerm = "";
+    private string RootPath = "/repos";
+
+    private bool showModal = false;
+    private string newRepoName = "";
+    private string customRepoPath = "";
+
+    private IEnumerable<RepoSummary> FilteredRepos =>
+        repositories.Where(r => string.IsNullOrEmpty(searchTerm) || r.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                   .OrderByDescending(r => r.LastCommitDate);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRepositories();
+    }
+
+    private async Task LoadRepositories()
+    {
+        repositories.Clear();
+
+        // Priority: 1) Admin UI saved setting, 2) appsettings config, 3) auto-detection
+        var systemSettings = await AdminService.GetSystemSettingsAsync();
+        if (!string.IsNullOrEmpty(systemSettings.ProjectRoot))
+        {
+            try
+            {
+                if (!Directory.Exists(systemSettings.ProjectRoot))
+                    Directory.CreateDirectory(systemSettings.ProjectRoot);
+                RootPath = systemSettings.ProjectRoot;
+            }
+            catch { /* path invalid or drive missing — fall through */ }
+        }
+
+        if (string.IsNullOrEmpty(RootPath))
+        {
+            var configuredPath = Config["Git:ProjectRoot"];
+            if (!string.IsNullOrEmpty(configuredPath))
+            {
+                try
+                {
+                    if (!Directory.Exists(configuredPath))
+                        Directory.CreateDirectory(configuredPath);
+                    RootPath = configuredPath;
+                }
+                catch { /* fall through */ }
+            }
+            else
+            {
+                string userDocs = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents");
+
+                if (Directory.Exists("/repos"))
+                {
+                    RootPath = "/repos";
+                }
+                else if (Directory.Exists(Path.Combine(userDocs, "Repo")))
+                {
+                    RootPath = Path.Combine(userDocs, "Repo");
+                }
+                else
+                {
+                    RootPath = Path.Combine(userDocs, "Repos");
+                    if (!Directory.Exists(RootPath)) Directory.CreateDirectory(RootPath);
+                }
+            }
+        }
+
+        // Collect all paths to scan (default + tracked)
+        var pathsToScan = new List<string>();
+        if (Directory.Exists(RootPath)) pathsToScan.Add(RootPath);
+
+        var trackingFile = Path.Combine(RootPath, ".data", "tracked_paths.json");
+        if (File.Exists(trackingFile))
+        {
+            try
+            {
+                var json = await File.ReadAllTextAsync(trackingFile);
+                var tracked = System.Text.Json.JsonSerializer.Deserialize<List<string>>(json);
+                if (tracked != null)
+                {
+                    foreach (var p in tracked)
+                    {
+                        if (Directory.Exists(p) && !pathsToScan.Contains(p, StringComparer.OrdinalIgnoreCase))
+                            pathsToScan.Add(p);
+                    }
+                }
+            }
+            catch { }
+        }
+
+        foreach (var scanPath in pathsToScan)
+        {
+            var directories = Directory.GetDirectories(scanPath);
+            foreach (var dir in directories)
+            {
+                if (Repository.IsValid(dir))
+                {
+                    try
+                    {
+                        using var gitRepo = new Repository(dir);
+                        var latestCommit = gitRepo.Commits.FirstOrDefault();
+                        var repoName = Path.GetFileName(dir);
+
+                        var repoMeta = await RepoService.GetRepositoryAsync(repoName);
+                        var isStarred = await RepoService.IsStarredAsync(repoName, UserService.Username);
+
+                        repositories.Add(new RepoSummary
+                        {
+                            Name = repoName,
+                            FullPath = dir,
+                            LastCommitMessage = latestCommit?.MessageShort ?? "No description provided.",
+                            LastCommitDate = latestCommit?.Author.When.DateTime,
+                            Stars = repoMeta?.Stars ?? 0,
+                            IsStarred = isStarred
+                        });
+                    }
+                    catch { }
+                }
+            }
+        }
+    }
+
+    private void ShowCreateModal()
+    {
+        customRepoPath = RootPath;
+        showModal = true;
+    }
+
+    private void ResetRepoPath() => customRepoPath = RootPath;
+
+    private string GetFullRepoPath()
+    {
+        var basePath = string.IsNullOrWhiteSpace(customRepoPath) ? RootPath : customRepoPath;
+        var folderName = string.IsNullOrWhiteSpace(newRepoName) ? "repo-name.git" :
+            (newRepoName.EndsWith(".git") ? newRepoName : $"{newRepoName}.git");
+        return Path.Combine(basePath, folderName);
+    }
+
+    private async Task CreateNewRepository()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (string.IsNullOrWhiteSpace(newRepoName)) return;
+
+        try
+        {
+            var basePath = string.IsNullOrWhiteSpace(customRepoPath) ? RootPath : customRepoPath;
+
+            // Ensure the base directory exists
+            if (!Directory.Exists(basePath))
+                Directory.CreateDirectory(basePath);
+
+            var folderName = newRepoName.EndsWith(".git") ? newRepoName : $"{newRepoName}.git";
+            var fullPath = Path.Combine(basePath, folderName);
+
+            if (!Directory.Exists(fullPath))
+            {
+                Repository.Init(fullPath, isBare: true);
+
+                // If using a non-default path, add it to tracked paths
+                if (basePath != RootPath)
+                {
+                    await SaveTrackedPathAsync(basePath);
+                }
+
+                showModal = false;
+                var repoNameWithoutGit = newRepoName.Replace(".git", "");
+                newRepoName = "";
+                Nav.NavigateTo($"/repo/{repoNameWithoutGit}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating repo: {ex.Message}");
+        }
+    }
+
+    private async Task SaveTrackedPathAsync(string path)
+    {
+        var trackingFile = Path.Combine(RootPath, ".data", "tracked_paths.json");
+        var paths = new List<string>();
+
+        if (File.Exists(trackingFile))
+        {
+            try
+            {
+                var json = await File.ReadAllTextAsync(trackingFile);
+                paths = System.Text.Json.JsonSerializer.Deserialize<List<string>>(json) ?? new();
+            }
+            catch { }
+        }
+
+        if (!paths.Contains(path, StringComparer.OrdinalIgnoreCase))
+        {
+            paths.Add(path);
+            Directory.CreateDirectory(Path.GetDirectoryName(trackingFile)!);
+            await File.WriteAllTextAsync(trackingFile, System.Text.Json.JsonSerializer.Serialize(paths, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+        }
+    }
+
+    private async Task ToggleStar(RepoSummary repo)
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (repo.IsStarred)
+        {
+            await RepoService.UnstarRepositoryAsync(repo.Name, UserService.Username);
+            repo.IsStarred = false;
+            repo.Stars--;
+        }
+        else
+        {
+            await RepoService.StarRepositoryAsync(repo.Name, UserService.Username);
+            repo.IsStarred = true;
+            repo.Stars++;
+        }
+        StateHasChanged();
+    }
+
+    private string GetRelativeTime(DateTime? date)
+    {
+        if (!date.HasValue) return "just now";
+        var span = DateTime.Now - date.Value;
+        if (span.TotalDays > 30) return date.Value.ToString("MMM dd, yyyy");
+        if (span.TotalDays > 1) return $"{(int)span.TotalDays} days ago";
+        if (span.TotalHours > 1) return $"{(int)span.TotalHours} hours ago";
+        if (span.TotalMinutes > 1) return $"{(int)span.TotalMinutes} minutes ago";
+        return "just now";
+    }
+
+    public class RepoSummary
+    {
+        public string Name { get; set; } = "";
+        public string DisplayName => Name.EndsWith(".git") ? Name[..^4] : Name;
+        public string FullPath { get; set; } = "";
+        public string LastCommitMessage { get; set; } = "";
+        public DateTime? LastCommitDate { get; set; }
+        public int Stars { get; set; }
+        public bool IsStarred { get; set; }
+    }
+}

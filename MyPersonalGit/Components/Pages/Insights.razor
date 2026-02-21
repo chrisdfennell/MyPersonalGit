@@ -1,0 +1,422 @@
+@page "/repo/{RepoName}/insights"
+@using LibGit2Sharp
+@using System.IO
+@inject IConfiguration Config
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<PageTitle>Insights · @RepoName</PageTitle>
+
+<div class="repo-header border-bottom bg-light-subtle mb-4 pt-3">
+    <div class="container-xl px-3">
+        <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-journal-bookmark text-muted me-2 h4 mb-0"></i>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 h4">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Repositories</a></li>
+                    <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
+                    <li class="breadcrumb-item active fw-bold" aria-current="page">Insights</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="container-xl px-3">
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="list-group">
+                <button class="list-group-item list-group-item-action @(activeTab == "contributors" ? "active" : "")" @onclick='() => activeTab = "contributors"'>
+                    <i class="bi bi-people me-2"></i> Contributors
+                </button>
+                <button class="list-group-item list-group-item-action @(activeTab == "commits" ? "active" : "")" @onclick='() => activeTab = "commits"'>
+                    <i class="bi bi-graph-up me-2"></i> Commit activity
+                </button>
+                <button class="list-group-item list-group-item-action @(activeTab == "frequency" ? "active" : "")" @onclick='() => activeTab = "frequency"'>
+                    <i class="bi bi-bar-chart me-2"></i> Code frequency
+                </button>
+                <button class="list-group-item list-group-item-action @(activeTab == "network" ? "active" : "")" @onclick='() => activeTab = "network"'>
+                    <i class="bi bi-diagram-3 me-2"></i> Network
+                </button>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            @if (activeTab == "contributors")
+            {
+                <div class="contributors-view">
+                    <h4 class="mb-4">Contributors</h4>
+                    
+                    @if (contributors.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var contributor in contributors.OrderByDescending(c => c.CommitCount))
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                                <strong>@contributor.Name.Substring(0, Math.Min(2, contributor.Name.Length)).ToUpper()</strong>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">@contributor.Name</h6>
+                                            <small class="text-muted">@contributor.Email</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="h5 mb-0 text-primary">@contributor.CommitCount</div>
+                                            <small class="text-muted">commits</small>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-success" style="width: @GetContributionPercentage(contributor)%"></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-2 small text-muted">
+                                            <span>@contributor.Additions additions</span>
+                                            <span>@contributor.Deletions deletions</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            No contributors found. Make some commits to see contributor statistics.
+                        </div>
+                    }
+                </div>
+            }
+            else if (activeTab == "commits")
+            {
+                <div class="commit-activity-view">
+                    <h4 class="mb-4">Commit Activity</h4>
+                    
+                    @if (commitActivity.Any())
+                    {
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="mb-4">
+                                    <h6 class="text-muted">Commits per week (last 12 weeks)</h6>
+                                    <div class="d-flex align-items-end gap-1" style="height: 200px;">
+                                        @{
+                                            var maxCommits = commitActivity.Max(c => c.Count);
+                                        }
+                                        @foreach (var week in commitActivity)
+                                        {
+                                            var height = maxCommits > 0 ? (week.Count * 180.0 / maxCommits) : 0;
+                                            <div class="flex-fill bg-primary rounded-top" 
+                                                 style="height: @(height)px; min-height: 4px;"
+                                                 title="Week of @week.WeekStart.ToString("MMM dd"): @week.Count commits">
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-2 small text-muted">
+                                        <span>@commitActivity.First().WeekStart.ToString("MMM dd")</span>
+                                        <span>@commitActivity.Last().WeekStart.ToString("MMM dd")</span>
+                                    </div>
+                                </div>
+
+                                <div class="row text-center">
+                                    <div class="col-md-4">
+                                        <div class="h3 text-primary mb-0">@totalCommits</div>
+                                        <small class="text-muted">Total commits</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="h3 text-success mb-0">@contributors.Count</div>
+                                        <small class="text-muted">Contributors</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="h3 text-info mb-0">@branches.Count</div>
+                                        <small class="text-muted">Branches</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            No commit activity to display.
+                        </div>
+                    }
+                </div>
+            }
+            else if (activeTab == "frequency")
+            {
+                <div class="code-frequency-view">
+                    <h4 class="mb-4">Code Frequency</h4>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <p class="text-muted">Lines of code added and deleted over time</p>
+                            
+                            @if (codeFrequency.Any())
+                            {
+                                <div class="mb-4">
+                                    <div class="d-flex align-items-center gap-1" style="height: 200px;">
+                                        @{
+                                            var maxChanges = codeFrequency.Max(c => Math.Max(c.Additions, c.Deletions));
+                                        }
+                                        @foreach (var week in codeFrequency)
+                                        {
+                                            var addHeight = maxChanges > 0 ? (week.Additions * 90.0 / maxChanges) : 0;
+                                            var delHeight = maxChanges > 0 ? (week.Deletions * 90.0 / maxChanges) : 0;
+                                            <div class="flex-fill d-flex flex-column justify-content-center align-items-center gap-1">
+                                                <div class="bg-success rounded" style="width: 100%; height: @(addHeight)px; min-height: 2px;"></div>
+                                                <div class="bg-danger rounded" style="width: 100%; height: @(delHeight)px; min-height: 2px;"></div>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="d-flex gap-3 mt-3">
+                                        <span class="small"><span class="badge bg-success">+</span> Additions</span>
+                                        <span class="small"><span class="badge bg-danger">-</span> Deletions</span>
+                                    </div>
+                                </div>
+
+                                <div class="row text-center">
+                                    <div class="col-md-6">
+                                        <div class="h3 text-success mb-0">+@codeFrequency.Sum(c => c.Additions)</div>
+                                        <small class="text-muted">Lines added</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="h3 text-danger mb-0">-@codeFrequency.Sum(c => c.Deletions)</div>
+                                        <small class="text-muted">Lines deleted</small>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    No code frequency data available.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (activeTab == "network")
+            {
+                <div class="network-view">
+                    <h4 class="mb-4">Network Graph</h4>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <p class="text-muted">Branch and merge visualization</p>
+                            
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Network graph visualization shows the relationship between branches and commits.
+                            </div>
+
+                            @if (branches.Any())
+                            {
+                                <h6 class="mt-4">Active Branches</h6>
+                                <div class="list-group">
+                                    @foreach (var branch in branches)
+                                    {
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <i class="bi bi-git text-primary me-2"></i>
+                                                <strong>@branch.Name</strong>
+                                            </div>
+                                            <span class="badge bg-secondary">@branch.CommitCount commits</span>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string RepoName { get; set; } = "";
+
+    private string activeTab = "contributors";
+    private List<Contributor> contributors = new();
+    private List<CommitActivity> commitActivity = new();
+    private List<CodeFrequency> codeFrequency = new();
+    private List<BranchInfo> branches = new();
+    private int totalCommits = 0;
+
+    protected override void OnParametersSet()
+    {
+        LoadInsights();
+    }
+
+    private void LoadInsights()
+    {
+        try
+        {
+            var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+            var repoPath = Path.Combine(projectRoot, $"{RepoName}.git");
+
+            if (!Directory.Exists(repoPath))
+                return;
+
+            using var repo = new Repository(repoPath);
+
+            LoadContributors(repo);
+            LoadCommitActivity(repo);
+            LoadCodeFrequency(repo);
+            LoadBranches(repo);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading insights: {ex.Message}");
+        }
+    }
+
+    private void LoadContributors(Repository repo)
+    {
+        var contributorDict = new Dictionary<string, Contributor>();
+
+        foreach (var commit in repo.Commits)
+        {
+            var email = commit.Author.Email;
+            if (!contributorDict.ContainsKey(email))
+            {
+                contributorDict[email] = new Contributor
+                {
+                    Name = commit.Author.Name,
+                    Email = email
+                };
+            }
+
+            contributorDict[email].CommitCount++;
+            
+            try
+            {
+                var parent = commit.Parents.FirstOrDefault();
+                if (parent != null)
+                {
+                    var changes = repo.Diff.Compare<Patch>(parent.Tree, commit.Tree);
+                    contributorDict[email].Additions += changes.Sum(c => c.LinesAdded);
+                    contributorDict[email].Deletions += changes.Sum(c => c.LinesDeleted);
+                }
+            }
+            catch { }
+        }
+
+        contributors = contributorDict.Values.ToList();
+        totalCommits = repo.Commits.Count();
+    }
+
+    private void LoadCommitActivity(Repository repo)
+    {
+        var now = DateTime.Now;
+        var weeks = new Dictionary<DateTime, int>();
+
+        for (int i = 11; i >= 0; i--)
+        {
+            var weekStart = now.AddDays(-7 * i).Date;
+            weekStart = weekStart.AddDays(-(int)weekStart.DayOfWeek);
+            weeks[weekStart] = 0;
+        }
+
+        foreach (var commit in repo.Commits)
+        {
+            var commitDate = commit.Author.When.DateTime;
+            var weekStart = commitDate.Date.AddDays(-(int)commitDate.DayOfWeek);
+            
+            if (weeks.ContainsKey(weekStart))
+            {
+                weeks[weekStart]++;
+            }
+        }
+
+        commitActivity = weeks.Select(w => new CommitActivity
+        {
+            WeekStart = w.Key,
+            Count = w.Value
+        }).OrderBy(w => w.WeekStart).ToList();
+    }
+
+    private void LoadCodeFrequency(Repository repo)
+    {
+        var now = DateTime.Now;
+        var weeks = new Dictionary<DateTime, CodeFrequency>();
+
+        for (int i = 11; i >= 0; i--)
+        {
+            var weekStart = now.AddDays(-7 * i).Date;
+            weekStart = weekStart.AddDays(-(int)weekStart.DayOfWeek);
+            weeks[weekStart] = new CodeFrequency { WeekStart = weekStart };
+        }
+
+        foreach (var commit in repo.Commits.Take(100))
+        {
+            try
+            {
+                var parent = commit.Parents.FirstOrDefault();
+                if (parent != null)
+                {
+                    var commitDate = commit.Author.When.DateTime;
+                    var weekStart = commitDate.Date.AddDays(-(int)commitDate.DayOfWeek);
+
+                    if (weeks.ContainsKey(weekStart))
+                    {
+                        var changes = repo.Diff.Compare<Patch>(parent.Tree, commit.Tree);
+                        weeks[weekStart].Additions += changes.Sum(c => c.LinesAdded);
+                        weeks[weekStart].Deletions += changes.Sum(c => c.LinesDeleted);
+                    }
+                }
+            }
+            catch { }
+        }
+
+        codeFrequency = weeks.Values.OrderBy(w => w.WeekStart).ToList();
+    }
+
+    private void LoadBranches(Repository repo)
+    {
+        branches = repo.Branches.Select(b => new BranchInfo
+        {
+            Name = b.FriendlyName,
+            CommitCount = b.Commits.Count()
+        }).ToList();
+    }
+
+    private double GetContributionPercentage(Contributor contributor)
+    {
+        if (totalCommits == 0) return 0;
+        return (contributor.CommitCount * 100.0 / totalCommits);
+    }
+
+    public class Contributor
+    {
+        public string Name { get; set; } = "";
+        public string Email { get; set; } = "";
+        public int CommitCount { get; set; }
+        public int Additions { get; set; }
+        public int Deletions { get; set; }
+    }
+
+    public class CommitActivity
+    {
+        public DateTime WeekStart { get; set; }
+        public int Count { get; set; }
+    }
+
+    public class CodeFrequency
+    {
+        public DateTime WeekStart { get; set; }
+        public int Additions { get; set; }
+        public int Deletions { get; set; }
+    }
+
+    public class BranchInfo
+    {
+        public string Name { get; set; } = "";
+        public int CommitCount { get; set; }
+    }
+}

@@ -1,0 +1,535 @@
+@page "/admin"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using MyPersonalGit.Services
+@inject IAdminService AdminService
+@inject CurrentUserService UserService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Admin Dashboard - MyPersonalGit</PageTitle>
+
+@if (!UserService.IsLoggedIn)
+{
+    <div class="container py-5 text-center">
+        <i class="bi bi-shield-lock" style="font-size: 4rem; color: #6c757d;"></i>
+        <h3 class="mt-3">Authentication Required</h3>
+        <p class="text-muted">Please sign in to access this page.</p>
+        <a href="/login" class="btn btn-primary">Sign in</a>
+    </div>
+}
+else if (!UserService.IsAdmin)
+{
+    <div class="container py-5 text-center">
+        <i class="bi bi-shield-exclamation" style="font-size: 4rem; color: #dc3545;"></i>
+        <h3 class="mt-3">Access Denied</h3>
+        <p class="text-muted">You do not have administrator privileges.</p>
+        <a href="/" class="btn btn-primary">Back to Home</a>
+    </div>
+}
+else
+{
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-shield-lock"></i> Admin Dashboard</h2>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link @(ActiveTab == "overview" ? "active" : "")" @onclick='() => ActiveTab = "overview"' style="cursor: pointer;">
+                <i class="bi bi-speedometer2"></i> Overview
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ActiveTab == "settings" ? "active" : "")" @onclick='() => ActiveTab = "settings"' style="cursor: pointer;">
+                <i class="bi bi-gear"></i> System Settings
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ActiveTab == "users" ? "active" : "")" @onclick='() => ActiveTab = "users"' style="cursor: pointer;">
+                <i class="bi bi-people"></i> User Management
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ActiveTab == "audit" ? "active" : "")" @onclick='() => ActiveTab = "audit"' style="cursor: pointer;">
+                <i class="bi bi-journal-text"></i> Audit Logs
+            </a>
+        </li>
+    </ul>
+
+    @if (ActiveTab == "overview")
+    {
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-people"></i> Total Users</h5>
+                        <h2 class="mb-0">@Statistics.TotalUsers</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-folder"></i> Repositories</h5>
+                        <h2 class="mb-0">@Statistics.TotalRepositories</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card text-white bg-info">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-hdd"></i> Storage Used</h5>
+                        <h2 class="mb-0">@FormatBytes(Statistics.TotalStorageUsed)</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card text-white bg-warning">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-activity"></i> Active (24h)</h5>
+                        <h2 class="mb-0">@Statistics.ActiveUsers24h</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">System Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Project Root:</strong></td>
+                                    <td>@Settings.ProjectRoot</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Authentication:</strong></td>
+                                    <td>@(Settings.RequireAuth ? "Enabled" : "Disabled")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>User Registration:</strong></td>
+                                    <td>@(Settings.AllowUserRegistration ? "Enabled" : "Disabled")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Actions/CI-CD:</strong></td>
+                                    <td>@(Settings.EnableActions ? "Enabled" : "Disabled")</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Recent Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (AuditLogs.Count == 0)
+                        {
+                            <p class="text-muted">No recent activity</p>
+                        }
+                        else
+                        {
+                            <div class="list-group list-group-flush">
+                                @foreach (var log in AuditLogs.Take(5))
+                                {
+                                    <div class="list-group-item px-0">
+                                        <div class="d-flex justify-content-between">
+                                            <strong>@log.Username</strong>
+                                            <small class="text-muted">@log.Timestamp.ToString("g")</small>
+                                        </div>
+                                        <small>@log.Action - @log.Details</small>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (ActiveTab == "settings")
+    {
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">System Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="Settings" OnValidSubmit="SaveSettings">
+                            <div class="mb-3">
+                                <label class="form-label">Project Root Directory</label>
+                                <InputText class="form-control" @bind-Value="Settings.ProjectRoot" />
+                                <small class="form-text text-muted">The root directory where repositories are stored</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.RequireAuth" id="requireAuth" />
+                                    <label class="form-check-label" for="requireAuth">
+                                        Require Authentication
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.AllowUserRegistration" id="allowReg" />
+                                    <label class="form-check-label" for="allowReg">
+                                        Allow User Registration
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.RequireEmailVerification" id="requireEmail" />
+                                    <label class="form-check-label" for="requireEmail">
+                                        Require Email Verification
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Max Repositories Per User</label>
+                                <InputNumber class="form-control" @bind-Value="Settings.MaxRepositoriesPerUser" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Max Repository Size (bytes)</label>
+                                <InputNumber class="form-control" @bind-Value="Settings.MaxRepositorySize" />
+                                <small class="form-text text-muted">Current: @FormatBytes(Settings.MaxRepositorySize)</small>
+                            </div>
+
+                            <h6 class="mt-4 mb-3">Feature Toggles</h6>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableActions" id="enableActions" />
+                                    <label class="form-check-label" for="enableActions">
+                                        Enable Actions/CI-CD
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableWiki" id="enableWiki" />
+                                    <label class="form-check-label" for="enableWiki">
+                                        Enable Wiki
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableIssues" id="enableIssues" />
+                                    <label class="form-check-label" for="enableIssues">
+                                        Enable Issues
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableProjects" id="enableProjects" />
+                                    <label class="form-check-label" for="enableProjects">
+                                        Enable Projects
+                                    </label>
+                                </div>
+                            </div>
+
+                            <h6 class="mt-4 mb-3">Email Settings (SMTP)</h6>
+
+                            <div class="mb-3">
+                                <label class="form-label">SMTP Server</label>
+                                <InputText class="form-control" @bind-Value="Settings.SmtpServer" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">SMTP Port</label>
+                                <InputNumber class="form-control" @bind-Value="Settings.SmtpPort" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">SMTP Username</label>
+                                <InputText class="form-control" @bind-Value="Settings.SmtpUsername" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">SMTP Password</label>
+                                <InputText type="password" class="form-control" @bind-Value="Settings.SmtpPassword" />
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.SmtpEnableSsl" id="smtpSsl" />
+                                    <label class="form-check-label" for="smtpSsl">
+                                        Enable SSL/TLS
+                                    </label>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(SettingsMessage))
+                            {
+                                <div class="alert alert-success">@SettingsMessage</div>
+                            }
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Save Settings
+                            </button>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (ActiveTab == "users")
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">User Management</h5>
+                        <button class="btn btn-primary btn-sm" @onclick="ShowAddUserModal">
+                            <i class="bi bi-plus"></i> Add User
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Repositories</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in Users)
+                                {
+                                    <tr>
+                                        <td>@user.Username</td>
+                                        <td>@user.Email</td>
+                                        <td>
+                                            @if (user.IsAdmin)
+                                            {
+                                                <span class="badge bg-danger">Admin</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">User</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (user.IsActive)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            }
+                                        </td>
+                                        <td>@user.CreatedAt.ToString("d")</td>
+                                        <td>@user.RepositoryCount</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => EditUser(user)">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteUser(user.Username)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (ActiveTab == "audit")
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Audit Logs</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Details</th>
+                                    <th>IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var log in AuditLogs)
+                                {
+                                    <tr>
+                                        <td>@log.Timestamp.ToString("g")</td>
+                                        <td>@log.Username</td>
+                                        <td><span class="badge bg-info">@log.Action</span></td>
+                                        <td>@log.Details</td>
+                                        <td>@log.IpAddress</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (ShowAddUser)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New User</h5>
+                    <button type="button" class="btn-close" @onclick="() => ShowAddUser = false"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="NewUser" OnValidSubmit="AddUser">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <InputText class="form-control" @bind-Value="NewUser.Username" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <InputText type="email" class="form-control" @bind-Value="NewUser.Email" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <InputText type="password" class="form-control" @bind-Value="NewUserPassword" />
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" @bind-Value="NewUser.IsAdmin" id="newUserAdmin" />
+                                <label class="form-check-label" for="newUserAdmin">
+                                    Administrator
+                                </label>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(UserMessage))
+                        {
+                            <div class="alert alert-info">@UserMessage</div>
+                        }
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="() => ShowAddUser = false">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add User</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+} @* end else (IsAdmin) *@
+
+@code {
+    private string ActiveTab = "overview";
+    private SystemSettings Settings = new();
+    private SystemStatistics Statistics = new();
+    private List<AuditLog> AuditLogs = new();
+    private List<UserManagement> Users = new();
+    private bool ShowAddUser = false;
+    private UserManagement NewUser = new();
+    private string NewUserPassword = "";
+    private string SettingsMessage = "";
+    private string UserMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        if (!UserService.IsAdmin) return;
+        Settings = await AdminService.GetSystemSettingsAsync();
+        Statistics = await AdminService.GetSystemStatisticsAsync();
+        AuditLogs = await AdminService.GetAuditLogsAsync();
+        Users = await AdminService.GetAllUsersAsync();
+    }
+
+    private async Task SaveSettings()
+    {
+        await AdminService.SaveSystemSettingsAsync(Settings);
+        await AdminService.AddAuditLogAsync(UserService.Username, "UPDATE_SETTINGS", "System settings updated");
+        SettingsMessage = "Settings saved successfully!";
+        await Task.Delay(3000);
+        SettingsMessage = "";
+    }
+
+    private void ShowAddUserModal()
+    {
+        NewUser = new UserManagement();
+        NewUserPassword = "";
+        UserMessage = "";
+        ShowAddUser = true;
+    }
+
+    private async Task AddUser()
+    {
+        var success = await AdminService.AddUserAsync(NewUser.Username, NewUserPassword, NewUser.Email, NewUser.IsAdmin);
+        if (success)
+        {
+            await AdminService.AddAuditLogAsync(UserService.Username, "ADD_USER", $"Added user: {NewUser.Username}");
+            await LoadData();
+            ShowAddUser = false;
+        }
+        else
+        {
+            UserMessage = "User already exists!";
+        }
+    }
+
+    private void EditUser(UserManagement user)
+    {
+    }
+
+    private async Task DeleteUser(string username)
+    {
+        var success = await AdminService.DeleteUserAsync(username);
+        if (success)
+        {
+            await AdminService.AddAuditLogAsync(UserService.Username, "DELETE_USER", $"Deleted user: {username}");
+            await LoadData();
+        }
+    }
+
+    private string FormatBytes(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
+}

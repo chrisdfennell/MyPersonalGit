@@ -1,0 +1,407 @@
+@page "/repo/{RepoName}/wiki"
+@page "/repo/{RepoName}/wiki/{Slug}"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using MyPersonalGit.Services
+@using Markdig
+@inject IWikiService WikiService
+@inject CurrentUserService UserService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>@(string.IsNullOrEmpty(Slug) ? "Wiki" : CurrentPage?.Title ?? "Wiki") - @RepoName</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex align-items-center mb-3">
+        <i class="bi bi-journal-bookmark text-muted me-2 h4 mb-0"></i>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 h4">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Repositories</a></li>
+                <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
+                <li class="breadcrumb-item active fw-bold" aria-current="page">Wiki</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Wiki Pages</h5>
+                    @if (UserService.IsLoggedIn)
+                    {
+                        <button class="btn btn-sm btn-primary" @onclick="ShowCreateModal">
+                            <i class="bi bi-plus"></i>
+                        </button>
+                    }
+                </div>
+                <div class="list-group list-group-flush">
+                    @if (Pages.Count == 0)
+                    {
+                        <div class="list-group-item text-muted">No pages yet</div>
+                    }
+                    else
+                    {
+                        @foreach (var page in Pages.OrderBy(p => p.Title))
+                        {
+                            <a href="@($"/repo/{RepoName}/wiki/{page.Slug}")"
+                               class="list-group-item list-group-item-action @(page.Slug == Slug ? "active" : "")">
+                                @(page.Title)
+                            </a>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            @if (string.IsNullOrEmpty(Slug))
+            {
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-book" style="font-size: 4rem; color: #6c757d;"></i>
+                        <h3 class="mt-3">Welcome to the Wiki</h3>
+                        <p class="text-muted">Create your first wiki page to get started</p>
+                        @if (UserService.IsLoggedIn)
+                        {
+                            <button class="btn btn-primary" @onclick="ShowCreateModal">
+                                <i class="bi bi-plus"></i> Create First Page
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+            else if (CurrentPage != null)
+            {
+                @if (IsEditing)
+                {
+                    <div class="card">
+                        <div class="card-header">
+                            <h4>Edit: @CurrentPage.Title</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Content (Markdown)</label>
+                                <textarea class="form-control font-monospace" rows="20" @bind="EditContent"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Commit Message</label>
+                                <input type="text" class="form-control" @bind="CommitMessage" placeholder="Describe your changes..." />
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" @onclick="SaveEdit">
+                                    <i class="bi bi-check"></i> Save Changes
+                                </button>
+                                <button class="btn btn-secondary" @onclick="CancelEdit">
+                                    <i class="bi bi-x"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3 class="mb-0">@CurrentPage.Title</h3>
+                            <div class="btn-group">
+                                @if (UserService.IsLoggedIn)
+                                {
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="StartEdit">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </button>
+                                }
+                                <button class="btn btn-sm btn-outline-secondary" @onclick="() => ShowHistory = !ShowHistory">
+                                    <i class="bi bi-clock-history"></i> History
+                                </button>
+                                @if (UserService.IsLoggedIn)
+                                {
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="DeletePage">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            @if (ShowHistory)
+                            {
+                                <div class="mb-4">
+                                    <h5>Revision History</h5>
+                                    <div class="list-group">
+                                        @foreach (var revision in CurrentPage.Revisions.OrderByDescending(r => r.CreatedAt))
+                                        {
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h6 class="mb-1">@revision.Message</h6>
+                                                        <small class="text-muted">
+                                                            by @revision.Author on @FormatDate(revision.CreatedAt)
+                                                        </small>
+                                                    </div>
+                                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => ViewRevision(revision.Id)">
+                                                        View
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            
+                            @if (ViewingRevisionId.HasValue)
+                            {
+                                <div class="alert alert-info d-flex justify-content-between align-items-center">
+                                    <span>Viewing revision @ViewingRevisionId</span>
+                                    <button class="btn btn-sm btn-primary" @onclick="() => ViewingRevisionId = null">
+                                        View Current Version
+                                    </button>
+                                </div>
+                            }
+
+                            <div class="wiki-content">
+                                @((MarkupString)RenderMarkdown(DisplayContent))
+                            </div>
+                        </div>
+                        <div class="card-footer text-muted">
+                            <small>
+                                Last updated by @CurrentPage.Author on @FormatDate(CurrentPage.UpdatedAt)
+                            </small>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Page not found
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (ShowCreatePage)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Wiki Page</h5>
+                    <button type="button" class="btn-close" @onclick="() => ShowCreatePage = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Page Title</label>
+                        <input type="text" class="form-control" @bind="NewPageTitle" placeholder="Enter page title..." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Content (Markdown)</label>
+                        <textarea class="form-control font-monospace" rows="10" @bind="NewPageContent" placeholder="# Your content here..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => ShowCreatePage = false">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="CreatePage">Create Page</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string RepoName { get; set; } = "";
+    [Parameter] public string? Slug { get; set; }
+
+    private List<WikiPage> Pages { get; set; } = new();
+    private WikiPage? CurrentPage { get; set; }
+    private bool ShowCreatePage { get; set; }
+    private bool IsEditing { get; set; }
+    private bool ShowHistory { get; set; }
+    private int? ViewingRevisionId { get; set; }
+    
+    private string NewPageTitle { get; set; } = "";
+    private string NewPageContent { get; set; } = "";
+    private string EditContent { get; set; } = "";
+    private string CommitMessage { get; set; } = "";
+    private string DisplayContent { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPages();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadPages();
+        if (!string.IsNullOrEmpty(Slug))
+        {
+            CurrentPage = await WikiService.GetPageAsync(RepoName, Slug);
+            DisplayContent = CurrentPage?.Content ?? "";
+            ViewingRevisionId = null;
+            ShowHistory = false;
+        }
+        else
+        {
+            CurrentPage = null;
+        }
+    }
+
+    private async Task LoadPages()
+    {
+        Pages = await WikiService.GetPagesAsync(RepoName);
+    }
+
+    private void ShowCreateModal()
+    {
+        NewPageTitle = "";
+        NewPageContent = "# New Page\n\nStart writing your content here...";
+        ShowCreatePage = true;
+    }
+
+    private async Task CreatePage()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (string.IsNullOrWhiteSpace(NewPageTitle))
+            return;
+
+        try
+        {
+            var page = await WikiService.CreatePageAsync(RepoName, NewPageTitle, NewPageContent, UserService.Username);
+            ShowCreatePage = false;
+            await LoadPages();
+            Navigation.NavigateTo($"/repo/{RepoName}/wiki/{page.Slug}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating page: {ex.Message}");
+        }
+    }
+
+    private void StartEdit()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (CurrentPage == null) return;
+        EditContent = CurrentPage.Content;
+        CommitMessage = "";
+        IsEditing = true;
+    }
+
+    private async Task SaveEdit()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (CurrentPage == null || string.IsNullOrWhiteSpace(CommitMessage))
+            return;
+
+        try
+        {
+            await WikiService.UpdatePageAsync(RepoName, CurrentPage.Slug, EditContent, UserService.Username, CommitMessage);
+            IsEditing = false;
+            CurrentPage = await WikiService.GetPageAsync(RepoName, CurrentPage.Slug);
+            DisplayContent = CurrentPage?.Content ?? "";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving page: {ex.Message}");
+        }
+    }
+
+    private void CancelEdit()
+    {
+        IsEditing = false;
+        EditContent = "";
+        CommitMessage = "";
+    }
+
+    private async Task DeletePage()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (CurrentPage == null) return;
+
+        await WikiService.DeletePageAsync(RepoName, CurrentPage.Slug);
+        Navigation.NavigateTo($"/repo/{RepoName}/wiki");
+    }
+
+    private async Task ViewRevision(int revisionId)
+    {
+        if (CurrentPage == null) return;
+
+        var revision = await WikiService.GetRevisionAsync(RepoName, CurrentPage.Slug, revisionId);
+        if (revision != null)
+        {
+            ViewingRevisionId = revisionId;
+            DisplayContent = revision.Content;
+        }
+    }
+
+    private string FormatDate(DateTime date)
+    {
+        var timeAgo = DateTime.UtcNow - date;
+        if (timeAgo.TotalMinutes < 1) return "just now";
+        if (timeAgo.TotalMinutes < 60) return $"{(int)timeAgo.TotalMinutes} minutes ago";
+        if (timeAgo.TotalHours < 24) return $"{(int)timeAgo.TotalHours} hours ago";
+        if (timeAgo.TotalDays < 7) return $"{(int)timeAgo.TotalDays} days ago";
+        return date.ToString("MMM dd, yyyy");
+    }
+
+    private string RenderMarkdown(string markdown)
+    {
+        if (string.IsNullOrEmpty(markdown)) return "";
+        var pipeline = new Markdig.MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .Build();
+        return Markdig.Markdown.ToHtml(markdown, pipeline);
+    }
+}
+
+<style>
+    .wiki-content {
+        line-height: 1.6;
+    }
+    
+    .wiki-content h1, .wiki-content h2, .wiki-content h3 {
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .wiki-content pre {
+        background-color: #f6f8fa;
+        padding: 1rem;
+        border-radius: 6px;
+        overflow-x: auto;
+    }
+    
+    .wiki-content code {
+        background-color: #f6f8fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 3px;
+        font-size: 85%;
+    }
+    
+    .wiki-content pre code {
+        background-color: transparent;
+        padding: 0;
+    }
+    
+    .wiki-content blockquote {
+        border-left: 4px solid #dfe2e5;
+        padding-left: 1rem;
+        color: #6a737d;
+        margin: 1rem 0;
+    }
+    
+    .wiki-content table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1rem 0;
+    }
+    
+    .wiki-content table th,
+    .wiki-content table td {
+        border: 1px solid #dfe2e5;
+        padding: 0.5rem;
+    }
+    
+    .wiki-content table th {
+        background-color: #f6f8fa;
+        font-weight: 600;
+    }
+</style>

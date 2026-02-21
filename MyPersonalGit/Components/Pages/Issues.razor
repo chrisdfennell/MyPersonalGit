@@ -1,0 +1,343 @@
+@page "/repo/{RepoName}/issues"
+@page "/repo/{RepoName}/issues/{Number:int}"
+@using MyPersonalGit.Models
+@using MyPersonalGit.Data
+@inject IIssueService IssueService
+@inject NavigationManager Nav
+@using MyPersonalGit.Services
+@inject CurrentUserService UserService
+@rendermode InteractiveServer
+
+<PageTitle>Issues · @RepoName</PageTitle>
+
+<div class="repo-header border-bottom bg-light-subtle mb-4 pt-3">
+    <div class="container-xl px-3">
+        <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-journal-bookmark text-muted me-2 h4 mb-0"></i>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 h4">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Repositories</a></li>
+                    <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
+                    <li class="breadcrumb-item active fw-bold" aria-current="page">Issues</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="container-xl px-3">
+    @if (Number.HasValue)
+    {
+        @if (currentIssue != null)
+        {
+            <div class="issue-detail">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="flex-grow-1">
+                        <h1 class="h3 mb-2">
+                            @currentIssue.Title
+                            <span class="text-muted fw-normal">#@currentIssue.Number</span>
+                        </h1>
+                        <div class="d-flex gap-2 align-items-center">
+                            @if (currentIssue.State == IssueState.Open)
+                            {
+                                <span class="badge bg-success d-flex align-items-center gap-1">
+                                    <i class="bi bi-circle-fill" style="font-size: 8px;"></i> Open
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger d-flex align-items-center gap-1">
+                                    <i class="bi bi-check-circle-fill"></i> Closed
+                                </span>
+                            }
+                            <span class="text-muted small">
+                                <strong>@currentIssue.Author</strong> opened this issue @FormatDate(currentIssue.CreatedAt)
+                                @if (currentIssue.ClosedAt.HasValue)
+                                {
+                                    <span> · Closed @FormatDate(currentIssue.ClosedAt.Value)</span>
+                                }
+                            </span>
+                        </div>
+                    </div>
+                    @if (UserService.IsLoggedIn)
+                    {
+                        <div class="btn-group">
+                            @if (currentIssue.State == IssueState.Open)
+                            {
+                                <button class="btn btn-outline-danger btn-sm" @onclick="CloseIssue">
+                                    <i class="bi bi-check-circle me-1"></i> Close issue
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-success btn-sm" @onclick="ReopenIssue">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reopen issue
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+
+                @if (currentIssue.Labels.Any())
+                {
+                    <div class="mb-3">
+                        @foreach (var label in currentIssue.Labels)
+                        {
+                            <span class="badge bg-primary me-1">@label</span>
+                        }
+                    </div>
+                }
+
+                <div class="card mb-3">
+                    <div class="card-header bg-light d-flex align-items-center gap-2">
+                        <i class="bi bi-person-circle"></i>
+                        <strong>@currentIssue.Author</strong>
+                        <span class="text-muted small">commented @FormatDate(currentIssue.CreatedAt)</span>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrWhiteSpace(currentIssue.Body))
+                        {
+                            <div class="markdown-body">@((MarkupString)RenderMarkdown(currentIssue.Body))</div>
+                        }
+                        else
+                        {
+                            <p class="text-muted fst-italic">No description provided.</p>
+                        }
+                    </div>
+                </div>
+
+                @foreach (var comment in currentIssue.Comments)
+                {
+                    <div class="card mb-3">
+                        <div class="card-header bg-light d-flex align-items-center gap-2">
+                            <i class="bi bi-person-circle"></i>
+                            <strong>@comment.Author</strong>
+                            <span class="text-muted small">commented @FormatDate(comment.CreatedAt)</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="markdown-body">@((MarkupString)RenderMarkdown(comment.Body))</div>
+                        </div>
+                    </div>
+                }
+
+                @if (UserService.IsLoggedIn)
+                {
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <strong>Add a comment</strong>
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control mb-2" rows="4" @bind="newCommentBody" placeholder="Leave a comment"></textarea>
+                            <button class="btn btn-success" @onclick="AddComment" disabled="@string.IsNullOrWhiteSpace(newCommentBody)">
+                                <i class="bi bi-chat-left-text me-1"></i> Comment
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">Issue #@Number not found.</div>
+        }
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="btn-group">
+                <button class="btn @(filterState == "open" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => filterState = "open"'>
+                    <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> @openCount Open
+                </button>
+                <button class="btn @(filterState == "closed" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => filterState = "closed"'>
+                    <i class="bi bi-check-circle me-1"></i> @closedCount Closed
+                </button>
+            </div>
+            @if (UserService.IsLoggedIn)
+            {
+                <button class="btn btn-success btn-sm" @onclick="() => showNewIssueModal = true">
+                    <i class="bi bi-plus-circle me-1"></i> New issue
+                </button>
+            }
+        </div>
+
+        @if (filteredIssues.Any())
+        {
+            <div class="list-group">
+                @foreach (var issue in filteredIssues)
+                {
+                    <a href="/repo/@RepoName/issues/@issue.Number" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    @if (issue.State == IssueState.Open)
+                                    {
+                                        <i class="bi bi-circle-fill text-success" style="font-size: 12px;"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle-fill text-danger"></i>
+                                    }
+                                    <h6 class="mb-0">@issue.Title</h6>
+                                    @foreach (var label in issue.Labels)
+                                    {
+                                        <span class="badge bg-primary" style="font-size: 10px;">@label</span>
+                                    }
+                                </div>
+                                <small class="text-muted">
+                                    #@issue.Number opened @FormatDate(issue.CreatedAt) by @issue.Author
+                                    @if (issue.Comments.Any())
+                                    {
+                                        <span> · <i class="bi bi-chat-left"></i> @issue.Comments.Count</span>
+                                    }
+                                </small>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="blankslate p-5 border rounded-3 bg-light text-center">
+                <i class="bi bi-check-circle display-4 text-muted mb-3"></i>
+                <h3 class="h5">No @filterState issues</h3>
+                <p class="text-muted">There are no @filterState issues for this repository.</p>
+            </div>
+        }
+    }
+</div>
+
+@if (showNewIssueModal)
+{
+    <div class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Issue</h5>
+                    <button type="button" class="btn-close" @onclick="() => showNewIssueModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Title</label>
+                        <input type="text" class="form-control" @bind="newIssueTitle" placeholder="Issue title" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Description</label>
+                        <textarea class="form-control" rows="6" @bind="newIssueBody" placeholder="Leave a comment"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Labels (comma-separated)</label>
+                        <input type="text" class="form-control" @bind="newIssueLabels" placeholder="bug, enhancement, documentation" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => showNewIssueModal = false">Cancel</button>
+                    <button type="button" class="btn btn-success" @onclick="CreateIssue" disabled="@string.IsNullOrWhiteSpace(newIssueTitle)">
+                        <i class="bi bi-plus-circle me-1"></i> Create issue
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string RepoName { get; set; } = "";
+    [Parameter] public int? Number { get; set; }
+
+    private List<Issue> issues = new();
+    private Issue? currentIssue;
+    private string filterState = "open";
+    private bool showNewIssueModal = false;
+
+    private string newIssueTitle = "";
+    private string newIssueBody = "";
+    private string newIssueLabels = "";
+    private string newCommentBody = "";
+
+    private List<Issue> filteredIssues => issues
+        .Where(i => filterState == "open" ? i.State == IssueState.Open : i.State == IssueState.Closed)
+        .OrderByDescending(i => i.CreatedAt)
+        .ToList();
+
+    private int openCount => issues.Count(i => i.State == IssueState.Open);
+    private int closedCount => issues.Count(i => i.State == IssueState.Closed);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadIssues();
+    }
+
+    private async Task LoadIssues()
+    {
+        issues = await IssueService.GetIssuesAsync(RepoName);
+        if (Number.HasValue)
+        {
+            currentIssue = await IssueService.GetIssueAsync(RepoName, Number.Value);
+        }
+    }
+
+    private async Task CreateIssue()
+    {
+        if (!UserService.IsLoggedIn) return;
+        var labels = newIssueLabels.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(l => l.Trim())
+            .Where(l => !string.IsNullOrWhiteSpace(l))
+            .ToList();
+
+        var issue = await IssueService.CreateIssueAsync(RepoName, newIssueTitle, newIssueBody, UserService.Username, labels);
+        
+        newIssueTitle = "";
+        newIssueBody = "";
+        newIssueLabels = "";
+        showNewIssueModal = false;
+
+        Nav.NavigateTo($"/repo/{RepoName}/issues/{issue.Number}");
+    }
+
+    private async Task AddComment()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (Number.HasValue && !string.IsNullOrWhiteSpace(newCommentBody))
+        {
+            await IssueService.AddCommentAsync(RepoName, Number.Value, UserService.Username, newCommentBody);
+            newCommentBody = "";
+            await LoadIssues();
+        }
+    }
+
+    private async Task CloseIssue()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (Number.HasValue)
+        {
+            await IssueService.CloseIssueAsync(RepoName, Number.Value);
+            await LoadIssues();
+        }
+    }
+
+    private async Task ReopenIssue()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (Number.HasValue)
+        {
+            await IssueService.ReopenIssueAsync(RepoName, Number.Value);
+            await LoadIssues();
+        }
+    }
+
+    private string FormatDate(DateTime date)
+    {
+        var diff = DateTime.UtcNow - date;
+        if (diff.TotalMinutes < 1) return "just now";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes} minutes ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours} hours ago";
+        if (diff.TotalDays < 30) return $"{(int)diff.TotalDays} days ago";
+        return date.ToString("MMM d, yyyy");
+    }
+
+    private string RenderMarkdown(string markdown)
+    {
+        return System.Web.HttpUtility.HtmlEncode(markdown).Replace("\n", "<br/>");
+    }
+}

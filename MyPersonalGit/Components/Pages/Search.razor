@@ -1,0 +1,407 @@
+@page "/search"
+@using LibGit2Sharp
+@using System.IO
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@inject IConfiguration Config
+@inject NavigationManager Nav
+@inject IIssueService IssueService
+@inject IPullRequestService PRService
+@rendermode InteractiveServer
+
+<PageTitle>Search · Personal Git</PageTitle>
+
+<div class="container-xl px-3 py-4">
+    <div class="mb-4">
+        <h2 class="h4 mb-3">Search</h2>
+        <div class="input-group input-group-lg shadow-sm">
+            <input type="text" 
+                   class="form-control" 
+                   placeholder="Search repositories, code, issues, and pull requests..." 
+                   @bind="searchQuery"
+                   @bind:event="oninput"
+                   @onkeyup="HandleKeyPress" />
+            <button class="btn btn-primary" @onclick="PerformSearch">
+                <i class="bi bi-search"></i> Search
+            </button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(searchQuery) && hasSearched)
+    {
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <button class="nav-link @(activeTab == "repositories" ? "active" : "")" @onclick='() => activeTab = "repositories"'>
+                    <i class="bi bi-journal-bookmark me-1"></i> Repositories
+                    <span class="badge bg-secondary ms-1">@repositoryResults.Count</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(activeTab == "code" ? "active" : "")" @onclick='() => activeTab = "code"'>
+                    <i class="bi bi-code-slash me-1"></i> Code
+                    <span class="badge bg-secondary ms-1">@codeResults.Count</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(activeTab == "issues" ? "active" : "")" @onclick='() => activeTab = "issues"'>
+                    <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> Issues
+                    <span class="badge bg-secondary ms-1">@issueResults.Count</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(activeTab == "pulls" ? "active" : "")" @onclick='() => activeTab = "pulls"'>
+                    <i class="bi bi-git me-1"></i> Pull requests
+                    <span class="badge bg-secondary ms-1">@prResults.Count</span>
+                </button>
+            </li>
+        </ul>
+
+        <div class="search-results">
+            @if (activeTab == "repositories")
+            {
+                @if (repositoryResults.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var repo in repositoryResults)
+                        {
+                            <a href="/repo/@repo.Name" class="list-group-item list-group-item-action">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="bi bi-journal-bookmark text-muted me-2"></i>
+                                            @repo.Name
+                                        </h6>
+                                        <p class="text-muted small mb-0">@repo.Description</p>
+                                    </div>
+                                    @if (repo.Stars > 0)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-star-fill"></i> @repo.Stars
+                                        </span>
+                                    }
+                                </div>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No repositories found matching "@searchQuery"
+                    </div>
+                }
+            }
+            else if (activeTab == "code")
+            {
+                @if (codeResults.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var result in codeResults)
+                        {
+                            <a href="/repo/@result.RepoName/@result.FilePath" class="list-group-item list-group-item-action">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">
+                                            <span class="text-muted">@result.RepoName /</span> @result.FilePath
+                                        </h6>
+                                        <pre class="bg-light p-2 rounded small mb-0"><code>@result.MatchedLine</code></pre>
+                                    </div>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No code found matching "@searchQuery"
+                    </div>
+                }
+            }
+            else if (activeTab == "issues")
+            {
+                @if (issueResults.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var issue in issueResults)
+                        {
+                            <a href="/repo/@issue.RepoName/issues/@issue.Number" class="list-group-item list-group-item-action">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    @if (issue.State == IssueState.Open)
+                                    {
+                                        <i class="bi bi-circle-fill text-success" style="font-size: 12px;"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle-fill text-danger"></i>
+                                    }
+                                    <h6 class="mb-0">@issue.Title</h6>
+                                    <span class="text-muted small">#@issue.Number</span>
+                                </div>
+                                <small class="text-muted">
+                                    @issue.RepoName · Opened by @issue.Author
+                                </small>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No issues found matching "@searchQuery"
+                    </div>
+                }
+            }
+            else if (activeTab == "pulls")
+            {
+                @if (prResults.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var pr in prResults)
+                        {
+                            <a href="/repo/@pr.RepoName/pull/@pr.Number" class="list-group-item list-group-item-action">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    @if (pr.State == PullRequestState.Open)
+                                    {
+                                        <i class="bi bi-git text-success"></i>
+                                    }
+                                    else if (pr.State == PullRequestState.Merged)
+                                    {
+                                        <i class="bi bi-check2-all text-primary"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-x-circle text-danger"></i>
+                                    }
+                                    <h6 class="mb-0">@pr.Title</h6>
+                                    <span class="text-muted small">#@pr.Number</span>
+                                </div>
+                                <small class="text-muted">
+                                    @pr.RepoName · @pr.SourceBranch → @pr.TargetBranch
+                                </small>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No pull requests found matching "@searchQuery"
+                    </div>
+                }
+            }
+        </div>
+    }
+    else if (!hasSearched)
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-search display-1 text-muted mb-3"></i>
+            <h3 class="h5 text-muted">Search across all repositories</h3>
+            <p class="text-muted">Find repositories, code, issues, and pull requests</p>
+        </div>
+    }
+</div>
+
+@code {
+    private string searchQuery = "";
+    private string activeTab = "repositories";
+    private bool hasSearched = false;
+
+    private List<RepositoryResult> repositoryResults = new();
+    private List<CodeResult> codeResults = new();
+    private List<Issue> issueResults = new();
+    private List<PullRequest> prResults = new();
+
+    protected override void OnInitialized()
+    {
+        var uri = new Uri(Nav.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        var q = query["q"];
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            searchQuery = q;
+            PerformSearch();
+        }
+    }
+
+    private void HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            PerformSearch();
+        }
+    }
+
+    private async void PerformSearch()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+            return;
+
+        hasSearched = true;
+        repositoryResults.Clear();
+        codeResults.Clear();
+        issueResults.Clear();
+        prResults.Clear();
+
+        await SearchRepositories();
+        await SearchCode();
+        await SearchIssues();
+        await SearchPullRequests();
+
+        StateHasChanged();
+    }
+
+    private async Task SearchRepositories()
+    {
+        try
+        {
+            var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+            if (!Directory.Exists(projectRoot))
+                return;
+
+            var directories = Directory.GetDirectories(projectRoot);
+            foreach (var dir in directories)
+            {
+                var repoName = Path.GetFileName(dir);
+                if (repoName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+                {
+                    repositoryResults.Add(new RepositoryResult
+                    {
+                        Name = repoName,
+                        Description = "Git repository",
+                        Stars = 0
+                    });
+                }
+            }
+        }
+        catch { }
+    }
+
+    private async Task SearchCode()
+    {
+        try
+        {
+            var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+            if (!Directory.Exists(projectRoot))
+                return;
+
+            var directories = Directory.GetDirectories(projectRoot);
+            foreach (var dir in directories)
+            {
+                if (!LibGit2Sharp.Repository.IsValid(dir))
+                    continue;
+
+                try
+                {
+                    using var repo = new LibGit2Sharp.Repository(dir);
+                    var repoName = Path.GetFileName(dir);
+                    var headCommit = repo.Head.Tip;
+
+                    if (headCommit == null)
+                        continue;
+
+                    foreach (var entry in headCommit.Tree)
+                    {
+                        if (entry.TargetType == TreeEntryTargetType.Blob)
+                        {
+                            var blob = (Blob)entry.Target;
+                            if (blob.IsBinary)
+                                continue;
+
+                            var content = blob.GetContentText();
+                            var lines = content.Split('\n');
+                            
+                            for (int i = 0; i < lines.Length; i++)
+                            {
+                                if (lines[i].Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    codeResults.Add(new CodeResult
+                                    {
+                                        RepoName = repoName,
+                                        FilePath = entry.Path,
+                                        LineNumber = i + 1,
+                                        MatchedLine = lines[i].Trim()
+                                    });
+                                    
+                                    if (codeResults.Count >= 50)
+                                        return;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+        }
+        catch { }
+    }
+
+    private async Task SearchIssues()
+    {
+        try
+        {
+            var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+            if (!Directory.Exists(projectRoot))
+                return;
+
+            var directories = Directory.GetDirectories(projectRoot);
+            foreach (var dir in directories)
+            {
+                var repoName = Path.GetFileName(dir);
+                var issues = await IssueService.GetIssuesAsync(repoName);
+                
+                var matches = issues.Where(i => 
+                    i.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    (i.Body?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ?? false)
+                );
+
+                issueResults.AddRange(matches);
+            }
+        }
+        catch { }
+    }
+
+    private async Task SearchPullRequests()
+    {
+        try
+        {
+            var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+            if (!Directory.Exists(projectRoot))
+                return;
+
+            var directories = Directory.GetDirectories(projectRoot);
+            foreach (var dir in directories)
+            {
+                var repoName = Path.GetFileName(dir);
+                var prs = await PRService.GetPullRequestsAsync(repoName);
+                
+                var matches = prs.Where(pr => 
+                    pr.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    (pr.Body?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ?? false)
+                );
+
+                prResults.AddRange(matches);
+            }
+        }
+        catch { }
+    }
+
+    public class RepositoryResult
+    {
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+        public int Stars { get; set; }
+    }
+
+    public class CodeResult
+    {
+        public string RepoName { get; set; } = "";
+        public string FilePath { get; set; } = "";
+        public int LineNumber { get; set; }
+        public string MatchedLine { get; set; } = "";
+    }
+}

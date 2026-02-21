@@ -1,0 +1,107 @@
+@page "/login"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using MyPersonalGit.Services
+@inject CurrentUserService UserService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>Login - MyPersonalGit</PageTitle>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold">MyPersonalGit</h2>
+                        <p class="text-muted">Sign in to your account</p>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>@ErrorMessage
+                        </div>
+                    }
+
+                    <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="mb-3">
+                            <label for="usernameOrEmail" class="form-label">Username or Email</label>
+                            <InputText id="usernameOrEmail" class="form-control" @bind-Value="loginModel.UsernameOrEmail" placeholder="Enter username or email" />
+                            <ValidationMessage For="@(() => loginModel.UsernameOrEmail)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" placeholder="Enter password" />
+                            <ValidationMessage For="@(() => loginModel.Password)" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-3" disabled="@IsLoading">
+                            @if (IsLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Signing in...</span>
+                            }
+                            else
+                            {
+                                <span>Sign in</span>
+                            }
+                        </button>
+                    </EditForm>
+
+                    <div class="text-center">
+                        <p class="text-muted mb-0">
+                            Don't have an account? <a href="/register" class="text-decoration-none">Sign up</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+    private string? ErrorMessage { get; set; }
+    private bool IsLoading { get; set; }
+
+    private async Task HandleLogin()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var sessionId = await UserService.LoginAsync(loginModel.UsernameOrEmail, loginModel.Password);
+
+            if (sessionId != null)
+            {
+                await JS.InvokeVoidAsync("sessionHelper.set", "sessionId", sessionId);
+                Navigation.NavigateTo("/", forceLoad: true);
+            }
+            else
+            {
+                ErrorMessage = "Invalid username/email or password";
+            }
+        }
+        catch
+        {
+            ErrorMessage = "An error occurred during login. Please try again.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private class LoginModel
+    {
+        public string UsernameOrEmail { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+}

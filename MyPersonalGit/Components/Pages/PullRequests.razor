@@ -1,0 +1,518 @@
+@page "/repo/{RepoName}/pulls"
+@page "/repo/{RepoName}/pull/{Number:int}"
+@using MyPersonalGit.Models
+@using MyPersonalGit.Data
+@using LibGit2Sharp
+@inject IPullRequestService PRService
+@inject IConfiguration Config
+@inject NavigationManager Nav
+@using MyPersonalGit.Services
+@inject CurrentUserService UserService
+@rendermode InteractiveServer
+
+<PageTitle>Pull Requests · @RepoName</PageTitle>
+
+<div class="repo-header border-bottom bg-light-subtle mb-4 pt-3">
+    <div class="container-xl px-3">
+        <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-journal-bookmark text-muted me-2 h4 mb-0"></i>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 h4">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Repositories</a></li>
+                    <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
+                    <li class="breadcrumb-item active fw-bold" aria-current="page">Pull Requests</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="container-xl px-3">
+    @if (Number.HasValue)
+    {
+        @if (currentPR != null)
+        {
+            <div class="pr-detail">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="flex-grow-1">
+                        <h1 class="h3 mb-2">
+                            @currentPR.Title
+                            <span class="text-muted fw-normal">#@currentPR.Number</span>
+                        </h1>
+                        <div class="d-flex gap-2 align-items-center">
+                            @if (currentPR.State == PullRequestState.Open)
+                            {
+                                <span class="badge bg-success d-flex align-items-center gap-1">
+                                    <i class="bi bi-git"></i> Open
+                                </span>
+                            }
+                            else if (currentPR.State == PullRequestState.Merged)
+                            {
+                                <span class="badge bg-primary d-flex align-items-center gap-1">
+                                    <i class="bi bi-check2-all"></i> Merged
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger d-flex align-items-center gap-1">
+                                    <i class="bi bi-x-circle"></i> Closed
+                                </span>
+                            }
+                            <span class="text-muted small">
+                                <strong>@currentPR.Author</strong> wants to merge from
+                                <code class="bg-light px-2 py-1 rounded">@currentPR.SourceBranch</code> into
+                                <code class="bg-light px-2 py-1 rounded">@currentPR.TargetBranch</code>
+                            </span>
+                        </div>
+                    </div>
+                    @if (UserService.IsLoggedIn && currentPR.State == PullRequestState.Open)
+                    {
+                        <div class="btn-group">
+                            <button class="btn btn-success btn-sm" @onclick="MergePR">
+                                <i class="bi bi-check2-all me-1"></i> Merge pull request
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" @onclick="ClosePR">
+                                <i class="bi bi-x-circle me-1"></i> Close
+                            </button>
+                        </div>
+                    }
+                </div>
+
+                <div class="row">
+                    <div class="col-md-9">
+                        <ul class="nav nav-tabs mb-3">
+                            <li class="nav-item">
+                                <button class="nav-link @(activeTab == "conversation" ? "active" : "")" @onclick='() => activeTab = "conversation"'>
+                                    <i class="bi bi-chat-left me-1"></i> Conversation
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link @(activeTab == "commits" ? "active" : "")" @onclick='() => activeTab = "commits"'>
+                                    <i class="bi bi-clock-history me-1"></i> Commits
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link @(activeTab == "files" ? "active" : "")" @onclick='() => activeTab = "files"'>
+                                    <i class="bi bi-file-diff me-1"></i> Files changed
+                                </button>
+                            </li>
+                        </ul>
+
+                        @if (activeTab == "conversation")
+                        {
+                            <div class="card mb-3">
+                                <div class="card-header bg-light d-flex align-items-center gap-2">
+                                    <i class="bi bi-person-circle"></i>
+                                    <strong>@currentPR.Author</strong>
+                                    <span class="text-muted small">commented @FormatDate(currentPR.CreatedAt)</span>
+                                </div>
+                                <div class="card-body">
+                                    @if (!string.IsNullOrWhiteSpace(currentPR.Body))
+                                    {
+                                        <div class="markdown-body">@((MarkupString)RenderMarkdown(currentPR.Body))</div>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted fst-italic">No description provided.</p>
+                                    }
+                                </div>
+                            </div>
+
+                            @foreach (var review in currentPR.Reviews)
+                            {
+                                <div class="card mb-3 @GetReviewCardClass(review.State)">
+                                    <div class="card-header d-flex align-items-center gap-2">
+                                        <i class="bi bi-person-circle"></i>
+                                        <strong>@review.Author</strong>
+                                        <span class="text-muted small">@GetReviewStateText(review.State) @FormatDate(review.CreatedAt)</span>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(review.Body))
+                                    {
+                                        <div class="card-body">
+                                            <div class="markdown-body">@((MarkupString)RenderMarkdown(review.Body))</div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            @foreach (var comment in currentPR.Comments)
+                            {
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light d-flex align-items-center gap-2">
+                                        <i class="bi bi-person-circle"></i>
+                                        <strong>@comment.Author</strong>
+                                        <span class="text-muted small">commented @FormatDate(comment.CreatedAt)</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="markdown-body">@((MarkupString)RenderMarkdown(comment.Body))</div>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (UserService.IsLoggedIn && currentPR.State == PullRequestState.Open)
+                            {
+                                <div class="card">
+                                    <div class="card-header bg-light">
+                                        <strong>Review changes</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <textarea class="form-control mb-2" rows="4" @bind="reviewBody" placeholder="Leave a review comment"></textarea>
+                                        <div class="btn-group">
+                                            <button class="btn btn-success btn-sm" @onclick='() => SubmitReview(ReviewState.Approved)'>
+                                                <i class="bi bi-check-circle me-1"></i> Approve
+                                            </button>
+                                            <button class="btn btn-warning btn-sm" @onclick='() => SubmitReview(ReviewState.ChangesRequested)'>
+                                                <i class="bi bi-x-circle me-1"></i> Request changes
+                                            </button>
+                                            <button class="btn btn-secondary btn-sm" @onclick='() => SubmitReview(ReviewState.Commented)'>
+                                                <i class="bi bi-chat-left me-1"></i> Comment
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else if (activeTab == "commits")
+                        {
+                            <div class="card">
+                                <div class="card-body">
+                                    <p class="text-muted">Commits from <code>@currentPR.SourceBranch</code> to <code>@currentPR.TargetBranch</code></p>
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Use the repository's commit history to view commits in this branch.
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else if (activeTab == "files")
+                        {
+                            <div class="card">
+                                <div class="card-body">
+                                    <p class="text-muted">Files changed between <code>@currentPR.TargetBranch</code> and <code>@currentPR.SourceBranch</code></p>
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Diff view will show changes between branches. Use git diff to compare.
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">Reviewers</h6>
+                                @if (currentPR.Reviewers.Any())
+                                {
+                                    <ul class="list-unstyled">
+                                        @foreach (var reviewer in currentPR.Reviewers)
+                                        {
+                                            <li><i class="bi bi-person"></i> @reviewer</li>
+                                        }
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <p class="text-muted small">No reviewers assigned</p>
+                                }
+
+                                <hr />
+
+                                <h6 class="card-title">Labels</h6>
+                                @if (currentPR.Labels.Any())
+                                {
+                                    @foreach (var label in currentPR.Labels)
+                                    {
+                                        <span class="badge bg-primary me-1 mb-1">@label</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted small">No labels</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">Pull Request #@Number not found.</div>
+        }
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="btn-group">
+                <button class="btn @(filterState == "open" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => filterState = "open"'>
+                    <i class="bi bi-git me-1"></i> @openCount Open
+                </button>
+                <button class="btn @(filterState == "closed" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => filterState = "closed"'>
+                    <i class="bi bi-x-circle me-1"></i> @closedCount Closed
+                </button>
+                <button class="btn @(filterState == "merged" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => filterState = "merged"'>
+                    <i class="bi bi-check2-all me-1"></i> @mergedCount Merged
+                </button>
+            </div>
+            @if (UserService.IsLoggedIn)
+            {
+                <button class="btn btn-success btn-sm" @onclick="() => showNewPRModal = true">
+                    <i class="bi bi-plus-circle me-1"></i> New pull request
+                </button>
+            }
+        </div>
+
+        @if (filteredPRs.Any())
+        {
+            <div class="list-group">
+                @foreach (var pr in filteredPRs)
+                {
+                    <a href="/repo/@RepoName/pull/@pr.Number" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    @if (pr.State == PullRequestState.Open)
+                                    {
+                                        <i class="bi bi-git text-success"></i>
+                                    }
+                                    else if (pr.State == PullRequestState.Merged)
+                                    {
+                                        <i class="bi bi-check2-all text-primary"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-x-circle text-danger"></i>
+                                    }
+                                    <h6 class="mb-0">@pr.Title</h6>
+                                    @if (pr.IsDraft)
+                                    {
+                                        <span class="badge bg-secondary" style="font-size: 10px;">Draft</span>
+                                    }
+                                    @foreach (var label in pr.Labels)
+                                    {
+                                        <span class="badge bg-primary" style="font-size: 10px;">@label</span>
+                                    }
+                                </div>
+                                <small class="text-muted">
+                                    #@pr.Number opened @FormatDate(pr.CreatedAt) by @pr.Author
+                                    · <code class="small">@pr.SourceBranch</code> → <code class="small">@pr.TargetBranch</code>
+                                </small>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="blankslate p-5 border rounded-3 bg-light text-center">
+                <i class="bi bi-git display-4 text-muted mb-3"></i>
+                <h3 class="h5">No @filterState pull requests</h3>
+                <p class="text-muted">There are no @filterState pull requests for this repository.</p>
+            </div>
+        }
+    }
+</div>
+
+@if (showNewPRModal)
+{
+    <div class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Pull Request</h5>
+                    <button type="button" class="btn-close" @onclick="() => showNewPRModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Title</label>
+                        <input type="text" class="form-control" @bind="newPRTitle" placeholder="Pull request title" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Description</label>
+                        <textarea class="form-control" rows="6" @bind="newPRBody" placeholder="Describe your changes"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Source Branch</label>
+                            <select class="form-select" @bind="newPRSourceBranch">
+                                <option value="">Select branch...</option>
+                                @foreach (var branch in branches)
+                                {
+                                    <option value="@branch">@branch</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Target Branch</label>
+                            <select class="form-select" @bind="newPRTargetBranch">
+                                <option value="">Select branch...</option>
+                                @foreach (var branch in branches)
+                                {
+                                    <option value="@branch">@branch</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" @bind="newPRIsDraft" id="draftCheck">
+                        <label class="form-check-label" for="draftCheck">
+                            Create as draft
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => showNewPRModal = false">Cancel</button>
+                    <button type="button" class="btn btn-success" @onclick="CreatePR" 
+                            disabled="@(string.IsNullOrWhiteSpace(newPRTitle) || string.IsNullOrWhiteSpace(newPRSourceBranch) || string.IsNullOrWhiteSpace(newPRTargetBranch))">
+                        <i class="bi bi-plus-circle me-1"></i> Create pull request
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string RepoName { get; set; } = "";
+    [Parameter] public int? Number { get; set; }
+
+    private List<PullRequest> prs = new();
+    private PullRequest? currentPR;
+    private string filterState = "open";
+    private string activeTab = "conversation";
+    private bool showNewPRModal = false;
+    private List<string> branches = new();
+
+    private string newPRTitle = "";
+    private string newPRBody = "";
+    private string newPRSourceBranch = "";
+    private string newPRTargetBranch = "";
+    private bool newPRIsDraft = false;
+    private string reviewBody = "";
+
+    private List<PullRequest> filteredPRs => prs
+        .Where(pr => filterState switch
+        {
+            "open" => pr.State == PullRequestState.Open,
+            "closed" => pr.State == PullRequestState.Closed,
+            "merged" => pr.State == PullRequestState.Merged,
+            _ => true
+        })
+        .OrderByDescending(pr => pr.CreatedAt)
+        .ToList();
+
+    private int openCount => prs.Count(pr => pr.State == PullRequestState.Open);
+    private int closedCount => prs.Count(pr => pr.State == PullRequestState.Closed);
+    private int mergedCount => prs.Count(pr => pr.State == PullRequestState.Merged);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadPRs();
+        LoadBranches();
+    }
+
+    private async Task LoadPRs()
+    {
+        prs = await PRService.GetPullRequestsAsync(RepoName);
+        if (Number.HasValue)
+        {
+            currentPR = await PRService.GetPullRequestAsync(RepoName, Number.Value);
+        }
+    }
+
+    private void LoadBranches()
+    {
+        try
+        {
+            var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+            var repoPath = Path.Combine(projectRoot, $"{RepoName}.git");
+            
+            if (Directory.Exists(repoPath))
+            {
+                using var repo = new LibGit2Sharp.Repository(repoPath);
+                branches = repo.Branches.Select(b => b.FriendlyName).ToList();
+            }
+        }
+        catch { }
+    }
+
+    private async Task CreatePR()
+    {
+        if (!UserService.IsLoggedIn) return;
+        var pr = await PRService.CreatePullRequestAsync(
+            RepoName, newPRTitle, newPRBody, UserService.Username,
+            newPRSourceBranch, newPRTargetBranch, newPRIsDraft);
+        
+        newPRTitle = "";
+        newPRBody = "";
+        newPRSourceBranch = "";
+        newPRTargetBranch = "";
+        newPRIsDraft = false;
+        showNewPRModal = false;
+
+        Nav.NavigateTo($"/repo/{RepoName}/pull/{pr.Number}");
+    }
+
+    private async Task SubmitReview(ReviewState state)
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (Number.HasValue)
+        {
+            await PRService.AddReviewAsync(RepoName, Number.Value, UserService.Username, state, reviewBody);
+            reviewBody = "";
+            await LoadPRs();
+        }
+    }
+
+    private async Task MergePR()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (Number.HasValue)
+        {
+            await PRService.MergePullRequestAsync(RepoName, Number.Value, UserService.Username);
+            await LoadPRs();
+        }
+    }
+
+    private async Task ClosePR()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (Number.HasValue)
+        {
+            await PRService.ClosePullRequestAsync(RepoName, Number.Value);
+            await LoadPRs();
+        }
+    }
+
+    private string FormatDate(DateTime date)
+    {
+        var diff = DateTime.UtcNow - date;
+        if (diff.TotalMinutes < 1) return "just now";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes} minutes ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours} hours ago";
+        if (diff.TotalDays < 30) return $"{(int)diff.TotalDays} days ago";
+        return date.ToString("MMM d, yyyy");
+    }
+
+    private string RenderMarkdown(string markdown)
+    {
+        return System.Web.HttpUtility.HtmlEncode(markdown).Replace("\n", "<br/>");
+    }
+
+    private string GetReviewCardClass(ReviewState state) => state switch
+    {
+        ReviewState.Approved => "border-success",
+        ReviewState.ChangesRequested => "border-warning",
+        _ => ""
+    };
+
+    private string GetReviewStateText(ReviewState state) => state switch
+    {
+        ReviewState.Approved => "approved these changes",
+        ReviewState.ChangesRequested => "requested changes",
+        ReviewState.Commented => "commented",
+        _ => "reviewed"
+    };
+}

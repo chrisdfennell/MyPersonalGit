@@ -1,0 +1,329 @@
+@page "/profile/{Username}"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using UserProfileModel = MyPersonalGit.Models.UserProfile
+@inject IUserProfileService ProfileService
+@inject NavigationManager Navigation
+@using MyPersonalGit.Services
+@inject CurrentUserService UserService
+@rendermode InteractiveServer
+
+<PageTitle>@Username - MyPersonalGit</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    @if (!string.IsNullOrEmpty(UserProfileData.AvatarUrl))
+                    {
+                        <img src="@UserProfileData.AvatarUrl" class="rounded-circle mb-3" style="width: 150px; height: 150px;" alt="Avatar" />
+                    }
+                    else
+                    {
+                        <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center mb-3"
+                             style="width: 150px; height: 150px; font-size: 4rem; color: white;">
+                            @Username[0].ToString().ToUpper()
+                        </div>
+                    }
+                    <h4>@(string.IsNullOrEmpty(UserProfileData.FullName) ? Username : UserProfileData.FullName)</h4>
+                    <p class="text-muted">@("@" + Username)</p>
+
+                    @if (!string.IsNullOrEmpty(UserProfileData.Bio))
+                    {
+                        <p class="mt-3">@UserProfileData.Bio</p>
+                    }
+
+                    <div class="mt-3 text-start">
+                        @if (!string.IsNullOrEmpty(UserProfileData.Company))
+                        {
+                            <div class="mb-2">
+                                <i class="bi bi-building"></i> @UserProfileData.Company
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(UserProfileData.Location))
+                        {
+                            <div class="mb-2">
+                                <i class="bi bi-geo-alt"></i> @UserProfileData.Location
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(UserProfileData.Website))
+                        {
+                            <div class="mb-2">
+                                <i class="bi bi-link-45deg"></i> <a href="@UserProfileData.Website" target="_blank">@UserProfileData.Website</a>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(UserProfileData.TwitterHandle))
+                        {
+                            <div class="mb-2">
+                                <i class="bi bi-twitter"></i> @("@" + UserProfileData.TwitterHandle)
+                            </div>
+                        }
+                    </div>
+
+                    @if (IsOwnProfile)
+                    {
+                        <button class="btn btn-primary w-100 mt-3" @onclick='() => Navigation.NavigateTo("/settings")'>
+                            <i class="bi bi-gear"></i> Edit Profile
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <a class="nav-link @(ActiveTab == "overview" ? "active" : "")" @onclick='() => ActiveTab = "overview"' style="cursor: pointer;">
+                        Overview
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ActiveTab == "activity" ? "active" : "")" @onclick='() => ActiveTab = "activity"' style="cursor: pointer;">
+                        Activity
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ActiveTab == "repositories" ? "active" : "")" @onclick='() => ActiveTab = "repositories"' style="cursor: pointer;">
+                        Repositories
+                    </a>
+                </li>
+            </ul>
+
+            @if (ActiveTab == "overview")
+            {
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h3 class="mb-0">@Statistics.TotalRepositories</h3>
+                                <small class="text-muted">Repositories</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h3 class="mb-0">@Statistics.TotalCommits</h3>
+                                <small class="text-muted">Commits</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h3 class="mb-0">@Statistics.TotalPullRequests</h3>
+                                <small class="text-muted">Pull Requests</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h3 class="mb-0">@Statistics.TotalIssues</h3>
+                                <small class="text-muted">Issues</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            @Statistics.ContributionsThisYear contributions in the last year
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="contribution-graph">
+                            @{
+                                var weeks = Contributions.GroupBy(c => GetWeekOfYear(c.Date)).ToList();
+                            }
+                            <div class="d-flex" style="gap: 3px;">
+                                @foreach (var week in weeks)
+                                {
+                                    <div class="d-flex flex-column" style="gap: 3px;">
+                                        @foreach (var day in week.OrderBy(d => d.Date.DayOfWeek))
+                                        {
+                                            <div class="contribution-day level-@day.Level" 
+                                                 title="@day.Count contributions on @day.Date.ToString("MMM d, yyyy")"
+                                                 style="width: 10px; height: 10px; border-radius: 2px;">
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="mt-3 d-flex align-items-center" style="gap: 10px;">
+                            <small class="text-muted">Less</small>
+                            <div class="contribution-day level-0" style="width: 10px; height: 10px;"></div>
+                            <div class="contribution-day level-1" style="width: 10px; height: 10px;"></div>
+                            <div class="contribution-day level-2" style="width: 10px; height: 10px;"></div>
+                            <div class="contribution-day level-3" style="width: 10px; height: 10px;"></div>
+                            <div class="contribution-day level-4" style="width: 10px; height: 10px;"></div>
+                            <small class="text-muted">More</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Recent Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Activities.Count == 0)
+                        {
+                            <p class="text-muted">No recent activity</p>
+                        }
+                        else
+                        {
+                            <div class="list-group list-group-flush">
+                                @foreach (var activity in Activities.Take(10))
+                                {
+                                    <div class="list-group-item px-0">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <i class="bi @GetActivityIcon(activity.ActivityType)"></i>
+                                                <strong>@activity.ActivityType</strong> in @activity.Repository
+                                            </div>
+                                            <small class="text-muted">@FormatTimeAgo(activity.Timestamp)</small>
+                                        </div>
+                                        <small class="text-muted">@activity.Description</small>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else if (ActiveTab == "activity")
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">All Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Activities.Count == 0)
+                        {
+                            <p class="text-muted">No activity yet</p>
+                        }
+                        else
+                        {
+                            <div class="list-group">
+                                @foreach (var activity in Activities)
+                                {
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <i class="bi @GetActivityIcon(activity.ActivityType)"></i>
+                                                    @activity.ActivityType
+                                                </h6>
+                                                <p class="mb-1">@activity.Description</p>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-folder"></i> @activity.Repository
+                                                </small>
+                                            </div>
+                                            <small class="text-muted">@activity.Timestamp.ToString("g")</small>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else if (ActiveTab == "repositories")
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Repositories</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Repository list will be displayed here</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .contribution-day {
+        background-color: #ebedf0;
+    }
+    .contribution-day.level-1 {
+        background-color: #9be9a8;
+    }
+    .contribution-day.level-2 {
+        background-color: #40c463;
+    }
+    .contribution-day.level-3 {
+        background-color: #30a14e;
+    }
+    .contribution-day.level-4 {
+        background-color: #216e39;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string Username { get; set; } = "";
+
+    private bool IsOwnProfile => UserService.IsLoggedIn && Username.Equals(UserService.Username, StringComparison.OrdinalIgnoreCase);
+
+    private string ActiveTab = "overview";
+    private UserProfileModel UserProfileData = new();
+    private UserStatistics Statistics = new();
+    private List<UserActivity> Activities = new();
+    private List<ContributionDay> Contributions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        UserProfileData = await ProfileService.GetProfileAsync(Username);
+        Statistics = await ProfileService.GetStatisticsAsync(Username);
+        Activities = await ProfileService.GetActivityAsync(Username);
+        Contributions = await ProfileService.GetContributionsAsync(Username);
+    }
+
+    private string GetActivityIcon(string activityType)
+    {
+        return activityType.ToLower() switch
+        {
+            "commit" => "bi-git",
+            "pull_request" => "bi-git-pull-request",
+            "issue" => "bi-exclamation-circle",
+            "fork" => "bi-diagram-3",
+            "star" => "bi-star",
+            _ => "bi-circle"
+        };
+    }
+
+    private string FormatTimeAgo(DateTime timestamp)
+    {
+        var span = DateTime.UtcNow - timestamp;
+        if (span.TotalMinutes < 1) return "just now";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+        if (span.TotalDays < 30) return $"{(int)span.TotalDays}d ago";
+        return timestamp.ToString("MMM d, yyyy");
+    }
+
+    private int GetWeekOfYear(DateTime date)
+    {
+        var day = (int)System.Globalization.CultureInfo.CurrentCulture.Calendar.GetDayOfWeek(date);
+        return System.Globalization.CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(
+            date.AddDays(-day), 
+            System.Globalization.CalendarWeekRule.FirstDay, 
+            DayOfWeek.Sunday);
+    }
+}

@@ -1,0 +1,423 @@
+@page "/repo/{RepoName}/security"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using MyPersonalGit.Services
+@inject ISecurityService SecurityService
+@inject CurrentUserService UserService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Security - @RepoName</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/">Repositories</a></li>
+                    <li class="breadcrumb-item"><a href="/repo/@RepoName">@RepoName</a></li>
+                    <li class="breadcrumb-item active">Security</li>
+                </ol>
+            </nav>
+            <h2 class="mt-2">Security</h2>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == "overview" ? "active" : "")" @onclick='() => ActiveTab = "overview"'>
+                <i class="bi bi-shield-check me-1"></i> Overview
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == "advisories" ? "active" : "")" @onclick='() => ActiveTab = "advisories"'>
+                <i class="bi bi-exclamation-triangle me-1"></i> Advisories
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == "dependencies" ? "active" : "")" @onclick='() => ActiveTab = "dependencies"'>
+                <i class="bi bi-box-seam me-1"></i> Dependencies
+            </button>
+        </li>
+    </ul>
+
+    @if (ActiveTab == "overview")
+    {
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-shield-check me-2"></i>Security Overview
+                        </h5>
+                        @if (LatestScan != null)
+                        {
+                            <div class="mt-3">
+                                <p class="text-muted mb-2">Last scanned: @FormatDate(LatestScan.ScannedAt)</p>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span>Total Vulnerabilities</span>
+                                    <span class="badge bg-secondary">@LatestScan.VulnerabilitiesFound</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span>Critical</span>
+                                    <span class="badge bg-danger">@LatestScan.CriticalCount</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span>High</span>
+                                    <span class="badge bg-warning">@LatestScan.HighCount</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span>Medium</span>
+                                    <span class="badge bg-info">@LatestScan.MediumCount</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span>Low</span>
+                                    <span class="badge bg-secondary">@LatestScan.LowCount</span>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted mt-3">No security scans performed yet</p>
+                        }
+                        <button class="btn btn-primary mt-3 w-100" @onclick="RunSecurityScan">
+                            <i class="bi bi-arrow-repeat me-2"></i>Run Security Scan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Security Advisories
+                        </h5>
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Published</span>
+                                <span class="badge bg-danger">@Advisories.Count(a => a.State == SecurityAdvisoryState.Published)</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Draft</span>
+                                <span class="badge bg-secondary">@Advisories.Count(a => a.State == SecurityAdvisoryState.Draft)</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Closed</span>
+                                <span class="badge bg-success">@Advisories.Count(a => a.State == SecurityAdvisoryState.Closed)</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary mt-3 w-100" @onclick="ShowCreateAdvisoryModal">
+                            <i class="bi bi-plus-circle me-2"></i>Create Advisory
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (ActiveTab == "advisories")
+    {
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-primary" @onclick="ShowCreateAdvisoryModal">
+                <i class="bi bi-plus-circle me-2"></i>Create Advisory
+            </button>
+        </div>
+
+        @if (Advisories.Count == 0)
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #6c757d;"></i>
+                    <h3 class="mt-3">No security advisories</h3>
+                    <p class="text-muted">Create security advisories to inform users about vulnerabilities</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="list-group">
+                @foreach (var advisory in Advisories)
+                {
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <h6 class="mb-0">@advisory.Title</h6>
+                                    <span class="badge @GetSeverityBadgeClass(advisory.Severity) ms-2">@advisory.Severity</span>
+                                    <span class="badge @GetStateBadgeClass(advisory.State) ms-2">@advisory.State</span>
+                                </div>
+                                <p class="mb-1 text-muted">@advisory.Description</p>
+                                <small class="text-muted">
+                                    Affected: @advisory.AffectedVersions
+                                    @if (!string.IsNullOrEmpty(advisory.PatchedVersions))
+                                    {
+                                        <span class="mx-2">•</span>
+                                        <span>Patched: @advisory.PatchedVersions</span>
+                                    }
+                                    <span class="mx-2">•</span>
+                                    Reported by @advisory.Reporter
+                                    <span class="mx-2">•</span>
+                                    @FormatDate(advisory.CreatedAt)
+                                </small>
+                            </div>
+                            <div class="btn-group">
+                                @if (advisory.State == SecurityAdvisoryState.Draft)
+                                {
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => PublishAdvisory(advisory.Id)">
+                                        <i class="bi bi-send"></i> Publish
+                                    </button>
+                                }
+                                @if (advisory.State == SecurityAdvisoryState.Published)
+                                {
+                                    <button class="btn btn-sm btn-outline-success" @onclick="() => CloseAdvisory(advisory.Id)">
+                                        <i class="bi bi-check-circle"></i> Close
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+    else if (ActiveTab == "dependencies")
+    {
+        @if (LatestScan == null || LatestScan.Dependencies.Count == 0)
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-box-seam" style="font-size: 4rem; color: #6c757d;"></i>
+                    <h3 class="mt-3">No dependencies scanned</h3>
+                    <p class="text-muted">Run a security scan to view dependency information</p>
+                    <button class="btn btn-primary" @onclick="RunSecurityScan">
+                        <i class="bi bi-arrow-repeat me-2"></i>Run Security Scan
+                    </button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="mb-3">
+                <p class="text-muted">Last scanned: @FormatDate(LatestScan.ScannedAt)</p>
+            </div>
+
+            <div class="list-group">
+                @foreach (var dependency in LatestScan.Dependencies)
+                {
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">@dependency.Name <span class="text-muted">@dependency.Version</span></h6>
+                                <small class="text-muted">Type: @dependency.Type</small>
+                                
+                                @if (dependency.Vulnerabilities.Count > 0)
+                                {
+                                    <div class="mt-2">
+                                        <span class="badge bg-danger">@dependency.Vulnerabilities.Count vulnerabilities</span>
+                                        @foreach (var vuln in dependency.Vulnerabilities)
+                                        {
+                                            <div class="alert alert-@GetSeverityAlertClass(vuln.Severity) mt-2 mb-0">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <strong>@vuln.Title</strong>
+                                                        <p class="mb-1">@vuln.Description</p>
+                                                        @if (!string.IsNullOrEmpty(vuln.FixedVersion))
+                                                        {
+                                                            <small>Fixed in version: @vuln.FixedVersion</small>
+                                                        }
+                                                    </div>
+                                                    <span class="badge @GetSeverityBadgeClass(vuln.Severity)">@vuln.Severity</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="mt-2">
+                                        <span class="badge bg-success">No known vulnerabilities</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@if (ShowAdvisoryModal)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Security Advisory</h5>
+                    <button type="button" class="btn-close" @onclick="() => ShowAdvisoryModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" @bind="NewAdvisoryTitle" placeholder="Brief description of the vulnerability" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" rows="3" @bind="NewAdvisoryDescription" placeholder="Detailed description"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Severity</label>
+                        <select class="form-select" @bind="NewAdvisorySeverity">
+                            <option value="@SecuritySeverity.Low">Low</option>
+                            <option value="@SecuritySeverity.Medium">Medium</option>
+                            <option value="@SecuritySeverity.High">High</option>
+                            <option value="@SecuritySeverity.Critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Affected Versions</label>
+                        <input type="text" class="form-control" @bind="NewAdvisoryAffectedVersions" placeholder="e.g., < 1.2.3" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => ShowAdvisoryModal = false">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="CreateAdvisory">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string RepoName { get; set; } = "";
+    
+    private List<SecurityAdvisory> Advisories { get; set; } = new();
+    private SecurityScan? LatestScan { get; set; }
+    private string ActiveTab { get; set; } = "overview";
+    
+    private bool ShowAdvisoryModal { get; set; }
+    private string NewAdvisoryTitle { get; set; } = "";
+    private string NewAdvisoryDescription { get; set; } = "";
+    private SecuritySeverity NewAdvisorySeverity { get; set; } = SecuritySeverity.Medium;
+    private string NewAdvisoryAffectedVersions { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        Advisories = await SecurityService.GetAdvisoriesAsync(RepoName);
+        LatestScan = await SecurityService.GetLatestScanAsync(RepoName);
+    }
+
+    private async Task RunSecurityScan()
+    {
+        var sampleDependencies = new List<Dependency>
+        {
+            new Dependency
+            {
+                Name = "Newtonsoft.Json",
+                Version = "12.0.3",
+                Type = "NuGet",
+                Vulnerabilities = new List<Vulnerability>()
+            },
+            new Dependency
+            {
+                Name = "System.Text.Json",
+                Version = "6.0.0",
+                Type = "NuGet",
+                Vulnerabilities = new List<Vulnerability>()
+            }
+        };
+
+        await SecurityService.CreateScanAsync(RepoName, sampleDependencies);
+        await LoadData();
+    }
+
+    private void ShowCreateAdvisoryModal()
+    {
+        ShowAdvisoryModal = true;
+    }
+
+    private async Task CreateAdvisory()
+    {
+        if (string.IsNullOrWhiteSpace(NewAdvisoryTitle))
+            return;
+
+        await SecurityService.CreateAdvisoryAsync(
+            RepoName,
+            NewAdvisoryTitle,
+            NewAdvisoryDescription,
+            NewAdvisorySeverity,
+            NewAdvisoryAffectedVersions,
+            UserService.Username
+        );
+
+        ShowAdvisoryModal = false;
+        NewAdvisoryTitle = "";
+        NewAdvisoryDescription = "";
+        NewAdvisorySeverity = SecuritySeverity.Medium;
+        NewAdvisoryAffectedVersions = "";
+        
+        await LoadData();
+    }
+
+    private async Task PublishAdvisory(int advisoryId)
+    {
+        await SecurityService.PublishAdvisoryAsync(RepoName, advisoryId);
+        await LoadData();
+    }
+
+    private async Task CloseAdvisory(int advisoryId)
+    {
+        await SecurityService.CloseAdvisoryAsync(RepoName, advisoryId);
+        await LoadData();
+    }
+
+    private string GetSeverityBadgeClass(SecuritySeverity severity)
+    {
+        return severity switch
+        {
+            SecuritySeverity.Critical => "bg-danger",
+            SecuritySeverity.High => "bg-warning",
+            SecuritySeverity.Medium => "bg-info",
+            SecuritySeverity.Low => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetSeverityAlertClass(SecuritySeverity severity)
+    {
+        return severity switch
+        {
+            SecuritySeverity.Critical => "danger",
+            SecuritySeverity.High => "warning",
+            SecuritySeverity.Medium => "info",
+            SecuritySeverity.Low => "secondary",
+            _ => "secondary"
+        };
+    }
+
+    private string GetStateBadgeClass(SecurityAdvisoryState state)
+    {
+        return state switch
+        {
+            SecurityAdvisoryState.Draft => "bg-secondary",
+            SecurityAdvisoryState.Published => "bg-danger",
+            SecurityAdvisoryState.Closed => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string FormatDate(DateTime date)
+    {
+        var timeAgo = DateTime.UtcNow - date;
+        if (timeAgo.TotalMinutes < 1) return "just now";
+        if (timeAgo.TotalMinutes < 60) return $"{(int)timeAgo.TotalMinutes} minutes ago";
+        if (timeAgo.TotalHours < 24) return $"{(int)timeAgo.TotalHours} hours ago";
+        if (timeAgo.TotalDays < 7) return $"{(int)timeAgo.TotalDays} days ago";
+        return date.ToString("MMM dd, yyyy");
+    }
+}

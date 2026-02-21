@@ -1,0 +1,2077 @@
+@page "/repo/{RepoName}"
+@page "/repo/{RepoName}/{*Path}"
+@page "/repo/{RepoName}/commit/{CommitHash}"
+@using LibGit2Sharp
+@using System.IO
+@using System.Text
+@using System.Linq
+@using System.Text.RegularExpressions
+@using Markdig
+@using Microsoft.AspNetCore.Components.Forms
+@using MyPersonalGit.Data
+@using BranchProtectionRule = MyPersonalGit.Models.BranchProtectionRule
+@inject IConfiguration Config
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject IBranchProtectionService BranchProtectionService
+@inject IAdminService AdminService
+@using MyPersonalGit.Services
+@inject CurrentUserService UserService
+@rendermode InteractiveServer
+
+<PageTitle>@GetPageTitle() · Personal Git</PageTitle>
+
+@if (notFound)
+{
+    <div class="container py-5 text-center">
+        <h1 class="display-4 text-muted">Repository not found</h1>
+        <p>The repository <strong>@RepoName</strong> does not exist on this server.</p>
+        <div class="alert alert-warning d-inline-block mt-3">
+            <small>Searching in: <code>@RootPath</code></small>
+        </div>
+        <br />
+        <a href="/" class="btn btn-primary mt-3">Back to Dashboard</a>
+    </div>
+}
+else
+{
+    <div class="repo-header border-bottom bg-light-subtle mb-4 pt-3">
+        <div class="container-xl px-3">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-journal-bookmark text-muted me-2 h4 mb-0"></i>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0 h4">
+                            <li class="breadcrumb-item"><a href="/profile/@UserService.Username" class="text-decoration-none">@UserService.Username</a></li>
+                            <li class="breadcrumb-item active fw-bold text-dark" aria-current="page">@RepoName</li>
+                        </ol>
+                    </nav>
+                    <span class="badge rounded-pill border text-muted fw-normal ms-2" style="font-size: 12px;">Public</span>
+                </div>
+
+                <div class="dropdown">
+                    <button class="btn btn-gh-primary btn-sm shadow-sm px-3" type="button" @onclick="() => showCloneDropdown = !showCloneDropdown">
+                        <i class="bi bi-download me-1"></i> Code <i class="bi bi-caret-down-fill ms-1" style="font-size: 10px;"></i>
+                    </button>
+                    @if (showCloneDropdown)
+                    {
+                        <div class="dropdown-menu dropdown-menu-end show shadow p-3" style="width: 320px; display: block; position: absolute; right: 0; z-index: 1000;">
+                            <h6 class="fw-bold small mb-2">Clone</h6>
+                            <div class="input-group input-group-sm mb-2">
+                                <input type="text" class="form-control bg-light" readonly value="@CloneUrl" id="cloneUrlInput" />
+                                <button class="btn btn-outline-secondary" type="button" @onclick="CopyCloneUrl" title="Copy to clipboard"><i class="bi bi-clipboard"></i></button>
+                            </div>
+                            <p class="x-small text-muted mb-0">Use the Git HTTP URL to clone this repository.</p>
+
+                            @if (UserService.IsLoggedIn)
+                            {
+                                <hr class="my-2" />
+
+                                <h6 class="fw-bold small mb-2">Add files</h6>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-sm btn-outline-secondary text-start" @onclick="NavigateToCreateFile">
+                                        <i class="bi bi-file-earmark-plus me-2"></i>Create new file
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary text-start" @onclick="OpenUploadModal">
+                                        <i class="bi bi-upload me-2"></i>Upload files
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary text-start" @onclick="OpenFolderUpload">
+                                        <i class="bi bi-folder-plus me-2"></i>Upload folder
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <ul class="nav nav-tabs border-bottom-0 gap-2">
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "code" || activeTab == "edit" || activeTab == "add-file" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("code")'>
+                        <i class="bi bi-code-slash me-1"></i> Code
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/issues">
+                        <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> Issues
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/pulls">
+                        <i class="bi bi-git me-1"></i> Pull requests
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/actions">
+                        <i class="bi bi-play-circle me-1"></i> Actions
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/wiki">
+                        <i class="bi bi-book me-1"></i> Wiki
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/projects">
+                        <i class="bi bi-kanban me-1"></i> Projects
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/security">
+                        <i class="bi bi-shield-check me-1"></i> Security
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "commits" || activeTab == "commit-detail" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("commits")'>
+                        <i class="bi bi-clock-history me-1"></i> Commits
+                        <span class="badge rounded-pill bg-secondary bg-opacity-10 text-dark ms-1">@commitCount</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "branches" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("branches")'>
+                        <i class="bi bi-branches me-1"></i> Branches
+                        <span class="badge rounded-pill bg-secondary bg-opacity-10 text-dark ms-1">@branches.Count</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "tags" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("tags")'>
+                        <i class="bi bi-tags me-1"></i> Tags
+                        <span class="badge rounded-pill bg-secondary bg-opacity-10 text-dark ms-1">@tags.Count</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/insights">
+                        <i class="bi bi-graph-up me-1"></i> Insights
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "settings" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("settings")'>
+                        <i class="bi bi-gear me-1"></i> Settings
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container-xl px-3">
+        @if (activeTab == "code")
+        {
+            @if (isEmpty)
+            {
+                <div class="blankslate p-5 border rounded-3 bg-light text-center shadow-sm">
+                    <i class="bi bi-terminal-fill display-4 text-muted mb-3"></i>
+                    <h3 class="h5 fw-bold">Quick setup — if you’ve done this kind of thing before</h3>
+                    <p class="text-muted mb-4 small">
+                        Get started by <button class="btn btn-link p-0 pb-1 small fw-bold text-decoration-none" @onclick="EnterAddFileMode">creating a new file</button> or pushing an existing repository.
+                    </p>
+                    <div class="bg-dark text-white p-3 rounded-2 text-start font-monospace small mx-auto mt-3" style="max-width: 600px;">
+                        <span class="text-success"># Push an existing repository</span><br />
+                        git remote add origin http://localhost:7200/@RepoName<br />
+                        git branch -M main<br />
+                        git push -u origin main
+                    </div>
+                </div>
+            }
+            else if (isFile)
+            {
+                var breadcrumbs = GetBreadcrumbs();
+                <div class="file-view mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0 small">
+                                <li class="breadcrumb-item"><a href="/repo/@RepoName">@RepoName</a></li>
+                                @foreach (var crumb in breadcrumbs)
+                                {
+                                    if (crumb.IsLast)
+                                    {
+                                        <li class="breadcrumb-item active">@crumb.Name</li>
+                                    }
+                                    else
+                                    {
+                                        <li class="breadcrumb-item"><a href="/repo/@RepoName/@crumb.Path">@crumb.Name</a></li>
+                                    }
+                                }
+                            </ol>
+                        </nav>
+                        <div class="btn-group shadow-sm">
+                            @if (UserService.IsLoggedIn)
+                            {
+                                <button class="btn btn-light btn-sm border" @onclick="EnterEditMode"><i class="bi bi-pencil me-1"></i> Edit</button>
+                            }
+                            <button class="btn btn-light btn-sm border" @onclick="ViewFileHistory"><i class="bi bi-clock-history me-1"></i> History</button>
+                            @if (UserService.IsLoggedIn)
+                            {
+                                <button class="btn btn-light btn-sm border" @onclick="() => showDeleteModal = true"><i class="bi bi-trash me-1 text-danger"></i> Delete</button>
+                            }
+                            <button class="btn @(showRaw ? "btn-secondary" : "btn-light") btn-sm border" @onclick="() => showRaw = !showRaw">
+                                <i class="bi bi-code-square me-1"></i> Raw
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card shadow-sm overflow-hidden">
+                        <div class="card-header bg-light-subtle d-flex justify-content-between align-items-center py-2 px-3">
+                            <span class="small text-muted">@lineCount lines · @fileSize bytes</span>
+                            <div class="d-flex gap-2">
+                                @if (Path?.EndsWith(".md", StringComparison.OrdinalIgnoreCase) == true)
+                                {
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle" style="font-size: 10px;">Markdown</span>
+                                }
+                                <i class="bi bi-lock small text-muted"></i>
+                            </div>
+                        </div>
+                        <div class="card-body p-0 bg-white">
+                            @if (Path?.EndsWith(".md", StringComparison.OrdinalIgnoreCase) == true && !showRaw)
+                            {
+                                <div class="p-4 markdown-body">
+                                    @ConvertMarkdownToHtml(fileContent)
+                                </div>
+                            }
+                            else
+                            {
+                                <pre class="m-0 bg-white text-dark line-numbers" style="font-size: 13px; line-height: 1.5; overflow-x: auto; padding: 0.5em 0.5em 0.5em 3.8em;"><code class="@GetPrismLanguageClass(Path)">@fileContent</code></pre>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="dropdown">
+                            <button class="btn btn-light btn-sm border fw-semibold shadow-sm dropdown-toggle" type="button" @onclick="() => showBranchDropdown = !showBranchDropdown">
+                                <i class="bi bi-branches me-1"></i> @currentBranch
+                            </button>
+                            @if (showBranchDropdown)
+                            {
+                                <div class="dropdown-menu show shadow-sm" style="position: absolute; z-index: 1000; display: block;">
+                                    <div class="px-3 py-2 border-bottom small fw-bold">Switch branches</div>
+                                    @foreach (var b in branches)
+                                    {
+                                        <button class="dropdown-item small d-flex align-items-center" @onclick="() => SwitchBranch(b.Name)">
+                                            @if (b.Name == currentBranch)
+                                            {
+                                                <i class="bi bi-check2 me-2 text-primary"></i>
+                                            }
+                                            else
+                                            {
+                                                <span class="me-4"></span>
+                                            }
+                                            @b.Name
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <div class="input-group input-group-sm" style="width: 240px;">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0 shadow-none" placeholder="Go to file..." @bind="fileSearchTerm" @bind:event="oninput" />
+                        </div>
+                    </div>
+                    @if (UserService.IsLoggedIn)
+                    {
+                        <div class="d-flex gap-2">
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm border shadow-sm px-3 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Add file
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" @onclick="EnterAddFileMode" @onclick:preventDefault>Create new file</a></li>
+                                    <li><a class="dropdown-item" href="#" @onclick="() => showUploadModal = true" @onclick:preventDefault>Upload files</a></li>
+                                    <li><a class="dropdown-item" href="#" @onclick="OpenFolderUpload" @onclick:preventDefault>Upload folder</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="card border shadow-sm mb-4">
+                    <div class="card-header bg-light-subtle py-2">
+                        <div class="d-flex justify-content-between align-items-center small">
+                            @if (latestCommit != null)
+                            {
+                                <div>
+                                    <strong class="text-dark">@latestCommit.AuthorName</strong>
+                                    <span class="text-muted ms-2">@latestCommit.Message</span>
+                                </div>
+                                <div class="text-muted">
+                                    <a href="/repo/@RepoName/commit/@latestCommit.Sha" class="text-decoration-none font-monospace small">@latestCommit.ShortSha</a> · @GetRelativeTime(latestCommit.Date)
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        @if (!string.IsNullOrEmpty(Path) && string.IsNullOrEmpty(fileSearchTerm))
+                        {
+                            <div class="list-group-item list-group-item-action py-2 px-3 border-0 border-bottom">
+                                <a href="/repo/@RepoName/@GetParentPath()" class="text-decoration-none text-primary fw-bold">..</a>
+                            </div>
+                        }
+
+                        @{
+                            var displayItems = treeItems.Where(i => string.IsNullOrEmpty(fileSearchTerm) || i.Name.Contains(fileSearchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+                        }
+
+                        @if (!displayItems.Any())
+                        {
+                            <div class="list-group-item py-4 text-center text-muted small">No files matching "@fileSearchTerm"</div>
+                        }
+
+                        @foreach (var item in displayItems)
+                        {
+                            var itemPath = string.IsNullOrEmpty(Path) ? item.Name : $"{Path}/{item.Name}";
+                            <div class="list-group-item list-group-item-action d-flex align-items-center py-2 px-3 border-0 border-bottom">
+                                <div style="width: 30px;">
+                                    @if (item.IsDirectory)
+                                    {
+                                        <i class="bi bi-folder-fill text-primary-emphasis"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-file-earmark-text text-muted"></i>
+                                    }
+                                </div>
+                                <div class="flex-grow-1">
+                                    <a href="/repo/@RepoName/@itemPath" class="text-decoration-none text-dark d-block">@item.Name</a>
+                                </div>
+                                <div class="text-muted small d-none d-md-block text-truncate" style="width: 250px;" title="@item.LastCommitMessage">
+                                    @(string.IsNullOrEmpty(item.LastCommitMessage) ? latestCommit?.Message : item.LastCommitMessage)
+                                </div>
+                                <div class="text-muted small text-end" style="width: 100px;">
+                                    @GetRelativeTime(item.LastCommitDate ?? latestCommit?.Date)
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(readmeContent) && string.IsNullOrEmpty(fileSearchTerm))
+                {
+                    <div class="readme-container mb-5">
+                        <div class="card border shadow-sm">
+                            <div class="card-header py-2 bg-white d-flex align-items-center">
+                                <i class="bi bi-book text-muted me-2"></i>
+                                <span class="fw-bold small">README.md</span>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="readme-body" style="font-size: 15px; line-height: 1.6;">
+                                    @ConvertMarkdownToHtml(readmeContent)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        }
+        else if (activeTab == "branches")
+        {
+            <div class="branches-view mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Branches</h5>
+                    <button class="btn btn-gh-primary btn-sm" @onclick="() => showNewBranchModal = true">New branch</button>
+                </div>
+
+                <div class="card border shadow-sm">
+                    <div class="card-header bg-light-subtle py-2 small fw-bold">Active branches</div>
+                    <div class="list-group list-group-flush">
+                        @if (!branches.Any())
+                        {
+                            <div class="list-group-item py-4 text-center text-muted small">No branches found.</div>
+                        }
+                        @foreach (var b in branches)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-branches text-muted me-3"></i>
+                                    <div>
+                                        <button class="btn btn-link p-0 text-decoration-none text-dark fw-bold" @onclick="() => SwitchBranch(b.Name)">@b.Name</button>
+                                        @if (b.Name == currentBranch)
+                                        {
+                                            <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary-subtle ms-2 small" style="font-size: 10px;">Default</span>
+                                        }
+                                        @if (branchProtectionRules.Any(r => BranchMatchesPattern(b.Name, r.BranchPattern)))
+                                        {
+                                            <span class="badge rounded-pill bg-warning bg-opacity-10 text-warning border border-warning-subtle ms-2 small" style="font-size: 10px;"><i class="bi bi-shield-lock me-1"></i>Protected</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-light btn-sm border" disabled="@(b.Name == currentBranch || branchProtectionRules.Any(r => BranchMatchesPattern(b.Name, r.BranchPattern) && r.PreventDeletion))">
+                                        <i class="bi bi-trash text-danger"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else if (activeTab == "tags")
+        {
+            <div class="tags-view mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Tags</h5>
+                    <button class="btn btn-gh-primary btn-sm" @onclick="() => showNewTagModal = true">New tag</button>
+                </div>
+
+                <div class="card border shadow-sm">
+                    <div class="card-header bg-light-subtle py-2 small fw-bold">Release tags</div>
+                    <div class="list-group list-group-flush">
+                        @if (!tags.Any())
+                        {
+                            <div class="list-group-item py-4 text-center text-muted small">No tags have been created yet.</div>
+                        }
+                        @foreach (var t in tags)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-tag text-muted me-3"></i>
+                                    <div>
+                                        <span class="fw-bold">@t.Name</span>
+                                        <div class="small text-muted font-monospace">@t.TargetSha.Substring(0, 7)</div>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="/repo/@RepoName/commit/@t.TargetSha" class="btn btn-light btn-sm border px-3">View commit</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else if (activeTab == "settings")
+        {
+            <div class="settings-view mb-5">
+                <div class="mb-4">
+                    <h5 class="fw-bold">Settings</h5>
+                    <p class="text-muted small">Manage repository lifecycle.</p>
+                </div>
+
+                <div class="card border shadow-sm mb-4">
+                    <div class="card-header bg-light-subtle py-2 small fw-bold">
+                        <i class="bi bi-shield-lock me-1"></i> Branch protection rules
+                    </div>
+                    <div class="card-body">
+                        @if (branchProtectionRules.Any())
+                        {
+                            <div class="list-group list-group-flush mb-3">
+                                @foreach (var rule in branchProtectionRules)
+                                {
+                                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <div>
+                                            <span class="fw-bold font-monospace">@rule.BranchPattern</span>
+                                            <div class="small text-muted mt-1">
+                                                @if (rule.RequirePullRequest) { <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle me-1">Require PR</span> }
+                                                @if (rule.RequiredApprovals > 0) { <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle me-1">@rule.RequiredApprovals approval(s)</span> }
+                                                @if (rule.PreventForcePush) { <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle me-1">No force push</span> }
+                                                @if (rule.PreventDeletion) { <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle me-1">No deletion</span> }
+                                                @if (rule.RequireLinearHistory) { <span class="badge bg-secondary bg-opacity-10 text-secondary border me-1">Linear history</span> }
+                                            </div>
+                                        </div>
+                                        @if (UserService.IsLoggedIn)
+                                        {
+                                            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteBranchProtectionRule(rule.Id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted small mb-3">No branch protection rules configured yet.</p>
+                        }
+
+                        @if (showAddProtectionRule)
+                        {
+                            <div class="border rounded p-3 bg-light-subtle">
+                                <h6 class="fw-bold small mb-3">Add branch protection rule</h6>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Branch name pattern</label>
+                                    <input type="text" class="form-control form-control-sm" @bind="newProtectionRule.BranchPattern" placeholder="main, release/*, etc." />
+                                    <div class="form-text">Use * as wildcard. Example: release/* matches release/v1, release/v2, etc.</div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" class="form-check-input" id="requirePR" @bind="newProtectionRule.RequirePullRequest" />
+                                            <label class="form-check-label small" for="requirePR">Require pull request before merging</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" class="form-check-input" id="preventForce" @bind="newProtectionRule.PreventForcePush" />
+                                            <label class="form-check-label small" for="preventForce">Prevent force pushes</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" class="form-check-input" id="preventDelete" @bind="newProtectionRule.PreventDeletion" />
+                                            <label class="form-check-label small" for="preventDelete">Prevent branch deletion</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" class="form-check-input" id="linearHistory" @bind="newProtectionRule.RequireLinearHistory" />
+                                            <label class="form-check-label small" for="linearHistory">Require linear history</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" class="form-check-input" id="requireChecks" @bind="newProtectionRule.RequireStatusChecks" />
+                                            <label class="form-check-label small" for="requireChecks">Require status checks</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                @if (newProtectionRule.RequirePullRequest)
+                                {
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Required approvals</label>
+                                        <input type="number" class="form-control form-control-sm" style="width: 100px;" @bind="newProtectionRule.RequiredApprovals" min="0" max="10" />
+                                    </div>
+                                }
+                                <div class="d-flex gap-2">
+                                    @if (UserService.IsLoggedIn)
+                                    {
+                                        <button class="btn btn-gh-primary btn-sm" @onclick="SaveBranchProtectionRule" disabled="@string.IsNullOrWhiteSpace(newProtectionRule.BranchPattern)">Save rule</button>
+                                    }
+                                    <button class="btn btn-light btn-sm border" @onclick="() => showAddProtectionRule = false">Cancel</button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            @if (UserService.IsLoggedIn)
+                            {
+                                <button class="btn btn-outline-primary btn-sm" @onclick="() => showAddProtectionRule = true">
+                                    <i class="bi bi-plus-lg me-1"></i>Add rule
+                                </button>
+                            }
+                        }
+                    </div>
+                </div>
+
+                @if (UserService.IsLoggedIn)
+                {
+                    <div class="card border-danger shadow-sm">
+                        <div class="card-header bg-danger bg-opacity-10 text-danger py-2 small fw-bold border-danger border-opacity-25">Danger Zone</div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="fw-bold mb-0">Delete this repository</h6>
+                                    <p class="text-muted small mb-0">Once you delete a repository, there is no going back.</p>
+                                </div>
+                                <button class="btn btn-outline-danger btn-sm px-3" @onclick="() => showDeleteRepoModal = true">Delete this repository</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else if (activeTab == "edit" || activeTab == "add-file")
+        {
+            @if (UserService.IsLoggedIn)
+            {
+                <div class="editor-view mb-5">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">
+                            @(activeTab == "edit" ? "Editing " : "Adding file to ")
+                            <span class="text-muted">@(activeTab == "edit" ? Path : (string.IsNullOrEmpty(Path) ? "/" : Path))</span>
+                        </h5>
+                        <button class="btn btn-link text-danger text-decoration-none btn-sm" @onclick='() => SetTab("code")'>Cancel</button>
+                    </div>
+
+                    @if (activeTab == "add-file")
+                    {
+                        <div class="mb-3">
+                            <input type="text" class="form-control form-control-sm font-monospace" @bind="newFileName" @bind:event="oninput" placeholder="Name your file (e.g. README.md)..." />
+                        </div>
+                    }
+
+                    <div class="card border shadow-sm mb-4">
+                        <div class="card-body p-0">
+                            <textarea class="form-control border-0 font-monospace p-3"
+                                      style="min-height: 400px; font-size: 13px; line-height: 1.5; resize: vertical;"
+                                      @bind="editingContent" @bind:event="oninput"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="card border shadow-sm">
+                        <div class="card-header bg-light-subtle py-2">
+                            <span class="fw-bold small">Commit changes</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <input type="text" class="form-control form-control-sm fw-semibold" @bind="commitMessage" @bind:event="oninput" placeholder="Commit message" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <textarea class="form-control form-control-sm" rows="3" @bind="commitDescription" @bind:event="oninput" placeholder="Add description..."></textarea>
+                                    </div>
+                                    <button class="btn btn-gh-primary btn-sm px-4" @onclick="CommitChanges" disabled="@(activeTab == "add-file" && string.IsNullOrWhiteSpace(newFileName))">Commit changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">You must be logged in to edit files.</div>
+            }
+        }
+        else if (activeTab == "commits")
+        {
+            <div class="timeline border-start ms-3 ps-4 mt-3">
+                @if (!string.IsNullOrEmpty(Path))
+                {
+                    <div class="mb-3">
+                        <span class="badge bg-light text-dark border fw-normal">History for: <code>@Path</code></span>
+                        <button class="btn btn-link btn-sm text-decoration-none" @onclick="ClearFileFilter">Clear filter</button>
+                    </div>
+                }
+                @foreach (var commit in commitHistory)
+                {
+                    <div class="commit-item mb-4 position-relative">
+                        <div class="commit-dot position-absolute bg-white border border-2 border-secondary" style="width: 12px; height: 12px; left: -31px; top: 6px; border-radius: 50%;"></div>
+                        <div class="card border shadow-sm">
+                            <div class="card-body py-2 px-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h6 class="mb-1 fw-bold">@commit.Message</h6>
+                                    <a href="/repo/@RepoName/commit/@commit.Sha" class="badge bg-light text-primary border border-primary-subtle font-monospace text-decoration-none">@commit.ShortSha</a>
+                                </div>
+                                <div class="text-muted small">
+                                    <strong>@commit.AuthorName</strong> committed @GetRelativeTime(commit.Date)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else if (activeTab == "commit-detail" && selectedCommit != null)
+        {
+            <div class="commit-detail mb-5">
+                <div class="card border shadow-sm mb-4">
+                    <div class="card-body bg-light-subtle">
+                        <h4 class="fw-bold mb-1">@selectedCommit.Message</h4>
+                        <div class="text-muted small">
+                            <strong>@selectedCommit.AuthorName</strong> authored @selectedCommit.Date.ToString("f")
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-3 small text-muted">
+                                <span>commit <code class="text-dark">@selectedCommit.Sha</code></span>
+                            </div>
+                            <div class="btn-group btn-group-sm bg-white border rounded shadow-sm">
+                                <button type="button" class="btn btn-light @(diffViewMode == "unified" ? "active border-primary" : "")" @onclick='() => diffViewMode = "unified"'>Unified</button>
+                                <button type="button" class="btn btn-light @(diffViewMode == "split" ? "active border-primary" : "")" @onclick='() => diffViewMode = "split"'>Split</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold text-muted small text-uppercase mb-3">Showing @commitPatches.Count changed files</h6>
+                @foreach (var patch in commitPatches)
+                {
+                    <div class="card border shadow-sm mb-3">
+                        <div class="card-header py-2 bg-light-subtle d-flex justify-content-between">
+                            <span class="fw-bold small font-monospace">@patch.Path</span>
+                            <span class="badge bg-white border text-dark fw-normal">@patch.LinesAdded additions / @patch.LinesDeleted deletions</span>
+                        </div>
+                        <div class="card-body p-0">
+                            @if (diffViewMode == "unified")
+                            {
+                                <div class="diff-container bg-white font-monospace" style="font-size: 12px; line-height: 1.4;">
+                                    @foreach (var line in patch.DiffLines)
+                                    {
+                                        <div class="diff-line d-flex @(line.StartsWith("+") ? "diff-added" : line.StartsWith("-") ? "diff-removed" : "diff-context")">
+                                            <div class="diff-sign px-2 border-end text-center" style="width: 25px;">@(line.Length > 0 ? line[0] : ' ')</div>
+                                            <div class="diff-text px-2 text-wrap" style="white-space: pre-wrap;">@(line.Length > 0 ? line.Substring(1) : "")</div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="diff-container bg-white font-monospace border-top" style="font-size: 12px; line-height: 1.4;">
+                                    @foreach (var pair in GetSplitDiff(patch.DiffLines))
+                                    {
+                                        <div class="d-flex border-bottom">
+                                            <div class="col-6 diff-line border-end @(pair.Left?.StartsWith("-") == true ? "diff-removed" : pair.Left == null && pair.Right?.StartsWith("+") == true ? "diff-empty" : "diff-context")">
+                                                <div class="d-flex h-100">
+                                                    <div class="diff-sign px-2 border-end text-center" style="width: 25px;">@(pair.Left?.Length > 0 ? pair.Left[0] : ' ')</div>
+                                                    <div class="diff-text px-2 text-wrap flex-grow-1" style="white-space: pre-wrap;">@(pair.Left?.Length > 0 ? pair.Left.Substring(1) : "")</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 diff-line @(pair.Right?.StartsWith("+") == true ? "diff-added" : pair.Right == null && pair.Left?.StartsWith("-") == true ? "diff-empty" : "diff-context")">
+                                                <div class="d-flex h-100">
+                                                    <div class="diff-sign px-2 border-end text-center" style="width: 25px;">@(pair.Right?.Length > 0 ? pair.Right[0] : ' ')</div>
+                                                    <div class="diff-text px-2 text-wrap flex-grow-1" style="white-space: pre-wrap;">@(pair.Right?.Length > 0 ? pair.Right.Substring(1) : "")</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@if (showDeleteModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">Delete file</h5>
+                    <button type="button" class="btn-close shadow-none" @onclick="() => showDeleteModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete <strong>@Path</strong>?</p>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showDeleteModal = false">Cancel</button>
+                    <button type="button" class="btn btn-danger btn-sm shadow-sm" @onclick="DeleteFileCommit">Delete file</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showDeleteRepoModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow border-danger border-opacity-25">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold text-danger">Delete repository</h5>
+                    <button type="button" class="btn-close shadow-none" @onclick="() => showDeleteRepoModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Permanently delete <strong>@RepoName</strong>?</p>
+                    <input type="text" class="form-control shadow-none mt-2" @bind="deleteConfirmName" @bind:event="oninput" placeholder="@RepoName" />
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showDeleteRepoModal = false">Cancel</button>
+                    <button type="button" class="btn btn-danger btn-sm shadow-sm" @onclick="DeleteRepository" disabled="@(deleteConfirmName != RepoName)">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showNewBranchModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">Create branch</h5>
+                    <button type="button" class="btn-close shadow-none" @onclick="() => showNewBranchModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" class="form-control shadow-none" @bind="newBranchName" @bind:event="oninput" placeholder="branch-name" />
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showNewBranchModal = false">Cancel</button>
+                    <button type="button" class="btn btn-gh-primary btn-sm shadow-sm" @onclick="CreateBranch" disabled="@string.IsNullOrWhiteSpace(newBranchName)">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showNewTagModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">Create tag</h5>
+                    <button type="button" class="btn-close shadow-none" @onclick="() => showNewTagModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" class="form-control shadow-none" @bind="newTagName" @bind:event="oninput" placeholder="v1.0" />
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showNewTagModal = false">Cancel</button>
+                    <button type="button" class="btn btn-gh-primary btn-sm shadow-sm" @onclick="CreateTag" disabled="@string.IsNullOrWhiteSpace(newTagName)">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .nav-tabs .nav-link {
+        border: none;
+        padding: 0.5rem 1rem;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+    }
+
+        .nav-tabs .nav-link.active {
+            border-bottom: 2px solid #fd7e14;
+            background: transparent;
+        }
+
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: "/";
+    }
+
+    .list-group-item:hover {
+        background-color: #f6f8fa;
+    }
+
+    .commit-item::before {
+        content: "";
+        position: absolute;
+        left: -30px;
+        top: 18px;
+        width: 15px;
+        height: 1px;
+        background-color: #dee2e6;
+    }
+
+    pre, .font-monospace {
+        font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
+    }
+
+    .diff-added {
+        background-color: #e6ffec;
+        color: #1f883d;
+    }
+
+    .diff-removed {
+        background-color: #fff1f0;
+        color: #cf222e;
+    }
+
+    .diff-context {
+        background-color: white;
+        color: #1f2328;
+    }
+
+    .diff-empty {
+        background-color: #f6f8fa;
+    }
+
+    .diff-line {
+        border-bottom: 1px solid #f0f0f0;
+        min-height: 20px;
+    }
+
+    .diff-sign {
+        opacity: 0.6;
+    }
+
+    /* Markdown Styles */
+    .markdown-body h1, .markdown-body h2 {
+        border-bottom: 1px solid #d0d7de;
+        padding-bottom: 0.3em;
+        margin-top: 24px;
+        margin-bottom: 16px;
+        font-weight: 600;
+        line-height: 1.25;
+    }
+
+    .markdown-body h3 {
+        margin-top: 24px;
+        margin-bottom: 16px;
+        font-weight: 600;
+        line-height: 1.25;
+    }
+
+    .markdown-body p {
+        margin-top: 0;
+        margin-bottom: 16px;
+    }
+
+    .markdown-body ul {
+        padding-left: 2em;
+        margin-bottom: 16px;
+        list-style-type: disc;
+    }
+
+    .markdown-body code {
+        padding: 0.2em 0.4em;
+        margin: 0;
+        font-size: 85%;
+        background-color: rgba(175,184,193,0.2);
+        border-radius: 6px;
+        font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
+    }
+
+    .markdown-body blockquote {
+        padding: 0 1em;
+        color: #656d76;
+        border-left: 0.25em solid #d0d7de;
+        margin: 0 0 16px 0;
+    }
+
+    .markdown-body table {
+        display: block;
+        width: max-content;
+        max-width: 100%;
+        overflow: auto;
+        border-spacing: 0;
+        border-collapse: collapse;
+        margin-bottom: 16px;
+    }
+
+        .markdown-body table tr {
+            background-color: #ffffff;
+            border-top: 1px solid #d8dee4;
+        }
+
+            .markdown-body table tr:nth-child(2n) {
+                background-color: #f6f8fa;
+            }
+
+        .markdown-body table th, .markdown-body table td {
+            padding: 6px 13px;
+            border: 1px solid #d0d7de;
+        }
+
+    .markdown-body img {
+        max-width: 100%;
+        box-sizing: content-box;
+        background-color: #ffffff;
+    }
+
+    .markdown-body hr {
+        height: 0.25em;
+        padding: 0;
+        margin: 24px 0;
+        background-color: #d0d7de;
+        border: 0;
+    }
+
+    .upload-zone {
+        border: 2px dashed #d0d7de;
+        border-radius: 8px;
+        padding: 20px;
+        transition: all 0.3s ease;
+        background-color: #f6f8fa;
+    }
+
+    .upload-zone.dragging {
+        border-color: #0969da;
+        background-color: #ddf4ff;
+    }
+
+    .upload-zone:hover {
+        border-color: #0969da;
+    }
+
+    /* Prism.js overrides for GitHub-like appearance */
+    pre[class*="language-"] {
+        background: #ffffff !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    code[class*="language-"] {
+        font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace !important;
+        font-size: 13px !important;
+    }
+
+    .line-numbers .line-numbers-rows {
+        border-right: 1px solid #e1e4e8 !important;
+        padding-right: 8px;
+    }
+
+    .line-numbers .line-numbers-rows > span:before {
+        color: #8b949e !important;
+    }
+</style>
+
+@if (showUploadModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload files to @RepoName</h5>
+                    <button type="button" class="btn-close" @onclick="() => showUploadModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="upload-zone @(isDragging ? "dragging" : "")"
+                         @ondrop="HandleDrop"
+                         @ondrop:preventDefault
+                         @ondragover="HandleDragOver"
+                         @ondragover:preventDefault
+                         @ondragenter="HandleDragEnter"
+                         @ondragenter:preventDefault
+                         @ondragleave="HandleDragLeave">
+                        <div class="text-center py-5">
+                            <i class="bi bi-cloud-upload display-1 text-muted mb-3"></i>
+                            <h5>Drag and drop files here</h5>
+                            <p class="text-muted">or</p>
+                            <label for="fileInput" class="btn btn-primary">
+                                Choose files
+                            </label>
+                            <InputFile id="fileInput" OnChange="HandleFileSelected" multiple class="d-none" />
+                        </div>
+                        @if (uploadFiles.Any())
+                        {
+                            <div class="mt-3">
+                                <h6>Selected files:</h6>
+                                <ul class="list-group">
+                                    @foreach (var file in uploadFiles)
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><i class="bi bi-file-earmark me-2"></i>@file.Name</span>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoveUploadFile(file)">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label">Commit message</label>
+                        <input type="text" class="form-control" @bind="uploadCommitMessage" placeholder="Add files via upload" />
+                    </div>
+                    @if (!string.IsNullOrEmpty(uploadError))
+                    {
+                        <div class="alert alert-danger mt-3">@uploadError</div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => showUploadModal = false">Cancel</button>
+                    <button type="button" class="btn btn-success" @onclick="CommitUploadedFiles" disabled="@(!uploadFiles.Any())">
+                        <i class="bi bi-upload me-1"></i>Commit changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showFolderUploadModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload folder to @RepoName</h5>
+                    <button type="button" class="btn-close" @onclick="() => showFolderUploadModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center py-4 border rounded mb-3 bg-light">
+                        <i class="bi bi-folder-plus display-4 text-muted mb-3"></i>
+                        <h5>Select a folder to upload</h5>
+                        <p class="text-muted small">All files in the folder will be added to the repository</p>
+                        <label for="folderInput" class="btn btn-primary">
+                            <i class="bi bi-folder2-open me-1"></i>Choose folder
+                        </label>
+                        <InputFile id="folderInput" OnChange="HandleFolderSelected" multiple class="d-none" />
+                    </div>
+                    @if (folderBrowserFiles.Any())
+                    {
+                        <div class="alert alert-info py-2">
+                            <i class="bi bi-folder me-2"></i><strong>@folderBrowserFiles.Count</strong> files to upload
+                        </div>
+                        @if (!string.IsNullOrEmpty(folderUploadInfo))
+                        {
+                            <div class="alert alert-secondary py-2 small">
+                                <i class="bi bi-funnel me-1"></i>@folderUploadInfo
+                            </div>
+                        }
+                        <div style="max-height: 250px; overflow-y: auto;">
+                            <ul class="list-group list-group-flush">
+                                @foreach (var entry in folderFilePaths)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2">
+                                        <span class="small text-truncate" style="max-width: 80%;">
+                                            <i class="bi bi-file-earmark me-1"></i>@entry.Value
+                                        </span>
+                                        <span class="badge bg-light text-muted">@FormatFileSize(folderBrowserFiles[entry.Key].Size)</span>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    @if (folderUploading)
+                    {
+                        <div class="mt-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <span class="small">Uploading... @folderUploadProgress%</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" style="width: @(folderUploadProgress)%"></div>
+                            </div>
+                        </div>
+                    }
+                    <div class="mt-3">
+                        <label class="form-label">Commit message</label>
+                        <input type="text" class="form-control" @bind="folderUploadCommitMessage" placeholder="Add folder via upload" />
+                    </div>
+                    @if (!string.IsNullOrEmpty(folderUploadError))
+                    {
+                        <div class="alert alert-danger mt-3">@folderUploadError</div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => showFolderUploadModal = false" disabled="@folderUploading">Cancel</button>
+                    <button type="button" class="btn btn-success" @onclick="CommitFolderUpload" disabled="@(!folderBrowserFiles.Any() || folderUploading)">
+                        <i class="bi bi-folder-plus me-1"></i>Commit folder
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string RepoName { get; set; } = "";
+    [Parameter] public string? Path { get; set; }
+    [Parameter] public string? CommitHash { get; set; }
+
+    private string activeTab = "code";
+    private bool notFound = false;
+    private bool isEmpty = true;
+    private bool isFile = false;
+    private string currentBranch = "main";
+    private int commitCount = 0;
+    private string diffViewMode = "unified";
+    private string fileSearchTerm = "";
+    private bool showRaw = false;
+
+    private List<TreeItem> treeItems = new();
+    private List<GitCommit> commitHistory = new();
+    private List<BranchSummary> branches = new();
+    private List<TagSummary> tags = new();
+    private GitCommit? latestCommit;
+
+    private string fileContent = "";
+    private long fileSize = 0;
+    private int lineCount = 0;
+    private string readmeContent = "";
+
+    // UI States
+    private string editingContent = "";
+    private string commitMessage = "";
+    private string commitDescription = "";
+    private string newFileName = "";
+    private bool showDeleteModal = false;
+    private bool showNewBranchModal = false;
+    private bool showBranchDropdown = false;
+    private bool showNewTagModal = false;
+    private bool showDeleteRepoModal = false;
+    private bool showCloneDropdown = false;
+    private bool showUploadModal = false;
+    private string newBranchName = "";
+    private string newTagName = "";
+    private string deleteConfirmName = "";
+
+    private bool isDragging = false;
+    private List<IBrowserFile> uploadFiles = new();
+    private string uploadCommitMessage = "Add files via upload";
+    private string uploadError = "";
+    private const long maxFileSize = 1024 * 1024 * 50;
+
+    // Folder upload
+    private bool showFolderUploadModal = false;
+    private string folderUploadCommitMessage = "Add folder via upload";
+    private string folderUploadError = "";
+    private string folderUploadInfo = "";
+    private List<IBrowserFile> folderBrowserFiles = new();
+    private Dictionary<int, string> folderFilePaths = new();
+    private bool folderUploading = false;
+    private int folderUploadProgress = 0;
+
+    // Default ignored patterns (common build artifacts, VCS dirs, etc.)
+    private static readonly string[] DefaultIgnorePatterns = new[]
+    {
+        ".git/", ".git\\",
+        "bin/", "bin\\",
+        "obj/", "obj\\",
+        "node_modules/", "node_modules\\",
+        ".vs/", ".vs\\",
+        ".idea/", ".idea\\",
+        "__pycache__/", "__pycache__\\",
+        ".DS_Store",
+        "Thumbs.db",
+        "*.suo", "*.user", "*.userosscache", "*.sln.docstates",
+        "packages/", "packages\\",
+        "dist/", "dist\\",
+        "build/", "build\\",
+        ".next/", ".next\\",
+        "target/", "target\\",
+        "*.exe", "*.dll", "*.pdb", "*.cache",
+    };
+
+    private static bool ShouldIgnoreFile(string relativePath, List<string> gitignorePatterns)
+    {
+        var normalized = relativePath.Replace('\\', '/');
+        var segments = normalized.Split('/');
+
+        // Check default ignore patterns
+        foreach (var pattern in DefaultIgnorePatterns)
+        {
+            var p = pattern.Replace('\\', '/');
+            if (p.EndsWith("/"))
+            {
+                // Directory pattern — check if any path segment matches
+                var dirName = p.TrimEnd('/');
+                if (segments.Any(s => s.Equals(dirName, StringComparison.OrdinalIgnoreCase)))
+                    return true;
+            }
+            else if (p.StartsWith("*."))
+            {
+                // Extension pattern
+                var ext = p.Substring(1); // e.g., ".exe"
+                if (normalized.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            else
+            {
+                // Exact filename
+                var fileName = segments.Last();
+                if (fileName.Equals(p, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+        }
+
+        // Check .gitignore patterns from the uploaded folder
+        foreach (var pattern in gitignorePatterns)
+        {
+            var p = pattern.Trim();
+            if (string.IsNullOrEmpty(p) || p.StartsWith("#")) continue;
+
+            var cleanPattern = p.TrimEnd('/');
+            if (p.EndsWith("/"))
+            {
+                // Directory pattern
+                if (segments.Any(s => s.Equals(cleanPattern, StringComparison.OrdinalIgnoreCase)))
+                    return true;
+            }
+            else if (p.StartsWith("*."))
+            {
+                var ext = p.Substring(1);
+                if (normalized.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            else if (p.Contains('/'))
+            {
+                // Path pattern
+                if (normalized.StartsWith(cleanPattern, StringComparison.OrdinalIgnoreCase) ||
+                    normalized.Contains("/" + cleanPattern, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            else
+            {
+                // Match as directory name or filename
+                if (segments.Any(s => s.Equals(cleanPattern, StringComparison.OrdinalIgnoreCase)))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private GitCommit? selectedCommit;
+    private List<FilePatch> commitPatches = new();
+
+    // Branch protection
+    private List<BranchProtectionRule> branchProtectionRules = new();
+    private bool showAddProtectionRule = false;
+    private BranchProtectionRule newProtectionRule = new() { BranchPattern = "" };
+
+    private string RootPath = "/repos";
+    private string RepoFullPath => GetRepoFullPath();
+
+    private string GetRepoFullPath()
+    {
+        var path = System.IO.Path.Combine(RootPath, RepoName);
+        if (!Repository.IsValid(path) && Repository.IsValid(path + ".git"))
+            return path + ".git";
+        return path;
+    }
+
+    private string CloneUrl => $"{Nav.BaseUri.TrimEnd('/')}/git/{RepoName}.git";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Priority: 1) Admin UI saved setting, 2) appsettings config, 3) auto-detection
+        var systemSettings = await AdminService.GetSystemSettingsAsync();
+        if (!string.IsNullOrEmpty(systemSettings.ProjectRoot))
+        {
+            try
+            {
+                if (!Directory.Exists(systemSettings.ProjectRoot))
+                    Directory.CreateDirectory(systemSettings.ProjectRoot);
+                RootPath = systemSettings.ProjectRoot;
+            }
+            catch { /* path invalid or drive missing — fall through */ }
+        }
+
+        if (string.IsNullOrEmpty(RootPath))
+        {
+            var configuredPath = Config["Git:ProjectRoot"];
+            if (!string.IsNullOrEmpty(configuredPath))
+            {
+                try
+                {
+                    if (!Directory.Exists(configuredPath))
+                        Directory.CreateDirectory(configuredPath);
+                    RootPath = configuredPath;
+                }
+                catch { /* fall through */ }
+            }
+        }
+
+        LoadRepoData();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (isFile && !showRaw)
+        {
+            await JS.InvokeVoidAsync("Prism.highlightAll");
+        }
+        if (showFolderUploadModal)
+        {
+            try { await JS.InvokeVoidAsync("folderUpload.setWebkitDirectory", "folderInput"); } catch { }
+        }
+    }
+
+    private string GetPageTitle()
+    {
+        if (activeTab == "edit") return $"Editing {System.IO.Path.GetFileName(Path)}";
+        if (activeTab == "add-file") return "Adding new file";
+        return string.IsNullOrEmpty(Path) ? RepoName : System.IO.Path.GetFileName(Path);
+    }
+
+    private async Task SetTab(string tab)
+    {
+        activeTab = tab;
+        if (tab == "code" && string.IsNullOrEmpty(Path)) Nav.NavigateTo($"/repo/{RepoName}");
+        else LoadRepoData();
+        if (tab == "settings" || tab == "branches") await LoadBranchProtectionRules();
+    }
+
+    private void LoadRepoData()
+    {
+        var fullPath = RepoFullPath;
+        if (!Repository.IsValid(fullPath)) { notFound = true; return; }
+
+        try
+        {
+            using var repo = new Repository(fullPath);
+            isEmpty = !repo.Refs.Any() && !repo.Commits.Any();
+            notFound = false;
+
+            branches = repo.Branches.Select(b => new BranchSummary { Name = b.FriendlyName, IsCurrent = b.IsCurrentRepositoryHead }).ToList();
+            tags = repo.Tags.Select(t => new TagSummary { Name = t.FriendlyName, TargetSha = t.Target.Sha }).ToList();
+
+            var branch = repo.Branches[currentBranch] ?? repo.Branches["main"] ?? repo.Branches["master"] ?? repo.Head;
+            currentBranch = branch.FriendlyName;
+
+            if (branch.Tip != null)
+            {
+                latestCommit = MapCommit(branch.Tip);
+                isEmpty = false;
+
+                if (activeTab == "commits")
+                {
+                    var filter = new CommitFilter { IncludeReachableFrom = branch.Tip };
+                    if (isFile && !string.IsNullOrEmpty(Path))
+                    {
+                        commitHistory = repo.Commits.QueryBy(Path, filter).Select(c => MapCommit(c.Commit)).Take(20).ToList();
+                        commitCount = repo.Commits.QueryBy(Path, filter).Count();
+                    }
+                    else
+                    {
+                        commitHistory = repo.Commits.QueryBy(filter).Select(c => MapCommit(c)).Take(20).ToList();
+                        commitCount = repo.Commits.QueryBy(filter).Count();
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(CommitHash))
+                {
+                    activeTab = "commit-detail";
+                    var rawCommit = repo.Lookup<Commit>(CommitHash);
+                    if (rawCommit != null)
+                    {
+                        selectedCommit = MapCommit(rawCommit);
+                        LoadCommitDetail(repo, rawCommit);
+                    }
+                }
+                else if (string.IsNullOrEmpty(Path))
+                {
+                    isFile = false;
+                    LoadTree(branch.Tip.Tree, repo);
+                    LoadReadme(branch.Tip.Tree);
+                }
+                else
+                {
+                    var entry = branch.Tip[Path];
+                    if (entry == null) { notFound = true; return; }
+                    if (entry.TargetType == TreeEntryTargetType.Tree)
+                    {
+                        isFile = false;
+                        LoadTree((Tree)entry.Target, repo);
+                        LoadReadme((Tree)entry.Target);
+                    }
+                    else
+                    {
+                        isFile = true;
+                        var blob = (Blob)entry.Target;
+                        fileSize = blob.Size;
+                        using var reader = new StreamReader(blob.GetContentStream(), Encoding.UTF8);
+                        fileContent = reader.ReadToEnd();
+                        lineCount = fileContent.Split('\n').Length;
+                    }
+                }
+            }
+            else
+            {
+                commitCount = 0;
+                commitHistory.Clear();
+            }
+        }
+        catch { notFound = true; }
+    }
+
+    private GitCommit MapCommit(Commit c) => new GitCommit
+    {
+        Sha = c.Sha,
+        ShortSha = c.Id.ToString(7),
+        AuthorName = c.Author.Name,
+        Message = c.MessageShort,
+        Date = c.Author.When.DateTime
+    };
+
+    private static readonly MarkdownPipeline _markdownPipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .Build();
+
+    private MarkupString ConvertMarkdownToHtml(string markdown)
+    {
+        if (string.IsNullOrWhiteSpace(markdown)) return new MarkupString("");
+        var html = Markdown.ToHtml(markdown, _markdownPipeline);
+        return new MarkupString(html);
+    }
+
+    private void LoadCommitDetail(Repository repo, Commit c)
+    {
+        commitPatches.Clear();
+        var parent = c.Parents.FirstOrDefault();
+        var changes = repo.Diff.Compare<Patch>(parent?.Tree, c.Tree);
+        foreach (var change in changes)
+        {
+            commitPatches.Add(new FilePatch
+            {
+                Path = change.Path,
+                LinesAdded = change.LinesAdded,
+                LinesDeleted = change.LinesDeleted,
+                DiffLines = change.Patch.Split('\n').ToList()
+            });
+        }
+    }
+
+    private void LoadTree(Tree tree, Repository? repo = null)
+    {
+        treeItems.Clear();
+        foreach (var entry in tree)
+        {
+            var item = new TreeItem { Name = entry.Name, IsDirectory = entry.TargetType == TreeEntryTargetType.Tree };
+            treeItems.Add(item);
+        }
+        treeItems = treeItems.OrderByDescending(i => i.IsDirectory).ThenBy(i => i.Name).ToList();
+
+        // Load per-file commit info in the background to avoid blocking page load
+        if (repo != null)
+        {
+            var repoPath = RepoFullPath;
+            var currentPath = Path;
+            var items = treeItems.ToList(); // snapshot
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    using var bgRepo = new Repository(repoPath);
+                    foreach (var item in items)
+                    {
+                        try
+                        {
+                            var itemPath = string.IsNullOrEmpty(currentPath) ? item.Name : $"{currentPath}/{item.Name}";
+                            var logEntry = bgRepo.Commits.QueryBy(itemPath).FirstOrDefault();
+                            if (logEntry != null)
+                            {
+                                item.LastCommitMessage = logEntry.Commit.MessageShort;
+                                item.LastCommitDate = logEntry.Commit.Author.When.DateTime;
+                            }
+                        }
+                        catch { }
+                    }
+                    InvokeAsync(StateHasChanged);
+                }
+                catch { }
+            });
+        }
+    }
+
+    private void LoadReadme(Tree tree)
+    {
+        readmeContent = "";
+        var readme = tree.FirstOrDefault(e => e.Name.Equals("README.md", StringComparison.OrdinalIgnoreCase));
+        if (readme != null && readme.TargetType == TreeEntryTargetType.Blob)
+        {
+            using var reader = new StreamReader(((Blob)readme.Target).GetContentStream(), Encoding.UTF8);
+            readmeContent = reader.ReadToEnd();
+        }
+    }
+
+    private void ViewFileHistory() { activeTab = "commits"; LoadRepoData(); }
+    private void ClearFileFilter() { Path = null; activeTab = "commits"; LoadRepoData(); }
+    private void SwitchBranch(string name) { currentBranch = name; Path = null; activeTab = "code"; showBranchDropdown = false; LoadRepoData(); }
+    private void EnterEditMode() { editingContent = fileContent; commitMessage = $"Update {System.IO.Path.GetFileName(Path)}"; activeTab = "edit"; }
+    private void EnterAddFileMode() { editingContent = ""; newFileName = ""; commitMessage = "Add file"; activeTab = "add-file"; }
+
+    private void CreateBranch()
+    {
+        using var repo = new Repository(RepoFullPath);
+        var target = repo.Lookup<Commit>(latestCommit?.Sha);
+        if (target != null) repo.CreateBranch(newBranchName, target);
+        currentBranch = newBranchName; showNewBranchModal = false; LoadRepoData();
+    }
+
+    private void CreateTag()
+    {
+        using var repo = new Repository(RepoFullPath);
+        if (latestCommit != null) repo.ApplyTag(newTagName, latestCommit.Sha);
+        showNewTagModal = false; LoadRepoData();
+    }
+
+    private void CommitChanges()
+    {
+        if (!UserService.IsLoggedIn) return;
+        var targetPath = activeTab == "edit" ? Path : (string.IsNullOrEmpty(Path) ? newFileName : $"{Path}/{newFileName}");
+        if (string.IsNullOrEmpty(targetPath)) return;
+        using var repo = new Repository(RepoFullPath);
+        var blob = repo.ObjectDatabase.CreateBlob(new MemoryStream(Encoding.UTF8.GetBytes(editingContent)));
+        var tip = repo.Branches[currentBranch]?.Tip ?? repo.Branches["main"]?.Tip ?? repo.Branches["master"]?.Tip ?? repo.Head.Tip;
+        var treeDef = tip != null ? TreeDefinition.From(tip.Tree) : new TreeDefinition();
+        treeDef.Add(targetPath, blob, Mode.NonExecutableFile);
+        var tree = repo.ObjectDatabase.CreateTree(treeDef);
+        var author = new Signature(UserService.Username, UserService.Email, DateTimeOffset.Now);
+        var parents = tip != null ? new[] { tip } : Array.Empty<Commit>();
+        var commit = repo.ObjectDatabase.CreateCommit(author, author, commitMessage, tree, parents, true);
+        var targetBranchName = string.IsNullOrEmpty(currentBranch) ? "main" : currentBranch;
+        var branchRef = repo.Refs[$"refs/heads/{targetBranchName}"];
+        if (branchRef == null) { repo.Branches.Add(targetBranchName, commit); repo.Refs.UpdateTarget("HEAD", $"refs/heads/{targetBranchName}"); }
+        else repo.Refs.UpdateTarget(branchRef.CanonicalName, commit.Id.Sha);
+        activeTab = "code"; LoadRepoData();
+    }
+
+    private void DeleteFileCommit()
+    {
+        if (!UserService.IsLoggedIn) return;
+        using var repo = new Repository(RepoFullPath);
+        var tip = repo.Branches[currentBranch]?.Tip;
+        if (tip == null) return;
+        var treeDef = TreeDefinition.From(tip.Tree);
+        treeDef.Remove(Path);
+        var tree = repo.ObjectDatabase.CreateTree(treeDef);
+        var author = new Signature(UserService.Username, UserService.Email, DateTimeOffset.Now);
+        var commit = repo.ObjectDatabase.CreateCommit(author, author, $"Delete {Path}", tree, new[] { tip }, true);
+        repo.Refs.UpdateTarget(repo.Branches[currentBranch].Reference.CanonicalName, commit.Id.Sha);
+        showDeleteModal = false; Path = GetParentPath(); LoadRepoData();
+    }
+
+    private void DeleteRepository()
+    {
+        if (!UserService.IsLoggedIn) return;
+        try
+        {
+            var repoPath = RepoFullPath;
+
+            if (Repository.IsValid(repoPath))
+            {
+                using (var repo = new Repository(repoPath))
+                {
+                }
+            }
+
+            DeleteDirectory(repoPath);
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting repository: {ex.Message}");
+        }
+    }
+
+    private void DeleteDirectory(string path)
+    {
+        if (!Directory.Exists(path)) return;
+
+        foreach (var file in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
+        {
+            try
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+                File.Delete(file);
+            }
+            catch
+            {
+            }
+        }
+
+        try
+        {
+            Directory.Delete(path, true);
+        }
+        catch
+        {
+            System.Threading.Thread.Sleep(100);
+            try
+            {
+                Directory.Delete(path, true);
+            }
+            catch
+            {
+            }
+        }
+    }
+
+    private List<DiffPair> GetSplitDiff(List<string> lines)
+    {
+        var pairs = new List<DiffPair>();
+        var removals = new List<string>();
+        var additions = new List<string>();
+        void Flush()
+        {
+            int max = Math.Max(removals.Count, additions.Count);
+            for (int i = 0; i < max; i++) pairs.Add(new DiffPair { Left = i < removals.Count ? removals[i] : null, Right = i < additions.Count ? additions[i] : null });
+            removals.Clear(); additions.Clear();
+        }
+        foreach (var line in lines)
+        {
+            if (line.StartsWith("@@") || line.StartsWith("diff") || line.StartsWith("index") || line.StartsWith("---") || line.StartsWith("+++")) continue;
+            if (line.StartsWith("-")) removals.Add(line);
+            else if (line.StartsWith("+")) additions.Add(line);
+            else { Flush(); pairs.Add(new DiffPair { Left = line, Right = line }); }
+        }
+        Flush(); return pairs;
+    }
+
+    private List<Crumb> GetBreadcrumbs()
+    {
+        var result = new List<Crumb>();
+        if (string.IsNullOrEmpty(Path)) return result;
+        var parts = Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        string current = "";
+        for (int i = 0; i < parts.Length; i++)
+        {
+            current = string.IsNullOrEmpty(current) ? parts[i] : $"{current}/{parts[i]}";
+            result.Add(new Crumb { Name = parts[i], Path = current, IsLast = (i == parts.Length - 1) });
+        }
+        return result;
+    }
+
+    private string GetParentPath() => !string.IsNullOrEmpty(Path) && Path.Contains('/') ? Path.Substring(0, Path.LastIndexOf('/')) : "";
+
+    private string GetRelativeTime(DateTime? date)
+    {
+        if (!date.HasValue) return "just now";
+        var span = DateTime.Now - date.Value;
+        if (span.TotalDays > 30) return date.Value.ToString("MMM dd, yyyy");
+        if (span.TotalDays > 1) return $"{(int)span.TotalDays} days ago";
+        return "recently";
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1) { order++; len /= 1024; }
+        return $"{len:0.#} {sizes[order]}";
+    }
+
+    private void HandleDragEnter()
+    {
+        isDragging = true;
+    }
+
+    private void HandleDragLeave()
+    {
+        isDragging = false;
+    }
+
+    private void HandleDragOver()
+    {
+    }
+
+    private async Task HandleDrop(DragEventArgs e)
+    {
+        isDragging = false;
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        uploadError = "";
+        try
+        {
+            foreach (var file in e.GetMultipleFiles(100))
+            {
+                if (file.Size > maxFileSize)
+                {
+                    uploadError = $"File {file.Name} exceeds maximum size of 50MB";
+                    continue;
+                }
+                uploadFiles.Add(file);
+            }
+        }
+        catch (Exception ex)
+        {
+            uploadError = $"Error selecting files: {ex.Message}";
+        }
+    }
+
+    private void NavigateToCreateFile()
+    {
+        showCloneDropdown = false;
+        EnterAddFileMode();
+    }
+
+    private void OpenUploadModal()
+    {
+        showCloneDropdown = false;
+        showUploadModal = true;
+    }
+
+    private void RemoveUploadFile(IBrowserFile file)
+    {
+        uploadFiles.Remove(file);
+    }
+
+    private async Task CommitUploadedFiles()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (!uploadFiles.Any()) return;
+
+        uploadError = "";
+        try
+        {
+            var fullPath = RepoFullPath;
+            using var repo = new Repository(fullPath);
+
+            var author = new Signature(UserService.Username, UserService.Email, DateTimeOffset.Now);
+            var tip = repo.Branches[currentBranch]?.Tip ?? repo.Branches["main"]?.Tip ?? repo.Branches["master"]?.Tip ?? repo.Head?.Tip;
+            var treeDef = tip != null ? TreeDefinition.From(tip.Tree) : new TreeDefinition();
+
+            foreach (var file in uploadFiles)
+            {
+                using var stream = file.OpenReadStream(maxFileSize);
+                using var memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+
+                var blob = repo.ObjectDatabase.CreateBlob(memoryStream);
+                var relativePath = string.IsNullOrEmpty(Path) ? file.Name : $"{Path}/{file.Name}";
+                treeDef.Add(relativePath, blob, Mode.NonExecutableFile);
+            }
+
+            var tree = repo.ObjectDatabase.CreateTree(treeDef);
+            var message = string.IsNullOrEmpty(uploadCommitMessage) ? "Add files via upload" : uploadCommitMessage;
+            var parents = tip != null ? new[] { tip } : Array.Empty<Commit>();
+            var commit = repo.ObjectDatabase.CreateCommit(author, author, message, tree, parents, true);
+
+            var targetBranchName = string.IsNullOrEmpty(currentBranch) ? "main" : currentBranch;
+            var branchRef = repo.Refs[$"refs/heads/{targetBranchName}"];
+            if (branchRef == null) { repo.Branches.Add(targetBranchName, commit); repo.Refs.UpdateTarget("HEAD", $"refs/heads/{targetBranchName}"); }
+            else repo.Refs.UpdateTarget(branchRef.CanonicalName, commit.Id.Sha);
+
+            uploadFiles.Clear();
+            uploadCommitMessage = "Add files via upload";
+            showUploadModal = false;
+            LoadRepoData();
+        }
+        catch (Exception ex)
+        {
+            uploadError = $"Error uploading files: {ex.Message}";
+        }
+    }
+
+    private async Task CopyCloneUrl()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", CloneUrl);
+        }
+        catch
+        {
+        }
+    }
+
+    private void OpenFolderUpload()
+    {
+        showCloneDropdown = false;
+        folderBrowserFiles.Clear();
+        folderFilePaths.Clear();
+        folderUploadError = "";
+        folderUploadInfo = "";
+        folderUploadCommitMessage = "Add folder via upload";
+        folderUploading = false;
+        folderUploadProgress = 0;
+        showFolderUploadModal = true;
+    }
+
+    private async Task HandleFolderSelected(InputFileChangeEventArgs e)
+    {
+        folderUploadError = "";
+        folderUploadInfo = "";
+        try
+        {
+            var allFiles = e.GetMultipleFiles(10000).ToList();
+
+            // Get relative paths from the DOM input element via JS
+            var paths = await JS.InvokeAsync<string[]>("folderUpload.getRelativePaths", "folderInput");
+
+            // First pass: read .gitignore if present in the uploaded folder
+            var gitignorePatterns = new List<string>();
+            for (int i = 0; i < allFiles.Count; i++)
+            {
+                var fullRelPath = (i < paths.Length) ? paths[i] : allFiles[i].Name;
+                var parts = fullRelPath.Replace('\\', '/').Split('/', 2);
+                var commitPath = parts.Length > 1 ? parts[1] : parts[0];
+
+                if (commitPath == ".gitignore" && allFiles[i].Size < 100_000)
+                {
+                    try
+                    {
+                        using var stream = allFiles[i].OpenReadStream(maxFileSize);
+                        using var reader = new StreamReader(stream);
+                        var content = await reader.ReadToEndAsync();
+                        gitignorePatterns = content.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList();
+                    }
+                    catch { }
+                    break;
+                }
+            }
+
+            // Second pass: filter files and build the list
+            folderBrowserFiles.Clear();
+            folderFilePaths.Clear();
+            int totalCount = allFiles.Count;
+            int filteredIndex = 0;
+
+            for (int i = 0; i < allFiles.Count; i++)
+            {
+                var fullRelPath = (i < paths.Length) ? paths[i] : allFiles[i].Name;
+                var parts = fullRelPath.Replace('\\', '/').Split('/', 2);
+                var commitPath = parts.Length > 1 ? parts[1] : parts[0];
+
+                if (ShouldIgnoreFile(commitPath, gitignorePatterns))
+                    continue;
+
+                folderBrowserFiles.Add(allFiles[i]);
+                folderFilePaths[filteredIndex] = commitPath;
+                filteredIndex++;
+            }
+
+            int skipped = totalCount - folderBrowserFiles.Count;
+            if (skipped > 0)
+            {
+                folderUploadInfo = $"Filtered out {skipped} files (build artifacts, .git, node_modules, etc.)";
+            }
+        }
+        catch (Exception ex)
+        {
+            // Fallback: if JS path retrieval fails, use just filenames
+            folderFilePaths.Clear();
+            for (int i = 0; i < folderBrowserFiles.Count; i++)
+            {
+                folderFilePaths[i] = folderBrowserFiles[i].Name;
+            }
+            folderUploadError = $"Note: Could not read folder structure. Files will be uploaded flat. ({ex.Message})";
+        }
+    }
+
+    private async Task CommitFolderUpload()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (!folderBrowserFiles.Any()) return;
+
+        folderUploadError = "";
+        folderUploading = true;
+        folderUploadProgress = 0;
+        StateHasChanged();
+
+        try
+        {
+            var fullPath = RepoFullPath;
+            using var repo = new Repository(fullPath);
+
+            var author = new Signature(UserService.Username, UserService.Email, DateTimeOffset.Now);
+            var tip = repo.Branches[currentBranch]?.Tip ?? repo.Branches["main"]?.Tip ?? repo.Branches["master"]?.Tip ?? repo.Head?.Tip;
+            var treeDef = tip != null ? TreeDefinition.From(tip.Tree) : new TreeDefinition();
+
+            int skippedLarge = 0;
+            for (int i = 0; i < folderBrowserFiles.Count; i++)
+            {
+                var file = folderBrowserFiles[i];
+                if (file.Size > maxFileSize) { skippedLarge++; continue; }
+
+                using var stream = file.OpenReadStream(maxFileSize);
+                using var memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+
+                var blob = repo.ObjectDatabase.CreateBlob(memoryStream);
+                var commitPath = folderFilePaths.ContainsKey(i) ? folderFilePaths[i] : file.Name;
+                var relativePath = string.IsNullOrEmpty(Path) ? commitPath : $"{Path}/{commitPath}";
+                treeDef.Add(relativePath, blob, Mode.NonExecutableFile);
+
+                folderUploadProgress = (int)((i + 1) * 100.0 / folderBrowserFiles.Count);
+                if (i % 25 == 0) // Update UI every 25 files
+                {
+                    await Task.Yield();
+                    StateHasChanged();
+                }
+            }
+
+            var tree = repo.ObjectDatabase.CreateTree(treeDef);
+            var message = string.IsNullOrEmpty(folderUploadCommitMessage) ? "Add folder via upload" : folderUploadCommitMessage;
+            var parents = tip != null ? new[] { tip } : Array.Empty<Commit>();
+            var commit = repo.ObjectDatabase.CreateCommit(author, author, message, tree, parents, true);
+
+            var targetBranchName = string.IsNullOrEmpty(currentBranch) ? "main" : currentBranch;
+            var branchRef = repo.Refs[$"refs/heads/{targetBranchName}"];
+            if (branchRef == null) { repo.Branches.Add(targetBranchName, commit); repo.Refs.UpdateTarget("HEAD", $"refs/heads/{targetBranchName}"); }
+            else repo.Refs.UpdateTarget(branchRef.CanonicalName, commit.Id.Sha);
+
+            if (skippedLarge > 0)
+            {
+                folderUploadError = $"Warning: {skippedLarge} file(s) skipped (exceeded 50MB size limit)";
+            }
+
+            folderBrowserFiles.Clear();
+            folderFilePaths.Clear();
+            showFolderUploadModal = false;
+            folderUploading = false;
+            LoadRepoData();
+        }
+        catch (Exception ex)
+        {
+            folderUploadError = $"Error uploading folder: {ex.Message}";
+            folderUploading = false;
+        }
+    }
+
+    private static bool BranchMatchesPattern(string branchName, string pattern)
+    {
+        if (pattern == branchName) return true;
+        if (pattern.Contains('*'))
+        {
+            var regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*") + "$";
+            return Regex.IsMatch(branchName, regexPattern);
+        }
+        return false;
+    }
+
+    private async Task LoadBranchProtectionRules()
+    {
+        branchProtectionRules = await BranchProtectionService.GetRulesAsync(RepoName);
+    }
+
+    private async Task SaveBranchProtectionRule()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (string.IsNullOrWhiteSpace(newProtectionRule.BranchPattern)) return;
+        await BranchProtectionService.AddRuleAsync(RepoName, newProtectionRule);
+        newProtectionRule = new BranchProtectionRule { BranchPattern = "" };
+        showAddProtectionRule = false;
+        await LoadBranchProtectionRules();
+    }
+
+    private async Task DeleteBranchProtectionRule(int ruleId)
+    {
+        if (!UserService.IsLoggedIn) return;
+        await BranchProtectionService.DeleteRuleAsync(RepoName, ruleId);
+        await LoadBranchProtectionRules();
+    }
+
+    private string GetPrismLanguageClass(string? filePath)
+    {
+        if (string.IsNullOrEmpty(filePath)) return "language-none";
+        var fileName = System.IO.Path.GetFileName(filePath).ToLowerInvariant();
+        if (fileName == "dockerfile") return "language-docker";
+        if (fileName == "makefile") return "language-makefile";
+        if (fileName == ".gitignore" || fileName == ".gitattributes") return "language-git";
+        var ext = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
+        return ext switch
+        {
+            ".cs" => "language-csharp",
+            ".js" => "language-javascript",
+            ".ts" => "language-typescript",
+            ".tsx" => "language-tsx",
+            ".jsx" => "language-jsx",
+            ".py" => "language-python",
+            ".rb" => "language-ruby",
+            ".java" => "language-java",
+            ".go" => "language-go",
+            ".rs" => "language-rust",
+            ".c" => "language-c",
+            ".cpp" or ".cc" or ".cxx" => "language-cpp",
+            ".h" or ".hpp" => "language-cpp",
+            ".html" or ".htm" => "language-html",
+            ".css" => "language-css",
+            ".scss" => "language-scss",
+            ".less" => "language-less",
+            ".json" => "language-json",
+            ".xml" => "language-xml",
+            ".yaml" or ".yml" => "language-yaml",
+            ".toml" => "language-toml",
+            ".sql" => "language-sql",
+            ".sh" or ".bash" => "language-bash",
+            ".ps1" => "language-powershell",
+            ".bat" or ".cmd" => "language-batch",
+            ".dockerfile" => "language-docker",
+            ".razor" => "language-cshtml",
+            ".cshtml" => "language-cshtml",
+            ".csproj" or ".sln" or ".props" or ".targets" => "language-xml",
+            ".md" => "language-markdown",
+            ".php" => "language-php",
+            ".swift" => "language-swift",
+            ".kt" or ".kts" => "language-kotlin",
+            ".dart" => "language-dart",
+            ".lua" => "language-lua",
+            ".r" => "language-r",
+            ".pl" or ".pm" => "language-perl",
+            ".ex" or ".exs" => "language-elixir",
+            ".erl" => "language-erlang",
+            ".hs" => "language-haskell",
+            ".fs" or ".fsx" => "language-fsharp",
+            ".scala" => "language-scala",
+            ".clj" => "language-clojure",
+            ".vim" => "language-vim",
+            ".ini" or ".cfg" or ".conf" => "language-ini",
+            ".makefile" => "language-makefile",
+            ".graphql" or ".gql" => "language-graphql",
+            ".proto" => "language-protobuf",
+            ".tf" => "language-hcl",
+            _ => "language-none"
+        };
+    }
+
+    public class GitCommit { public string Sha { get; set; } = ""; public string ShortSha { get; set; } = ""; public string AuthorName { get; set; } = ""; public string Message { get; set; } = ""; public DateTime Date { get; set; } }
+    public class TreeItem { public string Name { get; set; } = ""; public bool IsDirectory { get; set; } public string LastCommitMessage { get; set; } = ""; public DateTime? LastCommitDate { get; set; } }
+    public class Crumb { public string Name { get; set; } = ""; public string Path { get; set; } = ""; public bool IsLast { get; set; } }
+    public class BranchSummary { public string Name { get; set; } = ""; public bool IsCurrent { get; set; } }
+    public class TagSummary { public string Name { get; set; } = ""; public string TargetSha { get; set; } = ""; }
+    public class FilePatch { public string Path { get; set; } = ""; public int LinesAdded { get; set; } public int LinesDeleted { get; set; } public List<string> DiffLines { get; set; } = new(); }
+    public class DiffPair { public string? Left { get; set; } public string? Right { get; set; } }
+}

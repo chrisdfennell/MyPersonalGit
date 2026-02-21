@@ -1,0 +1,166 @@
+@page "/notifications"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using MyPersonalGit.Services
+@inject INotificationService NotificationService
+@inject CurrentUserService UserService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Notifications</PageTitle>
+
+@if (!UserService.IsLoggedIn)
+{
+    <div class="container py-5 text-center">
+        <i class="bi bi-bell" style="font-size: 4rem; color: #6c757d;"></i>
+        <h3 class="mt-3">Authentication Required</h3>
+        <p class="text-muted">Please sign in to view your notifications.</p>
+        <a href="/login" class="btn btn-primary">Sign in</a>
+    </div>
+}
+else
+{
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Notifications</h2>
+        <div class="btn-group">
+            <button class="btn btn-sm @(ShowUnreadOnly ? "btn-primary" : "btn-outline-primary")" @onclick="async () => { ShowUnreadOnly = true; await LoadNotifications(); }">
+                Unread (@UnreadCount)
+            </button>
+            <button class="btn btn-sm @(!ShowUnreadOnly ? "btn-primary" : "btn-outline-primary")" @onclick="async () => { ShowUnreadOnly = false; await LoadNotifications(); }">
+                All
+            </button>
+            @if (NotificationsList.Any(n => !n.IsRead))
+            {
+                <button class="btn btn-sm btn-outline-secondary" @onclick="MarkAllAsRead">
+                    <i class="bi bi-check-all"></i> Mark all as read
+                </button>
+            }
+        </div>
+    </div>
+
+    @if (NotificationsList.Count == 0)
+    {
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-bell-slash" style="font-size: 4rem; color: #6c757d;"></i>
+                <h3 class="mt-3">No notifications</h3>
+                <p class="text-muted">@(ShowUnreadOnly ? "You're all caught up!" : "You don't have any notifications yet")</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var notification in NotificationsList)
+            {
+                <div class="list-group-item @(notification.IsRead ? "" : "list-group-item-primary")">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1" style="cursor: pointer;" @onclick="() => NavigateToNotification(notification)">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="@GetNotificationIcon(notification.Type) me-2"></i>
+                                <h6 class="mb-0">@notification.Title</h6>
+                                @if (!notification.IsRead)
+                                {
+                                    <span class="badge bg-primary ms-2">New</span>
+                                }
+                            </div>
+                            <p class="mb-1 text-muted">@notification.Message</p>
+                            <small class="text-muted">
+                                <i class="bi bi-journal-bookmark me-1"></i>@notification.RepoName
+                                <span class="mx-2">•</span>
+                                @FormatDate(notification.CreatedAt)
+                            </small>
+                        </div>
+                        <div class="btn-group">
+                            @if (!notification.IsRead)
+                            {
+                                <button class="btn btn-sm btn-outline-primary" @onclick="() => MarkAsRead(notification.Id)">
+                                    <i class="bi bi-check"></i>
+                                </button>
+                            }
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteNotification(notification.Id)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+} @* end else (IsLoggedIn) *@
+
+@code {
+    private List<Notification> NotificationsList { get; set; } = new();
+    private int UnreadCount { get; set; }
+    private bool ShowUnreadOnly { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadNotifications();
+    }
+
+    private async Task LoadNotifications()
+    {
+        if (!UserService.IsLoggedIn) return;
+        NotificationsList = await NotificationService.GetNotificationsAsync(UserService.Username, ShowUnreadOnly);
+        UnreadCount = await NotificationService.GetUnreadCountAsync(UserService.Username);
+    }
+
+    private async Task MarkAsRead(int notificationId)
+    {
+        await NotificationService.MarkAsReadAsync(UserService.Username, notificationId);
+        await LoadNotifications();
+    }
+
+    private async Task MarkAllAsRead()
+    {
+        await NotificationService.MarkAllAsReadAsync(UserService.Username);
+        await LoadNotifications();
+    }
+
+    private async Task DeleteNotification(int notificationId)
+    {
+        await NotificationService.DeleteNotificationAsync(UserService.Username, notificationId);
+        await LoadNotifications();
+    }
+
+    private void NavigateToNotification(Notification notification)
+    {
+        if (!string.IsNullOrEmpty(notification.Url))
+        {
+            if (!notification.IsRead)
+            {
+                _ = MarkAsRead(notification.Id);
+            }
+            Navigation.NavigateTo(notification.Url);
+        }
+    }
+
+    private string GetNotificationIcon(string type)
+    {
+        return type switch
+        {
+            NotificationType.IssueCreated => "bi bi-circle-fill text-success",
+            NotificationType.IssueComment => "bi bi-chat-left-text text-primary",
+            NotificationType.IssueClosed => "bi bi-check-circle text-secondary",
+            NotificationType.PullRequestCreated => "bi bi-git text-info",
+            NotificationType.PullRequestReview => "bi bi-eye text-warning",
+            NotificationType.PullRequestMerged => "bi bi-check-circle-fill text-success",
+            NotificationType.Mention => "bi bi-at text-primary",
+            NotificationType.RepositoryStarred => "bi bi-star-fill text-warning",
+            _ => "bi bi-bell"
+        };
+    }
+
+    private string FormatDate(DateTime date)
+    {
+        var timeAgo = DateTime.UtcNow - date;
+        if (timeAgo.TotalMinutes < 1) return "just now";
+        if (timeAgo.TotalMinutes < 60) return $"{(int)timeAgo.TotalMinutes} minutes ago";
+        if (timeAgo.TotalHours < 24) return $"{(int)timeAgo.TotalHours} hours ago";
+        if (timeAgo.TotalDays < 7) return $"{(int)timeAgo.TotalDays} days ago";
+        return date.ToString("MMM dd, yyyy");
+    }
+}

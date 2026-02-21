@@ -1,0 +1,586 @@
+@page "/repo/{RepoName}/projects"
+@page "/repo/{RepoName}/projects/{ProjectId:int}"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using MyPersonalGit.Services
+@inject IProjectService ProjectService
+@inject IIssueService IssueService
+@inject CurrentUserService UserService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>@(ProjectId.HasValue ? CurrentProject?.Name ?? "Project" : "Projects") - @RepoName</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex align-items-center mb-3">
+        <i class="bi bi-journal-bookmark text-muted me-2 h4 mb-0"></i>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 h4">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Repositories</a></li>
+                <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
+                <li class="breadcrumb-item active fw-bold" aria-current="page">Projects</li>
+            </ol>
+        </nav>
+    </div>
+    @if (!ProjectId.HasValue)
+    {
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Projects</h2>
+            @if (UserService.IsLoggedIn)
+            {
+                <button class="btn btn-primary" @onclick="ShowCreateProjectModal">
+                    <i class="bi bi-plus"></i> New Project
+                </button>
+            }
+        </div>
+
+        <div class="row">
+            @if (ProjectsList.Count == 0)
+            {
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-kanban" style="font-size: 4rem; color: #6c757d;"></i>
+                            <h3 class="mt-3">No projects yet</h3>
+                            <p class="text-muted">Create a project to organize your work with Kanban boards</p>
+                            @if (UserService.IsLoggedIn)
+                            {
+                                <button class="btn btn-primary" @onclick="ShowCreateProjectModal">
+                                    <i class="bi bi-plus"></i> Create First Project
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                @foreach (var project in ProjectsList.Where(p => p.State == ProjectState.Open))
+                {
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <a href="/repo/@RepoName/projects/@project.Id" class="text-decoration-none">
+                                        @project.Name
+                                    </a>
+                                </h5>
+                                <p class="card-text text-muted">@project.Description</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <small class="text-muted">
+                                        @project.Columns.Sum(c => c.Cards.Count) cards
+                                    </small>
+                                    <span class="badge bg-success">Open</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (ProjectsList.Any(p => p.State == ProjectState.Closed))
+                {
+                    <div class="col-12 mt-4">
+                        <h4>Closed Projects</h4>
+                    </div>
+                    @foreach (var project in ProjectsList.Where(p => p.State == ProjectState.Closed))
+                    {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 opacity-75">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <a href="/repo/@RepoName/projects/@project.Id" class="text-decoration-none">
+                                            @project.Name
+                                        </a>
+                                    </h5>
+                                    <p class="card-text text-muted">@project.Description</p>
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <small class="text-muted">
+                                            @project.Columns.Sum(c => c.Cards.Count) cards
+                                        </small>
+                                        <span class="badge bg-secondary">Closed</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            }
+        </div>
+    }
+    else if (CurrentProject != null)
+    {
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="/repo/@RepoName/projects">Projects</a></li>
+                        <li class="breadcrumb-item active">@CurrentProject.Name</li>
+                    </ol>
+                </nav>
+                <h2 class="mt-2">@CurrentProject.Name</h2>
+                @if (!string.IsNullOrEmpty(CurrentProject.Description))
+                {
+                    <p class="text-muted">@CurrentProject.Description</p>
+                }
+            </div>
+            @if (UserService.IsLoggedIn)
+            {
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-primary" @onclick="ShowAddCardModal">
+                        <i class="bi bi-plus"></i> Add Card
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="ShowAddColumnModal">
+                        <i class="bi bi-plus"></i> Add Column
+                    </button>
+                    @if (CurrentProject.State == ProjectState.Open)
+                    {
+                        <button class="btn btn-sm btn-outline-danger" @onclick="CloseProject">
+                            <i class="bi bi-x-circle"></i> Close Project
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-sm btn-outline-success" @onclick="ReopenProject">
+                            <i class="bi bi-arrow-clockwise"></i> Reopen Project
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="kanban-board">
+            <div class="kanban-columns">
+                @foreach (var column in CurrentProject.Columns.OrderBy(c => c.Order))
+                {
+                    <div class="kanban-column">
+                        <div class="kanban-column-header">
+                            <h5>@column.Name</h5>
+                            <span class="badge bg-secondary">@column.Cards.Count</span>
+                        </div>
+                        <div class="kanban-column-body">
+                            @foreach (var card in column.Cards.OrderBy(c => c.Order))
+                            {
+                                <div class="kanban-card" draggable="true" 
+                                     @ondragstart="() => OnDragStart(card.Id)"
+                                     @ondrop="() => OnDrop(column.Id, card.Order)"
+                                     @ondragover:preventDefault>
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="mb-0">@card.Title</h6>
+                                        @if (UserService.IsLoggedIn)
+                                        {
+                                            <button class="btn btn-sm btn-link text-danger p-0" @onclick="() => DeleteCard(card.Id)">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(card.Note))
+                                    {
+                                        <p class="card-note text-muted small">@card.Note</p>
+                                    }
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <small class="text-muted">@card.Creator</small>
+                                        @if (card.Type == CardType.Issue)
+                                        {
+                                            <span class="badge bg-success">#@card.IssueNumber</span>
+                                        }
+                                        else if (card.Type == CardType.PullRequest)
+                                        {
+                                            <span class="badge bg-info">#@card.PullRequestNumber</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            <div class="kanban-card-drop-zone" 
+                                 @ondrop="() => OnDrop(column.Id, column.Cards.Count)"
+                                 @ondragover:preventDefault>
+                                Drop here
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@if (ShowCreateProject)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Project</h5>
+                    <button type="button" class="btn-close" @onclick="() => ShowCreateProject = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Project Name</label>
+                        <input type="text" class="form-control" @bind="NewProjectName" placeholder="Enter project name..." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" rows="3" @bind="NewProjectDescription" placeholder="Describe your project..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => ShowCreateProject = false">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="CreateProject">Create Project</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (ShowAddCard)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Card</h5>
+                    <button type="button" class="btn-close" @onclick="() => ShowAddCard = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Column</label>
+                        <select class="form-select" @bind="SelectedColumnId">
+                            @foreach (var col in CurrentProject?.Columns.OrderBy(c => c.Order) ?? Enumerable.Empty<ProjectColumn>())
+                            {
+                                <option value="@col.Id">@col.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Card Type</label>
+                        <select class="form-select" @bind="NewCardType">
+                            <option value="@CardType.Note">Note</option>
+                            <option value="@CardType.Issue">Issue</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" @bind="NewCardTitle" placeholder="Enter card title..." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Note</label>
+                        <textarea class="form-control" rows="3" @bind="NewCardNote" placeholder="Add details..."></textarea>
+                    </div>
+                    @if (NewCardType == CardType.Issue)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label">Issue Number</label>
+                            <input type="number" class="form-control" @bind="NewCardIssueNumber" placeholder="Issue #" />
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => ShowAddCard = false">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="AddCard">Add Card</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (ShowAddColumn)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Column</h5>
+                    <button type="button" class="btn-close" @onclick="() => ShowAddColumn = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Column Name</label>
+                        <input type="text" class="form-control" @bind="NewColumnName" placeholder="Enter column name..." />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => ShowAddColumn = false">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="AddColumn">Add Column</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string RepoName { get; set; } = "";
+    [Parameter] public int? ProjectId { get; set; }
+
+    private List<Project> ProjectsList { get; set; } = new();
+    private Project? CurrentProject { get; set; }
+    private bool ShowCreateProject { get; set; }
+    private bool ShowAddCard { get; set; }
+    private bool ShowAddColumn { get; set; }
+
+    private string NewProjectName { get; set; } = "";
+    private string NewProjectDescription { get; set; } = "";
+
+    private int SelectedColumnId { get; set; }
+    private string NewCardTitle { get; set; } = "";
+    private string NewCardNote { get; set; } = "";
+    private CardType NewCardType { get; set; } = CardType.Note;
+    private int? NewCardIssueNumber { get; set; }
+
+    private string NewColumnName { get; set; } = "";
+
+    private int? DraggedCardId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProjects();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadProjects();
+        if (ProjectId.HasValue)
+        {
+            CurrentProject = await ProjectService.GetProjectAsync(RepoName, ProjectId.Value);
+            if (CurrentProject != null && CurrentProject.Columns.Any())
+            {
+                SelectedColumnId = CurrentProject.Columns.First().Id;
+            }
+        }
+        else
+        {
+            CurrentProject = null;
+        }
+    }
+
+    private async Task LoadProjects()
+    {
+        ProjectsList = await ProjectService.GetProjectsAsync(RepoName);
+    }
+
+    private void ShowCreateProjectModal()
+    {
+        NewProjectName = "";
+        NewProjectDescription = "";
+        ShowCreateProject = true;
+    }
+
+    private async Task CreateProject()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (string.IsNullOrWhiteSpace(NewProjectName))
+            return;
+
+        try
+        {
+            var project = await ProjectService.CreateProjectAsync(RepoName, NewProjectName, NewProjectDescription, UserService.Username);
+            ShowCreateProject = false;
+            Navigation.NavigateTo($"/repo/{RepoName}/projects/{project.Id}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating project: {ex.Message}");
+        }
+    }
+
+    private void ShowAddCardModal()
+    {
+        NewCardTitle = "";
+        NewCardNote = "";
+        NewCardType = CardType.Note;
+        NewCardIssueNumber = null;
+        ShowAddCard = true;
+    }
+
+    private async Task AddCard()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (string.IsNullOrWhiteSpace(NewCardTitle) || !ProjectId.HasValue)
+            return;
+
+        try
+        {
+            await ProjectService.AddCardAsync(RepoName, ProjectId.Value, SelectedColumnId, 
+                NewCardTitle, NewCardNote, UserService.Username, NewCardType, NewCardIssueNumber, null);
+            ShowAddCard = false;
+            CurrentProject = await ProjectService.GetProjectAsync(RepoName, ProjectId.Value);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error adding card: {ex.Message}");
+        }
+    }
+
+    private void ShowAddColumnModal()
+    {
+        NewColumnName = "";
+        ShowAddColumn = true;
+    }
+
+    private async Task AddColumn()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (string.IsNullOrWhiteSpace(NewColumnName) || !ProjectId.HasValue)
+            return;
+
+        try
+        {
+            await ProjectService.AddColumnAsync(RepoName, ProjectId.Value, NewColumnName);
+            ShowAddColumn = false;
+            CurrentProject = await ProjectService.GetProjectAsync(RepoName, ProjectId.Value);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error adding column: {ex.Message}");
+        }
+    }
+
+    private async Task DeleteCard(int cardId)
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (!ProjectId.HasValue) return;
+
+        try
+        {
+            await ProjectService.DeleteCardAsync(RepoName, ProjectId.Value, cardId);
+            CurrentProject = await ProjectService.GetProjectAsync(RepoName, ProjectId.Value);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting card: {ex.Message}");
+        }
+    }
+
+    private async Task CloseProject()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (!ProjectId.HasValue) return;
+
+        try
+        {
+            await ProjectService.CloseProjectAsync(RepoName, ProjectId.Value);
+            CurrentProject = await ProjectService.GetProjectAsync(RepoName, ProjectId.Value);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error closing project: {ex.Message}");
+        }
+    }
+
+    private async Task ReopenProject()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (!ProjectId.HasValue) return;
+
+        try
+        {
+            await ProjectService.ReopenProjectAsync(RepoName, ProjectId.Value);
+            CurrentProject = await ProjectService.GetProjectAsync(RepoName, ProjectId.Value);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error reopening project: {ex.Message}");
+        }
+    }
+
+    private void OnDragStart(int cardId)
+    {
+        DraggedCardId = cardId;
+    }
+
+    private async Task OnDrop(int columnId, int order)
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (!DraggedCardId.HasValue || !ProjectId.HasValue) return;
+
+        try
+        {
+            await ProjectService.MoveCardAsync(RepoName, ProjectId.Value, DraggedCardId.Value, columnId, order);
+            CurrentProject = await ProjectService.GetProjectAsync(RepoName, ProjectId.Value);
+            DraggedCardId = null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error moving card: {ex.Message}");
+        }
+    }
+}
+
+<style>
+    .kanban-board {
+        overflow-x: auto;
+        padding-bottom: 1rem;
+    }
+    
+    .kanban-columns {
+        display: flex;
+        gap: 1rem;
+        min-width: min-content;
+    }
+    
+    .kanban-column {
+        flex: 0 0 320px;
+        background-color: #f6f8fa;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    
+    .kanban-column-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .kanban-column-header h5 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    .kanban-column-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        min-height: 200px;
+    }
+    
+    .kanban-card {
+        background-color: white;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        padding: 0.75rem;
+        cursor: move;
+        transition: box-shadow 0.2s;
+    }
+    
+    .kanban-card:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .kanban-card h6 {
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    .card-note {
+        margin: 0.5rem 0 0 0;
+        line-height: 1.4;
+    }
+    
+    .kanban-card-drop-zone {
+        min-height: 40px;
+        border: 2px dashed #d0d7de;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+        font-size: 0.875rem;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    
+    .kanban-card-drop-zone:hover {
+        opacity: 1;
+        background-color: #f6f8fa;
+    }
+</style>

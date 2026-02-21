@@ -1,0 +1,554 @@
+@page "/settings"
+@page "/settings/{Tab}"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using MyPersonalGit.Services
+@using UserProfileModel = MyPersonalGit.Models.UserProfile
+@inject IUserProfileService ProfileService
+@inject CurrentUserService UserService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Settings - MyPersonalGit</PageTitle>
+
+@if (!UserService.IsLoggedIn)
+{
+    <div class="container py-5 text-center">
+        <i class="bi bi-gear" style="font-size: 4rem; color: #6c757d;"></i>
+        <h3 class="mt-3">Authentication Required</h3>
+        <p class="text-muted">Please sign in to access your settings.</p>
+        <a href="/login" class="btn btn-primary">Sign in</a>
+    </div>
+}
+else
+{
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="list-group">
+                <a class="list-group-item list-group-item-action @(ActiveTab == "profile" ? "active" : "")" 
+                   @onclick='() => SetTab("profile")' style="cursor: pointer;">
+                    <i class="bi bi-person"></i> Profile
+                </a>
+                <a class="list-group-item list-group-item-action @(ActiveTab == "account" ? "active" : "")" 
+                   @onclick='() => SetTab("account")' style="cursor: pointer;">
+                    <i class="bi bi-shield-lock"></i> Account Security
+                </a>
+                <a class="list-group-item list-group-item-action @(ActiveTab == "ssh" ? "active" : "")" 
+                   @onclick='() => SetTab("ssh")' style="cursor: pointer;">
+                    <i class="bi bi-key"></i> SSH Keys
+                </a>
+                <a class="list-group-item list-group-item-action @(ActiveTab == "tokens" ? "active" : "")" 
+                   @onclick='() => SetTab("tokens")' style="cursor: pointer;">
+                    <i class="bi bi-code-square"></i> Access Tokens
+                </a>
+                <a class="list-group-item list-group-item-action @(ActiveTab == "sessions" ? "active" : "")" 
+                   @onclick='() => SetTab("sessions")' style="cursor: pointer;">
+                    <i class="bi bi-laptop"></i> Sessions
+                </a>
+                <a class="list-group-item list-group-item-action @(ActiveTab == "notifications" ? "active" : "")" 
+                   @onclick='() => SetTab("notifications")' style="cursor: pointer;">
+                    <i class="bi bi-bell"></i> Notifications
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            @if (ActiveTab == "profile")
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Public Profile</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Avatar URL</label>
+                            <input type="text" class="form-control" @bind="UserProfileData.AvatarUrl" placeholder="https://example.com/avatar.jpg" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" @bind="UserProfileData.FullName" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Bio</label>
+                            <textarea class="form-control" rows="3" @bind="UserProfileData.Bio"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Company</label>
+                            <input type="text" class="form-control" @bind="UserProfileData.Company" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Location</label>
+                            <input type="text" class="form-control" @bind="UserProfileData.Location" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Website</label>
+                            <input type="url" class="form-control" @bind="UserProfileData.Website" placeholder="https://example.com" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Twitter Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text">@("@")</span>
+                                <input type="text" class="form-control" @bind="UserProfileData.TwitterHandle" />
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" @bind="UserProfileData.IsPublic" id="isPublic" />
+                                <label class="form-check-label" for="isPublic">
+                                    Make profile public
+                                </label>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" @onclick="SaveProfile">
+                            <i class="bi bi-check-lg"></i> Save Profile
+                        </button>
+                    </div>
+                </div>
+            }
+            else if (ActiveTab == "account")
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Change Password</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" class="form-control" @bind="CurrentPassword" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-control" @bind="NewPassword" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" @bind="ConfirmPassword" />
+                        </div>
+                        <button class="btn btn-primary" @onclick="ChangePassword">
+                            <i class="bi bi-shield-check"></i> Update Password
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Two-Factor Authentication</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (TwoFactor.IsEnabled)
+                        {
+                            <div class="alert alert-success">
+                                <i class="bi bi-shield-check"></i> Two-factor authentication is enabled
+                            </div>
+                            <p>Enabled on @TwoFactor.EnabledAt?.ToString("g")</p>
+                            <button class="btn btn-danger" @onclick="Disable2FA">
+                                <i class="bi bi-x-circle"></i> Disable 2FA
+                            </button>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning">
+                                <i class="bi bi-shield-exclamation"></i> Two-factor authentication is not enabled
+                            </div>
+                            <p>Add an extra layer of security to your account by enabling two-factor authentication.</p>
+                            <button class="btn btn-primary" @onclick="Enable2FA">
+                                <i class="bi bi-shield-plus"></i> Enable 2FA
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+            else if (ActiveTab == "ssh")
+            {
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">SSH Keys</h5>
+                        <button class="btn btn-primary btn-sm" @onclick='() => ShowAddSshKey = true'>
+                            <i class="bi bi-plus-lg"></i> Add SSH Key
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        @if (SshKeys.Count == 0)
+                        {
+                            <p class="text-muted">No SSH keys configured</p>
+                        }
+                        else
+                        {
+                            <div class="list-group">
+                                @foreach (var key in SshKeys)
+                                {
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">@key.Title</h6>
+                                                <p class="mb-1 font-monospace small">@key.Fingerprint</p>
+                                                <small class="text-muted">
+                                                    Added @key.CreatedAt.ToString("MMM d, yyyy")
+                                                    @if (key.LastUsed.HasValue)
+                                                    {
+                                                        <span> • Last used @key.LastUsed.Value.ToString("MMM d, yyyy")</span>
+                                                    }
+                                                </small>
+                                            </div>
+                                            <button class="btn btn-danger btn-sm" @onclick="() => DeleteSshKey(key.Id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else if (ActiveTab == "tokens")
+            {
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Personal Access Tokens</h5>
+                        <button class="btn btn-primary btn-sm" @onclick='() => ShowAddToken = true'>
+                            <i class="bi bi-plus-lg"></i> Generate Token
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        @if (Tokens.Count == 0)
+                        {
+                            <p class="text-muted">No personal access tokens</p>
+                        }
+                        else
+                        {
+                            <div class="list-group">
+                                @foreach (var token in Tokens)
+                                {
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">@token.Name</h6>
+                                                <p class="mb-1">
+                                                    <span class="badge bg-secondary">@string.Join(", ", token.Scopes)</span>
+                                                </p>
+                                                <small class="text-muted">
+                                                    Created @token.CreatedAt.ToString("MMM d, yyyy")
+                                                    @if (token.ExpiresAt.HasValue)
+                                                    {
+                                                        <span> • Expires @token.ExpiresAt.Value.ToString("MMM d, yyyy")</span>
+                                                    }
+                                                    @if (token.LastUsed.HasValue)
+                                                    {
+                                                        <span> • Last used @token.LastUsed.Value.ToString("MMM d, yyyy")</span>
+                                                    }
+                                                </small>
+                                            </div>
+                                            <button class="btn btn-danger btn-sm" @onclick="() => DeleteToken(token.Id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else if (ActiveTab == "sessions")
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Active Sessions</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Sessions.Count == 0)
+                        {
+                            <p class="text-muted">No active sessions</p>
+                        }
+                        else
+                        {
+                            <div class="list-group">
+                                @foreach (var session in Sessions)
+                                {
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <i class="bi bi-laptop"></i> @session.UserAgent
+                                                </h6>
+                                                <p class="mb-1">
+                                                    <i class="bi bi-geo-alt"></i> @session.IpAddress
+                                                </p>
+                                                <small class="text-muted">
+                                                    Started @session.CreatedAt.ToString("g")
+                                                    • Last activity @session.LastActivity.ToString("g")
+                                                </small>
+                                            </div>
+                                            <button class="btn btn-danger btn-sm" @onclick="() => RevokeSession(session.Id)">
+                                                <i class="bi bi-x-circle"></i> Revoke
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else if (ActiveTab == "notifications")
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Notification Preferences</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" @bind="NotifyOnPullRequest" id="notifyPR" />
+                                <label class="form-check-label" for="notifyPR">
+                                    Pull request notifications
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" @bind="NotifyOnIssue" id="notifyIssue" />
+                                <label class="form-check-label" for="notifyIssue">
+                                    Issue notifications
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" @bind="NotifyOnMention" id="notifyMention" />
+                                <label class="form-check-label" for="notifyMention">
+                                    Mention notifications
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" @bind="NotifyOnComment" id="notifyComment" />
+                                <label class="form-check-label" for="notifyComment">
+                                    Comment notifications
+                                </label>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" @onclick="SaveNotificationSettings">
+                            <i class="bi bi-check-lg"></i> Save Preferences
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (ShowAddSshKey)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add SSH Key</h5>
+                    <button type="button" class="btn-close" @onclick='() => ShowAddSshKey = false'></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" @bind="NewSshKeyTitle" placeholder="My SSH Key" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Key</label>
+                        <textarea class="form-control font-monospace" rows="5" @bind="NewSshKeyContent" 
+                                  placeholder="ssh-rsa AAAAB3NzaC1yc2E..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick='() => ShowAddSshKey = false'>Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="AddSshKey">Add Key</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (ShowAddToken)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Generate Personal Access Token</h5>
+                    <button type="button" class="btn-close" @onclick='() => ShowAddToken = false'></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Token Name</label>
+                        <input type="text" class="form-control" @bind="NewTokenName" placeholder="My Token" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Scopes</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="TokenScopeRepo" id="scopeRepo" />
+                            <label class="form-check-label" for="scopeRepo">repo - Full repository access</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="TokenScopeUser" id="scopeUser" />
+                            <label class="form-check-label" for="scopeUser">user - User profile access</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="TokenScopeAdmin" id="scopeAdmin" />
+                            <label class="form-check-label" for="scopeAdmin">admin - Administrative access</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Expiration (days)</label>
+                        <input type="number" class="form-control" @bind="TokenExpirationDays" placeholder="30" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick='() => ShowAddToken = false'>Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="GenerateToken">Generate Token</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+} @* end else (IsLoggedIn) *@
+
+@code {
+    [Parameter]
+    public string? Tab { get; set; }
+
+    private string ActiveTab = "profile";
+
+    private UserProfileModel UserProfileData = new();
+    private TwoFactorAuth TwoFactor = new();
+    private List<SshKey> SshKeys = new();
+    private List<PersonalAccessToken> Tokens = new();
+    private List<ActiveUserSession> Sessions = new();
+
+    private string CurrentPassword = "";
+    private string NewPassword = "";
+    private string ConfirmPassword = "";
+
+    private bool NotifyOnPullRequest = true;
+    private bool NotifyOnIssue = true;
+    private bool NotifyOnMention = true;
+    private bool NotifyOnComment = true;
+
+    private bool ShowAddSshKey = false;
+    private string NewSshKeyTitle = "";
+    private string NewSshKeyContent = "";
+
+    private bool ShowAddToken = false;
+    private string NewTokenName = "";
+    private bool TokenScopeRepo = false;
+    private bool TokenScopeUser = false;
+    private bool TokenScopeAdmin = false;
+    private int TokenExpirationDays = 30;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(Tab))
+        {
+            ActiveTab = Tab;
+        }
+        await LoadData();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(Tab))
+        {
+            ActiveTab = Tab;
+        }
+    }
+
+    private void SetTab(string tab)
+    {
+        ActiveTab = tab;
+        Navigation.NavigateTo($"/settings/{tab}");
+    }
+
+    private async Task LoadData()
+    {
+        if (!UserService.IsLoggedIn) return;
+        UserProfileData = await ProfileService.GetProfileAsync(UserService.Username);
+        TwoFactor = await ProfileService.Get2FAAsync(UserService.Username) ?? new();
+        SshKeys = await ProfileService.GetSshKeysAsync(UserService.Username);
+        Tokens = await ProfileService.GetTokensAsync(UserService.Username);
+        Sessions = await ProfileService.GetSessionsAsync(UserService.Username);
+    }
+
+    private async Task SaveProfile()
+    {
+        await ProfileService.SaveProfileAsync(UserProfileData);
+    }
+
+    private async Task ChangePassword()
+    {
+        if (NewPassword != ConfirmPassword)
+        {
+            return;
+        }
+    }
+
+    private async Task Enable2FA()
+    {
+        await ProfileService.Enable2FAAsync(UserService.Username);
+        await LoadData();
+    }
+
+    private async Task Disable2FA()
+    {
+        await ProfileService.Disable2FAAsync(UserService.Username);
+        await LoadData();
+    }
+
+    private async Task AddSshKey()
+    {
+        await ProfileService.AddSshKeyAsync(UserService.Username, NewSshKeyTitle, NewSshKeyContent);
+        ShowAddSshKey = false;
+        NewSshKeyTitle = "";
+        NewSshKeyContent = "";
+        await LoadData();
+    }
+
+    private async Task DeleteSshKey(int id)
+    {
+        await ProfileService.DeleteSshKeyAsync(UserService.Username, id);
+        await LoadData();
+    }
+
+    private async Task GenerateToken()
+    {
+        var scopes = new List<string>();
+        if (TokenScopeRepo) scopes.Add("repo");
+        if (TokenScopeUser) scopes.Add("user");
+        if (TokenScopeAdmin) scopes.Add("admin");
+
+        DateTime? expiresAt = TokenExpirationDays > 0 ? DateTime.UtcNow.AddDays(TokenExpirationDays) : null;
+        await ProfileService.CreateTokenAsync(UserService.Username, NewTokenName, scopes.ToArray(), expiresAt);
+        ShowAddToken = false;
+        NewTokenName = "";
+        TokenScopeRepo = false;
+        TokenScopeUser = false;
+        TokenScopeAdmin = false;
+        await LoadData();
+    }
+
+    private async Task DeleteToken(int id)
+    {
+        await ProfileService.DeleteTokenAsync(UserService.Username, id);
+        await LoadData();
+    }
+
+    private async Task RevokeSession(int id)
+    {
+        await ProfileService.RevokeSessionAsync(UserService.Username, id);
+        await LoadData();
+    }
+
+    private async Task SaveNotificationSettings()
+    {
+    }
+}

@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/.git
+**/.vs
+**/.vscode
+**/node_modules/
+**/*.user
+**/*.suo
+**/Thumbs.db
+*.md
+.gitignore
+.dockerignore
