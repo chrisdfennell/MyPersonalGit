@@ -277,6 +277,8 @@ else
             }
             else
             {
+                <div class="row">
+                <div class="@(languageStats.Any() ? "col-md-9" : "col-12")">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="d-flex align-items-center gap-2">
                         <div class="dropdown">
@@ -404,28 +406,40 @@ else
                     </div>
                 }
 
-                @if (languageStats.Any() && string.IsNullOrEmpty(fileSearchTerm) && string.IsNullOrEmpty(Path))
+                </div>
+
+                @if (languageStats.Any() && string.IsNullOrEmpty(fileSearchTerm))
                 {
-                    <div class="languages-section mb-5">
-                        <h6 class="fw-bold mb-3">Languages</h6>
-                        <div class="language-bar d-flex rounded overflow-hidden" style="height: 8px;">
-                            @foreach (var lang in languageStats)
+                    <div class="col-md-3">
+                        <div class="border-bottom pb-3 mb-3">
+                            <h6 class="fw-bold mb-3">About</h6>
+                            @if (!string.IsNullOrEmpty(repoDescription))
                             {
-                                <div style="width: @lang.Percentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%; background-color: @lang.Color;" title="@lang.Name @lang.Percentage.ToString("F1")%"></div>
+                                <p class="text-muted small">@repoDescription</p>
                             }
                         </div>
-                        <div class="d-flex flex-wrap gap-3 mt-2">
-                            @foreach (var lang in languageStats)
-                            {
-                                <div class="d-flex align-items-center small">
-                                    <span class="rounded-circle d-inline-block me-1" style="width: 10px; height: 10px; background-color: @lang.Color;"></span>
-                                    <span class="fw-bold me-1">@lang.Name</span>
-                                    <span class="text-muted">@lang.Percentage.ToString("F1")%</span>
-                                </div>
-                            }
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-3">Languages</h6>
+                            <div class="language-bar d-flex rounded overflow-hidden" style="height: 8px;">
+                                @foreach (var lang in languageStats)
+                                {
+                                    <div style="width: @lang.Percentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%; background-color: @lang.Color;" title="@lang.Name @lang.Percentage.ToString("F1")%"></div>
+                                }
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                @foreach (var lang in languageStats)
+                                {
+                                    <div class="d-flex align-items-center small">
+                                        <span class="rounded-circle d-inline-block me-1" style="width: 10px; height: 10px; background-color: @lang.Color;"></span>
+                                        <span class="fw-bold me-1">@lang.Name</span>
+                                        <span class="text-muted">@lang.Percentage.ToString("F1")%</span>
+                                    </div>
+                                }
+                            </div>
                         </div>
                     </div>
                 }
+                </div>
             }
         }
         else if (activeTab == "branches")
@@ -2794,7 +2808,7 @@ else
     private string GetRelativeTime(DateTime? date)
     {
         if (!date.HasValue) return "just now";
-        var span = DateTime.UtcNow - date.Value;
+        var span = DateTime.Now - date.Value;
         if (span.TotalDays > 365) return $"{(int)(span.TotalDays / 365)} year{((int)(span.TotalDays / 365) != 1 ? "s" : "")} ago";
         if (span.TotalDays > 30) return date.Value.ToString("MMM dd, yyyy");
         if (span.TotalDays > 1) return $"{(int)span.TotalDays} days ago";
