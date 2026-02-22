@@ -46,7 +46,7 @@ else
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-0 h4">
                             <li class="breadcrumb-item"><a href="/profile/@UserService.Username" class="text-decoration-none">@UserService.Username</a></li>
-                            <li class="breadcrumb-item active fw-bold text-dark" aria-current="page">@RepoName</li>
+                            <li class="breadcrumb-item active fw-bold text-body" aria-current="page">@RepoName</li>
                         </ol>
                     </nav>
                     <span class="badge rounded-pill border @(repoIsPrivate ? "bg-warning bg-opacity-10 text-warning border-warning-subtle" : "text-muted") fw-normal ms-2" style="font-size: 12px;">
@@ -59,7 +59,7 @@ else
                     {
                         <button class="btn btn-light btn-sm border px-3 @(repoIsForked ? "disabled" : "")" @onclick="ForkRepository" disabled="@repoIsForked">
                             <i class="bi bi-diagram-3 me-1"></i> @(repoIsForked ? "Forked" : "Fork")
-                            @if (repoForkCount > 0) { <span class="badge bg-secondary bg-opacity-10 text-dark ms-1">@repoForkCount</span> }
+                            @if (repoForkCount > 0) { <span class="badge bg-secondary bg-opacity-10 text-body ms-1">@repoForkCount</span> }
                         </button>
                     }
                     <div class="dropdown">
@@ -153,7 +153,7 @@ else
                 <li class="nav-item">
                     <button class="nav-link @(activeTab == "commits" || activeTab == "commit-detail" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("commits")'>
                         <i class="bi bi-clock-history me-1"></i> Commits
-                        <span class="badge rounded-pill bg-secondary bg-opacity-10 text-dark ms-1">@commitCount</span>
+                        <span class="badge rounded-pill bg-secondary bg-opacity-10 text-body ms-1">@commitCount</span>
                     </button>
                 </li>
                 <li class="nav-item">
@@ -164,19 +164,19 @@ else
                 <li class="nav-item">
                     <button class="nav-link @(activeTab == "branches" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("branches")'>
                         <i class="bi bi-branches me-1"></i> Branches
-                        <span class="badge rounded-pill bg-secondary bg-opacity-10 text-dark ms-1">@branches.Count</span>
+                        <span class="badge rounded-pill bg-secondary bg-opacity-10 text-body ms-1">@branches.Count</span>
                     </button>
                 </li>
                 <li class="nav-item">
                     <button class="nav-link @(activeTab == "tags" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("tags")'>
                         <i class="bi bi-tags me-1"></i> Tags
-                        <span class="badge rounded-pill bg-secondary bg-opacity-10 text-dark ms-1">@tags.Count</span>
+                        <span class="badge rounded-pill bg-secondary bg-opacity-10 text-body ms-1">@tags.Count</span>
                     </button>
                 </li>
                 <li class="nav-item">
                     <button class="nav-link @(activeTab == "releases" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("releases")'>
                         <i class="bi bi-tag me-1"></i> Releases
-                        @if (releases.Any()) { <span class="badge rounded-pill bg-secondary bg-opacity-10 text-dark ms-1">@releases.Count</span> }
+                        @if (releases.Any()) { <span class="badge rounded-pill bg-secondary bg-opacity-10 text-body ms-1">@releases.Count</span> }
                     </button>
                 </li>
                 <li class="nav-item">
@@ -260,7 +260,7 @@ else
                                 <i class="bi bi-lock small text-muted"></i>
                             </div>
                         </div>
-                        <div class="card-body p-0 bg-white">
+                        <div class="card-body p-0">
                             @if (Path?.EndsWith(".md", StringComparison.OrdinalIgnoreCase) == true && !showRaw)
                             {
                                 <div class="p-4 markdown-body">
@@ -269,7 +269,7 @@ else
                             }
                             else
                             {
-                                <pre class="m-0 bg-white text-dark line-numbers" style="font-size: 13px; line-height: 1.5; overflow-x: auto; padding: 0.5em 0.5em 0.5em 3.8em;"><code class="@GetPrismLanguageClass(Path)">@fileContent</code></pre>
+                                <pre class="m-0 line-numbers" style="font-size: 13px; line-height: 1.5; overflow-x: auto; padding: 0.5em 0.5em 0.5em 3.8em;"><code class="@GetPrismLanguageClass(Path)">@fileContent</code></pre>
                             }
                         </div>
                     </div>
@@ -306,7 +306,7 @@ else
                         </div>
 
                         <div class="input-group input-group-sm" style="width: 240px;">
-                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                            <span class="input-group-text border-end-0 text-muted"><i class="bi bi-search"></i></span>
                             <input type="text" class="form-control border-start-0 ps-0 shadow-none" placeholder="Go to file..." @bind="fileSearchTerm" @bind:event="oninput" />
                         </div>
                     </div>
@@ -333,7 +333,7 @@ else
                             @if (latestCommit != null)
                             {
                                 <div>
-                                    <strong class="text-dark">@latestCommit.AuthorName</strong>
+                                    <strong class="text-body">@latestCommit.AuthorName</strong>
                                     <span class="text-muted ms-2">@latestCommit.Message</span>
                                 </div>
                                 <div class="text-muted">
@@ -374,7 +374,7 @@ else
                                     }
                                 </div>
                                 <div class="flex-grow-1">
-                                    <a href="/repo/@RepoName/@itemPath" class="text-decoration-none text-dark d-block">@item.Name</a>
+                                    <a href="/repo/@RepoName/@itemPath" class="text-decoration-none text-body d-block">@item.Name</a>
                                 </div>
                                 <div class="text-muted small d-none d-md-block text-truncate" style="width: 250px;" title="@item.LastCommitMessage">
                                     @(string.IsNullOrEmpty(item.LastCommitMessage) ? latestCommit?.Message : item.LastCommitMessage)
@@ -391,7 +391,7 @@ else
                 {
                     <div class="readme-container mb-5">
                         <div class="card border shadow-sm">
-                            <div class="card-header py-2 bg-white d-flex align-items-center">
+                            <div class="card-header py-2 d-flex align-items-center">
                                 <i class="bi bi-book text-muted me-2"></i>
                                 <span class="fw-bold small">README.md</span>
                             </div>
@@ -426,7 +426,7 @@ else
                                 <div class="d-flex align-items-center">
                                     <i class="bi bi-branches text-muted me-3"></i>
                                     <div>
-                                        <button class="btn btn-link p-0 text-decoration-none text-dark fw-bold" @onclick="() => SwitchBranch(b.Name)">@b.Name</button>
+                                        <button class="btn btn-link p-0 text-decoration-none text-body fw-bold" @onclick="() => SwitchBranch(b.Name)">@b.Name</button>
                                         @if (b.Name == currentBranch)
                                         {
                                             <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary-subtle ms-2 small" style="font-size: 10px;">Default</span>
@@ -564,8 +564,8 @@ else
                                     <div>
                                         <h5 class="fw-bold mb-1">
                                             <i class="bi bi-tag me-1 text-success"></i> @release.Title
-                                            @if (release.IsDraft) { <span class="badge bg-warning text-dark ms-1">Draft</span> }
-                                            @if (release.IsPrerelease) { <span class="badge bg-info text-dark ms-1">Pre-release</span> }
+                                            @if (release.IsDraft) { <span class="badge bg-warning text-body ms-1">Draft</span> }
+                                            @if (release.IsPrerelease) { <span class="badge bg-info text-body ms-1">Pre-release</span> }
                                         </h5>
                                         <div class="small text-muted mb-2">
                                             <span class="font-monospace bg-light px-1 rounded">@release.TagName</span>
@@ -983,14 +983,14 @@ else
                 @if (!string.IsNullOrEmpty(Path))
                 {
                     <div class="mb-3">
-                        <span class="badge bg-light text-dark border fw-normal">History for: <code>@Path</code></span>
+                        <span class="badge bg-light text-body border fw-normal">History for: <code>@Path</code></span>
                         <button class="btn btn-link btn-sm text-decoration-none" @onclick="ClearFileFilter">Clear filter</button>
                     </div>
                 }
                 @foreach (var commit in commitHistory)
                 {
                     <div class="commit-item mb-4 position-relative">
-                        <div class="commit-dot position-absolute bg-white border border-2 border-secondary" style="width: 12px; height: 12px; left: -31px; top: 6px; border-radius: 50%;"></div>
+                        <div class="commit-dot position-absolute border border-2 border-secondary" style="width: 12px; height: 12px; left: -31px; top: 6px; border-radius: 50%; background-color: var(--bs-body-bg);"></div>
                         <div class="card border shadow-sm">
                             <div class="card-body py-2 px-3">
                                 <div class="d-flex justify-content-between align-items-start">
@@ -1070,9 +1070,9 @@ else
                         <hr />
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex gap-3 small text-muted">
-                                <span>commit <code class="text-dark">@selectedCommit.Sha</code></span>
+                                <span>commit <code>@selectedCommit.Sha</code></span>
                             </div>
-                            <div class="btn-group btn-group-sm bg-white border rounded shadow-sm">
+                            <div class="btn-group btn-group-sm border rounded shadow-sm">
                                 <button type="button" class="btn btn-light @(diffViewMode == "unified" ? "active border-primary" : "")" @onclick='() => diffViewMode = "unified"'>Unified</button>
                                 <button type="button" class="btn btn-light @(diffViewMode == "split" ? "active border-primary" : "")" @onclick='() => diffViewMode = "split"'>Split</button>
                             </div>
@@ -1086,12 +1086,12 @@ else
                     <div class="card border shadow-sm mb-3">
                         <div class="card-header py-2 bg-light-subtle d-flex justify-content-between">
                             <span class="fw-bold small font-monospace">@patch.Path</span>
-                            <span class="badge bg-white border text-dark fw-normal">@patch.LinesAdded additions / @patch.LinesDeleted deletions</span>
+                            <span class="badge border fw-normal">@patch.LinesAdded additions / @patch.LinesDeleted deletions</span>
                         </div>
                         <div class="card-body p-0">
                             @if (diffViewMode == "unified")
                             {
-                                <div class="diff-container bg-white font-monospace" style="font-size: 12px; line-height: 1.4; overflow-x: auto;">
+                                <div class="diff-container font-monospace" style="font-size: 12px; line-height: 1.4; overflow-x: auto;">
                                     @foreach (var row in GetUnifiedDiffRows(patch.DiffLines))
                                     {
                                         <div class="diff-line d-flex @row.CssClass">
@@ -1105,7 +1105,7 @@ else
                             }
                             else
                             {
-                                <div class="diff-container bg-white font-monospace border-top" style="font-size: 12px; line-height: 1.4; overflow-x: auto;">
+                                <div class="diff-container font-monospace border-top" style="font-size: 12px; line-height: 1.4; overflow-x: auto;">
                                     @foreach (var pair in GetSplitDiffWithLineNumbers(patch.DiffLines))
                                     {
                                         <div class="d-flex border-bottom">
@@ -1425,6 +1425,78 @@ else
     .line-numbers-gutter {
         pointer-events: none;
         z-index: 1;
+    }
+
+    /* Dark mode overrides */
+    [data-bs-theme="dark"] .list-group-item:hover {
+        background-color: #161b22;
+    }
+
+    [data-bs-theme="dark"] .markdown-body h1,
+    [data-bs-theme="dark"] .markdown-body h2 {
+        border-bottom-color: #30363d;
+    }
+
+    [data-bs-theme="dark"] .markdown-body blockquote {
+        color: #8b949e;
+        border-left-color: #30363d;
+    }
+
+    [data-bs-theme="dark"] .markdown-body table tr {
+        background-color: #0d1117;
+        border-top-color: #30363d;
+    }
+
+    [data-bs-theme="dark"] .markdown-body table tr:nth-child(2n) {
+        background-color: #161b22;
+    }
+
+    [data-bs-theme="dark"] .markdown-body table th,
+    [data-bs-theme="dark"] .markdown-body table td {
+        border-color: #30363d;
+    }
+
+    [data-bs-theme="dark"] .markdown-body img {
+        background-color: transparent;
+    }
+
+    [data-bs-theme="dark"] .markdown-body hr {
+        background-color: #30363d;
+    }
+
+    [data-bs-theme="dark"] .markdown-body code {
+        background-color: rgba(110,118,129,0.4);
+    }
+
+    [data-bs-theme="dark"] pre[class*="language-"] {
+        background: #0d1117 !important;
+        color: #e6edf3 !important;
+    }
+
+    [data-bs-theme="dark"] .line-numbers .line-numbers-rows {
+        border-right-color: #30363d !important;
+    }
+
+    [data-bs-theme="dark"] .diff-linenum {
+        color: #8b949e;
+    }
+
+    [data-bs-theme="dark"] .upload-zone {
+        border-color: #30363d;
+        background-color: #161b22;
+    }
+
+    [data-bs-theme="dark"] .upload-zone.dragging {
+        border-color: #58a6ff;
+        background-color: #0d2137;
+    }
+
+    [data-bs-theme="dark"] .upload-zone:hover {
+        border-color: #58a6ff;
+    }
+
+    [data-bs-theme="dark"] .commit-item::before {
+        background-color: #30363d;
     }
 </style>
 
