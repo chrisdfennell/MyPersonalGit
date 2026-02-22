@@ -116,8 +116,23 @@ using (var scope = app.Services.CreateScope())
             adminUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(resetPassword, workFactor: 12);
             db.SaveChanges();
             Console.WriteLine($"==> Password reset for admin account '{adminUser.Username}'");
-            Console.WriteLine("==> IMPORTANT: Remove the RESET_ADMIN_PASSWORD env var and restart!");
         }
+        else
+        {
+            // Admin was deleted — recreate it
+            db.Users.Add(new User
+            {
+                Username = "admin",
+                Email = "admin@localhost",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(resetPassword, workFactor: 12),
+                IsAdmin = true,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            });
+            db.SaveChanges();
+            Console.WriteLine("==> Admin account recreated with provided password");
+        }
+        Console.WriteLine("==> IMPORTANT: Remove the RESET_ADMIN_PASSWORD env var and restart!");
     }
 }
 
