@@ -6,22 +6,48 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 
 ## Features
 
+### Code & Repositories
 - **Repository Management** — Create, browse, and delete Git repositories with a full code browser, file editor, commit history, branches, and tags
-- **Issues & Pull Requests** — Create, comment on, close/reopen issues and PRs with labels, assignees, and reviews. Merge PRs with merge commit, squash, or rebase strategies
-- **Dark Mode** — Full dark mode support with a toggle in the header, saved to localStorage
-- **Activity Feed** — See recent activity across all repositories on the home page
+- **Repository Archiving** — Mark repositories as read-only with visual badges; pushes are blocked for archived repos
+- **Git Smart HTTP** — Clone, fetch, and push over HTTP with Basic Auth
+- **Git LFS** — Large File Storage support for tracking binary files
+- **Repository Mirroring** — Mirror repositories to/from external Git remotes
 - **Compare View** — Compare branches with ahead/behind commit counts and full diff rendering
 - **Language Stats** — GitHub-style language breakdown bar on each repository page
-- **CI/CD Runner** — Define workflows in `.github/workflows/*.yml` and run them in Docker containers
+- **Branch Protection** — Configurable rules for required reviews, status checks, and force-push prevention
+- **Search** — Full-text search across repositories, issues, PRs, and code
+
+### Collaboration
+- **Issues & Pull Requests** — Create, comment on, close/reopen issues and PRs with labels, assignees, and reviews. Merge PRs with merge commit, squash, or rebase strategies
 - **Wiki** — Markdown-based wiki pages per repository with revision history
 - **Projects** — Kanban boards with drag-and-drop cards for organizing work
-- **Security** — Security advisories, dependency scanning, and vulnerability tracking
-- **User Profiles** — Contribution heatmap, activity feed, and stats per user
-- **Branch Protection** — Configurable rules for required reviews, status checks, and force-push prevention
-- **Git Smart HTTP** — Clone, fetch, and push over HTTP with Basic Auth
-- **Search** — Full-text search across repositories, issues, PRs, and code
-- **Notifications** — In-app notifications for mentions, comments, and repository activity
+- **Snippets** — Share code snippets (like GitHub Gists) with syntax highlighting and multiple files
+
+### CI/CD & DevOps
+- **CI/CD Runner** — Define workflows in `.github/workflows/*.yml` and run them in Docker containers
+- **Webhooks** — Trigger external services on repository events
+- **Prometheus Metrics** — Built-in `/metrics` endpoint for monitoring
+
+### Package & Container Hosting
+- **Container Registry** — Host Docker/OCI images with `docker push` and `docker pull` (OCI Distribution Spec)
+- **NuGet Registry** — Host .NET packages with full NuGet v3 API (service index, search, push, restore)
+- **npm Registry** — Host Node.js packages with standard npm publish/install
+- **Generic Packages** — Upload and download arbitrary binary artifacts via REST API
+
+### Static Sites
+- **Pages** — Serve static websites directly from a repository branch (like GitHub Pages) at `/pages/{owner}/{repo}/`
+
+### Notifications
+- **In-App Notifications** — Mentions, comments, and repository activity
+- **Push Notifications** — Ntfy and Gotify integration for real-time mobile/desktop alerts with per-user opt-in
+
+### Administration
 - **Admin Dashboard** — System settings, user management, audit logs, and statistics
+- **User Profiles** — Contribution heatmap, activity feed, and stats per user
+- **Personal Access Tokens** — Token-based API authentication with configurable scopes
+- **Backup & Restore** — Export and import server data
+- **Security** — Security advisories, dependency scanning, and vulnerability tracking
+- **Dark Mode** — Full dark/light mode support with a toggle in the header
 
 ## Tech Stack
 
@@ -31,9 +57,10 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 | Frontend | Blazor Server (interactive server-side rendering) |
 | Database | SQLite via Entity Framework Core 8 |
 | Git Engine | LibGit2Sharp |
-| Auth | BCrypt password hashing, session-based authentication |
+| Auth | BCrypt password hashing, session-based authentication, PAT tokens |
 | Markdown | Markdig |
 | CI/CD | Docker.DotNet, YamlDotNet |
+| Monitoring | Prometheus metrics |
 
 ## Quick Start
 
@@ -86,6 +113,7 @@ The app starts at **http://localhost:5146**.
 | `Git__ProjectRoot` | Directory where Git repos are stored | `/repos` |
 | `Git__RequireAuth` | Require auth for Git HTTP operations | `true` |
 | `Git__Users__<username>` | Set password for Git HTTP Basic Auth user | — |
+| `RESET_ADMIN_PASSWORD` | Emergency admin password reset on startup | — |
 
 ## Usage
 
@@ -126,6 +154,64 @@ You can edit files directly in the browser:
 - Use **Add files > Create new file** to add files without a local clone
 - Use **Add files > Upload files/folder** to upload from your machine
 
+### 6. Container Registry
+
+Push and pull Docker/OCI images directly to your server:
+
+```bash
+# Log in (use a Personal Access Token from Settings > Access Tokens)
+docker login localhost:8080 -u youruser
+
+# Push an image
+docker tag myapp:latest localhost:8080/myapp:v1
+docker push localhost:8080/myapp:v1
+
+# Pull an image
+docker pull localhost:8080/myapp:v1
+```
+
+> **Note:** Docker requires HTTPS by default. For HTTP, add your server to Docker's `insecure-registries` in `~/.docker/daemon.json`:
+> ```json
+> { "insecure-registries": ["localhost:8080"] }
+> ```
+
+### 7. Package Registry
+
+**NuGet (.NET packages):**
+```bash
+dotnet nuget add source http://localhost:8080/api/packages/nuget/v3/index.json \
+  --name mygit --username youruser --password yourPAT
+dotnet nuget push MyPackage.1.0.0.nupkg --source mygit --api-key yourPAT
+```
+
+**npm (Node.js packages):**
+```bash
+npm config set //localhost:8080/api/packages/npm/:_authToken="yourPAT"
+npm publish --registry=http://localhost:8080/api/packages/npm
+```
+
+**Generic (any binary):**
+```bash
+curl -u youruser:yourPAT -X PUT \
+  --upload-file myfile.zip \
+  http://localhost:8080/api/packages/generic/my-tool/1.0.0/myfile.zip
+```
+
+Browse all packages at `/packages` in the web UI.
+
+### 8. Pages (Static Site Hosting)
+
+Serve static websites from a repository branch:
+
+1. Go to your repository's **Settings** tab and enable **Pages**
+2. Set the branch (default: `gh-pages`)
+3. Push HTML/CSS/JS to that branch
+4. Visit `http://localhost:8080/pages/{username}/{repo}/`
+
+### 9. Push Notifications
+
+Configure Ntfy or Gotify in **Admin > System Settings** to receive push notifications on your phone or desktop when issues, PRs, or comments are created. Users can opt in/out in **Settings > Notifications**.
+
 ## Deploy to a NAS
 
 MyPersonalGit works great on a NAS (QNAP, Synology, etc.) via Docker:
@@ -152,6 +238,7 @@ All settings can be configured in `appsettings.json`, via environment variables,
 - Feature toggles (Issues, Wiki, Projects, Actions)
 - Max repository size and count per user
 - SMTP settings for email notifications
+- Push notification settings (Ntfy/Gotify)
 
 ## Project Structure
 
@@ -159,12 +246,12 @@ All settings can be configured in `appsettings.json`, via environment variables,
 MyPersonalGit/
   Components/
     Layout/          # MainLayout, NavMenu
-    Pages/           # Blazor pages (Home, RepoDetails, Issues, PRs, etc.)
-  Controllers/       # REST API endpoints
+    Pages/           # Blazor pages (Home, RepoDetails, Issues, PRs, Packages, etc.)
+  Controllers/       # REST API endpoints (NuGet, npm, Generic, Registry, etc.)
   Data/              # EF Core DbContext, service implementations
   Models/            # Domain models
   Migrations/        # EF Core migrations
-  Services/          # Middleware (auth, Git HTTP backend)
+  Services/          # Middleware (auth, Git HTTP backend, Pages, Registry auth)
   Program.cs         # App startup, DI, middleware pipeline
 MyPersonalGit.Tests/
   UnitTest1.cs       # xUnit tests with InMemory database
