@@ -1028,21 +1028,23 @@ else
                             }
                             else
                             {
-                                <div class="editor-wrapper position-relative">
-                                    <div id="editorGutter" class="editor-gutter position-absolute text-end pe-2 user-select-none"
-                                         style="left: 0; top: 0; width: 50px; height: 100%; font-size: 12px; line-height: 20px; padding-top: 12px; font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace; overflow: hidden;">
-                                        @{
-                                            var editorLineCount = string.IsNullOrEmpty(editingContent) ? 1 : editingContent.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None).Length;
-                                        }
-                                        @for (int ln = 1; ln <= editorLineCount; ln++)
-                                        {
-                                            <div>@ln</div>
-                                        }
+                                <div class="editor-wrapper border rounded overflow-hidden">
+                                    <div style="max-height: 600px; overflow: auto; display: flex; align-items: stretch;">
+                                        <div id="editorGutter" class="editor-gutter text-end pe-2 user-select-none flex-shrink-0"
+                                             style="width: 50px; font-size: 12px; line-height: 20px; padding-top: 6px; padding-bottom: 6px; font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;">
+                                            @{
+                                                var editorLineCount = string.IsNullOrEmpty(editingContent) ? 1 : editingContent.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None).Length;
+                                            }
+                                            @for (int ln = 1; ln <= editorLineCount; ln++)
+                                            {
+                                                <div>@ln</div>
+                                            }
+                                        </div>
+                                        <textarea id="codeEditor" class="editor-textarea border-0 font-monospace flex-grow-1"
+                                                  wrap="off"
+                                                  style="resize: none; overflow: hidden; font-size: 13px; line-height: 20px; padding: 6px 12px; outline: none; min-width: 0;"
+                                                  @bind="editingContent" @bind:event="oninput"></textarea>
                                     </div>
-                                    <textarea id="codeEditor" class="editor-textarea form-control border-0 font-monospace"
-                                              wrap="off"
-                                              style="min-height: 400px; font-size: 13px; line-height: 20px; resize: vertical; padding-left: 60px; padding-top: 12px; padding-right: 12px; overflow-x: auto;"
-                                              @bind="editingContent" @bind:event="oninput"></textarea>
                                 </div>
                             }
                         </div>
@@ -2432,7 +2434,7 @@ else
         if ((activeTab == "edit" || activeTab == "add-file") && editorMode == "edit")
         {
             try { await JS.InvokeVoidAsync("editorHelper.enableTabKey", "codeEditor"); } catch { }
-            try { await JS.InvokeVoidAsync("editorHelper.syncScroll", "codeEditor", "editorGutter"); } catch { }
+            try { await JS.InvokeVoidAsync("editorHelper.autoresize", "codeEditor"); } catch { }
         }
     }
 

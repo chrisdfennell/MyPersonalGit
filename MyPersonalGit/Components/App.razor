@@ -48,23 +48,19 @@
                 var el = document.getElementById(elementId);
                 if (el) el.scrollTop = val;
             },
-            syncScroll: function (textareaId, gutterId) {
-                var textarea = document.getElementById(textareaId);
-                var gutter = document.getElementById(gutterId);
-                if (!textarea || !gutter) return;
-                // Remove previous listener to avoid stacking on re-renders
-                if (textarea._gutterScrollHandler) {
-                    textarea.removeEventListener('scroll', textarea._gutterScrollHandler);
+            autoresize: function (elementId) {
+                var el = document.getElementById(elementId);
+                if (!el) return;
+                if (el._autoresizeHandler) {
+                    el.removeEventListener('input', el._autoresizeHandler);
                 }
-                textarea._gutterScrollHandler = function () {
-                    // Ensure gutter has enough scroll room to follow textarea all the way to the bottom
-                    var extra = textarea.scrollHeight - gutter.scrollHeight;
-                    if (extra > 0) {
-                        gutter.style.paddingBottom = (parseInt(gutter.style.paddingBottom) || 0) + extra + 'px';
-                    }
-                    gutter.scrollTop = textarea.scrollTop;
-                };
-                textarea.addEventListener('scroll', textarea._gutterScrollHandler);
+                function doResize() {
+                    el.style.height = 'auto';
+                    el.style.height = el.scrollHeight + 'px';
+                }
+                doResize();
+                el._autoresizeHandler = doResize;
+                el.addEventListener('input', el._autoresizeHandler);
             }
         };
         window.sessionHelper = {
