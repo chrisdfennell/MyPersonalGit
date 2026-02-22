@@ -59,10 +59,6 @@ public class RawFileController : ControllerBase
 
             var blob = (Blob)entry.Target;
 
-            // 50MB size limit
-            if (blob.Size > 50 * 1024 * 1024)
-                return StatusCode(413);
-
             // Determine MIME type
             var provider = new FileExtensionContentTypeProvider();
             if (!provider.TryGetContentType(path, out var contentType))

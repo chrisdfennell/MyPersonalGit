@@ -327,7 +327,7 @@
     private string customRepoPath = "";
 
     // Upload-on-create state
-    private const long maxFileSize = 50 * 1024 * 1024; // 50MB
+    private const long maxFileSize = long.MaxValue;
     private List<(string Path, byte[] Data)> initFileData = new();
     private byte[]? initZipData;
     private string initZipName = "";
@@ -535,7 +535,6 @@
                 if (string.IsNullOrEmpty(relativePath)) continue;
 
                 if (ShouldIgnoreFile(relativePath, gitignorePatterns)) continue;
-                if (files[i].Size > maxFileSize) continue;
 
                 using var stream = files[i].OpenReadStream(maxFileSize);
                 using var ms = new MemoryStream();
@@ -564,7 +563,7 @@
         try
         {
             initZipName = e.File.Name;
-            using var stream = e.File.OpenReadStream(maxFileSize * 20);
+            using var stream = e.File.OpenReadStream(maxFileSize);
             using var ms = new MemoryStream();
             await stream.CopyToAsync(ms);
             initZipData = ms.ToArray();
