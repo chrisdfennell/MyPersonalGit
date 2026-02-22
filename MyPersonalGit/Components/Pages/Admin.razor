@@ -691,9 +691,9 @@ else
 
         try
         {
-            // Trigger download via JS navigation to the API endpoint
-            // The API auth middleware will check credentials from the session
-            await JS.InvokeVoidAsync("open", "/api/v1/admin/backup", "_blank");
+            // Pass session ID as query param so the controller can authenticate
+            var sessionId = UserService.SessionId;
+            await JS.InvokeVoidAsync("open", $"/admin/api/backup?session={sessionId}", "_blank");
             BackupMessage = "Backup download started.";
         }
         catch (Exception ex)
