@@ -5,6 +5,7 @@
 @inject IAdminService AdminService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 @rendermode InteractiveServer
 
 <PageTitle>Admin Dashboard - MyPersonalGit</PageTitle>
@@ -55,6 +56,11 @@ else
         <li class="nav-item">
             <a class="nav-link @(ActiveTab == "audit" ? "active" : "")" @onclick='() => ActiveTab = "audit"' style="cursor: pointer;">
                 <i class="bi bi-journal-text"></i> Audit Logs
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ActiveTab == "backups" ? "active" : "")" @onclick='() => ActiveTab = "backups"' style="cursor: pointer;">
+                <i class="bi bi-cloud-download"></i> Backups
             </a>
         </li>
     </ul>
@@ -399,6 +405,48 @@ else
             </div>
         </div>
     }
+    else if (ActiveTab == "backups")
+    {
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-cloud-download"></i> Download Backup</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Download a complete backup of all repositories and the database as a <code>.tar.gz</code> archive.</p>
+                        @if (!string.IsNullOrEmpty(BackupMessage))
+                        {
+                            <div class="alert alert-info">@BackupMessage</div>
+                        }
+                        <button class="btn btn-primary" @onclick="DownloadBackup" disabled="@BackupInProgress">
+                            @if (BackupInProgress)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1"></span>
+                            }
+                            <i class="bi bi-download"></i> Download Backup
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-cloud-upload"></i> Restore Backup</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> <strong>Warning:</strong> Restoring a backup will overwrite all current data. The application should be restarted after a restore.
+                        </div>
+                        @if (!string.IsNullOrEmpty(RestoreMessage))
+                        {
+                            <div class="alert @(RestoreSuccess ? "alert-success" : "alert-danger")">@RestoreMessage</div>
+                        }
+                        <p class="text-muted small">Use the API directly for restore: <code>POST /api/v1/admin/restore</code> with a tar.gz file.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @if (ShowAddUser)
@@ -517,6 +565,10 @@ else
     private string UserMessage = "";
     private string EditUserMessage = "";
     private string EditUserPassword = "";
+    private bool BackupInProgress = false;
+    private string? BackupMessage;
+    private string? RestoreMessage;
+    private bool RestoreSuccess;
 
     protected override async Task OnInitializedAsync()
     {
@@ -625,5 +677,28 @@ else
             len = len / 1024;
         }
         return $"{len:0.##} {sizes[order]}";
+    }
+
+    private async Task DownloadBackup()
+    {
+        BackupInProgress = true;
+        BackupMessage = "Preparing backup...";
+        StateHasChanged();
+
+        try
+        {
+            // Trigger download via JS navigation to the API endpoint
+            // The API auth middleware will check credentials from the session
+            await JS.InvokeVoidAsync("open", "/api/v1/admin/backup", "_blank");
+            BackupMessage = "Backup download started.";
+        }
+        catch (Exception ex)
+        {
+            BackupMessage = $"Backup failed: {ex.Message}";
+        }
+        finally
+        {
+            BackupInProgress = false;
+        }
     }
 }

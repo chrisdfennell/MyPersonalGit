@@ -64,6 +64,16 @@ public class AppDbContext : DbContext
     public DbSet<SystemSettings> SystemSettings => Set<SystemSettings>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
+    // Snippets
+    public DbSet<Snippet> Snippets => Set<Snippet>();
+    public DbSet<SnippetFile> SnippetFiles => Set<SnippetFile>();
+
+    // Repository Mirrors
+    public DbSet<RepositoryMirror> RepositoryMirrors => Set<RepositoryMirror>();
+
+    // Git LFS
+    public DbSet<LfsObject> LfsObjects => Set<LfsObject>();
+
     // User Profiles
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
     public DbSet<UserActivity> UserActivities => Set<UserActivity>();
@@ -258,6 +268,27 @@ public class AppDbContext : DbContext
         {
             e.HasIndex(t => t.Token).IsUnique();
             e.Property(t => t.Scopes).HasConversion(arrayStringConverter, arrayStringComparer);
+        });
+
+        // --- Snippet ---
+        modelBuilder.Entity<Snippet>(e =>
+        {
+            e.HasMany(s => s.Files)
+                .WithOne()
+                .HasForeignKey(f => f.SnippetId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // --- RepositoryMirror ---
+        modelBuilder.Entity<RepositoryMirror>(e =>
+        {
+            e.HasIndex(m => new { m.RepoName, m.RemoteUrl }).IsUnique();
+        });
+
+        // --- LfsObject ---
+        modelBuilder.Entity<LfsObject>(e =>
+        {
+            e.HasIndex(o => new { o.RepoName, o.Oid }).IsUnique();
         });
     }
 }
