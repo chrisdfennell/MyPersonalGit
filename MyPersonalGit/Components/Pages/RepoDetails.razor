@@ -7,6 +7,8 @@
 @using System.Linq
 @using System.Text.RegularExpressions
 @using Markdig
+@using Markdig.Syntax
+@using Markdig.Syntax.Inlines
 @using Microsoft.AspNetCore.Components.Forms
 @using MyPersonalGit.Data
 @using BranchProtectionRule = MyPersonalGit.Models.BranchProtectionRule
@@ -1402,6 +1404,97 @@ else
         border: 0;
     }
 
+    .markdown-body pre {
+        padding: 16px;
+        overflow: auto;
+        font-size: 85%;
+        line-height: 1.45;
+        background-color: #f6f8fa;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        word-wrap: normal;
+    }
+
+    .markdown-body pre code {
+        padding: 0;
+        margin: 0;
+        font-size: 100%;
+        background-color: transparent;
+        border-radius: 0;
+        white-space: pre;
+        word-break: normal;
+        display: inline;
+        max-width: auto;
+        overflow: visible;
+        line-height: inherit;
+    }
+
+    .markdown-body ol {
+        padding-left: 2em;
+        margin-bottom: 16px;
+        list-style-type: decimal;
+    }
+
+    .markdown-body li + li {
+        margin-top: 0.25em;
+    }
+
+    .markdown-body .task-list-item {
+        list-style-type: none;
+        margin-left: -1.5em;
+    }
+
+    .markdown-body .task-list-item input[type="checkbox"] {
+        margin-right: 0.5em;
+    }
+
+    .markdown-body h4, .markdown-body h5, .markdown-body h6 {
+        margin-top: 24px;
+        margin-bottom: 16px;
+        font-weight: 600;
+        line-height: 1.25;
+    }
+
+    .markdown-body a {
+        color: #0969da;
+        text-decoration: none;
+    }
+
+    .markdown-body a:hover {
+        text-decoration: underline;
+    }
+
+    .markdown-body dl {
+        padding: 0;
+        margin-bottom: 16px;
+    }
+
+    .markdown-body dl dt {
+        padding: 0;
+        margin-top: 16px;
+        font-weight: 600;
+    }
+
+    .markdown-body dl dd {
+        padding: 0 16px;
+        margin-bottom: 16px;
+    }
+
+    .markdown-body sup {
+        font-size: 75%;
+        line-height: 0;
+        position: relative;
+        vertical-align: baseline;
+        top: -0.5em;
+    }
+
+    .markdown-body .footnotes {
+        font-size: 85%;
+        border-top: 1px solid #d0d7de;
+        margin-top: 24px;
+        padding-top: 16px;
+    }
+
     .upload-zone {
         border: 2px dashed #d0d7de;
         border-radius: 8px;
@@ -1503,6 +1596,18 @@ else
 
     [data-bs-theme="dark"] .markdown-body code {
         background-color: rgba(110,118,129,0.4);
+    }
+
+    [data-bs-theme="dark"] .markdown-body pre {
+        background-color: #161b22;
+    }
+
+    [data-bs-theme="dark"] .markdown-body a {
+        color: #58a6ff;
+    }
+
+    [data-bs-theme="dark"] .markdown-body .footnotes {
+        border-top-color: #30363d;
     }
 
     [data-bs-theme="dark"] pre[class*="language-"] {
@@ -2356,8 +2461,82 @@ else
     private MarkupString ConvertMarkdownToHtml(string markdown)
     {
         if (string.IsNullOrWhiteSpace(markdown)) return new MarkupString("");
-        var html = Markdown.ToHtml(markdown, _markdownPipeline);
-        return new MarkupString(html);
+
+        var document = Markdown.Parse(markdown, _markdownPipeline);
+        RewriteRelativeUrls(document);
+
+        var writer = new StringWriter();
+        var renderer = new Markdig.Renderers.HtmlRenderer(writer);
+        _markdownPipeline.Setup(renderer);
+        renderer.Render(document);
+        writer.Flush();
+        return new MarkupString(writer.ToString());
+    }
+
+    private void RewriteRelativeUrls(MarkdownDocument document)
+    {
+        // Determine directory context: README at root → "", file like "docs/guide.md" → "docs"
+        var currentDir = string.IsNullOrEmpty(Path)
+            ? ""
+            : (isFile ? GetParentPath() : Path);
+
+        foreach (var node in document.Descendants())
+        {
+            if (node is LinkInline link && !string.IsNullOrEmpty(link.Url))
+            {
+                if (IsAbsoluteUrl(link.Url)) continue;
+
+                // Split off fragment/query
+                var url = link.Url;
+                var fragment = "";
+                var hashIdx = url.IndexOf('#');
+                if (hashIdx >= 0) { fragment = url[hashIdx..]; url = url[..hashIdx]; }
+                var queryIdx = url.IndexOf('?');
+                var query = "";
+                if (queryIdx >= 0) { query = url[queryIdx..]; url = url[..queryIdx]; }
+
+                if (string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(fragment))
+                    continue; // pure anchor link like #heading
+
+                var resolvedPath = ResolveRelativePath(currentDir, url);
+
+                if (link.IsImage)
+                {
+                    link.Url = $"/raw/{RepoName}/{resolvedPath}?branch={Uri.EscapeDataString(currentBranch)}";
+                }
+                else
+                {
+                    link.Url = $"/repo/{RepoName}/{resolvedPath}{fragment}";
+                }
+            }
+        }
+    }
+
+    private static bool IsAbsoluteUrl(string url) =>
+        url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+        url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+        url.StartsWith("//") ||
+        url.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase) ||
+        url.StartsWith("data:", StringComparison.OrdinalIgnoreCase);
+
+    private static string ResolveRelativePath(string currentDir, string relativePath)
+    {
+        if (relativePath.StartsWith("/"))
+            return relativePath.TrimStart('/');
+
+        var combined = string.IsNullOrEmpty(currentDir)
+            ? relativePath
+            : currentDir.TrimEnd('/') + "/" + relativePath;
+
+        var segments = combined.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var result = new Stack<string>();
+        foreach (var seg in segments)
+        {
+            if (seg == ".") continue;
+            if (seg == "..") { if (result.Count > 0) result.Pop(); }
+            else result.Push(seg);
+        }
+        return string.Join("/", result.Reverse());
     }
 
     private void LoadCommitDetail(Repository repo, Commit c)
