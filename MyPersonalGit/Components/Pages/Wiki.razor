@@ -4,6 +4,8 @@
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
 @using Markdig
+@using Markdig.Syntax
+@using Markdig.Syntax.Inlines
 @inject IWikiService WikiService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
@@ -342,13 +344,37 @@
         return date.ToString("MMM dd, yyyy");
     }
 
+    private static readonly MarkdownPipeline _mdPipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .Build();
+
     private string RenderMarkdown(string markdown)
     {
         if (string.IsNullOrEmpty(markdown)) return "";
-        var pipeline = new Markdig.MarkdownPipelineBuilder()
-            .UseAdvancedExtensions()
-            .Build();
-        return Markdig.Markdown.ToHtml(markdown, pipeline);
+
+        var document = Markdig.Markdown.Parse(markdown, _mdPipeline);
+
+        foreach (var node in document.Descendants())
+        {
+            if (node is LinkInline link && link.IsImage && !string.IsNullOrEmpty(link.Url))
+            {
+                if (link.Url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                    link.Url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                    link.Url.StartsWith("//") ||
+                    link.Url.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var resolvedPath = link.Url.TrimStart('/');
+                link.Url = $"/raw/{RepoName}/{resolvedPath}?branch=main";
+            }
+        }
+
+        var writer = new System.IO.StringWriter();
+        var renderer = new Markdig.Renderers.HtmlRenderer(writer);
+        _mdPipeline.Setup(renderer);
+        renderer.Render(document);
+        writer.Flush();
+        return writer.ToString();
     }
 }
 

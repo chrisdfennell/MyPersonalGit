@@ -5,6 +5,8 @@
 @using LibGit2Sharp
 @using System.Text.RegularExpressions
 @using Markdig
+@using Markdig.Syntax
+@using Markdig.Syntax.Inlines
 @inject IPullRequestService PRService
 @inject IConfiguration Config
 @inject IAdminService AdminService
@@ -497,10 +499,34 @@
     .diff-linenum { font-size: 11px; }
     .diff-hunk .diff-text { font-style: italic; font-size: 11px; }
     .markdown-body h1, .markdown-body h2 { border-bottom: 1px solid #d0d7de; padding-bottom: 0.3em; margin-top: 24px; margin-bottom: 16px; font-weight: 600; }
+    .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 { margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; }
     .markdown-body p { margin-bottom: 16px; }
-    .markdown-body ul { padding-left: 2em; list-style-type: disc; }
+    .markdown-body ul { padding-left: 2em; list-style-type: disc; margin-bottom: 16px; }
+    .markdown-body ol { padding-left: 2em; list-style-type: decimal; margin-bottom: 16px; }
+    .markdown-body li + li { margin-top: 0.25em; }
     .markdown-body code { padding: 0.2em 0.4em; font-size: 85%; background-color: rgba(175,184,193,0.2); border-radius: 6px; }
-    .markdown-body blockquote { padding: 0 1em; color: #656d76; border-left: 0.25em solid #d0d7de; }
+    .markdown-body pre { padding: 16px; overflow: auto; font-size: 85%; line-height: 1.45; background-color: #f6f8fa; border-radius: 6px; margin-bottom: 16px; }
+    .markdown-body pre code { padding: 0; margin: 0; font-size: 100%; background-color: transparent; border-radius: 0; white-space: pre; }
+    .markdown-body blockquote { padding: 0 1em; color: #656d76; border-left: 0.25em solid #d0d7de; margin-bottom: 16px; }
+    .markdown-body table { display: block; width: max-content; max-width: 100%; overflow: auto; border-spacing: 0; border-collapse: collapse; margin-bottom: 16px; }
+    .markdown-body table tr { background-color: #ffffff; border-top: 1px solid #d8dee4; }
+    .markdown-body table tr:nth-child(2n) { background-color: #f6f8fa; }
+    .markdown-body table th, .markdown-body table td { padding: 6px 13px; border: 1px solid #d0d7de; }
+    .markdown-body img { max-width: 100%; }
+    .markdown-body hr { height: 0.25em; padding: 0; margin: 24px 0; background-color: #d0d7de; border: 0; }
+    .markdown-body a { color: #0969da; text-decoration: none; }
+    .markdown-body a:hover { text-decoration: underline; }
+    .markdown-body .task-list-item { list-style-type: none; margin-left: -1.5em; }
+    .markdown-body .task-list-item input[type="checkbox"] { margin-right: 0.5em; }
+    [data-bs-theme="dark"] .markdown-body pre { background-color: #161b22; }
+    [data-bs-theme="dark"] .markdown-body code { background-color: rgba(110,118,129,0.4); }
+    [data-bs-theme="dark"] .markdown-body blockquote { color: #8b949e; border-left-color: #30363d; }
+    [data-bs-theme="dark"] .markdown-body table tr { background-color: #0d1117; border-top-color: #30363d; }
+    [data-bs-theme="dark"] .markdown-body table tr:nth-child(2n) { background-color: #161b22; }
+    [data-bs-theme="dark"] .markdown-body table th, [data-bs-theme="dark"] .markdown-body table td { border-color: #30363d; }
+    [data-bs-theme="dark"] .markdown-body a { color: #58a6ff; }
+    [data-bs-theme="dark"] .markdown-body h1, [data-bs-theme="dark"] .markdown-body h2 { border-bottom-color: #30363d; }
+    [data-bs-theme="dark"] .markdown-body hr { background-color: #30363d; }
 </style>
 
 @code {
@@ -748,7 +774,31 @@
 
     private string RenderMarkdown(string markdown)
     {
-        return Markdig.Markdown.ToHtml(markdown, _mdPipeline);
+        if (string.IsNullOrWhiteSpace(markdown)) return "";
+
+        var document = Markdig.Markdown.Parse(markdown, _mdPipeline);
+
+        foreach (var node in document.Descendants())
+        {
+            if (node is LinkInline link && link.IsImage && !string.IsNullOrEmpty(link.Url))
+            {
+                if (link.Url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                    link.Url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                    link.Url.StartsWith("//") ||
+                    link.Url.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var resolvedPath = link.Url.TrimStart('/');
+                link.Url = $"/raw/{RepoName}/{resolvedPath}?branch=main";
+            }
+        }
+
+        var writer = new System.IO.StringWriter();
+        var renderer = new Markdig.Renderers.HtmlRenderer(writer);
+        _mdPipeline.Setup(renderer);
+        renderer.Render(document);
+        writer.Flush();
+        return writer.ToString();
     }
 
     private string GetReviewCardClass(ReviewState state) => state switch
