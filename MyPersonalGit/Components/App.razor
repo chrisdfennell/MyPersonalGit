@@ -47,6 +47,19 @@
             setScrollTop: function (elementId, val) {
                 var el = document.getElementById(elementId);
                 if (el) el.scrollTop = val;
+            },
+            syncScroll: function (textareaId, gutterId) {
+                var textarea = document.getElementById(textareaId);
+                var gutter = document.getElementById(gutterId);
+                if (!textarea || !gutter) return;
+                // Remove previous listener to avoid stacking on re-renders
+                if (textarea._gutterScrollHandler) {
+                    textarea.removeEventListener('scroll', textarea._gutterScrollHandler);
+                }
+                textarea._gutterScrollHandler = function () {
+                    gutter.scrollTop = textarea.scrollTop;
+                };
+                textarea.addEventListener('scroll', textarea._gutterScrollHandler);
             }
         };
         window.sessionHelper = {
