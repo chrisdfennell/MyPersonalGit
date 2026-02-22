@@ -57,6 +57,11 @@
                     textarea.removeEventListener('scroll', textarea._gutterScrollHandler);
                 }
                 textarea._gutterScrollHandler = function () {
+                    // Ensure gutter has enough scroll room to follow textarea all the way to the bottom
+                    var extra = textarea.scrollHeight - gutter.scrollHeight;
+                    if (extra > 0) {
+                        gutter.style.paddingBottom = (parseInt(gutter.style.paddingBottom) || 0) + extra + 'px';
+                    }
                     gutter.scrollTop = textarea.scrollTop;
                 };
                 textarea.addEventListener('scroll', textarea._gutterScrollHandler);
