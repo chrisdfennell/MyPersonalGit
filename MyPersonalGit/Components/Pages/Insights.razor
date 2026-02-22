@@ -1,7 +1,9 @@
 @page "/repo/{RepoName}/insights"
 @using LibGit2Sharp
 @using System.IO
+@using MyPersonalGit.Data
 @inject IConfiguration Config
+@inject IAdminService AdminService
 @inject NavigationManager Nav
 @rendermode InteractiveServer
 
@@ -248,16 +250,22 @@
     private List<BranchInfo> branches = new();
     private int totalCommits = 0;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        LoadInsights();
+        await LoadInsights();
     }
 
-    private void LoadInsights()
+    private async Task LoadInsights()
     {
         try
         {
-            var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+            var projectRoot = "";
+            var systemSettings = await AdminService.GetSystemSettingsAsync();
+            if (!string.IsNullOrEmpty(systemSettings.ProjectRoot))
+                projectRoot = systemSettings.ProjectRoot;
+            if (string.IsNullOrEmpty(projectRoot))
+                projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+
             var repoPath = Path.Combine(projectRoot, $"{RepoName}.git");
 
             if (!Directory.Exists(repoPath))
@@ -279,8 +287,9 @@
     private void LoadContributors(Repository repo)
     {
         var contributorDict = new Dictionary<string, Contributor>();
+        var filter = new CommitFilter { IncludeReachableFrom = repo.Refs };
 
-        foreach (var commit in repo.Commits)
+        foreach (var commit in repo.Commits.QueryBy(filter))
         {
             var email = commit.Author.Email;
             if (!contributorDict.ContainsKey(email))
@@ -308,7 +317,7 @@
         }
 
         contributors = contributorDict.Values.ToList();
-        totalCommits = repo.Commits.Count();
+        totalCommits = repo.Commits.QueryBy(filter).Count();
     }
 
     private void LoadCommitActivity(Repository repo)
@@ -323,11 +332,12 @@
             weeks[weekStart] = 0;
         }
 
-        foreach (var commit in repo.Commits)
+        var filter = new CommitFilter { IncludeReachableFrom = repo.Refs };
+        foreach (var commit in repo.Commits.QueryBy(filter))
         {
             var commitDate = commit.Author.When.UtcDateTime;
             var weekStart = commitDate.Date.AddDays(-(int)commitDate.DayOfWeek);
-            
+
             if (weeks.ContainsKey(weekStart))
             {
                 weeks[weekStart]++;
@@ -353,7 +363,8 @@
             weeks[weekStart] = new CodeFrequency { WeekStart = weekStart };
         }
 
-        foreach (var commit in repo.Commits.Take(100))
+        var filter = new CommitFilter { IncludeReachableFrom = repo.Refs };
+        foreach (var commit in repo.Commits.QueryBy(filter).Take(100))
         {
             try
             {
