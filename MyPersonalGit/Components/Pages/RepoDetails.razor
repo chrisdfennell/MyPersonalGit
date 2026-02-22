@@ -2647,10 +2647,14 @@ else
     private string GetRelativeTime(DateTime? date)
     {
         if (!date.HasValue) return "just now";
-        var span = DateTime.Now - date.Value;
+        var span = DateTime.UtcNow - date.Value;
+        if (span.TotalDays > 365) return $"{(int)(span.TotalDays / 365)} year{((int)(span.TotalDays / 365) != 1 ? "s" : "")} ago";
         if (span.TotalDays > 30) return date.Value.ToString("MMM dd, yyyy");
         if (span.TotalDays > 1) return $"{(int)span.TotalDays} days ago";
-        return "recently";
+        if (span.TotalDays > 0.9) return "yesterday";
+        if (span.TotalHours > 1) return $"{(int)span.TotalHours} hours ago";
+        if (span.TotalMinutes > 1) return $"{(int)span.TotalMinutes} minutes ago";
+        return "just now";
     }
 
     private string FormatFileSize(long bytes)
