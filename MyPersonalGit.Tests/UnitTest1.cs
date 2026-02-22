@@ -35,7 +35,8 @@ public class IssueServiceTests
 
         var factory = new TestDbContextFactory(options);
         _notifications = Substitute.For<INotificationService>();
-        _service = new IssueService(factory, NullLogger<IssueService>.Instance, _notifications);
+        var activityService = Substitute.For<IActivityService>();
+        _service = new IssueService(factory, NullLogger<IssueService>.Instance, _notifications, activityService);
     }
 
     [Fact]
@@ -269,7 +270,10 @@ public class PullRequestServiceTests
 
         var factory = new TestDbContextFactory(options);
         _notifications = Substitute.For<INotificationService>();
-        _service = new PullRequestService(factory, NullLogger<PullRequestService>.Instance, _notifications);
+        var activityService = Substitute.For<IActivityService>();
+        var adminService = Substitute.For<IAdminService>();
+        var config = Substitute.For<IConfiguration>();
+        _service = new PullRequestService(factory, NullLogger<PullRequestService>.Instance, _notifications, activityService, adminService, config);
     }
 
     [Fact]
@@ -354,7 +358,7 @@ public class PullRequestServiceTests
         await _service.CreatePullRequestAsync("repo", "PR", null, "alice", "feature", "main");
 
         var result = await _service.MergePullRequestAsync("repo", 1, "bob");
-        Assert.True(result);
+        Assert.True(result.Success);
 
         var pr = await _service.GetPullRequestAsync("repo", 1);
         Assert.Equal(PullRequestState.Merged, pr!.State);
@@ -366,7 +370,7 @@ public class PullRequestServiceTests
     public async Task MergePullRequestAsync_ReturnsFalse_WhenNotFound()
     {
         var result = await _service.MergePullRequestAsync("repo", 999, "bob");
-        Assert.False(result);
+        Assert.False(result.Success);
     }
 
     [Fact]
@@ -937,7 +941,8 @@ public class RepositoryServiceTests
 
         _factory = new TestDbContextFactory(options);
         _notifications = Substitute.For<INotificationService>();
-        _service = new RepositoryService(_factory, NullLogger<RepositoryService>.Instance, _notifications);
+        var activityService = Substitute.For<IActivityService>();
+        _service = new RepositoryService(_factory, NullLogger<RepositoryService>.Instance, _notifications, activityService);
     }
 
     private async Task SeedRepo(string name)
