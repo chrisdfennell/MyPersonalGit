@@ -1032,7 +1032,7 @@ else
                                     <div id="editorGutter" class="editor-gutter position-absolute text-end pe-2 user-select-none"
                                          style="left: 0; top: 0; width: 50px; height: 100%; font-size: 13px; line-height: 1.5; padding-top: 12px; font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace; overflow: hidden;">
                                         @{
-                                            var editorLineCount = string.IsNullOrEmpty(editingContent) ? 1 : editingContent.Split('\n').Length;
+                                            var editorLineCount = string.IsNullOrEmpty(editingContent) ? 1 : editingContent.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None).Length;
                                         }
                                         @for (int ln = 1; ln <= editorLineCount; ln++)
                                         {
@@ -1040,7 +1040,8 @@ else
                                         }
                                     </div>
                                     <textarea id="codeEditor" class="editor-textarea form-control border-0 font-monospace"
-                                              style="min-height: 400px; font-size: 13px; line-height: 1.5; resize: vertical; padding-left: 60px; padding-top: 12px; padding-right: 12px;"
+                                              wrap="off"
+                                              style="min-height: 400px; font-size: 13px; line-height: 1.5; resize: vertical; padding-left: 60px; padding-top: 12px; padding-right: 12px; overflow-x: auto;"
                                               @bind="editingContent" @bind:event="oninput"></textarea>
                                 </div>
                             }
