@@ -1,34 +1,39 @@
 using System.Formats.Tar;
 using System.IO.Compression;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
+using MyPersonalGit.Data;
 
 namespace MyPersonalGit.Controllers;
 
 /// <summary>
 /// Admin-only backup/restore endpoints.
-/// Backup creates a tar.gz of all bare repos + SQLite database.
-/// Restore accepts a tar.gz and replaces both.
+/// Uses session-based auth (same as Blazor pages) rather than API Bearer tokens.
+/// Routes are outside /api/ to bypass the ApiAuth middleware.
 /// </summary>
 [ApiController]
-[Route("api/v1/admin")]
-[EnableRateLimiting("api")]
+[Route("admin/api")]
 public class BackupController : ControllerBase
 {
     private readonly IConfiguration _config;
     private readonly ILogger<BackupController> _logger;
+    private readonly IAuthService _authService;
 
-    public BackupController(IConfiguration config, ILogger<BackupController> logger)
+    public BackupController(IConfiguration config, ILogger<BackupController> logger, IAuthService authService)
     {
         _config = config;
         _logger = logger;
+        _authService = authService;
     }
 
-    [HttpPost("backup")]
-    public async Task<IActionResult> CreateBackup()
+    [HttpGet("backup")]
+    public async Task<IActionResult> CreateBackup([FromQuery] string? session)
     {
-        // Auth check: only admins (set by ApiAuth middleware)
-        if (HttpContext.Items["IsAdmin"] is not true)
+        // Authenticate via session ID (passed from Blazor page)
+        if (string.IsNullOrEmpty(session))
+            return Unauthorized(new { error = "Missing session parameter" });
+
+        var user = await _authService.GetUserBySessionAsync(session);
+        if (user == null || !user.IsAdmin)
             return Forbid();
 
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
@@ -67,7 +72,7 @@ public class BackupController : ControllerBase
 
             var bytes = await System.IO.File.ReadAllBytesAsync(tempFile);
             var timestamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss");
-            _logger.LogInformation("Backup created: {Size} bytes", bytes.Length);
+            _logger.LogInformation("Backup created by {User}: {Size} bytes", user.Username, bytes.Length);
             return File(bytes, "application/gzip", $"mypersonalgit-backup-{timestamp}.tar.gz");
         }
         finally
@@ -78,9 +83,13 @@ public class BackupController : ControllerBase
 
     [HttpPost("restore")]
     [RequestSizeLimit(long.MaxValue)]
-    public async Task<IActionResult> RestoreBackup(IFormFile file)
+    public async Task<IActionResult> RestoreBackup(IFormFile file, [FromQuery] string? session)
     {
-        if (HttpContext.Items["IsAdmin"] is not true)
+        if (string.IsNullOrEmpty(session))
+            return Unauthorized(new { error = "Missing session parameter" });
+
+        var user = await _authService.GetUserBySessionAsync(session);
+        if (user == null || !user.IsAdmin)
             return Forbid();
 
         if (file == null || file.Length == 0)
@@ -138,7 +147,7 @@ public class BackupController : ControllerBase
                 }
             }
 
-            _logger.LogInformation("Backup restored from uploaded file ({Size} bytes)", file.Length);
+            _logger.LogInformation("Backup restored by {User} ({Size} bytes)", user.Username, file.Length);
             return Ok(new { message = "Backup restored successfully. Restart the application to apply database changes." });
         }
         finally
