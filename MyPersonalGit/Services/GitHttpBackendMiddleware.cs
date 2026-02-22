@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using MyPersonalGit.Data;
 
 namespace MyPersonalGit.Services;
 
@@ -30,7 +31,7 @@ public sealed class GitHttpBackendMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService)
     {
         // Only handle /git/* paths; let everything else pass through.
         if (!context.Request.Path.StartsWithSegments("/git", out var remaining))
@@ -53,6 +54,23 @@ public sealed class GitHttpBackendMiddleware
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             await context.Response.WriteAsync("Invalid path.");
             return;
+        }
+
+        // Block push to archived repos
+        var reqService = context.Request.Query["service"].FirstOrDefault() ?? "";
+        if (pathInfo.Contains("git-receive-pack") || reqService == "git-receive-pack")
+        {
+            var segments = pathInfo.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (segments.Length >= 1)
+            {
+                var repoMeta = await repoService.GetRepositoryAsync(segments[0]);
+                if (repoMeta?.IsArchived == true)
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await context.Response.WriteAsync("Repository is archived and read-only.");
+                    return;
+                }
+            }
         }
 
         // git http-backend needs CGI env vars.

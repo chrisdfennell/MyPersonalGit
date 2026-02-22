@@ -460,7 +460,9 @@ public class NotificationServiceTests
             .Options;
 
         _factory = new TestDbContextFactory(options);
-        _service = new NotificationService(_factory, NullLogger<NotificationService>.Instance);
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        var adminService = Substitute.For<IAdminService>();
+        _service = new NotificationService(_factory, NullLogger<NotificationService>.Instance, httpClientFactory, adminService);
     }
 
     [Fact]

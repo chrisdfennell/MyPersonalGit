@@ -15,6 +15,13 @@ public class UserProfile
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public bool IsPublic { get; set; } = true;
+
+    // Notification preferences
+    public bool PushNotificationsEnabled { get; set; } = true;
+    public bool NotifyOnPullRequest { get; set; } = true;
+    public bool NotifyOnIssue { get; set; } = true;
+    public bool NotifyOnMention { get; set; } = true;
+    public bool NotifyOnComment { get; set; } = true;
 }
 
 public class UserActivity

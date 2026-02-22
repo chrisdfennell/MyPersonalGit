@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using Microsoft.EntityFrameworkCore;
 using MyPersonalGit.Models;
 
@@ -17,11 +18,16 @@ public class NotificationService : INotificationService
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly ILogger<NotificationService> _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IAdminService _adminService;
 
-    public NotificationService(IDbContextFactory<AppDbContext> dbFactory, ILogger<NotificationService> logger)
+    public NotificationService(IDbContextFactory<AppDbContext> dbFactory, ILogger<NotificationService> logger,
+        IHttpClientFactory httpClientFactory, IAdminService adminService)
     {
         _dbFactory = dbFactory;
         _logger = logger;
+        _httpClientFactory = httpClientFactory;
+        _adminService = adminService;
     }
 
     public async Task<List<Notification>> GetNotificationsAsync(string username, bool unreadOnly = false)
@@ -60,6 +66,53 @@ public class NotificationService : INotificationService
 
         await db.SaveChangesAsync();
         _logger.LogDebug("Notification created for {Username}: {Title}", username, title);
+
+        // Dispatch to external push services (fire-and-forget)
+        _ = Task.Run(async () =>
+        {
+            try { await DispatchPushNotificationAsync(username, title, message); }
+            catch (Exception ex) { _logger.LogWarning(ex, "Failed to dispatch push notification"); }
+        });
+    }
+
+    private async Task DispatchPushNotificationAsync(string username, string title, string message)
+    {
+        var settings = await _adminService.GetSystemSettingsAsync();
+        if (!settings.EnablePushNotifications) return;
+
+        // Check user opt-in
+        using var db = _dbFactory.CreateDbContext();
+        var profile = await db.UserProfiles.FirstOrDefaultAsync(p => p.Username == username);
+        if (profile is { PushNotificationsEnabled: false }) return;
+
+        var client = _httpClientFactory.CreateClient();
+
+        // Ntfy
+        if (!string.IsNullOrEmpty(settings.NtfyUrl) && !string.IsNullOrEmpty(settings.NtfyTopic))
+        {
+            try
+            {
+                var url = $"{settings.NtfyUrl.TrimEnd('/')}/{settings.NtfyTopic}";
+                var request = new HttpRequestMessage(HttpMethod.Post, url);
+                request.Headers.Add("Title", title);
+                request.Content = new StringContent(message);
+                if (!string.IsNullOrEmpty(settings.NtfyAccessToken))
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", settings.NtfyAccessToken);
+                await client.SendAsync(request);
+            }
+            catch (Exception ex) { _logger.LogWarning(ex, "Ntfy push failed"); }
+        }
+
+        // Gotify
+        if (!string.IsNullOrEmpty(settings.GotifyUrl) && !string.IsNullOrEmpty(settings.GotifyAppToken))
+        {
+            try
+            {
+                var url = $"{settings.GotifyUrl.TrimEnd('/')}/message?token={settings.GotifyAppToken}";
+                await client.PostAsJsonAsync(url, new { title, message, priority = 5 });
+            }
+            catch (Exception ex) { _logger.LogWarning(ex, "Gotify push failed"); }
+        }
     }
 
     public async Task MarkAsReadAsync(string username, int notificationId)

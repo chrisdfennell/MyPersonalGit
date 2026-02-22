@@ -1,0 +1,198 @@
+@page "/packages"
+@page "/packages/{Type}"
+@page "/packages/{Type}/{PackageName}"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using MyPersonalGit.Services
+@inject IPackageService PackageService
+@inject CurrentUserService UserService
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<PageTitle>Packages · Personal Git</PageTitle>
+
+<div class="container-xl py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0"><i class="bi bi-box-seam me-2"></i>Packages</h3>
+    </div>
+
+    @if (SelectedPackage != null)
+    {
+        <!-- Package detail view -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/packages">Packages</a></li>
+                <li class="breadcrumb-item"><a href="/packages/@SelectedPackage.Type">@SelectedPackage.Type</a></li>
+                <li class="breadcrumb-item active">@SelectedPackage.Name</li>
+            </ol>
+        </nav>
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">@SelectedPackage.Name</h5>
+                    <span class="badge bg-primary">@SelectedPackage.Type</span>
+                    <span class="text-muted small ms-2">by @SelectedPackage.Owner</span>
+                </div>
+                <span class="text-muted small"><i class="bi bi-download me-1"></i>@SelectedPackage.Downloads downloads</span>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(SelectedPackage.Description))
+                {
+                    <p>@SelectedPackage.Description</p>
+                }
+
+                <h6 class="fw-bold mt-3">Install</h6>
+                @if (SelectedPackage.Type == "nuget")
+                {
+                    <code class="d-block bg-light p-2 rounded small mb-3">dotnet add package @SelectedPackage.Name --source @(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/nuget/v3/index.json</code>
+                }
+                else if (SelectedPackage.Type == "npm")
+                {
+                    <code class="d-block bg-light p-2 rounded small mb-3">npm install @SelectedPackage.Name --registry=@(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/npm</code>
+                }
+                else
+                {
+                    var latest = SelectedPackage.Versions.OrderByDescending(v => v.CreatedAt).FirstOrDefault();
+                    if (latest != null)
+                    {
+                        var firstFile = latest.Files.FirstOrDefault();
+                        if (firstFile != null)
+                        {
+                            <code class="d-block bg-light p-2 rounded small mb-3">curl -O @(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/generic/@SelectedPackage.Name/@latest.Version/@firstFile.Filename</code>
+                        }
+                    }
+                }
+
+                <h6 class="fw-bold mt-3">Versions</h6>
+                <div class="list-group">
+                    @foreach (var ver in SelectedPackage.Versions.OrderByDescending(v => v.CreatedAt))
+                    {
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@ver.Version</strong>
+                                    @if (ver.Size > 0)
+                                    {
+                                        <span class="text-muted small ms-2">@FormatBytes(ver.Size)</span>
+                                    }
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="bi bi-download me-1"></i>@ver.Downloads
+                                    <span class="ms-2">@ver.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                </div>
+                            </div>
+                            @if (ver.Files.Any())
+                            {
+                                <div class="mt-1">
+                                    @foreach (var f in ver.Files)
+                                    {
+                                        <span class="badge bg-light text-dark border me-1 small">@f.Filename</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Package list view -->
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <a class="nav-link @(string.IsNullOrEmpty(Type) ? "active" : "")" href="/packages">All</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Type == "nuget" ? "active" : "")" href="/packages/nuget">
+                    <i class="bi bi-box me-1"></i>NuGet
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Type == "npm" ? "active" : "")" href="/packages/npm">
+                    <i class="bi bi-box me-1"></i>npm
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Type == "generic" ? "active" : "")" href="/packages/generic">
+                    <i class="bi bi-file-earmark-zip me-1"></i>Generic
+                </a>
+            </li>
+        </ul>
+
+        <div class="mb-3">
+            <input type="text" class="form-control" placeholder="Search packages..." @bind="searchTerm" @bind:event="oninput" />
+        </div>
+
+        @if (FilteredPackages.Any())
+        {
+            <div class="list-group">
+                @foreach (var pkg in FilteredPackages)
+                {
+                    <a href="/packages/@pkg.Type/@pkg.Name" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0 fw-bold">@pkg.Name</h6>
+                                <span class="badge bg-primary me-2">@pkg.Type</span>
+                                <span class="text-muted small">by @pkg.Owner</span>
+                                @if (!string.IsNullOrEmpty(pkg.Description))
+                                {
+                                    <p class="text-muted small mb-0 mt-1">@pkg.Description</p>
+                                }
+                            </div>
+                            <div class="text-end">
+                                <div class="text-muted small"><i class="bi bi-download me-1"></i>@pkg.Downloads</div>
+                                <div class="text-muted small">@pkg.Versions.Count version(s)</div>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-box-seam" style="font-size: 3rem;"></i>
+                <p class="mt-3">No packages published yet.</p>
+                <p class="small">Push packages using NuGet, npm, or the generic API.</p>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string? Type { get; set; }
+    [Parameter] public string? PackageName { get; set; }
+
+    private List<Package> PackageList = new();
+    private Package? SelectedPackage;
+    private string searchTerm = "";
+
+    private IEnumerable<Package> FilteredPackages =>
+        PackageList.Where(p =>
+            string.IsNullOrEmpty(searchTerm) ||
+            p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            (p.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(PackageName) && !string.IsNullOrEmpty(Type))
+        {
+            SelectedPackage = await PackageService.GetPackageAsync(PackageName, Type);
+        }
+        else
+        {
+            SelectedPackage = null;
+            PackageList = await PackageService.GetPackagesAsync(Type);
+        }
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        if (bytes < 1024 * 1024 * 1024) return $"{bytes / (1024.0 * 1024):F1} MB";
+        return $"{bytes / (1024.0 * 1024 * 1024):F1} GB";
+    }
+}

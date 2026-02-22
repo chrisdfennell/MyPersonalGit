@@ -79,6 +79,7 @@ builder.Services.AddSingleton<IBranchProtectionService, BranchProtectionService>
 builder.Services.AddSingleton<ISnippetService, SnippetService>();
 builder.Services.AddSingleton<IMirrorService, MirrorService>();
 builder.Services.AddHostedService<MirrorSyncService>();
+builder.Services.AddSingleton<IPackageService, PackageService>();
 builder.Services.AddScoped<CurrentUserService>();
 
 var app = builder.Build();
@@ -150,8 +151,14 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
+// Static site hosting for repository Pages
+app.UsePages();
+
 // Rate limiting (before auth so rejected requests don't waste auth work)
 app.UseRateLimiter();
+
+// Container Registry authentication (OCI /v2/*)
+app.UseRegistryAuth();
 
 // REST API authentication
 app.UseApiAuth();
