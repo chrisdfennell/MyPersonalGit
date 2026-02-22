@@ -403,6 +403,29 @@ else
                         </div>
                     </div>
                 }
+
+                @if (languageStats.Any() && string.IsNullOrEmpty(fileSearchTerm) && string.IsNullOrEmpty(Path))
+                {
+                    <div class="languages-section mb-5">
+                        <h6 class="fw-bold mb-3">Languages</h6>
+                        <div class="language-bar d-flex rounded overflow-hidden" style="height: 8px;">
+                            @foreach (var lang in languageStats)
+                            {
+                                <div style="width: @lang.Percentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%; background-color: @lang.Color;" title="@lang.Name @lang.Percentage.ToString("F1")%"></div>
+                            }
+                        </div>
+                        <div class="d-flex flex-wrap gap-3 mt-2">
+                            @foreach (var lang in languageStats)
+                            {
+                                <div class="d-flex align-items-center small">
+                                    <span class="rounded-circle d-inline-block me-1" style="width: 10px; height: 10px; background-color: @lang.Color;"></span>
+                                    <span class="fw-bold me-1">@lang.Name</span>
+                                    <span class="text-muted">@lang.Percentage.ToString("F1")%</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
             }
         }
         else if (activeTab == "branches")
@@ -1666,6 +1689,7 @@ else
     private long fileSize = 0;
     private int lineCount = 0;
     private string readmeContent = "";
+    private List<LanguageStat> languageStats = new();
 
     // UI States
     private string editingContent = "";
@@ -2270,6 +2294,7 @@ else
                     isFile = false;
                     LoadTree(branch.Tip.Tree, repo);
                     LoadReadme(branch.Tip.Tree);
+                    LoadLanguageStats(branch.Tip.Tree);
                 }
                 else
                 {
@@ -2390,6 +2415,128 @@ else
             readmeContent = reader.ReadToEnd();
         }
     }
+
+    private void LoadLanguageStats(Tree tree)
+    {
+        languageStats.Clear();
+        var langBytes = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+
+        void WalkTree(Tree t)
+        {
+            foreach (var entry in t)
+            {
+                if (entry.TargetType == TreeEntryTargetType.Tree)
+                    WalkTree((Tree)entry.Target);
+                else if (entry.TargetType == TreeEntryTargetType.Blob)
+                {
+                    var ext = System.IO.Path.GetExtension(entry.Name)?.ToLowerInvariant();
+                    var lang = GetLanguageFromExtension(ext)
+                        ?? GetLanguageFromFileName(entry.Name);
+                    if (lang != null)
+                    {
+                        var blob = (Blob)entry.Target;
+                        langBytes.TryGetValue(lang, out var existing);
+                        langBytes[lang] = existing + blob.Size;
+                    }
+                }
+            }
+        }
+
+        WalkTree(tree);
+        if (langBytes.Count == 0) return;
+
+        var total = (double)langBytes.Values.Sum();
+        languageStats = langBytes
+            .OrderByDescending(kv => kv.Value)
+            .Select(kv => new LanguageStat
+            {
+                Name = kv.Key,
+                Percentage = kv.Value / total * 100.0,
+                Color = GetLanguageColor(kv.Key)
+            })
+            .Where(s => s.Percentage >= 0.1)
+            .ToList();
+    }
+
+    private static string? GetLanguageFromExtension(string? ext) => ext switch
+    {
+        ".cs" => "C#",
+        ".razor" => "HTML",
+        ".cshtml" => "HTML",
+        ".html" or ".htm" => "HTML",
+        ".css" => "CSS",
+        ".scss" or ".sass" => "SCSS",
+        ".js" => "JavaScript",
+        ".jsx" => "JavaScript",
+        ".ts" => "TypeScript",
+        ".tsx" => "TypeScript",
+        ".json" => "JSON",
+        ".xml" => "XML",
+        ".yaml" or ".yml" => "YAML",
+        ".py" => "Python",
+        ".java" => "Java",
+        ".rb" => "Ruby",
+        ".go" => "Go",
+        ".rs" => "Rust",
+        ".cpp" or ".cc" or ".cxx" => "C++",
+        ".c" or ".h" => "C",
+        ".php" => "PHP",
+        ".swift" => "Swift",
+        ".kt" or ".kts" => "Kotlin",
+        ".sql" => "SQL",
+        ".sh" or ".bash" => "Shell",
+        ".ps1" => "PowerShell",
+        ".md" or ".markdown" => "Markdown",
+        ".dockerfile" => "Dockerfile",
+        ".r" => "R",
+        ".lua" => "Lua",
+        ".dart" => "Dart",
+        ".vue" => "Vue",
+        ".svelte" => "Svelte",
+        _ => null
+    };
+
+    private static string? GetLanguageFromFileName(string name) => name.ToLowerInvariant() switch
+    {
+        "dockerfile" => "Dockerfile",
+        "makefile" => "Makefile",
+        "cmakelists.txt" => "CMake",
+        _ => null
+    };
+
+    private static string GetLanguageColor(string lang) => lang switch
+    {
+        "C#" => "#178600",
+        "HTML" => "#e34c26",
+        "CSS" => "#563d7c",
+        "SCSS" => "#c6538c",
+        "JavaScript" => "#f1e05a",
+        "TypeScript" => "#3178c6",
+        "Python" => "#3572A5",
+        "Java" => "#b07219",
+        "Ruby" => "#701516",
+        "Go" => "#00ADD8",
+        "Rust" => "#dea584",
+        "C++" => "#f34b7d",
+        "C" => "#555555",
+        "PHP" => "#4F5D95",
+        "Swift" => "#F05138",
+        "Kotlin" => "#A97BFF",
+        "SQL" => "#e38c00",
+        "Shell" => "#89e051",
+        "PowerShell" => "#012456",
+        "JSON" => "#292929",
+        "XML" => "#0060ac",
+        "YAML" => "#cb171e",
+        "Markdown" => "#083fa1",
+        "Dockerfile" => "#384d54",
+        "R" => "#198CE7",
+        "Lua" => "#000080",
+        "Dart" => "#00B4AB",
+        "Vue" => "#41b883",
+        "Svelte" => "#ff3e00",
+        _ => "#8b949e"
+    };
 
     private void ViewFileHistory() { activeTab = "commits"; LoadRepoData(); }
     private void ClearFileFilter() { Path = null; activeTab = "commits"; LoadRepoData(); }
@@ -3041,4 +3188,5 @@ else
     public class FilePatch { public string Path { get; set; } = ""; public int LinesAdded { get; set; } public int LinesDeleted { get; set; } public List<string> DiffLines { get; set; } = new(); }
     public class DiffPair { public string? Left { get; set; } public string? Right { get; set; } public int LeftLineNum { get; set; } public int RightLineNum { get; set; } }
     public class UnifiedDiffRow { public string OldNum { get; set; } = ""; public string NewNum { get; set; } = ""; public char Sign { get; set; } public string Content { get; set; } = ""; public string CssClass { get; set; } = ""; }
+    public class LanguageStat { public string Name { get; set; } = ""; public double Percentage { get; set; } public string Color { get; set; } = ""; }
 }
