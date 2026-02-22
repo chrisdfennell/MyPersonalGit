@@ -20,6 +20,7 @@
 @inject IRepositoryService RepoService
 @inject ICollaboratorService CollaboratorService
 @inject IReleaseService ReleaseService
+@inject IMirrorService MirrorService
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
 @rendermode InteractiveServer
@@ -910,6 +911,92 @@ else
                                 </select>
                                 <button class="btn btn-gh-primary btn-sm" @onclick="AddCollaborator" disabled="@string.IsNullOrWhiteSpace(newCollaboratorUsername)">
                                     <i class="bi bi-plus-lg me-1"></i>Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header py-2 small fw-bold">
+                            <i class="bi bi-arrow-repeat me-1"></i> Mirrors
+                        </div>
+                        <div class="card-body">
+                            @if (mirrors.Count > 0)
+                            {
+                                <div class="list-group list-group-flush mb-3">
+                                    @foreach (var mirror in mirrors)
+                                    {
+                                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                            <div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="badge @(mirror.Direction == MyPersonalGit.Models.MirrorDirection.Pull ? "bg-info" : "bg-warning")">
+                                                        @(mirror.Direction == MyPersonalGit.Models.MirrorDirection.Pull ? "Pull" : "Push")
+                                                    </span>
+                                                    <span class="small fw-semibold">@mirror.RemoteUrl</span>
+                                                    @if (!mirror.IsEnabled)
+                                                    {
+                                                        <span class="badge bg-secondary">Disabled</span>
+                                                    }
+                                                </div>
+                                                <small class="text-muted">
+                                                    Every @mirror.IntervalMinutes min ·
+                                                    @if (mirror.LastSyncAt.HasValue)
+                                                    {
+                                                        <span>Last sync: @mirror.LastSyncAt.Value.ToString("g")
+                                                            @if (mirror.LastSyncStatus == "success")
+                                                            {
+                                                                <i class="bi bi-check-circle text-success"></i>
+                                                            }
+                                                            else if (mirror.LastSyncStatus == "error")
+                                                            {
+                                                                <i class="bi bi-x-circle text-danger" title="@mirror.LastSyncError"></i>
+                                                            }
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>Never synced</span>
+                                                    }
+                                                </small>
+                                            </div>
+                                            <div class="d-flex gap-1">
+                                                <button class="btn btn-sm btn-outline-secondary" @onclick="() => ToggleMirror(mirror.Id)" title="@(mirror.IsEnabled ? "Disable" : "Enable")">
+                                                    <i class="bi @(mirror.IsEnabled ? "bi-pause" : "bi-play")"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteMirror(mirror.Id)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted small mb-3">No mirrors configured.</p>
+                            }
+                            <div class="d-flex gap-2 flex-wrap align-items-end">
+                                <div>
+                                    <label class="form-label small mb-0">Remote URL</label>
+                                    <input type="text" class="form-control form-control-sm" @bind="newMirrorUrl" placeholder="https://github.com/user/repo.git" style="min-width: 280px;" />
+                                </div>
+                                <div>
+                                    <label class="form-label small mb-0">Direction</label>
+                                    <select class="form-select form-select-sm" @bind="newMirrorDirection">
+                                        <option value="Pull">Pull</option>
+                                        <option value="Push">Push</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label small mb-0">Interval (min)</label>
+                                    <input type="number" class="form-control form-control-sm" @bind="newMirrorInterval" min="5" style="width: 80px;" />
+                                </div>
+                                <div>
+                                    <label class="form-label small mb-0">Auth Token <span class="text-muted">(optional)</span></label>
+                                    <input type="password" class="form-control form-control-sm" @bind="newMirrorToken" placeholder="token" style="width: 150px;" />
+                                </div>
+                                <button class="btn btn-gh-primary btn-sm" @onclick="AddMirror" disabled="@string.IsNullOrWhiteSpace(newMirrorUrl)">
+                                    <i class="bi bi-plus-lg me-1"></i>Add Mirror
                                 </button>
                             </div>
                         </div>
@@ -2191,6 +2278,13 @@ else
     private string newCollaboratorUsername = "";
     private string newCollaboratorPermission = "Read";
 
+    // Mirrors state
+    private List<MyPersonalGit.Models.RepositoryMirror> mirrors = new();
+    private string newMirrorUrl = "";
+    private string newMirrorDirection = "Pull";
+    private int newMirrorInterval = 60;
+    private string? newMirrorToken;
+
     // Releases state
     private List<MyPersonalGit.Models.Release> releases = new();
     private bool showCreateRelease = false;
@@ -2341,6 +2435,36 @@ else
         await LoadCollaborators();
     }
 
+    private async Task LoadMirrors()
+    {
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        mirrors = await MirrorService.GetMirrorsAsync(dirName);
+    }
+
+    private async Task AddMirror()
+    {
+        if (string.IsNullOrWhiteSpace(newMirrorUrl)) return;
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        var direction = newMirrorDirection == "Push" ? MyPersonalGit.Models.MirrorDirection.Push : MyPersonalGit.Models.MirrorDirection.Pull;
+        await MirrorService.AddMirrorAsync(dirName, newMirrorUrl.Trim(), direction, newMirrorInterval, newMirrorToken);
+        newMirrorUrl = "";
+        newMirrorToken = null;
+        newMirrorInterval = 60;
+        await LoadMirrors();
+    }
+
+    private async Task ToggleMirror(int id)
+    {
+        await MirrorService.ToggleMirrorAsync(id);
+        await LoadMirrors();
+    }
+
+    private async Task DeleteMirror(int id)
+    {
+        await MirrorService.DeleteMirrorAsync(id);
+        await LoadMirrors();
+    }
+
     private async Task LoadReleases()
     {
         var dirName = System.IO.Path.GetFileName(RepoFullPath);
@@ -2451,7 +2575,7 @@ else
         if (tab == "code" && string.IsNullOrEmpty(Path)) Nav.NavigateTo($"/repo/{RepoName}");
         else LoadRepoData();
         if (tab == "settings" || tab == "branches") await LoadBranchProtectionRules();
-        if (tab == "settings") await LoadCollaborators();
+        if (tab == "settings") { await LoadCollaborators(); await LoadMirrors(); }
         if (tab == "releases") await LoadReleases();
         if (tab == "graph") LoadGraph();
     }

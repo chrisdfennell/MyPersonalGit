@@ -16,7 +16,8 @@ WORKDIR /app
 
 # Git is required for git http-backend, docker.io for CI/CD workflow runner
 # gosu allows dropping from root to appuser after fixing permissions
-RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates docker.io gosu \
+RUN apt-get update && apt-get install -y --no-install-recommends git git-lfs ca-certificates docker.io gosu \
+    && git lfs install \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user and the repos/data directories

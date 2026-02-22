@@ -76,6 +76,9 @@ builder.Services.AddSingleton<ISecurityService, SecurityService>();
 builder.Services.AddSingleton<IAdminService, AdminService>();
 builder.Services.AddSingleton<IUserProfileService, UserProfileService>();
 builder.Services.AddSingleton<IBranchProtectionService, BranchProtectionService>();
+builder.Services.AddSingleton<ISnippetService, SnippetService>();
+builder.Services.AddSingleton<IMirrorService, MirrorService>();
+builder.Services.AddHostedService<MirrorSyncService>();
 builder.Services.AddScoped<CurrentUserService>();
 
 var app = builder.Build();

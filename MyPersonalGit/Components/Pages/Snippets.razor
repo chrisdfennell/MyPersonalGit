@@ -1,0 +1,357 @@
+@page "/snippets"
+@page "/snippets/{SnippetId:int}"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using MyPersonalGit.Services
+@inject ISnippetService SnippetService
+@inject CurrentUserService UserService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Snippets - MyPersonalGit</PageTitle>
+
+@if (ViewMode == "list")
+{
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-code-square"></i> Snippets</h2>
+        @if (UserService.IsLoggedIn)
+        {
+            <button class="btn btn-primary btn-sm" @onclick="ShowCreateForm">
+                <i class="bi bi-plus-lg"></i> New Snippet
+            </button>
+        }
+    </div>
+
+    @if (SnippetList.Count == 0)
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-code-square" style="font-size: 4rem; color: #6c757d;"></i>
+            <h4 class="mt-3 text-muted">No snippets yet</h4>
+            <p class="text-muted">Create a snippet to share code fragments.</p>
+        </div>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var snippet in SnippetList)
+            {
+                <a href="/snippets/@snippet.Id" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">
+                                <i class="bi @(snippet.IsPublic ? "bi-unlock" : "bi-lock") text-muted me-1" style="font-size: 0.8rem;"></i>
+                                @snippet.Title
+                            </h6>
+                            @if (!string.IsNullOrEmpty(snippet.Description))
+                            {
+                                <small class="text-muted">@snippet.Description</small>
+                            }
+                            <div class="mt-1">
+                                <small class="text-muted">
+                                    @snippet.Files.Count file(s) · by <strong>@snippet.Owner</strong> · updated @snippet.UpdatedAt.ToString("MMM d, yyyy")
+                                </small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-1">
+                            @foreach (var file in snippet.Files.Take(3))
+                            {
+                                <span class="badge bg-secondary">@file.Filename</span>
+                            }
+                            @if (snippet.Files.Count > 3)
+                            {
+                                <span class="badge bg-secondary">+@(snippet.Files.Count - 3)</span>
+                            }
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+}
+else if (ViewMode == "detail" && CurrentSnippet != null)
+{
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/snippets" class="text-decoration-none">Snippets</a></li>
+            <li class="breadcrumb-item active">@CurrentSnippet.Title</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <h3 class="mb-1">@CurrentSnippet.Title</h3>
+            @if (!string.IsNullOrEmpty(CurrentSnippet.Description))
+            {
+                <p class="text-muted mb-1">@CurrentSnippet.Description</p>
+            }
+            <small class="text-muted">
+                Created by <strong>@CurrentSnippet.Owner</strong> · @CurrentSnippet.CreatedAt.ToString("MMM d, yyyy HH:mm")
+                @if (CurrentSnippet.UpdatedAt != CurrentSnippet.CreatedAt)
+                {
+                    <span> · updated @CurrentSnippet.UpdatedAt.ToString("MMM d, yyyy HH:mm")</span>
+                }
+                · <i class="bi @(CurrentSnippet.IsPublic ? "bi-unlock" : "bi-lock")"></i> @(CurrentSnippet.IsPublic ? "Public" : "Private")
+            </small>
+        </div>
+        @if (UserService.IsLoggedIn && UserService.Username == CurrentSnippet.Owner)
+        {
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary btn-sm" @onclick="StartEdit">
+                    <i class="bi bi-pencil"></i> Edit
+                </button>
+                <button class="btn btn-outline-danger btn-sm" @onclick="DeleteSnippet">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </div>
+        }
+    </div>
+
+    @foreach (var file in CurrentSnippet.Files)
+    {
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                <span class="fw-semibold small"><i class="bi bi-file-code me-1"></i> @file.Filename</span>
+                @if (!string.IsNullOrEmpty(file.Language))
+                {
+                    <span class="badge bg-info">@file.Language</span>
+                }
+            </div>
+            <div class="card-body p-0">
+                <pre class="mb-0 p-3" style="overflow-x: auto; background: var(--gh-bg);"><code class="language-@(file.Language ?? "plaintext")">@file.Content</code></pre>
+            </div>
+        </div>
+    }
+}
+else if (ViewMode == "create" || ViewMode == "edit")
+{
+    <h3 class="mb-4">@(ViewMode == "edit" ? "Edit Snippet" : "New Snippet")</h3>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Title</label>
+                <input type="text" class="form-control" @bind="EditTitle" placeholder="Snippet title..." />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description <span class="text-muted small">(optional)</span></label>
+                <input type="text" class="form-control" @bind="EditDescription" placeholder="A short description..." />
+            </div>
+            <div class="mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" @bind="EditIsPublic" id="snippetPublic" />
+                    <label class="form-check-label" for="snippetPublic">Public snippet</label>
+                </div>
+            </div>
+
+            <h6>Files</h6>
+            @for (int i = 0; i < EditFiles.Count; i++)
+            {
+                var index = i;
+                <div class="card mb-2">
+                    <div class="card-header d-flex justify-content-between align-items-center py-1">
+                        <div class="d-flex gap-2 align-items-center flex-grow-1">
+                            <input type="text" class="form-control form-control-sm" style="max-width: 200px;"
+                                   placeholder="filename.ext" @bind="EditFiles[index].Filename" />
+                            <input type="text" class="form-control form-control-sm" style="max-width: 120px;"
+                                   placeholder="language" @bind="EditFiles[index].Language" />
+                        </div>
+                        @if (EditFiles.Count > 1)
+                        {
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => EditFiles.RemoveAt(index)">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        }
+                    </div>
+                    <div class="card-body p-0">
+                        <textarea class="form-control border-0 font-monospace" rows="8"
+                                  style="resize: vertical; font-size: 13px;"
+                                  @bind="EditFiles[index].Content" placeholder="Paste your code here..." />
+                    </div>
+                </div>
+            }
+
+            <button class="btn btn-outline-secondary btn-sm mb-3" @onclick="AddFile">
+                <i class="bi bi-plus"></i> Add file
+            </button>
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger">@ErrorMessage</div>
+            }
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" @onclick="SaveSnippet">
+                    <i class="bi bi-check-lg"></i> @(ViewMode == "edit" ? "Update" : "Create") Snippet
+                </button>
+                <button class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int? SnippetId { get; set; }
+
+    private string ViewMode = "list";
+    private List<Snippet> SnippetList = new();
+    private Snippet? CurrentSnippet;
+
+    // Edit/Create form state
+    private string EditTitle = "";
+    private string? EditDescription;
+    private bool EditIsPublic = true;
+    private List<EditableFile> EditFiles = new() { new EditableFile() };
+    private string? ErrorMessage;
+
+    private class EditableFile
+    {
+        public string Filename { get; set; } = "";
+        public string Content { get; set; } = "";
+        public string? Language { get; set; }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (SnippetId.HasValue)
+        {
+            CurrentSnippet = await SnippetService.GetSnippetAsync(SnippetId.Value);
+            if (CurrentSnippet == null)
+            {
+                Navigation.NavigateTo("/snippets");
+                return;
+            }
+            // Check visibility
+            if (!CurrentSnippet.IsPublic && (!UserService.IsLoggedIn || UserService.Username != CurrentSnippet.Owner))
+            {
+                Navigation.NavigateTo("/snippets");
+                return;
+            }
+            ViewMode = "detail";
+        }
+        else
+        {
+            ViewMode = "list";
+            var includePrivate = UserService.IsLoggedIn;
+            SnippetList = await SnippetService.GetSnippetsAsync(includePrivate: false);
+            // Also include user's own private snippets
+            if (UserService.IsLoggedIn)
+            {
+                var myPrivate = await SnippetService.GetSnippetsAsync(UserService.Username, includePrivate: true);
+                var publicIds = SnippetList.Select(s => s.Id).ToHashSet();
+                foreach (var s in myPrivate)
+                {
+                    if (!publicIds.Contains(s.Id))
+                        SnippetList.Add(s);
+                }
+                SnippetList = SnippetList.OrderByDescending(s => s.UpdatedAt).ToList();
+            }
+        }
+    }
+
+    private void ShowCreateForm()
+    {
+        ViewMode = "create";
+        EditTitle = "";
+        EditDescription = null;
+        EditIsPublic = true;
+        EditFiles = new() { new EditableFile() };
+        ErrorMessage = null;
+    }
+
+    private void StartEdit()
+    {
+        if (CurrentSnippet == null) return;
+        ViewMode = "edit";
+        EditTitle = CurrentSnippet.Title;
+        EditDescription = CurrentSnippet.Description;
+        EditIsPublic = CurrentSnippet.IsPublic;
+        EditFiles = CurrentSnippet.Files.Select(f => new EditableFile
+        {
+            Filename = f.Filename,
+            Content = f.Content,
+            Language = f.Language
+        }).ToList();
+        if (EditFiles.Count == 0) EditFiles.Add(new EditableFile());
+        ErrorMessage = null;
+    }
+
+    private void AddFile() => EditFiles.Add(new EditableFile());
+
+    private void CancelEdit()
+    {
+        if (CurrentSnippet != null)
+            ViewMode = "detail";
+        else
+            ViewMode = "list";
+    }
+
+    private async Task SaveSnippet()
+    {
+        if (string.IsNullOrWhiteSpace(EditTitle))
+        {
+            ErrorMessage = "Title is required.";
+            return;
+        }
+
+        var validFiles = EditFiles.Where(f => !string.IsNullOrWhiteSpace(f.Filename) && !string.IsNullOrWhiteSpace(f.Content)).ToList();
+        if (validFiles.Count == 0)
+        {
+            ErrorMessage = "At least one file with content is required.";
+            return;
+        }
+
+        var snippetFiles = validFiles.Select(f => new SnippetFile
+        {
+            Filename = f.Filename.Trim(),
+            Content = f.Content,
+            Language = string.IsNullOrWhiteSpace(f.Language) ? GuessLanguage(f.Filename) : f.Language.Trim()
+        }).ToList();
+
+        if (ViewMode == "edit" && CurrentSnippet != null)
+        {
+            await SnippetService.UpdateSnippetAsync(CurrentSnippet.Id, EditTitle.Trim(), EditDescription?.Trim(), EditIsPublic, snippetFiles);
+            Navigation.NavigateTo($"/snippets/{CurrentSnippet.Id}", forceLoad: true);
+        }
+        else
+        {
+            var created = await SnippetService.CreateSnippetAsync(EditTitle.Trim(), EditDescription?.Trim(), UserService.Username, EditIsPublic, snippetFiles);
+            Navigation.NavigateTo($"/snippets/{created.Id}", forceLoad: true);
+        }
+    }
+
+    private async Task DeleteSnippet()
+    {
+        if (CurrentSnippet == null) return;
+        await SnippetService.DeleteSnippetAsync(CurrentSnippet.Id, UserService.Username);
+        Navigation.NavigateTo("/snippets", forceLoad: true);
+    }
+
+    private string? GuessLanguage(string filename)
+    {
+        var ext = Path.GetExtension(filename).ToLowerInvariant();
+        return ext switch
+        {
+            ".cs" => "csharp",
+            ".js" => "javascript",
+            ".ts" => "typescript",
+            ".py" => "python",
+            ".rb" => "ruby",
+            ".go" => "go",
+            ".rs" => "rust",
+            ".java" => "java",
+            ".html" => "html",
+            ".css" => "css",
+            ".json" => "json",
+            ".xml" => "xml",
+            ".yaml" or ".yml" => "yaml",
+            ".sh" or ".bash" => "bash",
+            ".sql" => "sql",
+            ".md" => "markdown",
+            ".dockerfile" or ".docker" => "docker",
+            ".toml" => "toml",
+            ".cpp" or ".cc" => "cpp",
+            ".c" or ".h" => "c",
+            _ => null
+        };
+    }
+}

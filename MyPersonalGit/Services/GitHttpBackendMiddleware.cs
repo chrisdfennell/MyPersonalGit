@@ -106,6 +106,21 @@ public sealed class GitHttpBackendMiddleware
             psi.Environment[envKey] = string.Join(",", header.Value.ToArray());
         }
 
+        // Track git operation type for Prometheus metrics
+        var service = context.Request.Query["service"].FirstOrDefault() ?? "";
+        if (service == "git-upload-pack" || pathInfo.EndsWith("/git-upload-pack"))
+        {
+            // upload-pack = fetch/clone; distinguish by checking if repo has refs
+            var repoDir = Path.Combine(projectRoot, pathInfo.Split('/')[1]);
+            var isClone = !Directory.Exists(Path.Combine(repoDir, "refs", "heads")) ||
+                          !Directory.EnumerateFiles(Path.Combine(repoDir, "refs", "heads")).Any();
+            GitOperationCounters.Increment(isClone ? "clone" : "fetch");
+        }
+        else if (service == "git-receive-pack" || pathInfo.EndsWith("/git-receive-pack"))
+        {
+            GitOperationCounters.Increment("push");
+        }
+
         using var process = Process.Start(psi);
         if (process is null)
         {
