@@ -289,6 +289,42 @@ else
                                 </div>
                             </div>
 
+                            <h6 class="mt-4 mb-3">Push Notifications (ntfy / Gotify)</h6>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.EnablePushNotifications" id="enablePush" />
+                                    <label class="form-check-label" for="enablePush">
+                                        Enable Push Notifications
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">ntfy Server URL</label>
+                                <InputText class="form-control" @bind-Value="Settings.NtfyUrl" placeholder="https://ntfy.sh" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">ntfy Topic</label>
+                                <InputText class="form-control" @bind-Value="Settings.NtfyTopic" placeholder="mypersonalgit" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">ntfy Access Token <span class="text-muted small">(optional)</span></label>
+                                <InputText type="password" class="form-control" @bind-Value="Settings.NtfyAccessToken" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Gotify Server URL</label>
+                                <InputText class="form-control" @bind-Value="Settings.GotifyUrl" placeholder="https://gotify.example.com" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Gotify App Token</label>
+                                <InputText type="password" class="form-control" @bind-Value="Settings.GotifyAppToken" />
+                            </div>
+
                             @if (!string.IsNullOrEmpty(SettingsMessage))
                             {
                                 <div class="alert alert-success">@SettingsMessage</div>

@@ -11,8 +11,11 @@
 @using Markdig.Syntax.Inlines
 @using Microsoft.AspNetCore.Components.Forms
 @using MyPersonalGit.Data
+@using Microsoft.EntityFrameworkCore
+@using ContainerManifest = MyPersonalGit.Models.ContainerManifest
 @using BranchProtectionRule = MyPersonalGit.Models.BranchProtectionRule
 @inject IConfiguration Config
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject NavigationManager Nav
 @inject IJSRuntime JS
 @inject IBranchProtectionService BranchProtectionService
@@ -55,6 +58,12 @@ else
                     <span class="badge rounded-pill border @(repoIsPrivate ? "bg-warning bg-opacity-10 text-warning border-warning-subtle" : "text-muted") fw-normal ms-2" style="font-size: 12px;">
                         @(repoIsPrivate ? "Private" : "Public")
                     </span>
+                    @if (repoIsArchived)
+                    {
+                        <span class="badge rounded-pill border bg-secondary bg-opacity-10 text-secondary fw-normal ms-1" style="font-size: 12px;">
+                            <i class="bi bi-archive me-1"></i>Archived
+                        </span>
+                    }
                 </div>
 
                 <div class="d-flex gap-2">
@@ -85,7 +94,7 @@ else
                                 <i class="bi bi-file-earmark-zip me-2"></i>Download ZIP
                             </a>
 
-                            @if (UserService.IsLoggedIn)
+                            @if (UserService.IsLoggedIn && !repoIsArchived)
                             {
                                 <hr class="my-2" />
 
@@ -186,6 +195,11 @@ else
                     <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/insights">
                         <i class="bi bi-graph-up me-1"></i> Insights
                     </a>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "packages" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("packages")'>
+                        <i class="bi bi-box me-1"></i> Packages
+                    </button>
                 </li>
                 <li class="nav-item">
                     <button class="nav-link @(activeTab == "settings" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("settings")'>
@@ -315,7 +329,7 @@ else
                             <input type="text" class="form-control border-start-0 ps-0 shadow-none" placeholder="Go to file..." @bind="fileSearchTerm" @bind:event="oninput" />
                         </div>
                     </div>
-                    @if (UserService.IsLoggedIn)
+                    @if (UserService.IsLoggedIn && !repoIsArchived)
                     {
                         <div class="d-flex gap-2">
                             <div class="dropdown">
@@ -732,6 +746,42 @@ else
                 }
             </div>
         }
+        else if (activeTab == "packages")
+        {
+            <div class="mb-4">
+                <h5 class="fw-bold">Container Images</h5>
+                <p class="text-muted small">Docker and OCI images published to this repository.</p>
+                @if (containerTags.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var tag in containerTags)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <code class="fw-bold">@tag.Tag</code>
+                                        <span class="text-muted small ms-2">@tag.Digest[..19]...</span>
+                                        <span class="text-muted small ms-2">(@FormatBytes(tag.Size))</span>
+                                    </div>
+                                    <span class="text-muted small">@tag.UpdatedAt.ToString("g")</span>
+                                </div>
+                                <div class="mt-1">
+                                    <code class="small text-muted">docker pull @(new Uri(Nav.BaseUri).Authority)/v2/@(containerRegistryName):@tag.Tag</code>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-box" style="font-size: 2rem;"></i>
+                        <p class="mt-2">No container images published yet.</p>
+                        <p class="small"><code>docker push @(new Uri(Nav.BaseUri).Authority)/v2/@(containerRegistryName):tag</code></p>
+                    </div>
+                }
+            </div>
+        }
         else if (activeTab == "settings")
         {
             <div class="settings-view mb-5">
@@ -916,6 +966,32 @@ else
                         </div>
                     </div>
 
+                    <div class="card border shadow-sm mb-4">
+                        <div class="card-header bg-light-subtle py-2 small fw-bold">
+                            <i class="bi bi-globe me-1"></i> Pages
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" @bind="settingsHasPages" id="hasPages" />
+                                <label class="form-check-label small" for="hasPages">
+                                    Enable Pages (serve static site from a branch)
+                                </label>
+                            </div>
+                            @if (settingsHasPages)
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Source branch</label>
+                                    <input type="text" class="form-control form-control-sm" @bind="settingsPagesBranch" placeholder="gh-pages" style="max-width: 200px;" />
+                                </div>
+                                <div class="alert alert-info py-2 small mb-3">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Your site will be available at <code>/pages/@repoOwner/@RepoName/</code>
+                                </div>
+                            }
+                            <button class="btn btn-gh-primary btn-sm" @onclick="SavePagesSettings">Save</button>
+                        </div>
+                    </div>
+
                     <div class="card shadow-sm mb-4">
                         <div class="card-header py-2 small fw-bold">
                             <i class="bi bi-arrow-repeat me-1"></i> Mirrors
@@ -997,6 +1073,23 @@ else
                                 </div>
                                 <button class="btn btn-gh-primary btn-sm" @onclick="AddMirror" disabled="@string.IsNullOrWhiteSpace(newMirrorUrl)">
                                     <i class="bi bi-plus-lg me-1"></i>Add Mirror
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border shadow-sm mb-4">
+                        <div class="card-header bg-light-subtle py-2 small fw-bold">
+                            <i class="bi bi-archive me-1"></i> Archive
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="fw-bold mb-0">@(repoIsArchived ? "Unarchive this repository" : "Archive this repository")</h6>
+                                    <p class="text-muted small mb-0">@(repoIsArchived ? "Unarchiving will re-enable pushes, issues, and PRs." : "Archiving makes the repo read-only. No new pushes, issues, or PRs.")</p>
+                                </div>
+                                <button class="btn @(repoIsArchived ? "btn-outline-success" : "btn-outline-warning") btn-sm px-3" @onclick="ToggleArchive">
+                                    @(repoIsArchived ? "Unarchive" : "Archive")
                                 </button>
                             </div>
                         </div>
@@ -2262,6 +2355,7 @@ else
 
     // Repository metadata (from DB)
     private bool repoIsPrivate = false;
+    private bool repoIsArchived = false;
     private string repoDescription = "";
     private string repoOwner = "";
     private string repoForkedFrom = "";
@@ -2272,6 +2366,12 @@ else
     private bool settingsIsPrivate = false;
     private string settingsDescription = "";
     private string settingsSaveMessage = "";
+    private bool settingsHasPages = false;
+    private string settingsPagesBranch = "gh-pages";
+
+    // Container registry
+    private List<ContainerManifest> containerTags = new();
+    private string containerRegistryName = "";
 
     // Collaborators state
     private List<MyPersonalGit.Models.RepositoryCollaborator> collaborators = new();
@@ -2363,16 +2463,20 @@ else
         if (meta != null)
         {
             repoIsPrivate = meta.IsPrivate;
+            repoIsArchived = meta.IsArchived;
             repoDescription = meta.Description ?? "";
             repoOwner = meta.Owner;
             repoForkedFrom = meta.ForkedFrom ?? "";
             repoForkCount = meta.Forks;
             settingsIsPrivate = meta.IsPrivate;
             settingsDescription = meta.Description ?? "";
+            settingsHasPages = meta.HasPages;
+            settingsPagesBranch = meta.PagesBranch ?? "gh-pages";
         }
         else
         {
             repoIsPrivate = false;
+            repoIsArchived = false;
             repoDescription = "";
             repoOwner = "";
             repoForkedFrom = "";
@@ -2409,6 +2513,48 @@ else
         repoIsPrivate = settingsIsPrivate;
         repoDescription = settingsDescription;
         settingsSaveMessage = "Settings saved!";
+        StateHasChanged();
+    }
+
+    private async Task ToggleArchive()
+    {
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        if (repoIsArchived)
+            await RepoService.UnarchiveRepositoryAsync(dirName);
+        else
+            await RepoService.ArchiveRepositoryAsync(dirName);
+        repoIsArchived = !repoIsArchived;
+        StateHasChanged();
+    }
+
+    private async Task LoadContainerTags()
+    {
+        var displayName = RepoName;
+        containerRegistryName = repoOwner + "/" + displayName;
+        using var db = DbFactory.CreateDbContext();
+        containerTags = await db.ContainerManifests
+            .Where(m => m.RepositoryName == containerRegistryName || m.RepositoryName == displayName)
+            .OrderByDescending(m => m.UpdatedAt)
+            .ToListAsync();
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        if (bytes < 1024 * 1024 * 1024) return $"{bytes / (1024.0 * 1024):F1} MB";
+        return $"{bytes / (1024.0 * 1024 * 1024):F1} GB";
+    }
+
+    private async Task SavePagesSettings()
+    {
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        await RepoService.EnsureRepositoryRecordAsync(dirName, UserService.Username);
+        await RepoService.UpdateRepositoryAsync(dirName, repo =>
+        {
+            repo.HasPages = settingsHasPages;
+            repo.PagesBranch = settingsPagesBranch;
+        });
         StateHasChanged();
     }
 
@@ -2577,6 +2723,7 @@ else
         if (tab == "settings" || tab == "branches") await LoadBranchProtectionRules();
         if (tab == "settings") { await LoadCollaborators(); await LoadMirrors(); }
         if (tab == "releases") await LoadReleases();
+        if (tab == "packages") await LoadContainerTags();
         if (tab == "graph") LoadGraph();
     }
 

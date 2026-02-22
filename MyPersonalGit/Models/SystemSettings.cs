@@ -18,6 +18,14 @@ public class SystemSettings
     public string SmtpUsername { get; set; } = string.Empty;
     public string SmtpPassword { get; set; } = string.Empty;
     public bool SmtpEnableSsl { get; set; } = true;
+
+    // Push notifications
+    public bool EnablePushNotifications { get; set; }
+    public string NtfyUrl { get; set; } = string.Empty;
+    public string NtfyTopic { get; set; } = string.Empty;
+    public string NtfyAccessToken { get; set; } = string.Empty;
+    public string GotifyUrl { get; set; } = string.Empty;
+    public string GotifyAppToken { get; set; } = string.Empty;
 }
 
 public class SystemStatistics

@@ -19,6 +19,8 @@ public interface IRepositoryService
     Task<List<RepositoryFork>> GetForksAsync(string repoName);
     Task<bool> IsForkedAsync(string repoName, string username);
     Task<bool> DeleteRepositoryAsync(string name);
+    Task<bool> ArchiveRepositoryAsync(string name);
+    Task<bool> UnarchiveRepositoryAsync(string name);
 }
 
 public class RepositoryService : IRepositoryService
@@ -262,6 +264,32 @@ public class RepositoryService : IRepositoryService
         if (repo == null) return false;
         db.Repositories.Remove(repo);
         await db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> ArchiveRepositoryAsync(string name)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var repo = await db.Repositories.FirstOrDefaultAsync(r => r.Name.ToLower() == name.ToLower());
+        if (repo == null) return false;
+        repo.IsArchived = true;
+        repo.ArchivedAt = DateTime.UtcNow;
+        repo.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+        _logger.LogInformation("Repository archived: {Name}", name);
+        return true;
+    }
+
+    public async Task<bool> UnarchiveRepositoryAsync(string name)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var repo = await db.Repositories.FirstOrDefaultAsync(r => r.Name.ToLower() == name.ToLower());
+        if (repo == null) return false;
+        repo.IsArchived = false;
+        repo.ArchivedAt = null;
+        repo.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+        _logger.LogInformation("Repository unarchived: {Name}", name);
         return true;
     }
 }

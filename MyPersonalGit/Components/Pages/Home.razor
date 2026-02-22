@@ -127,6 +127,12 @@
                                     <span class="badge rounded-pill border @(repo.IsPrivate ? "bg-warning bg-opacity-10 text-warning border-warning-subtle" : "text-muted") fw-normal px-2" style="font-size: 12px;">
                                         @(repo.IsPrivate ? "Private" : "Public")
                                     </span>
+                                    @if (repo.IsArchived)
+                                    {
+                                        <span class="badge rounded-pill border bg-secondary bg-opacity-10 text-secondary fw-normal px-2 ms-1" style="font-size: 12px;">
+                                            <i class="bi bi-archive me-1"></i>Archived
+                                        </span>
+                                    }
                                 </div>
                                 @if (!string.IsNullOrEmpty(repo.Description))
                                 {
@@ -467,6 +473,7 @@
                             Stars = repoMeta?.Stars ?? 0,
                             IsStarred = isStarred,
                             IsPrivate = repoMeta?.IsPrivate ?? false,
+                            IsArchived = repoMeta?.IsArchived ?? false,
                             Description = repoMeta?.Description ?? "",
                             Owner = repoMeta?.Owner ?? "",
                             Forks = repoMeta?.Forks ?? 0
@@ -933,6 +940,7 @@
         public int Stars { get; set; }
         public bool IsStarred { get; set; }
         public bool IsPrivate { get; set; }
+        public bool IsArchived { get; set; }
         public string Description { get; set; } = "";
         public string Owner { get; set; } = "";
         public int Forks { get; set; }

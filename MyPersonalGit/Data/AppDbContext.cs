@@ -82,6 +82,16 @@ public class AppDbContext : DbContext
     public DbSet<ActiveUserSession> ActiveUserSessions => Set<ActiveUserSession>();
     public DbSet<TwoFactorAuth> TwoFactorAuths => Set<TwoFactorAuth>();
 
+    // Container Registry
+    public DbSet<ContainerManifest> ContainerManifests => Set<ContainerManifest>();
+    public DbSet<ContainerBlob> ContainerBlobs => Set<ContainerBlob>();
+    public DbSet<ContainerUploadSession> ContainerUploadSessions => Set<ContainerUploadSession>();
+
+    // Packages
+    public DbSet<Package> Packages => Set<Package>();
+    public DbSet<PackageVersion> PackageVersions => Set<PackageVersion>();
+    public DbSet<PackageFile> PackageFiles => Set<PackageFile>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Shared JSON value converters + comparers for List<string> and string[]
@@ -289,6 +299,42 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<LfsObject>(e =>
         {
             e.HasIndex(o => new { o.RepoName, o.Oid }).IsUnique();
+        });
+
+        // --- Container Registry ---
+        modelBuilder.Entity<ContainerManifest>(e =>
+        {
+            e.HasIndex(m => new { m.RepositoryName, m.Tag }).IsUnique();
+            e.HasIndex(m => new { m.RepositoryName, m.Digest });
+        });
+
+        modelBuilder.Entity<ContainerBlob>(e =>
+        {
+            e.HasIndex(b => new { b.RepositoryName, b.Digest }).IsUnique();
+        });
+
+        modelBuilder.Entity<ContainerUploadSession>(e =>
+        {
+            e.HasIndex(s => s.Uuid).IsUnique();
+        });
+
+        // --- Packages ---
+        modelBuilder.Entity<Package>(e =>
+        {
+            e.HasIndex(p => new { p.Name, p.Type }).IsUnique();
+            e.HasMany(p => p.Versions)
+                .WithOne()
+                .HasForeignKey(v => v.PackageId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PackageVersion>(e =>
+        {
+            e.HasIndex(v => new { v.PackageId, v.Version }).IsUnique();
+            e.HasMany(v => v.Files)
+                .WithOne()
+                .HasForeignKey(f => f.PackageVersionId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
