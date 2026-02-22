@@ -86,11 +86,16 @@ h1:focus {
     color: #8b949e !important;
 }
 
-[data-bs-theme="dark"] .token.keyword {
+[data-bs-theme="dark"] .token.keyword,
+[data-bs-theme="dark"] .token.boolean,
+[data-bs-theme="dark"] .token.important {
     color: #ff7b72 !important;
 }
 
-[data-bs-theme="dark"] .token.string {
+[data-bs-theme="dark"] .token.string,
+[data-bs-theme="dark"] .token.attr-value,
+[data-bs-theme="dark"] .token.regex,
+[data-bs-theme="dark"] .token.char {
     color: #a5d6ff !important;
 }
 
@@ -98,8 +103,47 @@ h1:focus {
     color: #d2a8ff !important;
 }
 
-[data-bs-theme="dark"] .token.number {
+[data-bs-theme="dark"] .token.number,
+[data-bs-theme="dark"] .token.constant {
     color: #79c0ff !important;
+}
+
+[data-bs-theme="dark"] .token.class-name,
+[data-bs-theme="dark"] .token.builtin,
+[data-bs-theme="dark"] .token.namespace,
+[data-bs-theme="dark"] .token.variable,
+[data-bs-theme="dark"] .token.parameter {
+    color: #ffa657 !important;
+}
+
+[data-bs-theme="dark"] .token.tag {
+    color: #7ee787 !important;
+}
+
+[data-bs-theme="dark"] .token.attr-name,
+[data-bs-theme="dark"] .token.property,
+[data-bs-theme="dark"] .token.selector {
+    color: #79c0ff !important;
+}
+
+[data-bs-theme="dark"] .token.operator,
+[data-bs-theme="dark"] .token.punctuation,
+[data-bs-theme="dark"] .token.entity,
+[data-bs-theme="dark"] .token.url {
+    color: #c9d1d9 !important;
+}
+
+[data-bs-theme="dark"] .token.atrule {
+    color: #d2a8ff !important;
+}
+
+[data-bs-theme="dark"] .token.symbol,
+[data-bs-theme="dark"] .token.deleted {
+    color: #f85149 !important;
+}
+
+[data-bs-theme="dark"] .token.inserted {
+    color: #56d364 !important;
 }
 
 [data-bs-theme="dark"] .line-numbers .line-numbers-rows {
