@@ -455,12 +455,13 @@ else
         await LoadData();
     }
 
-    protected override async Task OnParametersSetAsync()
+    protected override Task OnParametersSetAsync()
     {
         if (!string.IsNullOrEmpty(Tab))
         {
             ActiveTab = Tab;
         }
+        return Task.CompletedTask;
     }
 
     private void SetTab(string tab)
@@ -484,12 +485,13 @@ else
         await ProfileService.SaveProfileAsync(UserProfileData);
     }
 
-    private async Task ChangePassword()
+    private Task ChangePassword()
     {
         if (NewPassword != ConfirmPassword)
         {
-            return;
+            return Task.CompletedTask;
         }
+        return Task.CompletedTask;
     }
 
     private async Task Enable2FA()
@@ -548,7 +550,8 @@ else
         await LoadData();
     }
 
-    private async Task SaveNotificationSettings()
+    private Task SaveNotificationSettings()
     {
+        return Task.CompletedTask;
     }
 }
