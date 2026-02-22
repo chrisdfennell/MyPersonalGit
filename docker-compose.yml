@@ -1,0 +1,17 @@
+services:
+  mypersonalgit:
+    build: .
+    container_name: mypersonalgit
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - mypersonalgit-repos:/repos
+      - mypersonalgit-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - ConnectionStrings__Default=Data Source=/data/mypersonalgit.db
+
+volumes:
+  mypersonalgit-repos:
+  mypersonalgit-data:

@@ -3,8 +3,11 @@
 @using MyPersonalGit.Models
 @using MyPersonalGit.Data
 @using LibGit2Sharp
+@using System.Text.RegularExpressions
+@using Markdig
 @inject IPullRequestService PRService
 @inject IConfiguration Config
+@inject IAdminService AdminService
 @inject NavigationManager Nav
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
@@ -63,37 +66,75 @@
                                 <code class="bg-light px-2 py-1 rounded">@currentPR.SourceBranch</code> into
                                 <code class="bg-light px-2 py-1 rounded">@currentPR.TargetBranch</code>
                             </span>
+                            <a href="/repo/@RepoName/compare/@(currentPR.TargetBranch)...@(currentPR.SourceBranch)" class="btn btn-sm btn-outline-secondary ms-2">
+                                <i class="bi bi-arrow-left-right me-1"></i> View comparison
+                            </a>
                         </div>
                     </div>
-                    @if (UserService.IsLoggedIn && currentPR.State == PullRequestState.Open)
-                    {
-                        <div class="btn-group">
-                            <button class="btn btn-success btn-sm" @onclick="MergePR">
-                                <i class="bi bi-check2-all me-1"></i> Merge pull request
-                            </button>
-                            <button class="btn btn-outline-danger btn-sm" @onclick="ClosePR">
-                                <i class="bi bi-x-circle me-1"></i> Close
-                            </button>
-                        </div>
-                    }
                 </div>
+
+                <!-- Merge section for open PRs -->
+                @if (UserService.IsLoggedIn && currentPR.State == PullRequestState.Open)
+                {
+                    <div class="card mb-3 @(canMerge ? "border-success" : mergeReason != null ? "border-warning" : "")">
+                        <div class="card-body">
+                            @if (!string.IsNullOrEmpty(mergeError))
+                            {
+                                <div class="alert alert-danger py-2 mb-2">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> @mergeError
+                                </div>
+                            }
+                            @if (!canMerge && mergeReason != null)
+                            {
+                                <div class="alert alert-warning py-2 mb-2">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> @mergeReason
+                                </div>
+                            }
+                            <div class="d-flex align-items-center gap-2">
+                                <select class="form-select form-select-sm" style="width: auto;" @bind="selectedStrategy">
+                                    <option value="@MergeStrategy.MergeCommit">Create a merge commit</option>
+                                    <option value="@MergeStrategy.Squash">Squash and merge</option>
+                                    <option value="@MergeStrategy.Rebase">Rebase and merge</option>
+                                </select>
+                                <button class="btn btn-success btn-sm" @onclick="MergePR" disabled="@(!canMerge || isMerging)">
+                                    @if (isMerging)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                    }
+                                    <i class="bi bi-check2-all me-1"></i> Merge pull request
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" @onclick="ClosePR">
+                                    <i class="bi bi-x-circle me-1"></i> Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
 
                 <div class="row">
                     <div class="col-md-9">
                         <ul class="nav nav-tabs mb-3">
                             <li class="nav-item">
-                                <button class="nav-link @(activeTab == "conversation" ? "active" : "")" @onclick='() => activeTab = "conversation"'>
+                                <button class="nav-link @(activeTab == "conversation" ? "active" : "")" @onclick='() => SetTab("conversation")'>
                                     <i class="bi bi-chat-left me-1"></i> Conversation
                                 </button>
                             </li>
                             <li class="nav-item">
-                                <button class="nav-link @(activeTab == "commits" ? "active" : "")" @onclick='() => activeTab = "commits"'>
+                                <button class="nav-link @(activeTab == "commits" ? "active" : "")" @onclick='() => SetTab("commits")'>
                                     <i class="bi bi-clock-history me-1"></i> Commits
+                                    @if (prCommits.Any())
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-25 ms-1">@prCommits.Count</span>
+                                    }
                                 </button>
                             </li>
                             <li class="nav-item">
-                                <button class="nav-link @(activeTab == "files" ? "active" : "")" @onclick='() => activeTab = "files"'>
+                                <button class="nav-link @(activeTab == "files" ? "active" : "")" @onclick='() => SetTab("files")'>
                                     <i class="bi bi-file-diff me-1"></i> Files changed
+                                    @if (filePatches.Any())
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-25 ms-1">@filePatches.Count</span>
+                                    }
                                 </button>
                             </li>
                         </ul>
@@ -174,27 +215,99 @@
                         }
                         else if (activeTab == "commits")
                         {
-                            <div class="card">
-                                <div class="card-body">
-                                    <p class="text-muted">Commits from <code>@currentPR.SourceBranch</code> to <code>@currentPR.TargetBranch</code></p>
-                                    <div class="alert alert-info">
-                                        <i class="bi bi-info-circle me-2"></i>
-                                        Use the repository's commit history to view commits in this branch.
-                                    </div>
+                            @if (prCommits.Any())
+                            {
+                                <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+                                    @foreach (var c in prCommits)
+                                    {
+                                        <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                                            <div>
+                                                <span class="fw-semibold small">@c.MessageShort</span>
+                                                <span class="text-muted small ms-2">@c.Author.Name · @FormatDate(c.Author.When.DateTime)</span>
+                                            </div>
+                                            <code class="small text-muted">@c.Id.ToString(7)</code>
+                                        </div>
+                                    }
                                 </div>
-                            </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    No commits found between <code>@currentPR.TargetBranch</code> and <code>@currentPR.SourceBranch</code>.
+                                </div>
+                            }
                         }
                         else if (activeTab == "files")
                         {
-                            <div class="card">
-                                <div class="card-body">
-                                    <p class="text-muted">Files changed between <code>@currentPR.TargetBranch</code> and <code>@currentPR.SourceBranch</code></p>
-                                    <div class="alert alert-info">
-                                        <i class="bi bi-info-circle me-2"></i>
-                                        Diff view will show changes between branches. Use git diff to compare.
+                            @if (filePatches.Any())
+                            {
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted small">
+                                        Showing <strong>@filePatches.Count</strong> changed file@(filePatches.Count != 1 ? "s" : "")
+                                        with <span class="text-success fw-bold">@totalAdded additions</span> and
+                                        <span class="text-danger fw-bold">@totalDeleted deletions</span>
+                                    </span>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn @(diffMode == "unified" ? "btn-secondary" : "btn-outline-secondary")" @onclick='() => diffMode = "unified"'>Unified</button>
+                                        <button class="btn @(diffMode == "split" ? "btn-secondary" : "btn-outline-secondary")" @onclick='() => diffMode = "split"'>Split</button>
                                     </div>
                                 </div>
-                            </div>
+
+                                @foreach (var patch in filePatches)
+                                {
+                                    <div class="border rounded-3 mb-3 overflow-hidden">
+                                        <div class="d-flex justify-content-between align-items-center px-3 py-2 bg-light-subtle border-bottom">
+                                            <span class="font-monospace small fw-semibold">@patch.Path</span>
+                                            <div>
+                                                <span class="badge bg-success bg-opacity-10 text-success me-1">+@patch.LinesAdded</span>
+                                                <span class="badge bg-danger bg-opacity-10 text-danger">-@patch.LinesDeleted</span>
+                                            </div>
+                                        </div>
+                                        <div class="overflow-auto" style="max-height: 600px;">
+                                            @if (diffMode == "unified")
+                                            {
+                                                <table class="table table-sm table-borderless mb-0 font-monospace" style="font-size: 12px;">
+                                                    <tbody>
+                                                        @foreach (var row in GetUnifiedDiffRows(patch.DiffLines))
+                                                        {
+                                                            <tr class="@row.CssClass diff-line">
+                                                                <td class="text-muted px-2 text-end diff-linenum" style="width: 50px; user-select: none;">@row.OldNum</td>
+                                                                <td class="text-muted px-2 text-end diff-linenum" style="width: 50px; user-select: none;">@row.NewNum</td>
+                                                                <td class="px-1 diff-sign" style="width: 20px; user-select: none;">@(row.Sign == ' ' ? "" : row.Sign.ToString())</td>
+                                                                <td class="px-2 diff-text" style="white-space: pre-wrap; word-break: break-all;">@row.Content</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            }
+                                            else
+                                            {
+                                                <table class="table table-sm table-borderless mb-0 font-monospace" style="font-size: 12px;">
+                                                    <tbody>
+                                                        @foreach (var pair in GetSplitDiffWithLineNumbers(patch.DiffLines))
+                                                        {
+                                                            <tr class="diff-line">
+                                                                <td class="text-muted text-end px-1 diff-linenum @(pair.Left != null && pair.Left.StartsWith("-") ? "diff-removed" : "diff-context")" style="width: 40px; user-select: none;">@(pair.LeftLineNum > 0 ? pair.LeftLineNum.ToString() : "")</td>
+                                                                <td class="px-2 @(pair.Left == null ? "diff-empty" : pair.Left.StartsWith("-") ? "diff-removed" : "diff-context")" style="width: 50%; white-space: pre-wrap; word-break: break-all;">@(pair.Left != null && pair.Left.Length > 1 ? pair.Left.Substring(1) : pair.Left ?? "")</td>
+                                                                <td class="text-muted text-end px-1 diff-linenum @(pair.Right != null && pair.Right.StartsWith("+") ? "diff-added" : "diff-context")" style="width: 40px; user-select: none;">@(pair.RightLineNum > 0 ? pair.RightLineNum.ToString() : "")</td>
+                                                                <td class="px-2 @(pair.Right == null ? "diff-empty" : pair.Right.StartsWith("+") ? "diff-added" : "diff-context")" style="width: 50%; white-space: pre-wrap; word-break: break-all;">@(pair.Right != null && pair.Right.Length > 1 ? pair.Right.Substring(1) : pair.Right ?? "")</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    No file changes found between <code>@currentPR.TargetBranch</code> and <code>@currentPR.SourceBranch</code>.
+                                </div>
+                            }
                         }
                     </div>
 
@@ -364,7 +477,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="() => showNewPRModal = false">Cancel</button>
-                    <button type="button" class="btn btn-success" @onclick="CreatePR" 
+                    <button type="button" class="btn btn-success" @onclick="CreatePR"
                             disabled="@(string.IsNullOrWhiteSpace(newPRTitle) || string.IsNullOrWhiteSpace(newPRSourceBranch) || string.IsNullOrWhiteSpace(newPRTargetBranch))">
                         <i class="bi bi-plus-circle me-1"></i> Create pull request
                     </button>
@@ -373,6 +486,22 @@
         </div>
     </div>
 }
+
+<style>
+    .diff-added { background-color: var(--diff-added-bg, #e6ffec); color: var(--diff-added-fg, #1f883d); }
+    .diff-removed { background-color: var(--diff-removed-bg, #fff1f0); color: var(--diff-removed-fg, #cf222e); }
+    .diff-context { background-color: var(--diff-context-bg, white); color: var(--diff-context-fg, #1f2328); }
+    .diff-empty { background-color: var(--diff-empty-bg, #f6f8fa); }
+    .diff-line { border-bottom: 1px solid var(--gh-border, #f0f0f0); min-height: 20px; }
+    .diff-sign { opacity: 0.6; }
+    .diff-linenum { font-size: 11px; }
+    .diff-hunk .diff-text { font-style: italic; font-size: 11px; }
+    .markdown-body h1, .markdown-body h2 { border-bottom: 1px solid #d0d7de; padding-bottom: 0.3em; margin-top: 24px; margin-bottom: 16px; font-weight: 600; }
+    .markdown-body p { margin-bottom: 16px; }
+    .markdown-body ul { padding-left: 2em; list-style-type: disc; }
+    .markdown-body code { padding: 0.2em 0.4em; font-size: 85%; background-color: rgba(175,184,193,0.2); border-radius: 6px; }
+    .markdown-body blockquote { padding: 0 1em; color: #656d76; border-left: 0.25em solid #d0d7de; }
+</style>
 
 @code {
     [Parameter] public string RepoName { get; set; } = "";
@@ -384,6 +513,7 @@
     private string activeTab = "conversation";
     private bool showNewPRModal = false;
     private List<string> branches = new();
+    private string diffMode = "unified";
 
     private string newPRTitle = "";
     private string newPRBody = "";
@@ -391,6 +521,23 @@
     private string newPRTargetBranch = "";
     private bool newPRIsDraft = false;
     private string reviewBody = "";
+
+    // Merge state
+    private MergeStrategy selectedStrategy = MergeStrategy.MergeCommit;
+    private bool canMerge;
+    private string? mergeReason;
+    private string mergeError = "";
+    private bool isMerging;
+
+    // Commits & diff state
+    private List<Commit> prCommits = new();
+    private List<FilePatch> filePatches = new();
+    private int totalAdded;
+    private int totalDeleted;
+
+    private static readonly MarkdownPipeline _mdPipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .Build();
 
     private List<PullRequest> filteredPRs => prs
         .Where(pr => filterState switch
@@ -410,7 +557,17 @@
     protected override async Task OnParametersSetAsync()
     {
         await LoadPRs();
-        LoadBranches();
+        await LoadBranches();
+        if (currentPR != null)
+        {
+            LoadPRCommitsAndDiff();
+            if (currentPR.State == PullRequestState.Open)
+            {
+                var (cm, reason) = await PRService.CanMergeAsync(RepoName, currentPR.Number);
+                canMerge = cm;
+                mergeReason = reason;
+            }
+        }
     }
 
     private async Task LoadPRs()
@@ -422,20 +579,71 @@
         }
     }
 
-    private void LoadBranches()
+    private async Task LoadBranches()
     {
         try
         {
-            var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
-            var repoPath = Path.Combine(projectRoot, $"{RepoName}.git");
-            
-            if (Directory.Exists(repoPath))
+            var repoPath = await GetRepoPath();
+            if (repoPath != null && LibGit2Sharp.Repository.IsValid(repoPath))
             {
                 using var repo = new LibGit2Sharp.Repository(repoPath);
-                branches = repo.Branches.Select(b => b.FriendlyName).ToList();
+                branches = repo.Branches.Where(b => !b.IsRemote).Select(b => b.FriendlyName).ToList();
             }
         }
         catch { }
+    }
+
+    private void LoadPRCommitsAndDiff()
+    {
+        if (currentPR == null) return;
+        prCommits.Clear();
+        filePatches.Clear();
+        totalAdded = 0;
+        totalDeleted = 0;
+
+        try
+        {
+            var repoPath = GetRepoPathSync();
+            if (repoPath == null || !LibGit2Sharp.Repository.IsValid(repoPath)) return;
+
+            using var repo = new LibGit2Sharp.Repository(repoPath);
+            var sourceBranch = repo.Branches[currentPR.SourceBranch];
+            var targetBranch = repo.Branches[currentPR.TargetBranch];
+            if (sourceBranch?.Tip == null || targetBranch?.Tip == null) return;
+
+            // Commits unique to source
+            var filter = new CommitFilter
+            {
+                IncludeReachableFrom = sourceBranch.Tip,
+                ExcludeReachableFrom = targetBranch.Tip,
+                SortBy = CommitSortStrategies.Topological | CommitSortStrategies.Time
+            };
+            prCommits = repo.Commits.QueryBy(filter).ToList();
+
+            // Diff
+            var diff = repo.Diff.Compare<Patch>(targetBranch.Tip.Tree, sourceBranch.Tip.Tree);
+            foreach (var change in diff)
+            {
+                var lines = change.Patch.Split('\n').ToList();
+                var added = lines.Count(l => l.StartsWith("+") && !l.StartsWith("+++"));
+                var deleted = lines.Count(l => l.StartsWith("-") && !l.StartsWith("---"));
+                filePatches.Add(new FilePatch
+                {
+                    Path = change.Path,
+                    LinesAdded = added,
+                    LinesDeleted = deleted,
+                    DiffLines = lines
+                });
+                totalAdded += added;
+                totalDeleted += deleted;
+            }
+        }
+        catch { }
+    }
+
+    private void SetTab(string tab)
+    {
+        activeTab = tab;
     }
 
     private async Task CreatePR()
@@ -444,7 +652,7 @@
         var pr = await PRService.CreatePullRequestAsync(
             RepoName, newPRTitle, newPRBody, UserService.Username,
             newPRSourceBranch, newPRTargetBranch, newPRIsDraft);
-        
+
         newPRTitle = "";
         newPRBody = "";
         newPRSourceBranch = "";
@@ -469,10 +677,29 @@
     private async Task MergePR()
     {
         if (!UserService.IsLoggedIn) return;
-        if (Number.HasValue)
+        if (!Number.HasValue) return;
+
+        isMerging = true;
+        mergeError = "";
+        StateHasChanged();
+
+        try
         {
-            await PRService.MergePullRequestAsync(RepoName, Number.Value, UserService.Username);
-            await LoadPRs();
+            var (success, error) = await PRService.MergePullRequestAsync(RepoName, Number.Value, UserService.Username, selectedStrategy);
+            if (!success)
+            {
+                mergeError = error ?? "Merge failed";
+            }
+            else
+            {
+                await LoadPRs();
+                LoadPRCommitsAndDiff();
+            }
+        }
+        finally
+        {
+            isMerging = false;
+            StateHasChanged();
         }
     }
 
@@ -484,6 +711,29 @@
             await PRService.ClosePullRequestAsync(RepoName, Number.Value);
             await LoadPRs();
         }
+    }
+
+    private async Task<string?> GetRepoPath()
+    {
+        var systemSettings = await AdminService.GetSystemSettingsAsync();
+        var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot)
+            ? systemSettings.ProjectRoot
+            : Config["Git:ProjectRoot"] ?? "/repos";
+
+        var path = System.IO.Path.Combine(projectRoot, RepoName);
+        if (LibGit2Sharp.Repository.IsValid(path)) return path;
+        if (LibGit2Sharp.Repository.IsValid(path + ".git")) return path + ".git";
+        return null;
+    }
+
+    private string? GetRepoPathSync()
+    {
+        // Synchronous path resolution using config fallback
+        var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+        var path = System.IO.Path.Combine(projectRoot, RepoName);
+        if (LibGit2Sharp.Repository.IsValid(path)) return path;
+        if (LibGit2Sharp.Repository.IsValid(path + ".git")) return path + ".git";
+        return null;
     }
 
     private string FormatDate(DateTime date)
@@ -498,7 +748,7 @@
 
     private string RenderMarkdown(string markdown)
     {
-        return System.Web.HttpUtility.HtmlEncode(markdown).Replace("\n", "<br/>");
+        return Markdig.Markdown.ToHtml(markdown, _mdPipeline);
     }
 
     private string GetReviewCardClass(ReviewState state) => state switch
@@ -515,4 +765,84 @@
         ReviewState.Commented => "commented",
         _ => "reviewed"
     };
+
+    // Diff helper types and methods
+    private List<UnifiedDiffRow> GetUnifiedDiffRows(List<string> lines)
+    {
+        var rows = new List<UnifiedDiffRow>();
+        int oldLine = 0, newLine = 0;
+
+        foreach (var line in lines)
+        {
+            if (line.StartsWith("diff") || line.StartsWith("index") || line.StartsWith("---") || line.StartsWith("+++"))
+                continue;
+            if (line.StartsWith("@@"))
+            {
+                var match = Regex.Match(line, @"@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@");
+                if (match.Success) { oldLine = int.Parse(match.Groups[1].Value); newLine = int.Parse(match.Groups[2].Value); }
+                rows.Add(new UnifiedDiffRow { OldNum = "...", NewNum = "...", Sign = ' ', Content = line, CssClass = "diff-hunk" });
+                continue;
+            }
+            if (line.StartsWith("+"))
+            {
+                rows.Add(new UnifiedDiffRow { OldNum = "", NewNum = newLine.ToString(), Sign = '+', Content = line.Length > 1 ? line.Substring(1) : "", CssClass = "diff-added" });
+                newLine++;
+            }
+            else if (line.StartsWith("-"))
+            {
+                rows.Add(new UnifiedDiffRow { OldNum = oldLine.ToString(), NewNum = "", Sign = '-', Content = line.Length > 1 ? line.Substring(1) : "", CssClass = "diff-removed" });
+                oldLine++;
+            }
+            else
+            {
+                rows.Add(new UnifiedDiffRow { OldNum = oldLine.ToString(), NewNum = newLine.ToString(), Sign = ' ', Content = line, CssClass = "diff-context" });
+                oldLine++; newLine++;
+            }
+        }
+        return rows;
+    }
+
+    private List<DiffPair> GetSplitDiffWithLineNumbers(List<string> lines)
+    {
+        var pairs = new List<DiffPair>();
+        var removals = new List<(string Line, int Num)>();
+        var additions = new List<(string Line, int Num)>();
+        int oldLine = 0, newLine = 0;
+
+        void Flush()
+        {
+            int max = Math.Max(removals.Count, additions.Count);
+            for (int i = 0; i < max; i++)
+            {
+                pairs.Add(new DiffPair
+                {
+                    Left = i < removals.Count ? removals[i].Line : null,
+                    LeftLineNum = i < removals.Count ? removals[i].Num : 0,
+                    Right = i < additions.Count ? additions[i].Line : null,
+                    RightLineNum = i < additions.Count ? additions[i].Num : 0
+                });
+            }
+            removals.Clear(); additions.Clear();
+        }
+
+        foreach (var line in lines)
+        {
+            if (line.StartsWith("@@"))
+            {
+                Flush();
+                var match = Regex.Match(line, @"@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@");
+                if (match.Success) { oldLine = int.Parse(match.Groups[1].Value); newLine = int.Parse(match.Groups[2].Value); }
+                continue;
+            }
+            if (line.StartsWith("diff") || line.StartsWith("index") || line.StartsWith("---") || line.StartsWith("+++")) continue;
+            if (line.StartsWith("-")) { removals.Add((line, oldLine)); oldLine++; }
+            else if (line.StartsWith("+")) { additions.Add((line, newLine)); newLine++; }
+            else { Flush(); pairs.Add(new DiffPair { Left = line, LeftLineNum = oldLine, Right = line, RightLineNum = newLine }); oldLine++; newLine++; }
+        }
+        Flush(); return pairs;
+    }
+
+    public class FilePatch { public string Path { get; set; } = ""; public int LinesAdded { get; set; } public int LinesDeleted { get; set; } public List<string> DiffLines { get; set; } = new(); }
+    public class DiffPair { public string? Left { get; set; } public string? Right { get; set; } public int LeftLineNum { get; set; } public int RightLineNum { get; set; } }
+    public class UnifiedDiffRow { public string OldNum { get; set; } = ""; public string NewNum { get; set; } = ""; public char Sign { get; set; } public string Content { get; set; } = ""; public string CssClass { get; set; } = ""; }
 }

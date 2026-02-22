@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using MyPersonalGit.Data;
 
 namespace MyPersonalGit.Services;
 
@@ -25,7 +26,7 @@ public sealed class BasicAuthMiddleware
 
     public BasicAuthMiddleware(RequestDelegate next) => _next = next;
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService)
     {
         if (!context.Request.Path.StartsWithSegments("/git"))
         {
@@ -40,8 +41,23 @@ public sealed class BasicAuthMiddleware
             return;
         }
 
-        // Allow unauthenticated "info/refs?service=git-upload-pack" if you want public read-only.
-        // For now, require auth for everything under /git.
+        // Extract repo name from path: /git/{repoName}.git/...
+        var repoName = ExtractRepoName(context.Request.Path);
+        var isReadOperation = IsReadOperation(context.Request);
+
+        // For public repos, allow unauthenticated read (clone/fetch)
+        if (isReadOperation && !string.IsNullOrEmpty(repoName))
+        {
+            var repoMeta = await repoService.GetRepositoryAsync(repoName);
+            if (repoMeta == null || !repoMeta.IsPrivate)
+            {
+                // Public repo — allow anonymous read
+                await _next(context);
+                return;
+            }
+        }
+
+        // Private repos and push operations always require auth
         var header = context.Request.Headers.Authorization.ToString();
         if (string.IsNullOrWhiteSpace(header) || !header.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
         {
@@ -91,6 +107,28 @@ public sealed class BasicAuthMiddleware
         context.User = new ClaimsPrincipal(identity);
 
         await _next(context);
+    }
+
+    private static string? ExtractRepoName(PathString path)
+    {
+        // Path format: /git/{repoName}.git/info/refs etc.
+        var segments = path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments == null || segments.Length < 2) return null;
+        var repoSegment = segments[1]; // e.g., "myrepo.git"
+        return repoSegment; // Keep the .git suffix for DB lookup
+    }
+
+    private static bool IsReadOperation(HttpRequest request)
+    {
+        // git-upload-pack = fetch/clone (read), git-receive-pack = push (write)
+        var path = request.Path.Value ?? "";
+        var query = request.Query["service"].ToString();
+
+        if (path.Contains("git-receive-pack") || query == "git-receive-pack")
+            return false;
+
+        // Everything else (info/refs with upload-pack, git-upload-pack) is a read
+        return true;
     }
 
     private static void Challenge(HttpContext context)

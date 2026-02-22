@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyPersonalGit.Data;
 
@@ -10,9 +11,11 @@ using MyPersonalGit.Data;
 namespace MyPersonalGit.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260222044527_AddFeaturesPhase2")]
+    partial class AddFeaturesPhase2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.12");
@@ -1318,10 +1321,6 @@ namespace MyPersonalGit.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("RunsOn")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime?>("StartedAt")
                         .HasColumnType("TEXT");
 
@@ -1390,9 +1389,6 @@ namespace MyPersonalGit.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("Command")
-                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("TEXT");

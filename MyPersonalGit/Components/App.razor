@@ -5,6 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
+    <script>(function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-bs-theme',t);})()</script>
     <!-- Using CDN for reliability to ensure CSS loads correctly -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
@@ -16,7 +17,7 @@
     <HeadOutlet @rendermode="InteractiveServer" />
 </head>
 
-<body class="bg-white">
+<body>
     <Routes @rendermode="InteractiveServer" />
     <script src="_framework/blazor.web.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -24,10 +25,48 @@
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
     <script>
+        window.editorHelper = {
+            enableTabKey: function (elementId) {
+                var el = document.getElementById(elementId);
+                if (!el) return;
+                el.addEventListener('keydown', function (e) {
+                    if (e.key === 'Tab') {
+                        e.preventDefault();
+                        var start = el.selectionStart;
+                        var end = el.selectionEnd;
+                        el.value = el.value.substring(0, start) + '    ' + el.value.substring(end);
+                        el.selectionStart = el.selectionEnd = start + 4;
+                        el.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                });
+            },
+            getScrollTop: function (elementId) {
+                var el = document.getElementById(elementId);
+                return el ? el.scrollTop : 0;
+            },
+            setScrollTop: function (elementId, val) {
+                var el = document.getElementById(elementId);
+                if (el) el.scrollTop = val;
+            }
+        };
         window.sessionHelper = {
             set: function (key, value) { localStorage.setItem(key, value); },
             get: function (key) { return localStorage.getItem(key); },
             remove: function (key) { localStorage.removeItem(key); }
+        };
+        window.themeHelper = {
+            init: function () {
+                var saved = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-bs-theme', saved);
+                return saved;
+            },
+            set: function (theme) {
+                localStorage.setItem('theme', theme);
+                document.documentElement.setAttribute('data-bs-theme', theme);
+            },
+            get: function () {
+                return localStorage.getItem('theme') || 'light';
+            }
         };
         window.folderUpload = {
             setWebkitDirectory: function (elementId) {

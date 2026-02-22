@@ -9,6 +9,7 @@ public interface IWorkflowService
     Task<WorkflowRun?> GetWorkflowRunAsync(string repoName, int runId);
     Task<WorkflowRun> CreateWorkflowRunAsync(string repoName, string workflowName, string branch, string commitSha, string commitMessage, string triggeredBy);
     Task<bool> UpdateWorkflowRunAsync(string repoName, int runId, Action<WorkflowRun> updateAction);
+    Task<WorkflowRun> CreateWorkflowRunWithJobsAsync(string repoName, WorkflowDefinition definition, string branch, string sha, string message, string user);
     Task<List<Webhook>> GetWebhooksAsync(string repoName);
     Task<Webhook> CreateWebhookAsync(string repoName, string url, string secret, List<string> events);
     Task<bool> DeleteWebhookAsync(string repoName, int webhookId);
@@ -86,6 +87,52 @@ public class WorkflowService : IWorkflowService
         updateAction(run);
         await db.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<WorkflowRun> CreateWorkflowRunWithJobsAsync(
+        string repoName, WorkflowDefinition definition, string branch, string sha, string message, string user)
+    {
+        using var db = _dbFactory.CreateDbContext();
+
+        var run = new WorkflowRun
+        {
+            RepoName = repoName,
+            WorkflowName = definition.Name,
+            Branch = branch,
+            CommitSha = sha,
+            CommitMessage = message,
+            TriggeredBy = user,
+            Status = WorkflowStatus.Queued,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        foreach (var (jobName, jobDef) in definition.Jobs)
+        {
+            var job = new WorkflowJob
+            {
+                Name = jobName,
+                RunsOn = jobDef.RunsOn,
+                Status = WorkflowStatus.Queued
+            };
+
+            foreach (var stepDef in jobDef.Steps)
+            {
+                job.Steps.Add(new WorkflowStep
+                {
+                    Name = stepDef.Name ?? stepDef.Run ?? stepDef.Uses ?? "Step",
+                    Command = stepDef.Run,
+                    Status = WorkflowStatus.Queued
+                });
+            }
+
+            run.Jobs.Add(job);
+        }
+
+        db.WorkflowRuns.Add(run);
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Workflow run {RunId} created with {JobCount} jobs for {RepoName}", run.Id, run.Jobs.Count, repoName);
+        return run;
     }
 
     public async Task<List<Webhook>> GetWebhooksAsync(string repoName)

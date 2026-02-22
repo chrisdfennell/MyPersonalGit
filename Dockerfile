@@ -1,10 +1,10 @@
 # Build Stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["MyPersonalGit.csproj", "."]
-RUN dotnet restore
-COPY . .
-RUN dotnet publish -c Release -o /app/publish
+COPY ["MyPersonalGit/MyPersonalGit.csproj", "MyPersonalGit/"]
+RUN dotnet restore "MyPersonalGit/MyPersonalGit.csproj"
+COPY MyPersonalGit/ MyPersonalGit/
+RUN dotnet publish "MyPersonalGit/MyPersonalGit.csproj" -c Release -o /app/publish
 
 # Run Stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
@@ -14,12 +14,14 @@ LABEL org.opencontainers.image.source="https://github.com/ChrisDFennell/MyPerson
 
 WORKDIR /app
 
-# Git is required for git http-backend
-RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
+# Git is required for git http-backend, docker.io for CI/CD workflow runner
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates docker.io \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user and the repos/data directories
+# Add appuser to docker group for socket access
 RUN groupadd -r appuser && useradd -r -g appuser -m appuser \
+    && usermod -aG docker appuser \
     && mkdir /repos && chown appuser:appuser /repos \
     && mkdir /data && chown appuser:appuser /data
 
@@ -36,4 +38,6 @@ HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
 
 USER appuser
 
+# For CI/CD workflow runner, mount Docker socket at runtime:
+#   docker run ... -v /var/run/docker.sock:/var/run/docker.sock ...
 ENTRYPOINT ["dotnet", "MyPersonalGit.dll"]

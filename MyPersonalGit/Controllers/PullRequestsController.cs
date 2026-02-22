@@ -102,8 +102,8 @@ public class PullRequestsController : ControllerBase
     public async Task<IActionResult> MergePullRequest(string repoName, int number)
     {
         var username = User.Identity?.Name ?? "api-user";
-        var result = await _prService.MergePullRequestAsync(repoName, number, username);
-        if (!result) return BadRequest(new { error = "Failed to merge pull request" });
+        var (success, error) = await _prService.MergePullRequestAsync(repoName, number, username);
+        if (!success) return BadRequest(new { error = error ?? "Failed to merge pull request" });
 
         return Ok(new { message = $"Pull request #{number} merged successfully" });
     }
