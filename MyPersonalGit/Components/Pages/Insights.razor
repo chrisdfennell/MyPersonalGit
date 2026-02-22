@@ -313,7 +313,7 @@
 
     private void LoadCommitActivity(Repository repo)
     {
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         var weeks = new Dictionary<DateTime, int>();
 
         for (int i = 11; i >= 0; i--)
@@ -325,7 +325,7 @@
 
         foreach (var commit in repo.Commits)
         {
-            var commitDate = commit.Author.When.DateTime;
+            var commitDate = commit.Author.When.UtcDateTime;
             var weekStart = commitDate.Date.AddDays(-(int)commitDate.DayOfWeek);
             
             if (weeks.ContainsKey(weekStart))
@@ -343,7 +343,7 @@
 
     private void LoadCodeFrequency(Repository repo)
     {
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         var weeks = new Dictionary<DateTime, CodeFrequency>();
 
         for (int i = 11; i >= 0; i--)
@@ -360,7 +360,7 @@
                 var parent = commit.Parents.FirstOrDefault();
                 if (parent != null)
                 {
-                    var commitDate = commit.Author.When.DateTime;
+                    var commitDate = commit.Author.When.UtcDateTime;
                     var weekStart = commitDate.Date.AddDays(-(int)commitDate.DayOfWeek);
 
                     if (weeks.ContainsKey(weekStart))

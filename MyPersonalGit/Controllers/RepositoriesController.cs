@@ -135,7 +135,7 @@ public class RepositoriesController : ControllerBase
         {
             name = b.FriendlyName,
             is_head = b.IsCurrentRepositoryHead,
-            commit = b.Tip != null ? new { sha = b.Tip.Sha, message = b.Tip.MessageShort, author = b.Tip.Author.Name, date = b.Tip.Author.When.DateTime } : null
+            commit = b.Tip != null ? new { sha = b.Tip.Sha, message = b.Tip.MessageShort, author = b.Tip.Author.Name, date = b.Tip.Author.When.UtcDateTime } : null
         });
 
         return Ok(branches);
@@ -178,7 +178,7 @@ public class RepositoriesController : ControllerBase
                 message = c.MessageShort,
                 author = c.Author.Name,
                 email = c.Author.Email,
-                date = c.Author.When.DateTime
+                date = c.Author.When.UtcDateTime
             });
 
         return Ok(commits);
