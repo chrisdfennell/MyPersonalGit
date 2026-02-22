@@ -588,14 +588,26 @@ else
                         <div class="card-body">
                             <div class="mb-3">
                                 <label class="form-label small fw-bold">Tag</label>
-                                <select class="form-select form-select-sm" @bind="newReleaseTagName">
-                                    <option value="">Choose a tag...</option>
-                                    @foreach (var t in tags)
-                                    {
-                                        <option value="@t.Name">@t.Name</option>
-                                    }
-                                </select>
-                                <div class="form-text">Select an existing tag for this release.</div>
+                                @if (!newReleaseCreateNewTag)
+                                {
+                                    <select class="form-select form-select-sm" @bind="newReleaseTagName">
+                                        <option value="">Choose a tag...</option>
+                                        @foreach (var t in tags)
+                                        {
+                                            <option value="@t.Name">@t.Name</option>
+                                        }
+                                    </select>
+                                    <div class="form-text">
+                                        Choose an existing tag, or <button type="button" class="btn btn-link p-0 small align-baseline" @onclick='() => { newReleaseCreateNewTag = true; newReleaseTagName = ""; }'>create a new tag</button>.
+                                    </div>
+                                }
+                                else
+                                {
+                                    <input type="text" class="form-control form-control-sm" @bind="newReleaseNewTagName" @bind:event="oninput" placeholder="e.g. v1.0.0" />
+                                    <div class="form-text">
+                                        Will be applied to the latest commit@(latestCommit != null ? $" ({latestCommit.Sha[..7]})" : ""). Or <button type="button" class="btn btn-link p-0 small align-baseline" @onclick='() => { newReleaseCreateNewTag = false; newReleaseNewTagName = ""; }'>choose an existing tag</button>.
+                                    </div>
+                                }
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-bold">Release title</label>
@@ -2184,6 +2196,8 @@ else
     private string newReleaseBody = "";
     private bool newReleaseIsDraft = false;
     private bool newReleaseIsPrerelease = false;
+    private bool newReleaseCreateNewTag = false;
+    private string newReleaseNewTagName = "";
     private string releaseError = "";
     private bool assetUploading = false;
     private string assetUploadError = "";
@@ -2333,6 +2347,25 @@ else
     private async Task CreateRelease()
     {
         releaseError = "";
+
+        if (newReleaseCreateNewTag)
+        {
+            if (string.IsNullOrWhiteSpace(newReleaseNewTagName)) { releaseError = "Please enter a tag name."; return; }
+            try
+            {
+                using var repo = new Repository(RepoFullPath);
+                if (latestCommit != null)
+                    repo.ApplyTag(newReleaseNewTagName.Trim(), latestCommit.Sha);
+                newReleaseTagName = newReleaseNewTagName.Trim();
+                LoadRepoData();
+            }
+            catch (Exception ex)
+            {
+                releaseError = $"Failed to create tag: {ex.Message}";
+                return;
+            }
+        }
+
         if (string.IsNullOrWhiteSpace(newReleaseTagName)) { releaseError = "Please select a tag."; return; }
         if (string.IsNullOrWhiteSpace(newReleaseTitle)) { releaseError = "Please enter a title."; return; }
 
@@ -2343,6 +2376,8 @@ else
         newReleaseBody = "";
         newReleaseIsDraft = false;
         newReleaseIsPrerelease = false;
+        newReleaseCreateNewTag = false;
+        newReleaseNewTagName = "";
         showCreateRelease = false;
         await LoadReleases();
     }
