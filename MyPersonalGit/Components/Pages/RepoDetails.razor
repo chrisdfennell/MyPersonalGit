@@ -3038,12 +3038,13 @@ else
     {
     }
 
-    private async Task HandleDrop(DragEventArgs e)
+    private Task HandleDrop(DragEventArgs e)
     {
         isDragging = false;
+        return Task.CompletedTask;
     }
 
-    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    private Task HandleFileSelected(InputFileChangeEventArgs e)
     {
         uploadError = "";
         try
@@ -3062,6 +3063,7 @@ else
         {
             uploadError = $"Error selecting files: {ex.Message}";
         }
+        return Task.CompletedTask;
     }
 
     private void NavigateToCreateFile()
