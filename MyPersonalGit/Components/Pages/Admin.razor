@@ -481,6 +481,11 @@ else
                                 </label>
                             </div>
                         </div>
+                        <hr />
+                        <div class="mb-3">
+                            <label class="form-label">New Password <span class="text-muted small">(leave blank to keep current)</span></label>
+                            <InputText type="password" class="form-control" @bind-Value="EditUserPassword" />
+                        </div>
                         @if (!string.IsNullOrEmpty(EditUserMessage))
                         {
                             <div class="alert alert-danger">@EditUserMessage</div>
@@ -511,6 +516,7 @@ else
     private string SettingsMessage = "";
     private string UserMessage = "";
     private string EditUserMessage = "";
+    private string EditUserPassword = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -571,22 +577,31 @@ else
             RepositoryCount = user.RepositoryCount
         };
         EditUserMessage = "";
+        EditUserPassword = "";
         ShowEditUser = true;
     }
 
     private async Task SaveEditUser()
     {
         var success = await AdminService.UpdateUserAsync(EditingUser);
-        if (success)
-        {
-            await AdminService.AddAuditLogAsync(UserService.Username, "UPDATE_USER", $"Updated user: {EditingUser.Username}");
-            await LoadData();
-            ShowEditUser = false;
-        }
-        else
+        if (!success)
         {
             EditUserMessage = "Failed to update user.";
+            return;
         }
+        if (!string.IsNullOrWhiteSpace(EditUserPassword))
+        {
+            var pwSuccess = await AdminService.ResetPasswordAsync(EditingUser.Username, EditUserPassword);
+            if (!pwSuccess)
+            {
+                EditUserMessage = "User updated but password reset failed.";
+                return;
+            }
+            await AdminService.AddAuditLogAsync(UserService.Username, "RESET_PASSWORD", $"Reset password for: {EditingUser.Username}");
+        }
+        await AdminService.AddAuditLogAsync(UserService.Username, "UPDATE_USER", $"Updated user: {EditingUser.Username}");
+        await LoadData();
+        ShowEditUser = false;
     }
 
     private async Task DeleteUser(string username)
