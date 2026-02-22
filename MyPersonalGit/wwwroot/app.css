@@ -70,13 +70,19 @@ h1:focus {
     --diff-empty-bg: #161b22;
 }
 
-[data-bs-theme="dark"] pre[class*="language-"] {
+[data-bs-theme="dark"] pre[class*="language-"],
+[data-bs-theme="dark"] code[class*="language-"] {
     background: #161b22 !important;
     color: #e6edf3 !important;
+    text-shadow: none !important;
 }
 
-[data-bs-theme="dark"] code[class*="language-"] {
-    color: #e6edf3 !important;
+[data-bs-theme="dark"] .line-numbers-rows {
+    border-right-color: #30363d !important;
+}
+
+[data-bs-theme="dark"] .line-numbers-rows > span::before {
+    color: #484f58 !important;
 }
 
 [data-bs-theme="dark"] .token.comment,
