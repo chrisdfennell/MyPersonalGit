@@ -14,6 +14,7 @@ public interface IAdminService
     Task<bool> AddUserAsync(string username, string password, string email, bool isAdmin = false);
     Task<bool> DeleteUserAsync(string username);
     Task<bool> UpdateUserAsync(UserManagement user);
+    Task<bool> ResetPasswordAsync(string username, string newPassword);
 }
 
 public class AdminService : IAdminService
@@ -196,6 +197,19 @@ public class AdminService : IAdminService
         await db.SaveChangesAsync();
 
         _logger.LogInformation("User {Username} updated by admin", user.Username);
+        return true;
+    }
+
+    public async Task<bool> ResetPasswordAsync(string username, string newPassword)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (user == null) return false;
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Password reset for {Username} by admin", username);
         return true;
     }
 }
