@@ -7,6 +7,12 @@ using MyPersonalGit.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Remove request body size limit so large git pushes can succeed
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = null; // unlimited
+});
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
