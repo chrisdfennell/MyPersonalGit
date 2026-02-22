@@ -1,16 +1,22 @@
 # MyPersonalGit
 
-A self-hosted Git server with a GitHub-like web interface. Browse repositories, manage issues, pull requests, wikis, projects, and more — all from your own machine or server.
+A self-hosted Git server with a GitHub-like web interface built with ASP.NET Core and Blazor Server. Browse repositories, manage issues, pull requests, wikis, projects, and more — all from your own machine or server.
+
+![MyPersonalGit Screenshot](assets/images/screenshot.png)
 
 ## Features
 
 - **Repository Management** — Create, browse, and delete Git repositories with a full code browser, file editor, commit history, branches, and tags
-- **Issues & Pull Requests** — Create, comment on, close/reopen issues and PRs with labels, assignees, and reviews
+- **Issues & Pull Requests** — Create, comment on, close/reopen issues and PRs with labels, assignees, and reviews. Merge PRs with merge commit, squash, or rebase strategies
+- **Dark Mode** — Full dark mode support with a toggle in the header, saved to localStorage
+- **Activity Feed** — See recent activity across all repositories on the home page
+- **Compare View** — Compare branches with ahead/behind commit counts and full diff rendering
+- **Language Stats** — GitHub-style language breakdown bar on each repository page
+- **CI/CD Runner** — Define workflows in `.github/workflows/*.yml` and run them in Docker containers
 - **Wiki** — Markdown-based wiki pages per repository with revision history
 - **Projects** — Kanban boards with drag-and-drop cards for organizing work
-- **Actions/CI-CD** — Workflow runs and webhook management
 - **Security** — Security advisories, dependency scanning, and vulnerability tracking
-- **User Management** — Registration, login, admin roles, SSH keys, personal access tokens, 2FA
+- **User Profiles** — Contribution heatmap, activity feed, and stats per user
 - **Branch Protection** — Configurable rules for required reviews, status checks, and force-push prevention
 - **Git Smart HTTP** — Clone, fetch, and push over HTTP with Basic Auth
 - **Search** — Full-text search across repositories, issues, PRs, and code
@@ -19,19 +25,48 @@ A self-hosted Git server with a GitHub-like web interface. Browse repositories, 
 
 ## Tech Stack
 
-- **Backend**: ASP.NET Core 8.0
-- **Frontend**: Blazor Server (interactive server-side rendering)
-- **Database**: SQLite via Entity Framework Core 8
-- **Git Engine**: LibGit2Sharp
-- **Auth**: BCrypt password hashing, session-based authentication
-- **Markdown**: Markdig
+| Component | Technology |
+|-----------|-----------|
+| Backend | ASP.NET Core 8.0 |
+| Frontend | Blazor Server (interactive server-side rendering) |
+| Database | SQLite via Entity Framework Core 8 |
+| Git Engine | LibGit2Sharp |
+| Auth | BCrypt password hashing, session-based authentication |
+| Markdown | Markdig |
+| CI/CD | Docker.DotNet, YamlDotNet |
 
 ## Quick Start
 
 ### Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later
-- Git (required for `git http-backend` Smart HTTP support)
+- [Docker](https://docs.docker.com/get-docker/) (recommended)
+- Or [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) + Git for local development
+
+### Docker (Recommended)
+
+Pull from Docker Hub and run:
+
+```bash
+docker run -d --name mypersonalgit -p 8080:8080 \
+  -v mypersonalgit-repos:/repos \
+  -v mypersonalgit-data:/data \
+  -e Git__Users__admin=admin \
+  fennch/mypersonalgit:latest
+```
+
+Or use Docker Compose:
+
+```bash
+git clone https://github.com/ChrisDFennell/MyPersonalGit.git
+cd MyPersonalGit
+docker compose up -d
+```
+
+The app will be available at **http://localhost:8080**.
+
+> **Default credentials**: `admin` / `admin`
+>
+> **Change the default password immediately** via the Admin dashboard after first login.
 
 ### Run Locally
 
@@ -41,126 +76,76 @@ cd MyPersonalGit/MyPersonalGit
 dotnet run
 ```
 
-The app starts at **http://localhost:5146**. On first run, the database is created automatically and a default admin account is seeded.
+The app starts at **http://localhost:5146**.
 
-> **Default credentials**: `admin` / `admin`
->
-> **Change the default password immediately** via the Admin dashboard after first login.
-
-### Docker
-
-```bash
-docker build -t mypersonalgit ./MyPersonalGit
-docker run -d -p 8080:8080 -v mypersonalgit-data:/app -v mypersonalgit-repos:/repos mypersonalgit
-```
-
-The app will be available at **http://localhost:8080**.
-
-#### Environment Variables
+### Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `ConnectionStrings__Default` | SQLite connection string | `Data Source=mypersonalgit.db` |
+| `ConnectionStrings__Default` | SQLite connection string | `Data Source=/data/mypersonalgit.db` |
 | `Git__ProjectRoot` | Directory where Git repos are stored | `/repos` |
 | `Git__RequireAuth` | Require auth for Git HTTP operations | `true` |
 | `Git__Users__<username>` | Set password for Git HTTP Basic Auth user | — |
-
-Example with Git auth:
-```bash
-docker run -d -p 8080:8080 \
-  -e Git__Users__fennell=mysecretpassword \
-  -e Git__RequireAuth=true \
-  -v mypersonalgit-data:/app \
-  -v mypersonalgit-repos:/repos \
-  mypersonalgit
-```
 
 ## Usage
 
 ### 1. Sign In
 
-Open **http://localhost:5146** and click **Sign in**. On a fresh install, use the default credentials (`admin` / `admin`). You can create additional users via the **Admin** dashboard or by enabling user registration in Admin > Settings.
+Open the app and click **Sign In**. On a fresh install, use the default credentials (`admin` / `admin`). Create additional users via the **Admin** dashboard or by enabling user registration in Admin > Settings.
 
 ### 2. Create a Repository
 
 Click the green **New** button on the home page, enter a name, and click **Create**. This creates a bare Git repository on the server that you can clone, push to, and manage through the web UI.
 
-### 3. Clone and Push from the Command Line
+### 3. Clone and Push
 
 ```bash
-# Clone the empty repo
-git clone http://localhost:5146/git/MyRepo.git
+git clone http://localhost:8080/git/MyRepo.git
 cd MyRepo
 
-# Add some code and push
 echo "# My Project" > README.md
 git add .
 git commit -m "Initial commit"
 git push origin main
 ```
 
-If Git HTTP auth is enabled (`Git:RequireAuth = true`), you'll be prompted for the credentials configured in `Git:Users` (these are separate from the web UI login — see [Configuration](#configuration)).
+If Git HTTP auth is enabled, you'll be prompted for the credentials configured via `Git__Users__<username>` environment variables. These are separate from the web UI login.
 
-### 4. Clone and Push from Visual Studio Code
+### 4. Clone from an IDE
 
-1. Open VS Code and press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
-2. Type **Git: Clone** and press Enter
-3. Paste the clone URL: `http://localhost:5146/git/MyRepo.git`
-4. Choose a local folder and open the cloned repo
-5. Make changes, commit with the Source Control panel (`Ctrl+Shift+G`), and click **Sync Changes** to push
+**VS Code**: `Ctrl+Shift+P` > **Git: Clone** > paste `http://localhost:8080/git/MyRepo.git`
 
-### 5. Clone and Push from Visual Studio
+**Visual Studio**: **Git > Clone Repository** > paste the URL
 
-1. Open Visual Studio and go to **Git > Clone Repository**
-2. Paste the clone URL: `http://localhost:5146/git/MyRepo.git`
-3. Choose a local path and click **Clone**
-4. Make changes, then use **Git > Commit or Stash** to commit
-5. Click **Push** in the Git toolbar to push to MyPersonalGit
+**JetBrains**: **File > New > Project from Version Control** > paste the URL
 
-### 6. Clone and Push from JetBrains IDEs (Rider, IntelliJ, etc.)
+### 5. Use the Web Editor
 
-1. Go to **File > New > Project from Version Control**
-2. Paste the clone URL: `http://localhost:5146/git/MyRepo.git`
-3. Click **Clone**
-4. Commit and push using **Git > Push** (`Ctrl+Shift+K`)
-
-### 7. Use the Web Editor
-
-You can also edit files directly in the browser:
-- Navigate to a repository and click on any file
-- Click **Edit** to modify it inline
-- Enter a commit message and click **Commit changes**
+You can edit files directly in the browser:
+- Navigate to a repository and click on any file, then click **Edit**
 - Use **Add files > Create new file** to add files without a local clone
 - Use **Add files > Upload files/folder** to upload from your machine
 
-### 8. Manage Issues, PRs, and More
+## Deploy to a NAS
 
-Each repository has tabs for:
-- **Issues** — Bug reports, feature requests, and discussions
-- **Pull Requests** — Code review and merge workflow
-- **Wiki** — Documentation pages with Markdown and revision history
-- **Projects** — Kanban boards for organizing work
-- **Actions** — Workflow runs and webhooks
-- **Security** — Advisories and vulnerability scanning
-- **Insights** — Repository statistics
+MyPersonalGit works great on a NAS (QNAP, Synology, etc.) via Docker:
+
+```bash
+docker run -d --name mypersonalgit -p 8080:8080 \
+  -v /share/Container/mypersonalgit/repos:/repos \
+  -v /share/Container/mypersonalgit/data:/data \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -e ConnectionStrings__Default="Data Source=/data/mypersonalgit.db" \
+  -e Git__Users__admin=yourpassword \
+  fennch/mypersonalgit:latest
+```
+
+The Docker socket mount is optional — only needed if you want CI/CD workflow execution.
 
 ## Configuration
 
-All settings can be configured in `appsettings.json` or via the Admin dashboard:
+All settings can be configured in `appsettings.json`, via environment variables, or through the Admin dashboard at `/admin`:
 
-```json
-{
-  "ConnectionStrings": {
-    "Default": "Data Source=mypersonalgit.db"
-  },
-  "Git": {
-    "ProjectRoot": "/repos",
-    "RequireAuth": true
-  }
-}
-```
-
-The Admin dashboard (accessible to admin users at `/admin`) allows you to configure:
 - Project root directory
 - Authentication requirements
 - User registration settings
