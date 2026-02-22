@@ -15,17 +15,20 @@ LABEL org.opencontainers.image.source="https://github.com/ChrisDFennell/MyPerson
 WORKDIR /app
 
 # Git is required for git http-backend, docker.io for CI/CD workflow runner
-RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates docker.io \
+# gosu allows dropping from root to appuser after fixing permissions
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates docker.io gosu \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user and the repos/data directories
 # Add appuser to docker group for socket access
 RUN groupadd -r appuser && useradd -r -g appuser -m appuser \
     && usermod -aG docker appuser \
-    && mkdir /repos && chown appuser:appuser /repos \
-    && mkdir /data && chown appuser:appuser /data
+    && mkdir -p /repos && chown appuser:appuser /repos \
+    && mkdir -p /data && chown appuser:appuser /data
 
 COPY --from=build /app/publish .
+COPY entrypoint.sh /app/entrypoint.sh
+RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Configure credentials via environment variables at runtime:
 #   docker run -e Git__Users__fennell=secret -e Git__RequireAuth=true ...
@@ -36,8 +39,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
     CMD curl -f http://localhost:8080/ || exit 1
 
-USER appuser
-
-# For CI/CD workflow runner, mount Docker socket at runtime:
-#   docker run ... -v /var/run/docker.sock:/var/run/docker.sock ...
-ENTRYPOINT ["dotnet", "MyPersonalGit.dll"]
+# Run as root so entrypoint can fix bind mount permissions, then drop to appuser
+ENTRYPOINT ["/app/entrypoint.sh"]
