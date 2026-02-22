@@ -104,6 +104,21 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine("==> Default admin account created (username: admin, password: admin)");
         Console.WriteLine("==> IMPORTANT: Change the default password immediately!");
     }
+
+    // Emergency password reset via environment variable
+    // Usage: docker run -e RESET_ADMIN_PASSWORD=newpassword ...
+    var resetPassword = Environment.GetEnvironmentVariable("RESET_ADMIN_PASSWORD");
+    if (!string.IsNullOrEmpty(resetPassword))
+    {
+        var adminUser = db.Users.FirstOrDefault(u => u.IsAdmin);
+        if (adminUser != null)
+        {
+            adminUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(resetPassword, workFactor: 12);
+            db.SaveChanges();
+            Console.WriteLine($"==> Password reset for admin account '{adminUser.Username}'");
+            Console.WriteLine("==> IMPORTANT: Remove the RESET_ADMIN_PASSWORD env var and restart!");
+        }
+    }
 }
 
 // Configure the HTTP request pipeline.
