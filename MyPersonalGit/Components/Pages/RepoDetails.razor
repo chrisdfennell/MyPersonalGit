@@ -1392,8 +1392,20 @@ else
 
     .markdown-body img {
         max-width: 100%;
+        height: auto;
         box-sizing: content-box;
         background-color: #ffffff;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+
+    .markdown-body img:hover {
+        opacity: 0.85;
+    }
+
+    .markdown-body a > img {
+        display: block;
     }
 
     .markdown-body hr {
@@ -2470,7 +2482,13 @@ else
         _markdownPipeline.Setup(renderer);
         renderer.Render(document);
         writer.Flush();
-        return new MarkupString(writer.ToString());
+
+        // Wrap standalone <img> tags in clickable <a> links to view full-size
+        var html = Regex.Replace(writer.ToString(),
+            @"(?<!<a[^>]*>)\s*<img\s+([^>]*?)src=""([^""]+)""([^>]*?)/?>",
+            @"<a href=""$2"" target=""_blank"" rel=""noopener""><img src=""$2"" $1$3 /></a>");
+
+        return new MarkupString(html);
     }
 
     private void RewriteRelativeUrls(MarkdownDocument document)
