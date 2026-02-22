@@ -1899,7 +1899,7 @@ else
     private List<IBrowserFile> uploadFiles = new();
     private string uploadCommitMessage = "Add files via upload";
     private string uploadError = "";
-    private const long maxFileSize = 1024 * 1024 * 50;
+    private const long maxFileSize = long.MaxValue;
 
     // Folder upload
     private bool showFolderUploadModal = false;
@@ -2398,7 +2398,6 @@ else
         {
             foreach (var file in e.GetMultipleFiles(10))
             {
-                if (file.Size > maxFileSize) { assetUploadError = $"File {file.Name} exceeds 50MB limit."; continue; }
                 using var stream = file.OpenReadStream(maxFileSize);
                 using var ms = new MemoryStream();
                 await stream.CopyToAsync(ms);
@@ -3131,11 +3130,6 @@ else
         {
             foreach (var file in e.GetMultipleFiles(100))
             {
-                if (file.Size > maxFileSize)
-                {
-                    uploadError = $"File {file.Name} exceeds maximum size of 50MB";
-                    continue;
-                }
                 uploadFiles.Add(file);
             }
         }
@@ -3325,11 +3319,9 @@ else
             var tip = repo.Branches[currentBranch]?.Tip ?? repo.Branches["main"]?.Tip ?? repo.Branches["master"]?.Tip ?? repo.Head?.Tip;
             var treeDef = tip != null ? TreeDefinition.From(tip.Tree) : new TreeDefinition();
 
-            int skippedLarge = 0;
             for (int i = 0; i < folderBrowserFiles.Count; i++)
             {
                 var file = folderBrowserFiles[i];
-                if (file.Size > maxFileSize) { skippedLarge++; continue; }
 
                 using var stream = file.OpenReadStream(maxFileSize);
                 using var memoryStream = new MemoryStream();
@@ -3358,11 +3350,6 @@ else
             var branchRef = repo.Refs[$"refs/heads/{targetBranchName}"];
             if (branchRef == null) { repo.Branches.Add(targetBranchName, commit); repo.Refs.UpdateTarget("HEAD", $"refs/heads/{targetBranchName}"); }
             else repo.Refs.UpdateTarget(branchRef.CanonicalName, commit.Id.Sha);
-
-            if (skippedLarge > 0)
-            {
-                folderUploadError = $"Warning: {skippedLarge} file(s) skipped (exceeded 50MB size limit)";
-            }
 
             folderBrowserFiles.Clear();
             folderFilePaths.Clear();
