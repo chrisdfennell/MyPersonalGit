@@ -412,7 +412,7 @@
                 {
                     Name = repoName,
                     LastCommitMessage = latestCommit?.MessageShort ?? "No description provided.",
-                    LastCommitDate = latestCommit?.Author.When.DateTime,
+                    LastCommitDate = latestCommit?.Author.When.UtcDateTime,
                     IsPrivate = meta?.IsPrivate ?? false,
                     Description = meta?.Description ?? ""
                 });

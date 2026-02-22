@@ -463,7 +463,7 @@
                             Name = repoName,
                             FullPath = dir,
                             LastCommitMessage = latestCommit?.MessageShort ?? "No description provided.",
-                            LastCommitDate = latestCommit?.Author.When.DateTime,
+                            LastCommitDate = latestCommit?.Author.When.UtcDateTime,
                             Stars = repoMeta?.Stars ?? 0,
                             IsStarred = isStarred,
                             IsPrivate = repoMeta?.IsPrivate ?? false,
@@ -804,7 +804,7 @@
     private string GetRelativeTime(DateTime? date)
     {
         if (!date.HasValue) return "just now";
-        var span = DateTime.Now - date.Value;
+        var span = DateTime.UtcNow - date.Value;
         if (span.TotalDays > 365) return $"{(int)(span.TotalDays / 365)} year{((int)(span.TotalDays / 365) != 1 ? "s" : "")} ago";
         if (span.TotalDays > 30) return date.Value.ToString("MMM dd, yyyy");
         if (span.TotalDays > 1) return $"{(int)span.TotalDays} days ago";
