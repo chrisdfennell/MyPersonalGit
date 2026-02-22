@@ -1,11 +1,17 @@
 @page "/repo/{RepoName}/actions"
+@page "/repo/{RepoName}/actions/runs/{RunId:int}"
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
+@using LibGit2Sharp
 @inject IWorkflowService WorkflowService
+@inject WorkflowYamlParser YamlParser
+@inject IAdminService AdminService
+@inject IConfiguration Config
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
+@implements IDisposable
 
 <PageTitle>Actions - @RepoName</PageTitle>
 
@@ -21,154 +27,272 @@
             </nav>
             <h2 class="mt-2">Actions</h2>
         </div>
-        @if (UserService.IsLoggedIn)
+        @if (UserService.IsLoggedIn && !RunId.HasValue)
         {
-            <button class="btn btn-primary" @onclick="ShowCreateWorkflowModal">
-                <i class="bi bi-plus-circle me-2"></i>Create workflow run
-            </button>
+            @if (detectedWorkflows.Any())
+            {
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" @onclick="() => showRunDropdown = !showRunDropdown">
+                        <i class="bi bi-play-circle me-1"></i> Run workflow
+                    </button>
+                    @if (showRunDropdown)
+                    {
+                        <div class="dropdown-menu show shadow p-3" style="min-width: 300px; display: block; position: absolute; right: 0; z-index: 1000;">
+                            <h6 class="fw-bold small mb-2">Select workflow</h6>
+                            @foreach (var wf in detectedWorkflows)
+                            {
+                                <button class="dropdown-item py-2" @onclick="() => TriggerWorkflow(wf)">
+                                    <i class="bi bi-file-earmark-code me-2"></i> @wf.Name
+                                    <span class="text-muted small d-block">@wf.FileName</span>
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <button class="btn btn-primary" @onclick="ShowCreateWorkflowModal">
+                    <i class="bi bi-plus-circle me-2"></i>Create workflow run
+                </button>
+            }
         }
     </div>
 
-    <ul class="nav nav-tabs mb-4">
-        <li class="nav-item">
-            <button class="nav-link @(ActiveTab == "runs" ? "active" : "")" @onclick='() => ActiveTab = "runs"'>
-                <i class="bi bi-play-circle me-1"></i> Workflow Runs
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link @(ActiveTab == "webhooks" ? "active" : "")" @onclick='() => ActiveTab = "webhooks"'>
-                <i class="bi bi-webhook me-1"></i> Webhooks
-            </button>
-        </li>
-    </ul>
-
-    @if (ActiveTab == "runs")
+    @if (RunId.HasValue)
     {
-        @if (WorkflowRuns.Count == 0)
+        <!-- Run Detail View -->
+        @if (selectedRun != null)
         {
-            <div class="card">
-                <div class="card-body text-center py-5">
-                    <i class="bi bi-play-circle" style="font-size: 4rem; color: #6c757d;"></i>
-                    <h3 class="mt-3">No workflow runs yet</h3>
-                    <p class="text-muted">Create your first workflow run to get started with CI/CD</p>
-                    @if (UserService.IsLoggedIn)
-                    {
-                        <button class="btn btn-primary" @onclick="ShowCreateWorkflowModal">
-                            <i class="bi bi-plus-circle me-2"></i>Create workflow run
-                        </button>
-                    }
+            <div class="mb-3">
+                <a href="/repo/@RepoName/actions" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to runs
+                </a>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1">
+                            <i class="@GetStatusIcon(selectedRun.Status) me-2"></i>
+                            @selectedRun.WorkflowName
+                            <span class="badge @GetStatusBadgeClass(selectedRun.Status) ms-2">@selectedRun.Status</span>
+                        </h5>
+                        <small class="text-muted">
+                            <i class="bi bi-git me-1"></i>@selectedRun.Branch
+                            <span class="mx-1">·</span>
+                            <code>@selectedRun.CommitSha[..Math.Min(7, selectedRun.CommitSha.Length)]</code>
+                            <span class="mx-1">·</span>
+                            @selectedRun.CommitMessage
+                        </small>
+                    </div>
+                    <div class="text-end text-muted small">
+                        <div>Triggered by <strong>@selectedRun.TriggeredBy</strong></div>
+                        <div>@FormatDate(selectedRun.CreatedAt)</div>
+                        @if (selectedRun.CompletedAt.HasValue && selectedRun.StartedAt.HasValue)
+                        {
+                            <div>Duration: @((selectedRun.CompletedAt.Value - selectedRun.StartedAt.Value).TotalSeconds.ToString("F1"))s</div>
+                        }
+                    </div>
                 </div>
             </div>
-        }
-        else
-        {
-            <div class="list-group">
-                @foreach (var run in WorkflowRuns)
-                {
-                    <div class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => ViewWorkflowRun(run.Id)">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="flex-grow-1">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="@GetStatusIcon(run.Status) me-2"></i>
-                                    <h6 class="mb-0">@run.WorkflowName</h6>
-                                    <span class="badge @GetStatusBadgeClass(run.Status) ms-2">@run.Status</span>
-                                </div>
-                                <p class="mb-1 text-muted">@run.CommitMessage</p>
-                                <small class="text-muted">
-                                    <i class="bi bi-git me-1"></i>@run.Branch
-                                    <span class="mx-2">•</span>
-                                    <i class="bi bi-hash me-1"></i>@run.CommitSha.Substring(0, 7)
-                                    <span class="mx-2">•</span>
-                                    <i class="bi bi-person me-1"></i>@run.TriggeredBy
-                                    <span class="mx-2">•</span>
-                                    @FormatDate(run.CreatedAt)
-                                </small>
-                            </div>
-                            @if (run.CompletedAt.HasValue && run.StartedAt.HasValue)
+
+            @foreach (var job in selectedRun.Jobs)
+            {
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center" style="cursor: pointer;" @onclick="() => ToggleJob(job.Id)">
+                        <div>
+                            <i class="@GetStatusIcon(job.Status) me-2"></i>
+                            <strong>@job.Name</strong>
+                            <span class="badge @GetStatusBadgeClass(job.Status) ms-2">@job.Status</span>
+                            <span class="text-muted small ms-2">(@job.RunsOn)</span>
+                        </div>
+                        <i class="bi @(expandedJobs.Contains(job.Id) ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                    </div>
+                    @if (expandedJobs.Contains(job.Id))
+                    {
+                        <div class="card-body p-0">
+                            @foreach (var step in job.Steps)
                             {
-                                <div class="text-end">
-                                    <small class="text-muted">
-                                        Duration: @((run.CompletedAt.Value - run.StartedAt.Value).TotalSeconds.ToString("F1"))s
-                                    </small>
+                                <div class="border-bottom px-3 py-2">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <i class="@GetStatusIcon(step.Status) me-2"></i>
+                                            <span class="small fw-semibold">@step.Name</span>
+                                        </div>
+                                        @if (step.StartedAt.HasValue && step.CompletedAt.HasValue)
+                                        {
+                                            <span class="text-muted" style="font-size: 11px;">
+                                                @((step.CompletedAt.Value - step.StartedAt.Value).TotalSeconds.ToString("F1"))s
+                                            </span>
+                                        }
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(step.Output))
+                                    {
+                                        <pre class="mt-2 p-2 bg-dark text-light rounded small mb-0" style="max-height: 400px; overflow: auto; font-size: 12px; white-space: pre-wrap;">@step.Output</pre>
+                                    }
                                 </div>
                             }
                         </div>
-                    </div>
-                }
-            </div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-warning">Workflow run #@RunId not found.</div>
         }
     }
-    else if (ActiveTab == "webhooks")
+    else
     {
-        @if (UserService.IsLoggedIn)
-        {
-            <div class="d-flex justify-content-end mb-3">
-                <button class="btn btn-primary" @onclick="ShowCreateWebhookModal">
-                    <i class="bi bi-plus-circle me-2"></i>Add webhook
+        <!-- Runs List -->
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <button class="nav-link @(ActiveTab == "runs" ? "active" : "")" @onclick='() => ActiveTab = "runs"'>
+                    <i class="bi bi-play-circle me-1"></i> Workflow Runs
                 </button>
-            </div>
-        }
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(ActiveTab == "webhooks" ? "active" : "")" @onclick='() => ActiveTab = "webhooks"'>
+                    <i class="bi bi-webhook me-1"></i> Webhooks
+                </button>
+            </li>
+        </ul>
 
-        @if (Webhooks.Count == 0)
+        @if (ActiveTab == "runs")
         {
-            <div class="card">
-                <div class="card-body text-center py-5">
-                    <i class="bi bi-webhook" style="font-size: 4rem; color: #6c757d;"></i>
-                    <h3 class="mt-3">No webhooks configured</h3>
-                    <p class="text-muted">Add webhooks to receive notifications about repository events</p>
-                    @if (UserService.IsLoggedIn)
+            @if (detectedWorkflows.Any())
+            {
+                <div class="alert alert-info small py-2 mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Detected <strong>@detectedWorkflows.Count</strong> workflow@(detectedWorkflows.Count != 1 ? "s" : "") from <code>.github/workflows/</code>:
+                    @string.Join(", ", detectedWorkflows.Select(w => w.FileName))
+                </div>
+            }
+
+            @if (WorkflowRuns.Count == 0)
+            {
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-play-circle" style="font-size: 4rem; color: #6c757d;"></i>
+                        <h3 class="mt-3">No workflow runs yet</h3>
+                        <p class="text-muted">
+                            @if (detectedWorkflows.Any())
+                            {
+                                <span>Click "Run workflow" to trigger a workflow from <code>.github/workflows/</code></span>
+                            }
+                            else
+                            {
+                                <span>Add a <code>.github/workflows/*.yml</code> file to your repository, or create a manual run.</span>
+                            }
+                        </p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="list-group">
+                    @foreach (var run in WorkflowRuns.OrderByDescending(r => r.CreatedAt))
                     {
-                        <button class="btn btn-primary" @onclick="ShowCreateWebhookModal">
-                            <i class="bi bi-plus-circle me-2"></i>Add webhook
-                        </button>
+                        <div class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => ViewWorkflowRun(run.Id)">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="@GetStatusIcon(run.Status) me-2"></i>
+                                        <h6 class="mb-0">@run.WorkflowName</h6>
+                                        <span class="badge @GetStatusBadgeClass(run.Status) ms-2">@run.Status</span>
+                                    </div>
+                                    <p class="mb-1 text-muted small">@run.CommitMessage</p>
+                                    <small class="text-muted">
+                                        <i class="bi bi-git me-1"></i>@run.Branch
+                                        <span class="mx-2">·</span>
+                                        <code>@run.CommitSha[..Math.Min(7, run.CommitSha.Length)]</code>
+                                        <span class="mx-2">·</span>
+                                        <i class="bi bi-person me-1"></i>@run.TriggeredBy
+                                        <span class="mx-2">·</span>
+                                        @FormatDate(run.CreatedAt)
+                                    </small>
+                                </div>
+                                @if (run.CompletedAt.HasValue && run.StartedAt.HasValue)
+                                {
+                                    <div class="text-end">
+                                        <small class="text-muted">
+                                            @((run.CompletedAt.Value - run.StartedAt.Value).TotalSeconds.ToString("F1"))s
+                                        </small>
+                                    </div>
+                                }
+                            </div>
+                        </div>
                     }
                 </div>
-            </div>
+            }
         }
-        else
+        else if (ActiveTab == "webhooks")
         {
-            <div class="list-group">
-                @foreach (var webhook in Webhooks)
-                {
-                    <div class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="flex-grow-1">
-                                <div class="d-flex align-items-center mb-2">
-                                    <h6 class="mb-0">@webhook.Url</h6>
-                                    <span class="badge @(webhook.IsActive ? "bg-success" : "bg-secondary") ms-2">
-                                        @(webhook.IsActive ? "Active" : "Inactive")
-                                    </span>
-                                </div>
-                                <div class="mb-2">
-                                    @foreach (var evt in webhook.Events)
-                                    {
-                                        <span class="badge bg-secondary me-1">@evt</span>
-                                    }
-                                </div>
-                                <small class="text-muted">
-                                    Created @FormatDate(webhook.CreatedAt)
-                                    @if (webhook.LastTriggeredAt.HasValue)
-                                    {
-                                        <span class="mx-2">•</span>
-                                        <span>Last triggered @FormatDate(webhook.LastTriggeredAt.Value)</span>
-                                    }
-                                </small>
-                            </div>
-                            @if (UserService.IsLoggedIn)
-                            {
-                                <div class="btn-group">
-                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => ToggleWebhook(webhook.Id)">
-                                        <i class="bi bi-@(webhook.IsActive ? "pause" : "play")-circle"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteWebhook(webhook.Id)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            }
-                        </div>
+            @if (UserService.IsLoggedIn)
+            {
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-primary" @onclick="ShowCreateWebhookModal">
+                        <i class="bi bi-plus-circle me-2"></i>Add webhook
+                    </button>
+                </div>
+            }
+
+            @if (Webhooks.Count == 0)
+            {
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-webhook" style="font-size: 4rem; color: #6c757d;"></i>
+                        <h3 class="mt-3">No webhooks configured</h3>
+                        <p class="text-muted">Add webhooks to receive notifications about repository events</p>
                     </div>
-                }
-            </div>
+                </div>
+            }
+            else
+            {
+                <div class="list-group">
+                    @foreach (var webhook in Webhooks)
+                    {
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <h6 class="mb-0">@webhook.Url</h6>
+                                        <span class="badge @(webhook.IsActive ? "bg-success" : "bg-secondary") ms-2">
+                                            @(webhook.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </div>
+                                    <div class="mb-2">
+                                        @foreach (var evt in webhook.Events)
+                                        {
+                                            <span class="badge bg-secondary me-1">@evt</span>
+                                        }
+                                    </div>
+                                    <small class="text-muted">
+                                        Created @FormatDate(webhook.CreatedAt)
+                                        @if (webhook.LastTriggeredAt.HasValue)
+                                        {
+                                            <span class="mx-2">·</span>
+                                            <span>Last triggered @FormatDate(webhook.LastTriggeredAt.Value)</span>
+                                        }
+                                    </small>
+                                </div>
+                                @if (UserService.IsLoggedIn)
+                                {
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-primary" @onclick="() => ToggleWebhook(webhook.Id)">
+                                            <i class="bi bi-@(webhook.IsActive ? "pause" : "play")-circle"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteWebhook(webhook.Id)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
         }
     }
 </div>
@@ -254,31 +378,155 @@
 
 @code {
     [Parameter] public string RepoName { get; set; } = "";
-    
+    [Parameter] public int? RunId { get; set; }
+
     private List<WorkflowRun> WorkflowRuns { get; set; } = new();
     private List<Webhook> Webhooks { get; set; } = new();
+    private List<WorkflowDefinition> detectedWorkflows = new();
+    private WorkflowRun? selectedRun;
     private string ActiveTab { get; set; } = "runs";
-    
+    private bool showRunDropdown;
+    private HashSet<int> expandedJobs = new();
+    private System.Threading.Timer? _refreshTimer;
+
     private bool ShowWorkflowModal { get; set; }
     private string NewWorkflowName { get; set; } = "";
     private string NewWorkflowBranch { get; set; } = "main";
     private string NewWorkflowCommitSha { get; set; } = "";
     private string NewWorkflowCommitMessage { get; set; } = "";
-    
+
     private bool ShowWebhookModal { get; set; }
     private string NewWebhookUrl { get; set; } = "";
     private string NewWebhookSecret { get; set; } = "";
     private List<string> SelectedEvents { get; set; } = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         await LoadData();
+        DetectWorkflows();
+
+        if (RunId.HasValue)
+        {
+            selectedRun = await WorkflowService.GetWorkflowRunAsync(RepoName, RunId.Value);
+            if (selectedRun != null)
+            {
+                // Auto-expand all jobs
+                foreach (var job in selectedRun.Jobs)
+                    expandedJobs.Add(job.Id);
+
+                // Auto-refresh while in-progress
+                if (selectedRun.Status == WorkflowStatus.InProgress || selectedRun.Status == WorkflowStatus.Queued)
+                {
+                    StartAutoRefresh();
+                }
+                else
+                {
+                    StopAutoRefresh();
+                }
+            }
+        }
+        else
+        {
+            selectedRun = null;
+            StopAutoRefresh();
+        }
+    }
+
+    private void StartAutoRefresh()
+    {
+        StopAutoRefresh();
+        _refreshTimer = new System.Threading.Timer(async _ =>
+        {
+            try
+            {
+                if (RunId.HasValue)
+                {
+                    selectedRun = await WorkflowService.GetWorkflowRunAsync(RepoName, RunId.Value);
+                    if (selectedRun != null && selectedRun.Status != WorkflowStatus.InProgress && selectedRun.Status != WorkflowStatus.Queued)
+                    {
+                        StopAutoRefresh();
+                    }
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+            catch { }
+        }, null, 2000, 2000);
+    }
+
+    private void StopAutoRefresh()
+    {
+        _refreshTimer?.Dispose();
+        _refreshTimer = null;
+    }
+
+    public void Dispose()
+    {
+        StopAutoRefresh();
     }
 
     private async Task LoadData()
     {
         WorkflowRuns = await WorkflowService.GetWorkflowRunsAsync(RepoName);
         Webhooks = await WorkflowService.GetWebhooksAsync(RepoName);
+    }
+
+    private void DetectWorkflows()
+    {
+        try
+        {
+            var repoPath = GetRepoPath();
+            if (repoPath != null)
+            {
+                detectedWorkflows = YamlParser.ParseFromRepo(repoPath);
+            }
+        }
+        catch { }
+    }
+
+    private string? GetRepoPath()
+    {
+        var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+        var path = System.IO.Path.Combine(projectRoot, RepoName);
+        if (LibGit2Sharp.Repository.IsValid(path)) return path;
+        if (LibGit2Sharp.Repository.IsValid(path + ".git")) return path + ".git";
+        return null;
+    }
+
+    private async Task TriggerWorkflow(WorkflowDefinition workflow)
+    {
+        if (!UserService.IsLoggedIn) return;
+        showRunDropdown = false;
+
+        var repoPath = GetRepoPath();
+        var branch = "main";
+        var sha = "HEAD";
+        var message = "Manual trigger";
+
+        if (repoPath != null && LibGit2Sharp.Repository.IsValid(repoPath))
+        {
+            try
+            {
+                using var repo = new LibGit2Sharp.Repository(repoPath);
+                var head = repo.Head;
+                if (head?.Tip != null)
+                {
+                    branch = head.FriendlyName;
+                    sha = head.Tip.Sha;
+                    message = head.Tip.MessageShort;
+                }
+            }
+            catch { }
+        }
+
+        await WorkflowService.CreateWorkflowRunWithJobsAsync(
+            RepoName, workflow, branch, sha, message, UserService.Username);
+        await LoadData();
+    }
+
+    private void ToggleJob(int jobId)
+    {
+        if (!expandedJobs.Remove(jobId))
+            expandedJobs.Add(jobId);
     }
 
     private void ShowCreateWorkflowModal()
@@ -306,7 +554,7 @@
         NewWorkflowBranch = "main";
         NewWorkflowCommitSha = "";
         NewWorkflowCommitMessage = "";
-        
+
         await LoadData();
     }
 
@@ -328,12 +576,12 @@
             return;
 
         await WorkflowService.CreateWebhookAsync(RepoName, NewWebhookUrl, NewWebhookSecret, SelectedEvents);
-        
+
         ShowWebhookModal = false;
         NewWebhookUrl = "";
         NewWebhookSecret = "";
         SelectedEvents.Clear();
-        
+
         await LoadData();
     }
 
@@ -364,31 +612,25 @@
         }
     }
 
-    private string GetStatusIcon(WorkflowStatus status)
+    private string GetStatusIcon(WorkflowStatus status) => status switch
     {
-        return status switch
-        {
-            WorkflowStatus.Queued => "bi bi-clock text-secondary",
-            WorkflowStatus.InProgress => "bi bi-arrow-repeat text-primary",
-            WorkflowStatus.Success => "bi bi-check-circle-fill text-success",
-            WorkflowStatus.Failure => "bi bi-x-circle-fill text-danger",
-            WorkflowStatus.Cancelled => "bi bi-dash-circle text-secondary",
-            _ => "bi bi-circle"
-        };
-    }
+        WorkflowStatus.Queued => "bi bi-clock text-secondary",
+        WorkflowStatus.InProgress => "bi bi-arrow-repeat text-primary",
+        WorkflowStatus.Success => "bi bi-check-circle-fill text-success",
+        WorkflowStatus.Failure => "bi bi-x-circle-fill text-danger",
+        WorkflowStatus.Cancelled => "bi bi-dash-circle text-secondary",
+        _ => "bi bi-circle"
+    };
 
-    private string GetStatusBadgeClass(WorkflowStatus status)
+    private string GetStatusBadgeClass(WorkflowStatus status) => status switch
     {
-        return status switch
-        {
-            WorkflowStatus.Queued => "bg-secondary",
-            WorkflowStatus.InProgress => "bg-primary",
-            WorkflowStatus.Success => "bg-success",
-            WorkflowStatus.Failure => "bg-danger",
-            WorkflowStatus.Cancelled => "bg-secondary",
-            _ => "bg-secondary"
-        };
-    }
+        WorkflowStatus.Queued => "bg-secondary",
+        WorkflowStatus.InProgress => "bg-primary",
+        WorkflowStatus.Success => "bg-success",
+        WorkflowStatus.Failure => "bg-danger",
+        WorkflowStatus.Cancelled => "bg-secondary",
+        _ => "bg-secondary"
+    };
 
     private string FormatDate(DateTime date)
     {

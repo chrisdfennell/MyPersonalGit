@@ -41,6 +41,9 @@
             </nav>
 
             <div class="ms-auto d-flex align-items-center gap-3">
+                <button class="btn btn-link text-white text-opacity-75 p-0" @onclick="ToggleTheme" title="Toggle dark mode">
+                    <i class="bi @(currentTheme == "dark" ? "bi-sun-fill" : "bi-moon-fill")"></i>
+                </button>
                 @if (UserService.IsLoggedIn)
                 {
                     <a href="/notifications" class="text-white text-opacity-75 text-decoration-none">
@@ -151,24 +154,176 @@
     .gh-main {
         flex: 1;
     }
+
+    /* Dark mode overrides */
+    [data-bs-theme="dark"] {
+        --gh-header: #161b22;
+        --gh-border: #30363d;
+        --gh-text: #e6edf3;
+        --gh-bg: #0d1117;
+    }
+
+    [data-bs-theme="dark"] body {
+        background-color: var(--gh-bg);
+        color: var(--gh-text);
+    }
+
+    [data-bs-theme="dark"] .gh-header {
+        background-color: #161b22;
+    }
+
+    [data-bs-theme="dark"] .list-group-item {
+        background-color: #161b22;
+        border-color: #30363d;
+        color: #e6edf3;
+    }
+
+    [data-bs-theme="dark"] .list-group-item:hover,
+    [data-bs-theme="dark"] .list-group-item-action:hover {
+        background-color: #1c2128;
+    }
+
+    [data-bs-theme="dark"] .card {
+        background-color: #161b22;
+        border-color: #30363d;
+    }
+
+    [data-bs-theme="dark"] .card-header {
+        border-color: #30363d;
+    }
+
+    [data-bs-theme="dark"] .modal-content {
+        background-color: #161b22;
+        border-color: #30363d;
+        color: #e6edf3;
+    }
+
+    [data-bs-theme="dark"] .bg-light,
+    [data-bs-theme="dark"] .bg-light-subtle {
+        background-color: #161b22 !important;
+    }
+
+    [data-bs-theme="dark"] .border,
+    [data-bs-theme="dark"] .border-bottom,
+    [data-bs-theme="dark"] .border-top,
+    [data-bs-theme="dark"] .border-end {
+        border-color: #30363d !important;
+    }
+
+    [data-bs-theme="dark"] code {
+        background-color: rgba(110,118,129,0.4);
+        color: #e6edf3;
+    }
+
+    [data-bs-theme="dark"] .form-control,
+    [data-bs-theme="dark"] .form-select {
+        background-color: #0d1117;
+        border-color: #30363d;
+        color: #e6edf3;
+    }
+
+    [data-bs-theme="dark"] .form-control:focus,
+    [data-bs-theme="dark"] .form-select:focus {
+        background-color: #0d1117;
+        border-color: #58a6ff;
+        color: #e6edf3;
+    }
+
+    [data-bs-theme="dark"] .dropdown-menu {
+        background-color: #161b22;
+        border-color: #30363d;
+    }
+
+    [data-bs-theme="dark"] .dropdown-item {
+        color: #e6edf3;
+    }
+
+    [data-bs-theme="dark"] .dropdown-item:hover {
+        background-color: #1c2128;
+    }
+
+    [data-bs-theme="dark"] .text-dark {
+        color: #e6edf3 !important;
+    }
+
+    [data-bs-theme="dark"] .text-muted {
+        color: #8b949e !important;
+    }
+
+    [data-bs-theme="dark"] .nav-tabs .nav-link {
+        color: #8b949e;
+    }
+
+    [data-bs-theme="dark"] .nav-tabs .nav-link.active {
+        background-color: #0d1117;
+        border-color: #30363d #30363d #0d1117;
+        color: #e6edf3;
+    }
+
+    [data-bs-theme="dark"] .gh-footer {
+        border-color: #30363d !important;
+    }
+
+    [data-bs-theme="dark"] .input-group-text {
+        background-color: #161b22;
+        border-color: #30363d;
+        color: #e6edf3;
+    }
+
+    [data-bs-theme="dark"] .breadcrumb-item a {
+        color: #58a6ff;
+    }
+
+    [data-bs-theme="dark"] .breadcrumb-item.active {
+        color: #e6edf3;
+    }
+
+    [data-bs-theme="dark"] .btn-outline-secondary {
+        color: #8b949e;
+        border-color: #30363d;
+    }
+
+    [data-bs-theme="dark"] .btn-outline-secondary:hover {
+        background-color: #30363d;
+        color: #e6edf3;
+    }
+
+    [data-bs-theme="dark"] .btn-light {
+        background-color: #21262d;
+        border-color: #30363d;
+        color: #e6edf3;
+    }
+
+    [data-bs-theme="dark"] .btn-light:hover {
+        background-color: #30363d;
+    }
 </style>
 
 @code {
+    private string currentTheme = "light";
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             try
             {
+                currentTheme = await JS.InvokeAsync<string>("themeHelper.init");
                 var sessionId = await JS.InvokeAsync<string>("sessionHelper.get", "sessionId");
                 if (!string.IsNullOrEmpty(sessionId))
                 {
                     await UserService.InitializeFromSessionAsync(sessionId);
-                    StateHasChanged();
                 }
+                StateHasChanged();
             }
             catch { }
         }
+    }
+
+    private async Task ToggleTheme()
+    {
+        currentTheme = currentTheme == "dark" ? "light" : "dark";
+        await JS.InvokeVoidAsync("themeHelper.set", currentTheme);
     }
 
     private async Task HandleLogout()

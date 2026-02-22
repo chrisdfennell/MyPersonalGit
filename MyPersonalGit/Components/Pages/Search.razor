@@ -7,6 +7,10 @@
 @inject NavigationManager Nav
 @inject IIssueService IssueService
 @inject IPullRequestService PRService
+@inject IRepositoryService RepoService
+@inject IAdminService AdminService
+@using MyPersonalGit.Services
+@inject CurrentUserService UserService
 @rendermode InteractiveServer
 
 <PageTitle>Search · Personal Git</PageTitle>
@@ -255,11 +259,29 @@
         StateHasChanged();
     }
 
+    private async Task<string> GetProjectRoot()
+    {
+        var systemSettings = await AdminService.GetSystemSettingsAsync();
+        if (!string.IsNullOrEmpty(systemSettings.ProjectRoot) && Directory.Exists(systemSettings.ProjectRoot))
+            return systemSettings.ProjectRoot;
+        var configuredPath = Config["Git:ProjectRoot"];
+        if (!string.IsNullOrEmpty(configuredPath) && Directory.Exists(configuredPath))
+            return configuredPath;
+        return "/repos";
+    }
+
+    private async Task<bool> IsRepoAccessible(string repoName)
+    {
+        var meta = await RepoService.GetRepositoryAsync(repoName);
+        if (meta == null || !meta.IsPrivate) return true;
+        return UserService.IsLoggedIn && meta.Owner.Equals(UserService.Username, StringComparison.OrdinalIgnoreCase);
+    }
+
     private async Task SearchRepositories()
     {
         try
         {
-            var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+            var projectRoot = await GetProjectRoot();
             if (!Directory.Exists(projectRoot))
                 return;
 
@@ -269,11 +291,14 @@
                 var repoName = Path.GetFileName(dir);
                 if (repoName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
                 {
+                    if (!await IsRepoAccessible(repoName)) continue;
+
+                    var meta = await RepoService.GetRepositoryAsync(repoName);
                     repositoryResults.Add(new RepositoryResult
                     {
                         Name = repoName,
-                        Description = "Git repository",
-                        Stars = 0
+                        Description = meta?.Description ?? "Git repository",
+                        Stars = meta?.Stars ?? 0
                     });
                 }
             }
@@ -285,7 +310,7 @@
     {
         try
         {
-            var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+            var projectRoot = await GetProjectRoot();
             if (!Directory.Exists(projectRoot))
                 return;
 
@@ -295,44 +320,20 @@
                 if (!LibGit2Sharp.Repository.IsValid(dir))
                     continue;
 
+                var repoName = Path.GetFileName(dir);
+                if (!await IsRepoAccessible(repoName)) continue;
+
                 try
                 {
                     using var repo = new LibGit2Sharp.Repository(dir);
-                    var repoName = Path.GetFileName(dir);
                     var headCommit = repo.Head.Tip;
 
                     if (headCommit == null)
                         continue;
 
-                    foreach (var entry in headCommit.Tree)
-                    {
-                        if (entry.TargetType == TreeEntryTargetType.Blob)
-                        {
-                            var blob = (Blob)entry.Target;
-                            if (blob.IsBinary)
-                                continue;
-
-                            var content = blob.GetContentText();
-                            var lines = content.Split('\n');
-                            
-                            for (int i = 0; i < lines.Length; i++)
-                            {
-                                if (lines[i].Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
-                                {
-                                    codeResults.Add(new CodeResult
-                                    {
-                                        RepoName = repoName,
-                                        FilePath = entry.Path,
-                                        LineNumber = i + 1,
-                                        MatchedLine = lines[i].Trim()
-                                    });
-                                    
-                                    if (codeResults.Count >= 50)
-                                        return;
-                                }
-                            }
-                        }
-                    }
+                    SearchTree(headCommit.Tree, repoName, "");
+                    if (codeResults.Count >= 50)
+                        return;
                 }
                 catch { }
             }
@@ -340,11 +341,51 @@
         catch { }
     }
 
+    private void SearchTree(Tree tree, string repoName, string basePath)
+    {
+        foreach (var entry in tree)
+        {
+            var entryPath = string.IsNullOrEmpty(basePath) ? entry.Name : $"{basePath}/{entry.Name}";
+
+            if (entry.TargetType == TreeEntryTargetType.Tree)
+            {
+                SearchTree((Tree)entry.Target, repoName, entryPath);
+                if (codeResults.Count >= 50) return;
+            }
+            else if (entry.TargetType == TreeEntryTargetType.Blob)
+            {
+                var blob = (Blob)entry.Target;
+                if (blob.IsBinary || blob.Size > 512 * 1024)
+                    continue;
+
+                var content = blob.GetContentText();
+                var lines = content.Split('\n');
+
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    if (lines[i].Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+                    {
+                        codeResults.Add(new CodeResult
+                        {
+                            RepoName = repoName,
+                            FilePath = entryPath,
+                            LineNumber = i + 1,
+                            MatchedLine = lines[i].Trim()
+                        });
+
+                        if (codeResults.Count >= 50)
+                            return;
+                    }
+                }
+            }
+        }
+    }
+
     private async Task SearchIssues()
     {
         try
         {
-            var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+            var projectRoot = await GetProjectRoot();
             if (!Directory.Exists(projectRoot))
                 return;
 
@@ -352,9 +393,11 @@
             foreach (var dir in directories)
             {
                 var repoName = Path.GetFileName(dir);
+                if (!await IsRepoAccessible(repoName)) continue;
+
                 var issues = await IssueService.GetIssuesAsync(repoName);
-                
-                var matches = issues.Where(i => 
+
+                var matches = issues.Where(i =>
                     i.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
                     (i.Body?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ?? false)
                 );
@@ -369,7 +412,7 @@
     {
         try
         {
-            var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+            var projectRoot = await GetProjectRoot();
             if (!Directory.Exists(projectRoot))
                 return;
 
@@ -377,9 +420,11 @@
             foreach (var dir in directories)
             {
                 var repoName = Path.GetFileName(dir);
+                if (!await IsRepoAccessible(repoName)) continue;
+
                 var prs = await PRService.GetPullRequestsAsync(repoName);
-                
-                var matches = prs.Where(pr => 
+
+                var matches = prs.Where(pr =>
                     pr.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
                     (pr.Body?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ?? false)
                 );

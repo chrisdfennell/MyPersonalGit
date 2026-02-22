@@ -19,6 +19,9 @@
 # Repos directory (user data)
 **/repos/
 
+# Test project
+MyPersonalGit.Tests/
+
 # Docker/CI
 .dockerignore
 .gitignore

@@ -58,3 +58,54 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* Dark mode diff colors */
+[data-bs-theme="dark"] {
+    --diff-added-bg: #1a2d1e;
+    --diff-added-fg: #56d364;
+    --diff-removed-bg: #2d1a1a;
+    --diff-removed-fg: #f85149;
+    --diff-context-bg: #0d1117;
+    --diff-context-fg: #e6edf3;
+    --diff-empty-bg: #161b22;
+}
+
+[data-bs-theme="dark"] pre[class*="language-"] {
+    background: #161b22 !important;
+    color: #e6edf3 !important;
+}
+
+[data-bs-theme="dark"] code[class*="language-"] {
+    color: #e6edf3 !important;
+}
+
+[data-bs-theme="dark"] .token.comment,
+[data-bs-theme="dark"] .token.prolog,
+[data-bs-theme="dark"] .token.doctype,
+[data-bs-theme="dark"] .token.cdata {
+    color: #8b949e !important;
+}
+
+[data-bs-theme="dark"] .token.keyword {
+    color: #ff7b72 !important;
+}
+
+[data-bs-theme="dark"] .token.string {
+    color: #a5d6ff !important;
+}
+
+[data-bs-theme="dark"] .token.function {
+    color: #d2a8ff !important;
+}
+
+[data-bs-theme="dark"] .token.number {
+    color: #79c0ff !important;
+}
+
+[data-bs-theme="dark"] .line-numbers .line-numbers-rows {
+    border-right-color: #30363d !important;
+}
+
+[data-bs-theme="dark"] .line-numbers .line-numbers-rows > span::before {
+    color: #484f58 !important;
+}

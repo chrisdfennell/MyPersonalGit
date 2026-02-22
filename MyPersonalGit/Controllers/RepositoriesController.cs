@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using LibGit2Sharp;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -11,12 +12,14 @@ namespace MyPersonalGit.Controllers;
 public class RepositoriesController : ControllerBase
 {
     private readonly IRepositoryService _repoService;
+    private readonly IReleaseService _releaseService;
     private readonly IConfiguration _config;
     private readonly ILogger<RepositoriesController> _logger;
 
-    public RepositoriesController(IRepositoryService repoService, IConfiguration config, ILogger<RepositoriesController> logger)
+    public RepositoriesController(IRepositoryService repoService, IReleaseService releaseService, IConfiguration config, ILogger<RepositoriesController> logger)
     {
         _repoService = repoService;
+        _releaseService = releaseService;
         _config = config;
         _logger = logger;
     }
@@ -26,6 +29,10 @@ public class RepositoriesController : ControllerBase
     {
         var repos = await _repoService.GetRepositoriesAsync();
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
+
+        // Filter private repos unless the API caller is the owner
+        var currentUser = User.Identity?.Name;
+        repos = repos.Where(r => !r.IsPrivate || (currentUser != null && r.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))).ToList();
 
         var result = repos.Select(r =>
         {
@@ -68,6 +75,14 @@ public class RepositoriesController : ControllerBase
     {
         var repo = await _repoService.GetRepositoryAsync(repoName);
         if (repo == null) return NotFound(new { error = $"Repository '{repoName}' not found" });
+
+        // Enforce private repo access
+        if (repo.IsPrivate)
+        {
+            var currentUser = User.Identity?.Name;
+            if (currentUser == null || !repo.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))
+                return NotFound(new { error = $"Repository '{repoName}' not found" });
+        }
 
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
         var repoPath = Path.Combine(projectRoot, repoName);
@@ -216,5 +231,81 @@ public class RepositoriesController : ControllerBase
         }).OrderByDescending(e => e.type == "dir").ThenBy(e => e.name);
 
         return Ok(new { type = "dir", path = path ?? "/", entries = items });
+    }
+
+    [HttpGet("{repoName}/archive/zip")]
+    public async Task<IActionResult> DownloadZip(string repoName, [FromQuery] string? @ref = null)
+    {
+        var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
+        var repoPath = Path.Combine(projectRoot, repoName);
+        if (!Repository.IsValid(repoPath))
+        {
+            repoPath = Path.Combine(projectRoot, repoName + ".git");
+            if (!Repository.IsValid(repoPath))
+                return NotFound(new { error = $"Repository '{repoName}' not found" });
+        }
+
+        // Enforce private repo access
+        var meta = await _repoService.GetRepositoryAsync(repoName);
+        if (meta is { IsPrivate: true })
+        {
+            var currentUser = User.Identity?.Name;
+            if (currentUser == null || !meta.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))
+                return NotFound(new { error = $"Repository '{repoName}' not found" });
+        }
+
+        using var repo = new Repository(repoPath);
+        var branch = repo.Branches[@ref ?? ""] ?? repo.Branches["main"] ?? repo.Branches["master"] ?? repo.Head;
+        if (branch?.Tip == null)
+            return NotFound(new { error = "No commits found" });
+
+        var displayName = repoName.EndsWith(".git") ? repoName[..^4] : repoName;
+        var ms = new MemoryStream();
+        using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            AddTreeToZip(archive, branch.Tip.Tree, $"{displayName}/");
+        }
+        ms.Position = 0;
+        return File(ms, "application/zip", $"{displayName}-{branch.FriendlyName}.zip");
+    }
+
+    [HttpGet("{repoName}/releases")]
+    public async Task<IActionResult> ListReleases(string repoName)
+    {
+        var releases = await _releaseService.GetReleasesAsync(repoName);
+        return Ok(releases.Select(r => new
+        {
+            r.Id, r.TagName, r.Title, r.Body, r.Author, r.IsDraft, r.IsPrerelease,
+            created_at = r.CreatedAt, published_at = r.PublishedAt,
+            assets = r.Assets.Select(a => new { a.Id, a.FileName, a.Size, a.ContentType, a.DownloadCount })
+        }));
+    }
+
+    [HttpGet("{repoName}/releases/{releaseId}/assets/{assetId}")]
+    public async Task<IActionResult> DownloadAsset(string repoName, int releaseId, int assetId)
+    {
+        var (asset, data) = await _releaseService.GetAssetAsync(assetId);
+        if (asset == null || data == null) return NotFound(new { error = "Asset not found" });
+        return File(data, asset.ContentType, asset.FileName);
+    }
+
+    private static void AddTreeToZip(ZipArchive archive, Tree tree, string basePath)
+    {
+        foreach (var entry in tree)
+        {
+            var entryPath = basePath + entry.Name;
+            if (entry.TargetType == TreeEntryTargetType.Tree)
+            {
+                AddTreeToZip(archive, (Tree)entry.Target, entryPath + "/");
+            }
+            else if (entry.TargetType == TreeEntryTargetType.Blob)
+            {
+                var blob = (Blob)entry.Target;
+                var zipEntry = archive.CreateEntry(entryPath);
+                using var blobStream = blob.GetContentStream();
+                using var zipStream = zipEntry.Open();
+                blobStream.CopyTo(zipStream);
+            }
+        }
     }
 }

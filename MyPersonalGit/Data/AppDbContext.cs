@@ -17,6 +17,12 @@ public class AppDbContext : DbContext
     // Repositories
     public DbSet<Repository> Repositories => Set<Repository>();
     public DbSet<RepositoryStar> RepositoryStars => Set<RepositoryStar>();
+    public DbSet<RepositoryFork> RepositoryForks => Set<RepositoryFork>();
+    public DbSet<RepositoryCollaborator> RepositoryCollaborators => Set<RepositoryCollaborator>();
+
+    // Releases
+    public DbSet<Release> Releases => Set<Release>();
+    public DbSet<ReleaseAsset> ReleaseAssets => Set<ReleaseAsset>();
 
     // Issues
     public DbSet<Issue> Issues => Set<Issue>();
@@ -109,6 +115,25 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<RepositoryStar>(e =>
         {
             e.HasIndex(s => new { s.RepoName, s.Username }).IsUnique();
+        });
+
+        modelBuilder.Entity<RepositoryFork>(e =>
+        {
+            e.HasIndex(f => new { f.OriginalRepo, f.Owner }).IsUnique();
+        });
+
+        modelBuilder.Entity<RepositoryCollaborator>(e =>
+        {
+            e.HasIndex(c => new { c.RepoName, c.Username }).IsUnique();
+        });
+
+        // --- Release ---
+        modelBuilder.Entity<Release>(e =>
+        {
+            e.HasMany(r => r.Assets)
+                .WithOne()
+                .HasForeignKey(a => a.ReleaseId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // --- Issue ---

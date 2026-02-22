@@ -30,6 +30,7 @@ public class WorkflowJob
     public int Id { get; set; }
     public int WorkflowRunId { get; set; }
     public required string Name { get; set; }
+    public string RunsOn { get; set; } = "ubuntu-latest";
     public WorkflowStatus Status { get; set; }
     public DateTime? StartedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
@@ -41,6 +42,7 @@ public class WorkflowStep
     public int Id { get; set; }
     public int WorkflowJobId { get; set; }
     public required string Name { get; set; }
+    public string? Command { get; set; }
     public WorkflowStatus Status { get; set; }
     public string? Output { get; set; }
     public DateTime? StartedAt { get; set; }

@@ -15,6 +15,9 @@
 @inject IJSRuntime JS
 @inject IBranchProtectionService BranchProtectionService
 @inject IAdminService AdminService
+@inject IRepositoryService RepoService
+@inject ICollaboratorService CollaboratorService
+@inject IReleaseService ReleaseService
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
 @rendermode InteractiveServer
@@ -46,13 +49,23 @@ else
                             <li class="breadcrumb-item active fw-bold text-dark" aria-current="page">@RepoName</li>
                         </ol>
                     </nav>
-                    <span class="badge rounded-pill border text-muted fw-normal ms-2" style="font-size: 12px;">Public</span>
+                    <span class="badge rounded-pill border @(repoIsPrivate ? "bg-warning bg-opacity-10 text-warning border-warning-subtle" : "text-muted") fw-normal ms-2" style="font-size: 12px;">
+                        @(repoIsPrivate ? "Private" : "Public")
+                    </span>
                 </div>
 
-                <div class="dropdown">
-                    <button class="btn btn-gh-primary btn-sm shadow-sm px-3" type="button" @onclick="() => showCloneDropdown = !showCloneDropdown">
-                        <i class="bi bi-download me-1"></i> Code <i class="bi bi-caret-down-fill ms-1" style="font-size: 10px;"></i>
-                    </button>
+                <div class="d-flex gap-2">
+                    @if (UserService.IsLoggedIn)
+                    {
+                        <button class="btn btn-light btn-sm border px-3 @(repoIsForked ? "disabled" : "")" @onclick="ForkRepository" disabled="@repoIsForked">
+                            <i class="bi bi-diagram-3 me-1"></i> @(repoIsForked ? "Forked" : "Fork")
+                            @if (repoForkCount > 0) { <span class="badge bg-secondary bg-opacity-10 text-dark ms-1">@repoForkCount</span> }
+                        </button>
+                    }
+                    <div class="dropdown">
+                        <button class="btn btn-gh-primary btn-sm shadow-sm px-3" type="button" @onclick="() => showCloneDropdown = !showCloneDropdown">
+                            <i class="bi bi-download me-1"></i> Code <i class="bi bi-caret-down-fill ms-1" style="font-size: 10px;"></i>
+                        </button>
                     @if (showCloneDropdown)
                     {
                         <div class="dropdown-menu dropdown-menu-end show shadow p-3" style="width: 320px; display: block; position: absolute; right: 0; z-index: 1000;">
@@ -62,6 +75,12 @@ else
                                 <button class="btn btn-outline-secondary" type="button" @onclick="CopyCloneUrl" title="Copy to clipboard"><i class="bi bi-clipboard"></i></button>
                             </div>
                             <p class="x-small text-muted mb-0">Use the Git HTTP URL to clone this repository.</p>
+
+                            <hr class="my-2" />
+                            <h6 class="fw-bold small mb-2">Download</h6>
+                            <a href="/api/v1/repos/@(System.IO.Path.GetFileName(RepoFullPath))/archive/zip?ref=@currentBranch" class="btn btn-sm btn-outline-secondary w-100 text-start">
+                                <i class="bi bi-file-earmark-zip me-2"></i>Download ZIP
+                            </a>
 
                             @if (UserService.IsLoggedIn)
                             {
@@ -82,8 +101,18 @@ else
                             }
                         </div>
                     }
+                    </div>
                 </div>
             </div>
+
+            @if (!string.IsNullOrEmpty(repoForkedFrom))
+            {
+                <p class="text-muted small mb-2"><i class="bi bi-diagram-3 me-1"></i>forked from <a href="/repo/@repoForkedFrom" class="text-decoration-none">@repoForkedFrom</a></p>
+            }
+            @if (!string.IsNullOrEmpty(repoDescription))
+            {
+                <p class="text-muted small mb-3">@repoDescription</p>
+            }
 
             <ul class="nav nav-tabs border-bottom-0 gap-2">
                 <li class="nav-item">
@@ -128,6 +157,11 @@ else
                     </button>
                 </li>
                 <li class="nav-item">
+                    <button class="nav-link @(activeTab == "graph" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("graph")'>
+                        <i class="bi bi-diagram-3 me-1"></i> Graph
+                    </button>
+                </li>
+                <li class="nav-item">
                     <button class="nav-link @(activeTab == "branches" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("branches")'>
                         <i class="bi bi-branches me-1"></i> Branches
                         <span class="badge rounded-pill bg-secondary bg-opacity-10 text-dark ms-1">@branches.Count</span>
@@ -137,6 +171,12 @@ else
                     <button class="nav-link @(activeTab == "tags" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("tags")'>
                         <i class="bi bi-tags me-1"></i> Tags
                         <span class="badge rounded-pill bg-secondary bg-opacity-10 text-dark ms-1">@tags.Count</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "releases" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("releases")'>
+                        <i class="bi bi-tag me-1"></i> Releases
+                        @if (releases.Any()) { <span class="badge rounded-pill bg-secondary bg-opacity-10 text-dark ms-1">@releases.Count</span> }
                     </button>
                 </li>
                 <li class="nav-item">
@@ -199,6 +239,7 @@ else
                                 <button class="btn btn-light btn-sm border" @onclick="EnterEditMode"><i class="bi bi-pencil me-1"></i> Edit</button>
                             }
                             <button class="btn btn-light btn-sm border" @onclick="ViewFileHistory"><i class="bi bi-clock-history me-1"></i> History</button>
+                            <button class="btn @(activeTab == "blame" ? "btn-secondary" : "btn-light") btn-sm border" @onclick="ToggleBlameView"><i class="bi bi-person-lines-fill me-1"></i> Blame</button>
                             @if (UserService.IsLoggedIn)
                             {
                                 <button class="btn btn-light btn-sm border" @onclick="() => showDeleteModal = true"><i class="bi bi-trash me-1 text-danger"></i> Delete</button>
@@ -397,7 +438,8 @@ else
                                     </div>
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <button class="btn btn-light btn-sm border" disabled="@(b.Name == currentBranch || branchProtectionRules.Any(r => BranchMatchesPattern(b.Name, r.BranchPattern) && r.PreventDeletion))">
+                                    <button class="btn btn-light btn-sm border" @onclick="() => DeleteBranch(b.Name)"
+                                            disabled="@(b.Name == currentBranch || branchProtectionRules.Any(r => BranchMatchesPattern(b.Name, r.BranchPattern) && r.PreventDeletion))">
                                         <i class="bi bi-trash text-danger"></i>
                                     </button>
                                 </div>
@@ -441,6 +483,159 @@ else
                 </div>
             </div>
         }
+        else if (activeTab == "releases")
+        {
+            <div class="releases-view mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Releases</h5>
+                    @if (UserService.IsLoggedIn)
+                    {
+                        <button class="btn btn-gh-primary btn-sm" @onclick="() => showCreateRelease = true">
+                            <i class="bi bi-plus-lg me-1"></i>New release
+                        </button>
+                    }
+                </div>
+
+                @if (showCreateRelease)
+                {
+                    <div class="card border shadow-sm mb-4">
+                        <div class="card-header bg-light-subtle py-2">
+                            <h6 class="fw-bold mb-0 small">Create a new release</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Tag</label>
+                                <select class="form-select form-select-sm" @bind="newReleaseTagName">
+                                    <option value="">Choose a tag...</option>
+                                    @foreach (var t in tags)
+                                    {
+                                        <option value="@t.Name">@t.Name</option>
+                                    }
+                                </select>
+                                <div class="form-text">Select an existing tag for this release.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Release title</label>
+                                <input type="text" class="form-control form-control-sm" @bind="newReleaseTitle" placeholder="e.g. v1.0.0" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Description</label>
+                                <textarea class="form-control form-control-sm" @bind="newReleaseBody" rows="6" placeholder="Describe this release..."></textarea>
+                            </div>
+                            <div class="d-flex gap-3 mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="releaseDraft" @bind="newReleaseIsDraft" />
+                                    <label class="form-check-label small" for="releaseDraft">Draft</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="releasePrerelease" @bind="newReleaseIsPrerelease" />
+                                    <label class="form-check-label small" for="releasePrerelease">Pre-release</label>
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(releaseError))
+                            {
+                                <div class="alert alert-danger small py-2">@releaseError</div>
+                            }
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-gh-primary btn-sm" @onclick="CreateRelease">Publish release</button>
+                                <button class="btn btn-light btn-sm border" @onclick="() => showCreateRelease = false">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (!releases.Any() && !showCreateRelease)
+                {
+                    <div class="card border shadow-sm">
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-tag display-4 text-muted mb-3 d-block"></i>
+                            <h6 class="fw-bold">No releases yet</h6>
+                            <p class="text-muted small">Create a release to bundle your software and share it with users.</p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var release in releases)
+                    {
+                        <div class="card border shadow-sm mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h5 class="fw-bold mb-1">
+                                            <i class="bi bi-tag me-1 text-success"></i> @release.Title
+                                            @if (release.IsDraft) { <span class="badge bg-warning text-dark ms-1">Draft</span> }
+                                            @if (release.IsPrerelease) { <span class="badge bg-info text-dark ms-1">Pre-release</span> }
+                                        </h5>
+                                        <div class="small text-muted mb-2">
+                                            <span class="font-monospace bg-light px-1 rounded">@release.TagName</span>
+                                            <span class="mx-1">&middot;</span>
+                                            @release.Author released this @GetRelativeTime(release.CreatedAt)
+                                        </div>
+                                    </div>
+                                    @if (UserService.IsLoggedIn)
+                                    {
+                                        <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteRelease(release.Id)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    }
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(release.Body))
+                                {
+                                    <div class="border-top pt-3 mt-2">
+                                        @ConvertMarkdownToHtml(release.Body)
+                                    </div>
+                                }
+
+                                @if (release.Assets.Any())
+                                {
+                                    <div class="border-top pt-3 mt-2">
+                                        <h6 class="small fw-bold mb-2">Assets</h6>
+                                        @foreach (var asset in release.Assets)
+                                        {
+                                            <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi bi-file-earmark me-2 text-muted"></i>
+                                                    <a href="/api/v1/repos/@(System.IO.Path.GetFileName(RepoFullPath))/releases/@release.Id/assets/@asset.Id" class="text-decoration-none small">@asset.FileName</a>
+                                                    <span class="text-muted small ms-2">(@FormatFileSize(asset.Size))</span>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="text-muted x-small"><i class="bi bi-download me-1"></i>@asset.DownloadCount</span>
+                                                    @if (UserService.IsLoggedIn)
+                                                    {
+                                                        <button class="btn btn-outline-danger btn-sm py-0 px-1" @onclick="() => DeleteAsset(asset.Id, release.Id)">
+                                                            <i class="bi bi-x-lg" style="font-size: 10px;"></i>
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+
+                                @if (UserService.IsLoggedIn)
+                                {
+                                    <div class="border-top pt-3 mt-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <InputFile OnChange="(e) => HandleAssetUpload(e, release.Id)" class="form-control form-control-sm" style="max-width: 300px;" />
+                                            @if (assetUploading)
+                                            {
+                                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                            }
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(assetUploadError))
+                                        {
+                                            <div class="text-danger small mt-1">@assetUploadError</div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        }
         else if (activeTab == "settings")
         {
             <div class="settings-view mb-5">
@@ -448,6 +643,41 @@ else
                     <h5 class="fw-bold">Settings</h5>
                     <p class="text-muted small">Manage repository lifecycle.</p>
                 </div>
+
+                @if (UserService.IsLoggedIn)
+                {
+                    <div class="card border shadow-sm mb-4">
+                        <div class="card-header bg-light-subtle py-2 small fw-bold">
+                            <i class="bi bi-info-circle me-1"></i> General
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Description</label>
+                                <input type="text" class="form-control form-control-sm" @bind="settingsDescription" placeholder="Short description of your repository" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Visibility</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="settingsVisibility" id="settingsPublic" checked="@(!settingsIsPrivate)" @onchange="() => settingsIsPrivate = false" />
+                                    <label class="form-check-label small" for="settingsPublic">
+                                        <i class="bi bi-journal-bookmark me-1"></i> Public — anyone can see this repository
+                                    </label>
+                                </div>
+                                <div class="form-check mt-1">
+                                    <input class="form-check-input" type="radio" name="settingsVisibility" id="settingsPrivate" checked="@settingsIsPrivate" @onchange="() => settingsIsPrivate = true" />
+                                    <label class="form-check-label small" for="settingsPrivate">
+                                        <i class="bi bi-lock me-1"></i> Private — only you can see this repository
+                                    </label>
+                                </div>
+                            </div>
+                            <button class="btn btn-gh-primary btn-sm" @onclick="SaveGeneralSettings">Save changes</button>
+                            @if (!string.IsNullOrEmpty(settingsSaveMessage))
+                            {
+                                <span class="text-success small ms-2"><i class="bi bi-check-circle me-1"></i>@settingsSaveMessage</span>
+                            }
+                        </div>
+                    </div>
+                }
 
                 <div class="card border shadow-sm mb-4">
                     <div class="card-header bg-light-subtle py-2 small fw-bold">
@@ -550,6 +780,46 @@ else
 
                 @if (UserService.IsLoggedIn)
                 {
+                    <div class="card border shadow-sm mb-4">
+                        <div class="card-header bg-light-subtle py-2 small fw-bold">
+                            <i class="bi bi-people me-1"></i> Collaborators
+                        </div>
+                        <div class="card-body">
+                            @if (collaborators.Any())
+                            {
+                                <div class="list-group list-group-flush mb-3">
+                                    @foreach (var collab in collaborators)
+                                    {
+                                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                            <div>
+                                                <a href="/profile/@collab.Username" class="text-decoration-none fw-bold">@collab.Username</a>
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary ms-2">@collab.Permission</span>
+                                            </div>
+                                            <button class="btn btn-outline-danger btn-sm" @onclick="() => RemoveCollaborator(collab.Username)">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted small mb-3">No collaborators yet.</p>
+                            }
+                            <div class="d-flex gap-2">
+                                <input type="text" class="form-control form-control-sm" @bind="newCollaboratorUsername" placeholder="Username" style="max-width: 200px;" />
+                                <select class="form-select form-select-sm" @bind="newCollaboratorPermission" style="max-width: 120px;">
+                                    <option value="Read">Read</option>
+                                    <option value="Write">Write</option>
+                                    <option value="Admin">Admin</option>
+                                </select>
+                                <button class="btn btn-gh-primary btn-sm" @onclick="AddCollaborator" disabled="@string.IsNullOrWhiteSpace(newCollaboratorUsername)">
+                                    <i class="bi bi-plus-lg me-1"></i>Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="card border-danger shadow-sm">
                         <div class="card-header bg-danger bg-opacity-10 text-danger py-2 small fw-bold border-danger border-opacity-25">Danger Zone</div>
                         <div class="card-body">
@@ -563,6 +833,53 @@ else
                         </div>
                     </div>
                 }
+            </div>
+        }
+        else if (activeTab == "blame")
+        {
+            <div class="mb-3">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0 small">
+                        <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
+                        <li class="breadcrumb-item active">@Path</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="card shadow-sm overflow-hidden">
+                <div class="card-header bg-light-subtle py-2 px-3">
+                    <span class="small fw-bold"><i class="bi bi-person-lines-fill me-1"></i> Blame</span>
+                    <button class="btn btn-link btn-sm text-decoration-none float-end" @onclick="ExitBlameView">
+                        <i class="bi bi-arrow-left me-1"></i>Back to code
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    @if (blameLines.Any())
+                    {
+                        <table class="table table-sm table-borderless mb-0 font-monospace" style="font-size: 12px;">
+                            @foreach (var line in blameLines)
+                            {
+                                <tr class="@(line.HunkIndex % 2 == 0 ? "" : "bg-light")">
+                                    @if (line.IsFirstInHunk)
+                                    {
+                                        <td class="text-muted border-end px-2 py-0 text-nowrap align-top" style="width: 200px; max-width: 200px; overflow: hidden; text-overflow: ellipsis;" rowspan="@line.HunkLineCount">
+                                            <div class="d-flex flex-column">
+                                                <a href="/repo/@RepoName/commit/@line.CommitSha" class="text-decoration-none text-primary" style="font-size: 11px;">@line.ShortSha</a>
+                                                <span class="text-truncate" style="font-size: 11px;">@line.Author</span>
+                                                <span style="font-size: 10px;" class="text-muted">@line.Date.ToString("yyyy-MM-dd")</span>
+                                            </div>
+                                        </td>
+                                    }
+                                    <td class="text-muted text-end border-end px-2 py-0 select-none" style="width: 40px;">@line.LineNumber</td>
+                                    <td class="px-2 py-0"><pre class="m-0 d-inline" style="white-space: pre-wrap;">@line.Content</pre></td>
+                                </tr>
+                            }
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted p-3">Unable to load blame information.</p>
+                    }
+                </div>
             </div>
         }
         else if (activeTab == "edit" || activeTab == "add-file")
@@ -586,10 +903,52 @@ else
                     }
 
                     <div class="card border shadow-sm mb-4">
+                        @{
+                            var editingFilePath = activeTab == "edit" ? Path : newFileName;
+                            var isEditingMarkdown = editingFilePath?.EndsWith(".md", StringComparison.OrdinalIgnoreCase) == true;
+                        }
+                        <div class="card-header bg-light-subtle py-1 d-flex align-items-center gap-2">
+                            <button class="btn btn-sm @(editorMode == "edit" ? "btn-secondary" : "btn-light border") px-3" @onclick='() => editorMode = "edit"'>
+                                <i class="bi bi-code-slash me-1"></i>Edit file
+                            </button>
+                            @if (isEditingMarkdown)
+                            {
+                                <button class="btn btn-sm @(editorMode == "preview" ? "btn-secondary" : "btn-light border") px-3" @onclick='() => editorMode = "preview"'>
+                                    <i class="bi bi-eye me-1"></i>Preview
+                                </button>
+                            }
+                            <span class="ms-auto small text-muted">
+                                @if (!string.IsNullOrEmpty(editingContent))
+                                {
+                                    @($"{editingContent.Split('\n').Length} lines · {Encoding.UTF8.GetByteCount(editingContent)} bytes")
+                                }
+                            </span>
+                        </div>
                         <div class="card-body p-0">
-                            <textarea class="form-control border-0 font-monospace p-3"
-                                      style="min-height: 400px; font-size: 13px; line-height: 1.5; resize: vertical;"
-                                      @bind="editingContent" @bind:event="oninput"></textarea>
+                            @if (editorMode == "preview" && isEditingMarkdown)
+                            {
+                                <div class="p-4 markdown-body" style="min-height: 400px;">
+                                    @ConvertMarkdownToHtml(editingContent)
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="editor-wrapper position-relative">
+                                    <div class="line-numbers-gutter position-absolute text-end pe-2 text-muted user-select-none"
+                                         style="left: 0; top: 0; width: 50px; height: 100%; font-size: 13px; line-height: 1.5; padding-top: 12px; background: #f6f8fa; border-right: 1px solid #d0d7de; font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace; overflow: hidden;">
+                                        @{
+                                            var editorLineCount = string.IsNullOrEmpty(editingContent) ? 1 : editingContent.Split('\n').Length;
+                                        }
+                                        @for (int ln = 1; ln <= editorLineCount; ln++)
+                                        {
+                                            <div style="height: 19.5px; font-size: 12px; color: #8b949e;">@ln</div>
+                                        }
+                                    </div>
+                                    <textarea id="codeEditor" class="form-control border-0 font-monospace"
+                                              style="min-height: 400px; font-size: 13px; line-height: 1.5; resize: vertical; padding-left: 60px; padding-top: 12px; padding-right: 12px;"
+                                              @bind="editingContent" @bind:event="oninput"></textarea>
+                                </div>
+                            }
                         </div>
                     </div>
 
@@ -647,6 +1006,58 @@ else
                 }
             </div>
         }
+        else if (activeTab == "graph")
+        {
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light-subtle py-2">
+                    <h6 class="fw-bold mb-0 small"><i class="bi bi-diagram-3 me-1"></i> Commit Graph</h6>
+                </div>
+                <div class="card-body p-0" style="overflow-x: auto;">
+                    @if (graphEntries.Any())
+                    {
+                        <div class="d-flex">
+                            <svg width="@(graphMaxLane * 30 + 40)" height="@(graphEntries.Count * 32 + 20)" style="flex-shrink: 0;">
+                                @foreach (var entry in graphEntries)
+                                {
+                                    var cx = entry.Lane * 30 + 20;
+                                    var cy = entry.Row * 32 + 26;
+                                    @foreach (var parentRow in entry.ParentRows)
+                                    {
+                                        var parentEntry = graphEntries.FirstOrDefault(e => e.Row == parentRow);
+                                        if (parentEntry != null)
+                                        {
+                                            var px = parentEntry.Lane * 30 + 20;
+                                            var py = parentEntry.Row * 32 + 26;
+                                            <line x1="@cx" y1="@cy" x2="@px" y2="@py" stroke="@entry.Color" stroke-width="2" opacity="0.6" />
+                                        }
+                                    }
+                                }
+                                @foreach (var entry in graphEntries)
+                                {
+                                    var cx = entry.Lane * 30 + 20;
+                                    var cy = entry.Row * 32 + 26;
+                                    <circle cx="@cx" cy="@cy" r="5" fill="@entry.Color" stroke="white" stroke-width="2" />
+                                }
+                            </svg>
+                            <div class="flex-grow-1" style="font-size: 12px; font-family: monospace;">
+                                @foreach (var entry in graphEntries)
+                                {
+                                    <div style="height: 32px; line-height: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 8px;">
+                                        <a href="/repo/@RepoName/commit/@entry.Sha" class="text-decoration-none" style="color: #0969da;">@entry.ShortSha</a>
+                                        <span class="ms-2">@TruncateMessage(entry.Message, 60)</span>
+                                        <span class="ms-2 text-muted">@entry.Author · @GetRelativeTime(entry.Date)</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted p-3">No commits to display.</p>
+                    }
+                </div>
+            </div>
+        }
         else if (activeTab == "commit-detail" && selectedCommit != null)
         {
             <div class="commit-detail mb-5">
@@ -680,31 +1091,35 @@ else
                         <div class="card-body p-0">
                             @if (diffViewMode == "unified")
                             {
-                                <div class="diff-container bg-white font-monospace" style="font-size: 12px; line-height: 1.4;">
-                                    @foreach (var line in patch.DiffLines)
+                                <div class="diff-container bg-white font-monospace" style="font-size: 12px; line-height: 1.4; overflow-x: auto;">
+                                    @foreach (var row in GetUnifiedDiffRows(patch.DiffLines))
                                     {
-                                        <div class="diff-line d-flex @(line.StartsWith("+") ? "diff-added" : line.StartsWith("-") ? "diff-removed" : "diff-context")">
-                                            <div class="diff-sign px-2 border-end text-center" style="width: 25px;">@(line.Length > 0 ? line[0] : ' ')</div>
-                                            <div class="diff-text px-2 text-wrap" style="white-space: pre-wrap;">@(line.Length > 0 ? line.Substring(1) : "")</div>
+                                        <div class="diff-line d-flex @row.CssClass">
+                                            <div class="diff-linenum text-end border-end user-select-none" style="width: 45px; min-width: 45px; padding: 0 6px; color: #8b949e;">@row.OldNum</div>
+                                            <div class="diff-linenum text-end border-end user-select-none" style="width: 45px; min-width: 45px; padding: 0 6px; color: #8b949e;">@row.NewNum</div>
+                                            <div class="diff-sign px-1 text-center user-select-none" style="width: 20px; min-width: 20px;">@row.Sign</div>
+                                            <div class="diff-text px-2 text-wrap flex-grow-1" style="white-space: pre-wrap;">@row.Content</div>
                                         </div>
                                     }
                                 </div>
                             }
                             else
                             {
-                                <div class="diff-container bg-white font-monospace border-top" style="font-size: 12px; line-height: 1.4;">
-                                    @foreach (var pair in GetSplitDiff(patch.DiffLines))
+                                <div class="diff-container bg-white font-monospace border-top" style="font-size: 12px; line-height: 1.4; overflow-x: auto;">
+                                    @foreach (var pair in GetSplitDiffWithLineNumbers(patch.DiffLines))
                                     {
                                         <div class="d-flex border-bottom">
                                             <div class="col-6 diff-line border-end @(pair.Left?.StartsWith("-") == true ? "diff-removed" : pair.Left == null && pair.Right?.StartsWith("+") == true ? "diff-empty" : "diff-context")">
                                                 <div class="d-flex h-100">
-                                                    <div class="diff-sign px-2 border-end text-center" style="width: 25px;">@(pair.Left?.Length > 0 ? pair.Left[0] : ' ')</div>
+                                                    <div class="diff-linenum text-end border-end user-select-none" style="width: 40px; min-width: 40px; padding: 0 4px; color: #8b949e;">@(pair.LeftLineNum > 0 ? pair.LeftLineNum.ToString() : "")</div>
+                                                    <div class="diff-sign px-1 text-center user-select-none" style="width: 20px; min-width: 20px;">@(pair.Left?.Length > 0 ? pair.Left[0] : ' ')</div>
                                                     <div class="diff-text px-2 text-wrap flex-grow-1" style="white-space: pre-wrap;">@(pair.Left?.Length > 0 ? pair.Left.Substring(1) : "")</div>
                                                 </div>
                                             </div>
                                             <div class="col-6 diff-line @(pair.Right?.StartsWith("+") == true ? "diff-added" : pair.Right == null && pair.Left?.StartsWith("-") == true ? "diff-empty" : "diff-context")">
                                                 <div class="d-flex h-100">
-                                                    <div class="diff-sign px-2 border-end text-center" style="width: 25px;">@(pair.Right?.Length > 0 ? pair.Right[0] : ' ')</div>
+                                                    <div class="diff-linenum text-end border-end user-select-none" style="width: 40px; min-width: 40px; padding: 0 4px; color: #8b949e;">@(pair.RightLineNum > 0 ? pair.RightLineNum.ToString() : "")</div>
+                                                    <div class="diff-sign px-1 text-center user-select-none" style="width: 20px; min-width: 20px;">@(pair.Right?.Length > 0 ? pair.Right[0] : ' ')</div>
                                                     <div class="diff-text px-2 text-wrap flex-grow-1" style="white-space: pre-wrap;">@(pair.Right?.Length > 0 ? pair.Right.Substring(1) : "")</div>
                                                 </div>
                                             </div>
@@ -841,26 +1256,26 @@ else
     }
 
     .diff-added {
-        background-color: #e6ffec;
-        color: #1f883d;
+        background-color: var(--diff-added-bg, #e6ffec);
+        color: var(--diff-added-fg, #1f883d);
     }
 
     .diff-removed {
-        background-color: #fff1f0;
-        color: #cf222e;
+        background-color: var(--diff-removed-bg, #fff1f0);
+        color: var(--diff-removed-fg, #cf222e);
     }
 
     .diff-context {
-        background-color: white;
-        color: #1f2328;
+        background-color: var(--diff-context-bg, white);
+        color: var(--diff-context-fg, #1f2328);
     }
 
     .diff-empty {
-        background-color: #f6f8fa;
+        background-color: var(--diff-empty-bg, #f6f8fa);
     }
 
     .diff-line {
-        border-bottom: 1px solid #f0f0f0;
+        border-bottom: 1px solid var(--gh-border, #f0f0f0);
         min-height: 20px;
     }
 
@@ -986,6 +1401,30 @@ else
 
     .line-numbers .line-numbers-rows > span:before {
         color: #8b949e !important;
+    }
+
+    .diff-linenum {
+        font-size: 11px;
+        line-height: inherit;
+    }
+
+    .diff-hunk .diff-text {
+        font-style: italic;
+        font-size: 11px;
+    }
+
+    .editor-wrapper textarea {
+        background: transparent;
+    }
+
+    .editor-wrapper textarea:focus {
+        box-shadow: none;
+        outline: none;
+    }
+
+    .line-numbers-gutter {
+        pointer-events: none;
+        z-index: 1;
     }
 </style>
 
@@ -1161,6 +1600,7 @@ else
     private string commitMessage = "";
     private string commitDescription = "";
     private string newFileName = "";
+    private string editorMode = "edit"; // "edit" or "preview"
     private bool showDeleteModal = false;
     private bool showNewBranchModal = false;
     private bool showBranchDropdown = false;
@@ -1281,6 +1721,202 @@ else
     private GitCommit? selectedCommit;
     private List<FilePatch> commitPatches = new();
 
+    // Blame view state
+    private List<BlameLine> blameLines = new();
+
+    private class BlameLine
+    {
+        public int HunkIndex { get; set; }
+        public int HunkLineCount { get; set; }
+        public bool IsFirstInHunk { get; set; }
+        public string CommitSha { get; set; } = "";
+        public string ShortSha { get; set; } = "";
+        public string Author { get; set; } = "";
+        public DateTime Date { get; set; }
+        public int LineNumber { get; set; }
+        public string Content { get; set; } = "";
+    }
+
+    private void ExitBlameView() { activeTab = "code"; LoadRepoData(); }
+
+    // Commit graph state
+    private List<GraphEntry> graphEntries = new();
+    private int graphMaxLane = 0;
+    private static readonly string[] GraphColors = new[] { "#0969da", "#cf222e", "#1a7f37", "#8250df", "#bf8700", "#0550ae", "#e16f24", "#6639ba" };
+
+    private class GraphEntry
+    {
+        public int Row { get; set; }
+        public int Lane { get; set; }
+        public string Sha { get; set; } = "";
+        public string ShortSha { get; set; } = "";
+        public string Message { get; set; } = "";
+        public string Author { get; set; } = "";
+        public DateTime Date { get; set; }
+        public string Color { get; set; } = "";
+        public List<int> ParentRows { get; set; } = new();
+    }
+
+    private void LoadGraph()
+    {
+        graphEntries.Clear();
+        graphMaxLane = 0;
+        try
+        {
+            using var repo = new Repository(RepoFullPath);
+            var shaToRow = new Dictionary<string, int>();
+            var activeLanes = new Dictionary<string, int>(); // sha -> lane
+            int row = 0;
+            int nextLane = 0;
+
+            // Collect commits from all branches
+            var allTips = repo.Branches.Select(b => b.Tip).Where(t => t != null).ToList();
+            if (!allTips.Any()) return;
+
+            var filter = new CommitFilter { IncludeReachableFrom = allTips, SortBy = CommitSortStrategies.Topological | CommitSortStrategies.Time };
+            var commits = repo.Commits.QueryBy(filter).Take(100).ToList();
+
+            // Assign branch colors
+            var branchColors = new Dictionary<string, string>();
+            int colorIdx = 0;
+            foreach (var branch in repo.Branches)
+            {
+                if (branch.Tip != null)
+                    branchColors[branch.Tip.Sha] = GraphColors[colorIdx++ % GraphColors.Length];
+            }
+
+            foreach (var commit in commits)
+            {
+                // Determine lane for this commit
+                int lane;
+                if (activeLanes.ContainsKey(commit.Sha))
+                {
+                    lane = activeLanes[commit.Sha];
+                    activeLanes.Remove(commit.Sha);
+                }
+                else
+                {
+                    lane = nextLane++;
+                }
+
+                var color = branchColors.ContainsKey(commit.Sha) ? branchColors[commit.Sha] : GraphColors[lane % GraphColors.Length];
+                shaToRow[commit.Sha] = row;
+
+                var entry = new GraphEntry
+                {
+                    Row = row,
+                    Lane = lane,
+                    Sha = commit.Sha,
+                    ShortSha = commit.Sha[..7],
+                    Message = commit.MessageShort,
+                    Author = commit.Author.Name,
+                    Date = commit.Author.When.DateTime,
+                    Color = color
+                };
+
+                // Link parents
+                foreach (var parent in commit.Parents)
+                {
+                    if (shaToRow.ContainsKey(parent.Sha))
+                    {
+                        entry.ParentRows.Add(shaToRow[parent.Sha]);
+                    }
+                    if (!activeLanes.ContainsKey(parent.Sha))
+                    {
+                        activeLanes[parent.Sha] = lane;
+                    }
+                }
+
+                graphEntries.Add(entry);
+                if (lane > graphMaxLane) graphMaxLane = lane;
+                row++;
+            }
+        }
+        catch { }
+    }
+
+    private string TruncateMessage(string msg, int max)
+    {
+        return msg.Length <= max ? msg : msg[..max] + "...";
+    }
+
+    private void ToggleBlameView()
+    {
+        if (activeTab == "blame")
+        {
+            activeTab = "code";
+            LoadRepoData();
+            return;
+        }
+        activeTab = "blame";
+        LoadBlame();
+    }
+
+    private void LoadBlame()
+    {
+        blameLines.Clear();
+        if (string.IsNullOrEmpty(Path)) return;
+        try
+        {
+            using var repo = new Repository(RepoFullPath);
+            var result = repo.Blame(Path);
+            var allLines = fileContent.Split('\n');
+            int hunkIndex = 0;
+            foreach (var hunk in result)
+            {
+                var lineCount = hunk.LineCount;
+                for (int i = 0; i < lineCount; i++)
+                {
+                    var globalLine = hunk.FinalStartLineNumber + i;
+                    blameLines.Add(new BlameLine
+                    {
+                        HunkIndex = hunkIndex,
+                        HunkLineCount = lineCount,
+                        IsFirstInHunk = i == 0,
+                        CommitSha = hunk.FinalCommit.Sha,
+                        ShortSha = hunk.FinalCommit.Sha[..7],
+                        Author = hunk.FinalCommit.Author.Name,
+                        Date = hunk.FinalCommit.Author.When.DateTime,
+                        LineNumber = globalLine + 1,
+                        Content = globalLine < allLines.Length ? allLines[globalLine] : ""
+                    });
+                }
+                hunkIndex++;
+            }
+        }
+        catch { }
+    }
+
+    // Repository metadata (from DB)
+    private bool repoIsPrivate = false;
+    private string repoDescription = "";
+    private string repoOwner = "";
+    private string repoForkedFrom = "";
+    private bool repoIsForked = false;
+    private int repoForkCount = 0;
+
+    // Settings tab state
+    private bool settingsIsPrivate = false;
+    private string settingsDescription = "";
+    private string settingsSaveMessage = "";
+
+    // Collaborators state
+    private List<MyPersonalGit.Models.RepositoryCollaborator> collaborators = new();
+    private string newCollaboratorUsername = "";
+    private string newCollaboratorPermission = "Read";
+
+    // Releases state
+    private List<MyPersonalGit.Models.Release> releases = new();
+    private bool showCreateRelease = false;
+    private string newReleaseTagName = "";
+    private string newReleaseTitle = "";
+    private string newReleaseBody = "";
+    private bool newReleaseIsDraft = false;
+    private bool newReleaseIsPrerelease = false;
+    private string releaseError = "";
+    private bool assetUploading = false;
+    private string assetUploadError = "";
+
     // Branch protection
     private List<BranchProtectionRule> branchProtectionRules = new();
     private bool showAddProtectionRule = false;
@@ -1333,6 +1969,147 @@ else
         }
 
         LoadRepoData();
+        await LoadRepoMetadata();
+    }
+
+    private async Task LoadRepoMetadata()
+    {
+        var repoName = RepoFullPath;
+        var dirName = System.IO.Path.GetFileName(repoName);
+        var meta = await RepoService.GetRepositoryAsync(dirName);
+        if (meta != null)
+        {
+            repoIsPrivate = meta.IsPrivate;
+            repoDescription = meta.Description ?? "";
+            repoOwner = meta.Owner;
+            repoForkedFrom = meta.ForkedFrom ?? "";
+            repoForkCount = meta.Forks;
+            settingsIsPrivate = meta.IsPrivate;
+            settingsDescription = meta.Description ?? "";
+        }
+        else
+        {
+            repoIsPrivate = false;
+            repoDescription = "";
+            repoOwner = "";
+            repoForkedFrom = "";
+            repoForkCount = 0;
+            settingsIsPrivate = false;
+            settingsDescription = "";
+        }
+
+        // Check if current user already forked this repo
+        if (UserService.IsLoggedIn)
+            repoIsForked = await RepoService.IsForkedAsync(dirName, UserService.Username);
+
+        // Enforce private repo access: if private and user is not owner or collaborator, block
+        if (repoIsPrivate)
+        {
+            var hasAccess = UserService.IsLoggedIn && (
+                repoOwner.Equals(UserService.Username, StringComparison.OrdinalIgnoreCase) ||
+                await CollaboratorService.IsCollaboratorAsync(dirName, UserService.Username));
+            if (!hasAccess)
+                notFound = true;
+        }
+    }
+
+    private async Task SaveGeneralSettings()
+    {
+        settingsSaveMessage = "";
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        await RepoService.EnsureRepositoryRecordAsync(dirName, UserService.Username);
+        await RepoService.UpdateRepositoryAsync(dirName, repo =>
+        {
+            repo.Description = settingsDescription;
+            repo.IsPrivate = settingsIsPrivate;
+        });
+        repoIsPrivate = settingsIsPrivate;
+        repoDescription = settingsDescription;
+        settingsSaveMessage = "Settings saved!";
+        StateHasChanged();
+    }
+
+    private async Task LoadCollaborators()
+    {
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        collaborators = await CollaboratorService.GetCollaboratorsAsync(dirName);
+    }
+
+    private async Task AddCollaborator()
+    {
+        if (string.IsNullOrWhiteSpace(newCollaboratorUsername)) return;
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        var perm = Enum.Parse<MyPersonalGit.Models.CollaboratorPermission>(newCollaboratorPermission);
+        await CollaboratorService.AddCollaboratorAsync(dirName, newCollaboratorUsername, perm, UserService.Username);
+        newCollaboratorUsername = "";
+        await LoadCollaborators();
+    }
+
+    private async Task RemoveCollaborator(string username)
+    {
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        await CollaboratorService.RemoveCollaboratorAsync(dirName, username);
+        await LoadCollaborators();
+    }
+
+    private async Task LoadReleases()
+    {
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        releases = await ReleaseService.GetReleasesAsync(dirName);
+    }
+
+    private async Task CreateRelease()
+    {
+        releaseError = "";
+        if (string.IsNullOrWhiteSpace(newReleaseTagName)) { releaseError = "Please select a tag."; return; }
+        if (string.IsNullOrWhiteSpace(newReleaseTitle)) { releaseError = "Please enter a title."; return; }
+
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        await ReleaseService.CreateReleaseAsync(dirName, newReleaseTagName, newReleaseTitle, newReleaseBody, UserService.Username, newReleaseIsDraft, newReleaseIsPrerelease);
+        newReleaseTagName = "";
+        newReleaseTitle = "";
+        newReleaseBody = "";
+        newReleaseIsDraft = false;
+        newReleaseIsPrerelease = false;
+        showCreateRelease = false;
+        await LoadReleases();
+    }
+
+    private async Task DeleteRelease(int releaseId)
+    {
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        await ReleaseService.DeleteReleaseAsync(dirName, releaseId);
+        await LoadReleases();
+    }
+
+    private async Task HandleAssetUpload(InputFileChangeEventArgs e, int releaseId)
+    {
+        assetUploadError = "";
+        assetUploading = true;
+        StateHasChanged();
+        try
+        {
+            foreach (var file in e.GetMultipleFiles(10))
+            {
+                if (file.Size > maxFileSize) { assetUploadError = $"File {file.Name} exceeds 50MB limit."; continue; }
+                using var stream = file.OpenReadStream(maxFileSize);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                await ReleaseService.AddAssetAsync(releaseId, file.Name, file.Size, file.ContentType, ms.ToArray());
+            }
+            await LoadReleases();
+        }
+        catch (Exception ex)
+        {
+            assetUploadError = $"Upload failed: {ex.Message}";
+        }
+        assetUploading = false;
+    }
+
+    private async Task DeleteAsset(int assetId, int releaseId)
+    {
+        await ReleaseService.DeleteAssetAsync(assetId);
+        await LoadReleases();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -1344,6 +2121,10 @@ else
         if (showFolderUploadModal)
         {
             try { await JS.InvokeVoidAsync("folderUpload.setWebkitDirectory", "folderInput"); } catch { }
+        }
+        if ((activeTab == "edit" || activeTab == "add-file") && editorMode == "edit")
+        {
+            try { await JS.InvokeVoidAsync("editorHelper.enableTabKey", "codeEditor"); } catch { }
         }
     }
 
@@ -1360,6 +2141,9 @@ else
         if (tab == "code" && string.IsNullOrEmpty(Path)) Nav.NavigateTo($"/repo/{RepoName}");
         else LoadRepoData();
         if (tab == "settings" || tab == "branches") await LoadBranchProtectionRules();
+        if (tab == "settings") await LoadCollaborators();
+        if (tab == "releases") await LoadReleases();
+        if (tab == "graph") LoadGraph();
     }
 
     private void LoadRepoData()
@@ -1538,8 +2322,20 @@ else
     private void ViewFileHistory() { activeTab = "commits"; LoadRepoData(); }
     private void ClearFileFilter() { Path = null; activeTab = "commits"; LoadRepoData(); }
     private void SwitchBranch(string name) { currentBranch = name; Path = null; activeTab = "code"; showBranchDropdown = false; LoadRepoData(); }
-    private void EnterEditMode() { editingContent = fileContent; commitMessage = $"Update {System.IO.Path.GetFileName(Path)}"; activeTab = "edit"; }
-    private void EnterAddFileMode() { editingContent = ""; newFileName = ""; commitMessage = "Add file"; activeTab = "add-file"; }
+    private void EnterEditMode() { editingContent = fileContent; commitMessage = $"Update {System.IO.Path.GetFileName(Path)}"; editorMode = "edit"; activeTab = "edit"; }
+    private void EnterAddFileMode() { editingContent = ""; newFileName = ""; commitMessage = "Add file"; editorMode = "edit"; activeTab = "add-file"; }
+
+    private async Task ForkRepository()
+    {
+        if (!UserService.IsLoggedIn || repoIsForked) return;
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        var fork = await RepoService.ForkRepositoryAsync(dirName, UserService.Username, RootPath);
+        if (fork != null)
+        {
+            var forkedDisplayName = fork.ForkedRepo.EndsWith(".git") ? fork.ForkedRepo[..^4] : fork.ForkedRepo;
+            Nav.NavigateTo($"/repo/{forkedDisplayName}");
+        }
+    }
 
     private void CreateBranch()
     {
@@ -1547,6 +2343,22 @@ else
         var target = repo.Lookup<Commit>(latestCommit?.Sha);
         if (target != null) repo.CreateBranch(newBranchName, target);
         currentBranch = newBranchName; showNewBranchModal = false; LoadRepoData();
+    }
+
+    private void DeleteBranch(string branchName)
+    {
+        if (!UserService.IsLoggedIn || branchName == currentBranch) return;
+        try
+        {
+            using var repo = new Repository(RepoFullPath);
+            var branch = repo.Branches[branchName];
+            if (branch != null)
+            {
+                repo.Branches.Remove(branch);
+            }
+            LoadRepoData();
+        }
+        catch { }
     }
 
     private void CreateTag()
@@ -1648,23 +2460,98 @@ else
         }
     }
 
+    private List<UnifiedDiffRow> GetUnifiedDiffRows(List<string> lines)
+    {
+        var rows = new List<UnifiedDiffRow>();
+        int oldLine = 0, newLine = 0;
+
+        foreach (var line in lines)
+        {
+            if (line.StartsWith("diff") || line.StartsWith("index") || line.StartsWith("---") || line.StartsWith("+++"))
+                continue;
+
+            if (line.StartsWith("@@"))
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(line, @"@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@");
+                if (match.Success)
+                {
+                    oldLine = int.Parse(match.Groups[1].Value);
+                    newLine = int.Parse(match.Groups[2].Value);
+                }
+                rows.Add(new UnifiedDiffRow { OldNum = "...", NewNum = "...", Sign = ' ', Content = line, CssClass = "diff-hunk" });
+                continue;
+            }
+
+            if (line.StartsWith("+"))
+            {
+                rows.Add(new UnifiedDiffRow { OldNum = "", NewNum = newLine.ToString(), Sign = '+', Content = line.Length > 1 ? line.Substring(1) : "", CssClass = "diff-added" });
+                newLine++;
+            }
+            else if (line.StartsWith("-"))
+            {
+                rows.Add(new UnifiedDiffRow { OldNum = oldLine.ToString(), NewNum = "", Sign = '-', Content = line.Length > 1 ? line.Substring(1) : "", CssClass = "diff-removed" });
+                oldLine++;
+            }
+            else
+            {
+                rows.Add(new UnifiedDiffRow { OldNum = oldLine.ToString(), NewNum = newLine.ToString(), Sign = ' ', Content = line, CssClass = "diff-context" });
+                oldLine++;
+                newLine++;
+            }
+        }
+        return rows;
+    }
+
     private List<DiffPair> GetSplitDiff(List<string> lines)
     {
+        return GetSplitDiffWithLineNumbers(lines);
+    }
+
+    private List<DiffPair> GetSplitDiffWithLineNumbers(List<string> lines)
+    {
         var pairs = new List<DiffPair>();
-        var removals = new List<string>();
-        var additions = new List<string>();
+        var removals = new List<(string Line, int Num)>();
+        var additions = new List<(string Line, int Num)>();
+        int oldLine = 0, newLine = 0;
+
         void Flush()
         {
             int max = Math.Max(removals.Count, additions.Count);
-            for (int i = 0; i < max; i++) pairs.Add(new DiffPair { Left = i < removals.Count ? removals[i] : null, Right = i < additions.Count ? additions[i] : null });
+            for (int i = 0; i < max; i++)
+            {
+                pairs.Add(new DiffPair
+                {
+                    Left = i < removals.Count ? removals[i].Line : null,
+                    LeftLineNum = i < removals.Count ? removals[i].Num : 0,
+                    Right = i < additions.Count ? additions[i].Line : null,
+                    RightLineNum = i < additions.Count ? additions[i].Num : 0
+                });
+            }
             removals.Clear(); additions.Clear();
         }
+
         foreach (var line in lines)
         {
-            if (line.StartsWith("@@") || line.StartsWith("diff") || line.StartsWith("index") || line.StartsWith("---") || line.StartsWith("+++")) continue;
-            if (line.StartsWith("-")) removals.Add(line);
-            else if (line.StartsWith("+")) additions.Add(line);
-            else { Flush(); pairs.Add(new DiffPair { Left = line, Right = line }); }
+            if (line.StartsWith("@@"))
+            {
+                Flush();
+                var match = System.Text.RegularExpressions.Regex.Match(line, @"@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@");
+                if (match.Success)
+                {
+                    oldLine = int.Parse(match.Groups[1].Value);
+                    newLine = int.Parse(match.Groups[2].Value);
+                }
+                continue;
+            }
+            if (line.StartsWith("diff") || line.StartsWith("index") || line.StartsWith("---") || line.StartsWith("+++")) continue;
+            if (line.StartsWith("-")) { removals.Add((line, oldLine)); oldLine++; }
+            else if (line.StartsWith("+")) { additions.Add((line, newLine)); newLine++; }
+            else
+            {
+                Flush();
+                pairs.Add(new DiffPair { Left = line, LeftLineNum = oldLine, Right = line, RightLineNum = newLine });
+                oldLine++; newLine++;
+            }
         }
         Flush(); return pairs;
     }
@@ -2076,5 +2963,6 @@ else
     public class BranchSummary { public string Name { get; set; } = ""; public bool IsCurrent { get; set; } }
     public class TagSummary { public string Name { get; set; } = ""; public string TargetSha { get; set; } = ""; }
     public class FilePatch { public string Path { get; set; } = ""; public int LinesAdded { get; set; } public int LinesDeleted { get; set; } public List<string> DiffLines { get; set; } = new(); }
-    public class DiffPair { public string? Left { get; set; } public string? Right { get; set; } }
+    public class DiffPair { public string? Left { get; set; } public string? Right { get; set; } public int LeftLineNum { get; set; } public int RightLineNum { get; set; } }
+    public class UnifiedDiffRow { public string OldNum { get; set; } = ""; public string NewNum { get; set; } = ""; public char Sign { get; set; } public string Content { get; set; } = ""; public string CssClass { get; set; } = ""; }
 }

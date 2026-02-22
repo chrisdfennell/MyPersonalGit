@@ -9,6 +9,7 @@
 @inject IJSRuntime JS
 @inject IRepositoryService RepoService
 @inject IAdminService AdminService
+@inject IActivityService ActivityService
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
 @rendermode InteractiveServer
@@ -123,9 +124,18 @@
                             <div class="flex-grow-1">
                                 <div class="d-flex align-items-center mb-1">
                                     <a href="/repo/@repo.DisplayName" class="h5 text-decoration-none fw-bold text-primary mb-0 me-2">@repo.DisplayName</a>
-                                    <span class="badge rounded-pill border text-muted fw-normal px-2" style="font-size: 12px;">Public</span>
+                                    <span class="badge rounded-pill border @(repo.IsPrivate ? "bg-warning bg-opacity-10 text-warning border-warning-subtle" : "text-muted") fw-normal px-2" style="font-size: 12px;">
+                                        @(repo.IsPrivate ? "Private" : "Public")
+                                    </span>
                                 </div>
-                                <p class="text-muted small mb-3">@repo.LastCommitMessage</p>
+                                @if (!string.IsNullOrEmpty(repo.Description))
+                                {
+                                    <p class="text-muted small mb-2">@repo.Description</p>
+                                }
+                                else
+                                {
+                                    <p class="text-muted small mb-2 fst-italic">@repo.LastCommitMessage</p>
+                                }
                                 <div class="d-flex align-items-center gap-3" style="font-size: 12px;">
                                     <span class="d-flex align-items-center">
                                         <span class="rounded-circle bg-primary me-1" style="width: 12px; height: 12px;"></span>
@@ -136,6 +146,13 @@
                                         <span class="d-flex align-items-center text-muted">
                                             <i class="bi bi-star-fill text-warning me-1"></i>
                                             @repo.Stars
+                                        </span>
+                                    }
+                                    @if (repo.Forks > 0)
+                                    {
+                                        <span class="d-flex align-items-center text-muted">
+                                            <i class="bi bi-diagram-3 me-1"></i>
+                                            @repo.Forks
                                         </span>
                                     }
                                     <span class="text-muted">
@@ -156,6 +173,39 @@
                 }
             </div>
         }
+
+        <!-- Activity Feed -->
+        @if (recentActivities.Any())
+        {
+            <div class="mt-4">
+                <h2 class="h5 fw-bold mb-3">Recent Activity</h2>
+                <div class="border rounded-3 overflow-hidden shadow-sm">
+                    @foreach (var activity in recentActivities)
+                    {
+                        <div class="d-flex align-items-start p-3 border-bottom">
+                            <div class="me-3 mt-1">
+                                <span class="badge rounded-pill @GetActivityBadgeClass(activity.ActivityType) p-2">
+                                    <i class="bi @GetActivityIcon(activity.ActivityType)"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="small">
+                                    <strong>@activity.Username</strong>
+                                    <span class="text-muted">@GetActivityVerb(activity.ActivityType)</span>
+                                    <a href="@activity.Url" class="text-decoration-none fw-semibold">@activity.Repository</a>
+                                </div>
+                                <div class="text-muted" style="font-size: 12px;">
+                                    @activity.Description
+                                </div>
+                                <div class="text-muted" style="font-size: 11px;">
+                                    @GetRelativeTime(activity.Timestamp)
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
     </div>
 </div>
 
@@ -172,6 +222,28 @@
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Repository name</label>
                         <input type="text" class="form-control shadow-none" @bind="newRepoName" @bind:event="oninput" placeholder="my-awesome-project" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Description <span class="fw-normal text-muted">(optional)</span></label>
+                        <input type="text" class="form-control shadow-none" @bind="newRepoDescription" @bind:event="oninput" placeholder="Short description of your project" />
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="repoVisibility" id="repoPublic" checked="@(!newRepoIsPrivate)" @onchange="() => newRepoIsPrivate = false" />
+                            <label class="form-check-label" for="repoPublic">
+                                <i class="bi bi-journal-bookmark me-1"></i>
+                                <strong>Public</strong>
+                                <span class="text-muted d-block small">Anyone can see this repository.</span>
+                            </label>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="radio" name="repoVisibility" id="repoPrivate" checked="@newRepoIsPrivate" @onchange="() => newRepoIsPrivate = true" />
+                            <label class="form-check-label" for="repoPrivate">
+                                <i class="bi bi-lock me-1"></i>
+                                <strong>Private</strong>
+                                <span class="text-muted d-block small">Only you (and collaborators) can see this repository.</span>
+                            </label>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Storage location</label>
@@ -244,11 +316,14 @@
 
 @code {
     private List<RepoSummary> repositories = new();
+    private List<MyPersonalGit.Models.UserActivity> recentActivities = new();
     private string searchTerm = "";
     private string RootPath = "/repos";
 
     private bool showModal = false;
     private string newRepoName = "";
+    private string newRepoDescription = "";
+    private bool newRepoIsPrivate = false;
     private string customRepoPath = "";
 
     // Upload-on-create state
@@ -260,12 +335,15 @@
     private bool isCreating = false;
 
     private IEnumerable<RepoSummary> FilteredRepos =>
-        repositories.Where(r => string.IsNullOrEmpty(searchTerm) || r.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+        repositories.Where(r =>
+            (string.IsNullOrEmpty(searchTerm) || r.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            (!r.IsPrivate || (UserService.IsLoggedIn && r.Owner.Equals(UserService.Username, StringComparison.OrdinalIgnoreCase))))
                    .OrderByDescending(r => r.LastCommitDate);
 
     protected override async Task OnInitializedAsync()
     {
         await LoadRepositories();
+        try { recentActivities = await ActivityService.GetRecentActivitiesAsync(20); } catch { }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -387,7 +465,11 @@
                             LastCommitMessage = latestCommit?.MessageShort ?? "No description provided.",
                             LastCommitDate = latestCommit?.Author.When.DateTime,
                             Stars = repoMeta?.Stars ?? 0,
-                            IsStarred = isStarred
+                            IsStarred = isStarred,
+                            IsPrivate = repoMeta?.IsPrivate ?? false,
+                            Description = repoMeta?.Description ?? "",
+                            Owner = repoMeta?.Owner ?? "",
+                            Forks = repoMeta?.Forks ?? 0
                         });
                     }
                     catch { }
@@ -412,6 +494,9 @@
         initFileData.Clear();
 
         var files = e.GetMultipleFiles(10000).ToList();
+        // Use a temp list so initFileData stays empty during reads.
+        // This prevents Blazor from re-rendering away the InputFile element mid-read.
+        var tempData = new List<(string Path, byte[] Data)>();
 
         try
         {
@@ -439,7 +524,7 @@
                 }
             }
 
-            // Read all file data into memory immediately (before any re-render)
+            // Read all file data into memory before updating state
             for (int i = 0; i < files.Count; i++)
             {
                 var relativePath = (paths != null && i < paths.Length) ? paths[i] : files[i].Name;
@@ -455,11 +540,17 @@
                 using var stream = files[i].OpenReadStream(maxFileSize);
                 using var ms = new MemoryStream();
                 await stream.CopyToAsync(ms);
-                initFileData.Add((relativePath, ms.ToArray()));
+                tempData.Add((relativePath, ms.ToArray()));
             }
+
+            // Assign all at once after reading is complete
+            initFileData = tempData;
         }
         catch (Exception ex)
         {
+            // Keep whatever was read successfully
+            if (tempData.Any())
+                initFileData = tempData;
             createError = $"Error reading files: {ex.Message}";
         }
         StateHasChanged();
@@ -547,6 +638,9 @@
 
             Repository.Init(fullPath, isBare: true);
 
+            // Create DB record for repository metadata
+            await RepoService.CreateRepositoryAsync(folderName, UserService.Username, newRepoDescription, newRepoIsPrivate);
+
             // Commit uploaded files if any
             if (initFileData.Any())
             {
@@ -566,6 +660,8 @@
             showModal = false;
             var repoNameWithoutGit = newRepoName.Replace(".git", "");
             newRepoName = "";
+            newRepoDescription = "";
+            newRepoIsPrivate = false;
             ClearInitFiles();
             Nav.NavigateTo($"/repo/{repoNameWithoutGit}");
         }
@@ -688,6 +784,8 @@
     private async Task ToggleStar(RepoSummary repo)
     {
         if (!UserService.IsLoggedIn) return;
+        // Ensure repo record exists in DB before star operations
+        await RepoService.EnsureRepositoryRecordAsync(repo.Name, UserService.Username);
         if (repo.IsStarred)
         {
             await RepoService.UnstarRepositoryAsync(repo.Name, UserService.Username);
@@ -783,6 +881,47 @@
         return false;
     }
 
+    private string GetActivityIcon(string type) => type switch
+    {
+        "created_repo" => "bi-journal-plus",
+        "starred_repo" => "bi-star-fill",
+        "forked_repo" => "bi-diagram-3",
+        "opened_pr" => "bi-git",
+        "merged_pr" => "bi-check2-circle",
+        "closed_pr" => "bi-x-circle",
+        "opened_issue" => "bi-circle-fill",
+        "closed_issue" => "bi-check-circle-fill",
+        "created_release" => "bi-tag",
+        _ => "bi-activity"
+    };
+
+    private string GetActivityVerb(string type) => type switch
+    {
+        "created_repo" => "created repository",
+        "starred_repo" => "starred",
+        "forked_repo" => "forked",
+        "opened_pr" => "opened a pull request in",
+        "merged_pr" => "merged a pull request in",
+        "closed_pr" => "closed a pull request in",
+        "opened_issue" => "opened an issue in",
+        "closed_issue" => "closed an issue in",
+        "created_release" => "published a release in",
+        _ => "updated"
+    };
+
+    private string GetActivityBadgeClass(string type) => type switch
+    {
+        "created_repo" => "bg-success bg-opacity-10 text-success",
+        "starred_repo" => "bg-warning bg-opacity-10 text-warning",
+        "forked_repo" => "bg-info bg-opacity-10 text-info",
+        "opened_pr" or "merged_pr" => "bg-primary bg-opacity-10 text-primary",
+        "closed_pr" => "bg-danger bg-opacity-10 text-danger",
+        "opened_issue" => "bg-success bg-opacity-10 text-success",
+        "closed_issue" => "bg-secondary bg-opacity-10 text-secondary",
+        "created_release" => "bg-info bg-opacity-10 text-info",
+        _ => "bg-secondary bg-opacity-10 text-secondary"
+    };
+
     public class RepoSummary
     {
         public string Name { get; set; } = "";
@@ -792,5 +931,9 @@
         public DateTime? LastCommitDate { get; set; }
         public int Stars { get; set; }
         public bool IsStarred { get; set; }
+        public bool IsPrivate { get; set; }
+        public string Description { get; set; } = "";
+        public string Owner { get; set; } = "";
+        public int Forks { get; set; }
     }
 }

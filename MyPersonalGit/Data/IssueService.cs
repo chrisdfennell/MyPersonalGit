@@ -19,12 +19,14 @@ public class IssueService : IIssueService
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly ILogger<IssueService> _logger;
     private readonly INotificationService _notificationService;
+    private readonly IActivityService _activityService;
 
-    public IssueService(IDbContextFactory<AppDbContext> dbFactory, ILogger<IssueService> logger, INotificationService notificationService)
+    public IssueService(IDbContextFactory<AppDbContext> dbFactory, ILogger<IssueService> logger, INotificationService notificationService, IActivityService activityService)
     {
         _dbFactory = dbFactory;
         _logger = logger;
         _notificationService = notificationService;
+        _activityService = activityService;
     }
 
     public async Task<List<Issue>> GetIssuesAsync(string repoName)
@@ -67,6 +69,8 @@ public class IssueService : IIssueService
         await db.SaveChangesAsync();
 
         _logger.LogInformation("Issue #{Number} created in {RepoName} by {Author}", issue.Number, repoName, author);
+
+        await _activityService.RecordActivityAsync(author, "opened_issue", repoName, $"{author} opened issue #{issue.Number}: {title}", $"/repo/{repoName}/issues/{issue.Number}");
 
         await _notificationService.CreateNotificationAsync(
             "current-user",
@@ -145,6 +149,8 @@ public class IssueService : IIssueService
         await db.SaveChangesAsync();
 
         _logger.LogInformation("Issue #{Number} closed in {RepoName}", number, repoName);
+
+        await _activityService.RecordActivityAsync(issue.Author, "closed_issue", repoName, $"Issue #{number} closed: {issue.Title}", $"/repo/{repoName}/issues/{number}");
 
         await _notificationService.CreateNotificationAsync(
             "current-user",

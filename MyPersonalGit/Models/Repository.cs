@@ -16,6 +16,7 @@ public class Repository
     public bool HasIssues { get; set; } = true;
     public bool HasWiki { get; set; } = true;
     public bool HasProjects { get; set; } = true;
+    public string? ForkedFrom { get; set; }
 }
 
 public class RepositoryStar
