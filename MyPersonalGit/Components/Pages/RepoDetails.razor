@@ -410,7 +410,7 @@ else
 
                 </div>
 
-                @if (languageStats.Any() && string.IsNullOrEmpty(fileSearchTerm))
+                @if ((languageStats.Any() || releases.Any()) && string.IsNullOrEmpty(fileSearchTerm))
                 {
                     <div class="col-md-3">
                         <div class="border-bottom pb-3 mb-3">
@@ -420,25 +420,69 @@ else
                                 <p class="text-muted small">@repoDescription</p>
                             }
                         </div>
-                        <div class="mb-4">
-                            <h6 class="fw-bold mb-3">Languages</h6>
-                            <div class="language-bar d-flex rounded overflow-hidden" style="height: 8px;">
-                                @foreach (var lang in languageStats)
-                                {
-                                    <div style="width: @lang.Percentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%; background-color: @lang.Color;" title="@lang.Name @lang.Percentage.ToString("F1")%"></div>
-                                }
-                            </div>
-                            <div class="d-flex flex-wrap gap-2 mt-2">
-                                @foreach (var lang in languageStats)
-                                {
-                                    <div class="d-flex align-items-center small">
-                                        <span class="rounded-circle d-inline-block me-1" style="width: 10px; height: 10px; background-color: @lang.Color;"></span>
-                                        <span class="fw-bold me-1">@lang.Name</span>
-                                        <span class="text-muted">@lang.Percentage.ToString("F1")%</span>
+                        @if (releases.Any())
+                        {
+                            var latestRelease = releases.Where(r => !r.IsDraft).OrderByDescending(r => r.PublishedAt ?? r.CreatedAt).FirstOrDefault()
+                                ?? releases.OrderByDescending(r => r.PublishedAt ?? r.CreatedAt).First();
+                            <div class="border-bottom pb-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold mb-0">
+                                        <button class="btn btn-link p-0 text-body text-decoration-none fw-bold" @onclick='() => SetTab("releases")'>
+                                            Releases
+                                        </button>
+                                    </h6>
+                                    <span class="badge bg-secondary rounded-pill">@releases.Count</span>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-start gap-2 mb-1">
+                                        <i class="bi bi-tag text-muted mt-1" style="font-size: 13px;"></i>
+                                        <div>
+                                            <button class="btn btn-link p-0 text-decoration-none text-body fw-semibold small lh-sm" @onclick='() => SetTab("releases")'>
+                                                @latestRelease.Title
+                                            </button>
+                                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                                <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle" style="font-size: 10px;">@latestRelease.TagName</span>
+                                                @if (latestRelease.IsPrerelease)
+                                                {
+                                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle" style="font-size: 10px;">Pre-release</span>
+                                                }
+                                            </div>
+                                            <div class="text-muted mt-1" style="font-size: 11px;">
+                                                @((latestRelease.PublishedAt ?? latestRelease.CreatedAt).ToLocalTime().ToString("MMM d, yyyy"))
+                                            </div>
+                                        </div>
                                     </div>
+                                </div>
+                                @if (releases.Count > 1)
+                                {
+                                    <button class="btn btn-link p-0 small text-muted mt-1" @onclick='() => SetTab("releases")'>
+                                        + @(releases.Count - 1) more @(releases.Count - 1 == 1 ? "release" : "releases")
+                                    </button>
                                 }
                             </div>
-                        </div>
+                        }
+                        @if (languageStats.Any())
+                        {
+                            <div class="mb-4">
+                                <h6 class="fw-bold mb-3">Languages</h6>
+                                <div class="language-bar d-flex rounded overflow-hidden" style="height: 8px;">
+                                    @foreach (var lang in languageStats)
+                                    {
+                                        <div style="width: @lang.Percentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%; background-color: @lang.Color;" title="@lang.Name @lang.Percentage.ToString("F1")%"></div>
+                                    }
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 mt-2">
+                                    @foreach (var lang in languageStats)
+                                    {
+                                        <div class="d-flex align-items-center small">
+                                            <span class="rounded-circle d-inline-block me-1" style="width: 10px; height: 10px; background-color: @lang.Color;"></span>
+                                            <span class="fw-bold me-1">@lang.Name</span>
+                                            <span class="text-muted">@lang.Percentage.ToString("F1")%</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
                     </div>
                 }
                 </div>
@@ -2197,6 +2241,7 @@ else
 
         LoadRepoData();
         await LoadRepoMetadata();
+        await LoadReleases();
     }
 
     private async Task LoadRepoMetadata()
