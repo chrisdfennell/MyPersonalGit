@@ -15,6 +15,8 @@ public interface IWorkflowService
     Task<bool> DeleteWebhookAsync(string repoName, int webhookId);
     Task<bool> ToggleWebhookAsync(string repoName, int webhookId);
     Task<List<WebhookDelivery>> GetWebhookDeliveriesAsync(string repoName, int webhookId);
+    Task<bool> UpdateWebhookAsync(string repoName, int webhookId, string url, string secret, List<string> events);
+    Task<bool> RedeliverWebhookAsync(string repoName, int deliveryId);
 }
 
 public class WorkflowService : IWorkflowService
@@ -197,5 +199,81 @@ public class WorkflowService : IWorkflowService
             .Where(d => d.WebhookId == webhookId)
             .OrderByDescending(d => d.DeliveredAt)
             .ToListAsync();
+    }
+
+    public async Task<bool> UpdateWebhookAsync(string repoName, int webhookId, string url, string secret, List<string> events)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var webhook = await db.Webhooks.FirstOrDefaultAsync(w => w.Id == webhookId && w.RepoName == repoName);
+        if (webhook == null) return false;
+
+        webhook.Url = url;
+        if (!string.IsNullOrEmpty(secret))
+            webhook.Secret = secret;
+        webhook.Events = events;
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Webhook {WebhookId} updated in {RepoName}", webhookId, repoName);
+        return true;
+    }
+
+    public async Task<bool> RedeliverWebhookAsync(string repoName, int deliveryId)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var delivery = await db.WebhookDeliveries.FirstOrDefaultAsync(d => d.Id == deliveryId);
+        if (delivery == null) return false;
+
+        var webhook = await db.Webhooks.FirstOrDefaultAsync(w => w.Id == delivery.WebhookId && w.RepoName == repoName);
+        if (webhook == null) return false;
+
+        // Re-create delivery by firing it again with the same payload
+        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        var signature = ComputeSignature(delivery.Payload, webhook.Secret);
+
+        var request = new HttpRequestMessage(HttpMethod.Post, webhook.Url);
+        request.Headers.Add("X-PersonalGit-Event", delivery.Event);
+        request.Headers.Add("X-PersonalGit-Signature", $"sha256={signature}");
+        request.Headers.Add("X-PersonalGit-Delivery", Guid.NewGuid().ToString());
+        request.Content = new StringContent(delivery.Payload, System.Text.Encoding.UTF8, "application/json");
+
+        int statusCode = 0;
+        string? responseBody = null;
+        bool success = false;
+
+        try
+        {
+            var response = await client.SendAsync(request);
+            statusCode = (int)response.StatusCode;
+            responseBody = await response.Content.ReadAsStringAsync();
+            success = response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            responseBody = ex.Message;
+        }
+
+        db.WebhookDeliveries.Add(new WebhookDelivery
+        {
+            WebhookId = webhook.Id,
+            Event = delivery.Event,
+            Payload = delivery.Payload,
+            StatusCode = statusCode,
+            Response = responseBody?.Length > 5000 ? responseBody[..5000] : responseBody,
+            DeliveredAt = DateTime.UtcNow,
+            Success = success
+        });
+
+        webhook.LastTriggeredAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Webhook delivery {DeliveryId} redelivered to {Url}", deliveryId, webhook.Url);
+        return true;
+    }
+
+    private static string ComputeSignature(string payload, string secret)
+    {
+        using var hmac = new System.Security.Cryptography.HMACSHA256(System.Text.Encoding.UTF8.GetBytes(secret));
+        var hash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(payload));
+        return Convert.ToHexString(hash).ToLower();
     }
 }

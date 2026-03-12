@@ -84,6 +84,7 @@ builder.Services.AddSingleton<ISecretsService, SecretsService>();
 builder.Services.AddSingleton<ISshAuthService, SshAuthService>();
 builder.Services.AddHostedService<AuthorizedKeysSyncService>();
 builder.Services.AddSingleton<IArtifactService, ArtifactService>();
+builder.Services.AddSingleton<IMarkdownService, MarkdownService>();
 builder.Services.AddHostedService<WorkflowSchedulerService>();
 builder.Services.AddScoped<CurrentUserService>();
 
