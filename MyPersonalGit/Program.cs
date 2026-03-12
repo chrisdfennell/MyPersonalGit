@@ -80,6 +80,11 @@ builder.Services.AddSingleton<ISnippetService, SnippetService>();
 builder.Services.AddSingleton<IMirrorService, MirrorService>();
 builder.Services.AddHostedService<MirrorSyncService>();
 builder.Services.AddSingleton<IPackageService, PackageService>();
+builder.Services.AddSingleton<ISecretsService, SecretsService>();
+builder.Services.AddSingleton<ISshAuthService, SshAuthService>();
+builder.Services.AddHostedService<AuthorizedKeysSyncService>();
+builder.Services.AddSingleton<IArtifactService, ArtifactService>();
+builder.Services.AddHostedService<WorkflowSchedulerService>();
 builder.Services.AddScoped<CurrentUserService>();
 
 var app = builder.Build();

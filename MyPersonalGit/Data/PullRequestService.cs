@@ -16,6 +16,10 @@ public interface IPullRequestService
     Task<bool> ClosePullRequestAsync(string repoName, int number);
     Task<bool> AddReviewAsync(string repoName, int number, string author, ReviewState state, string? body = null);
     Task<(bool CanMerge, string? Reason)> CanMergeAsync(string repoName, int number);
+    Task<bool> ToggleDraftAsync(string repoName, int number);
+    Task<bool> EnableAutoMergeAsync(string repoName, int number, MergeStrategy strategy);
+    Task<bool> DisableAutoMergeAsync(string repoName, int number);
+    Task<bool> ReopenPullRequestAsync(string repoName, int number);
 }
 
 public class PullRequestService : IPullRequestService
@@ -340,6 +344,61 @@ public class PullRequestService : IPullRequestService
             $"/repo/{repoName}/pulls/{number}"
         );
 
+        return true;
+    }
+
+    public async Task<bool> ToggleDraftAsync(string repoName, int number)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var pr = await db.PullRequests.FirstOrDefaultAsync(p => p.RepoName == repoName && p.Number == number);
+        if (pr == null || pr.State != PullRequestState.Open) return false;
+
+        pr.IsDraft = !pr.IsDraft;
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("PR #{Number} in {RepoName} draft status toggled to {IsDraft}", number, repoName, pr.IsDraft);
+        return true;
+    }
+
+    public async Task<bool> EnableAutoMergeAsync(string repoName, int number, MergeStrategy strategy)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var pr = await db.PullRequests.FirstOrDefaultAsync(p => p.RepoName == repoName && p.Number == number);
+        if (pr == null || pr.State != PullRequestState.Open) return false;
+
+        pr.AutoMergeEnabled = true;
+        pr.AutoMergeStrategy = strategy.ToString();
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Auto-merge enabled for PR #{Number} in {RepoName} with strategy {Strategy}", number, repoName, strategy);
+        return true;
+    }
+
+    public async Task<bool> DisableAutoMergeAsync(string repoName, int number)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var pr = await db.PullRequests.FirstOrDefaultAsync(p => p.RepoName == repoName && p.Number == number);
+        if (pr == null) return false;
+
+        pr.AutoMergeEnabled = false;
+        pr.AutoMergeStrategy = null;
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Auto-merge disabled for PR #{Number} in {RepoName}", number, repoName);
+        return true;
+    }
+
+    public async Task<bool> ReopenPullRequestAsync(string repoName, int number)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var pr = await db.PullRequests.FirstOrDefaultAsync(p => p.RepoName == repoName && p.Number == number);
+        if (pr == null || pr.State != PullRequestState.Closed) return false;
+
+        pr.State = PullRequestState.Open;
+        pr.ClosedAt = null;
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("PR #{Number} reopened in {RepoName}", number, repoName);
         return true;
     }
 

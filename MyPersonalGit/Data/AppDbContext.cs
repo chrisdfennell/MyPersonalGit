@@ -50,6 +50,9 @@ public class AppDbContext : DbContext
     public DbSet<WorkflowStep> WorkflowSteps => Set<WorkflowStep>();
     public DbSet<Webhook> Webhooks => Set<Webhook>();
     public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
+    public DbSet<WorkflowArtifact> WorkflowArtifacts => Set<WorkflowArtifact>();
+    public DbSet<WorkflowSchedule> WorkflowSchedules => Set<WorkflowSchedule>();
+    public DbSet<GlobalSecret> GlobalSecrets => Set<GlobalSecret>();
 
     // Security
     public DbSet<SecurityAdvisory> SecurityAdvisories => Set<SecurityAdvisory>();
@@ -81,6 +84,9 @@ public class AppDbContext : DbContext
     public DbSet<PersonalAccessToken> PersonalAccessTokens => Set<PersonalAccessToken>();
     public DbSet<ActiveUserSession> ActiveUserSessions => Set<ActiveUserSession>();
     public DbSet<TwoFactorAuth> TwoFactorAuths => Set<TwoFactorAuth>();
+
+    // Secrets
+    public DbSet<RepositorySecret> RepositorySecrets => Set<RepositorySecret>();
 
     // Container Registry
     public DbSet<ContainerManifest> ContainerManifests => Set<ContainerManifest>();
@@ -233,6 +239,24 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        // --- WorkflowArtifact ---
+        modelBuilder.Entity<WorkflowArtifact>(e =>
+        {
+            e.HasIndex(a => a.WorkflowRunId);
+        });
+
+        // --- WorkflowSchedule ---
+        modelBuilder.Entity<WorkflowSchedule>(e =>
+        {
+            e.HasIndex(s => new { s.RepoName, s.WorkflowFileName }).IsUnique();
+        });
+
+        // --- GlobalSecret ---
+        modelBuilder.Entity<GlobalSecret>(e =>
+        {
+            e.HasIndex(s => s.Name).IsUnique();
+        });
+
         modelBuilder.Entity<Webhook>(e =>
         {
             e.Property(w => w.Events).HasConversion(listStringConverter, listStringComparer);
@@ -299,6 +323,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<LfsObject>(e =>
         {
             e.HasIndex(o => new { o.RepoName, o.Oid }).IsUnique();
+        });
+
+        // --- RepositorySecret ---
+        modelBuilder.Entity<RepositorySecret>(e =>
+        {
+            e.HasIndex(s => new { s.RepoName, s.Name }).IsUnique();
         });
 
         // --- Container Registry ---

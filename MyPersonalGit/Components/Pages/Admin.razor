@@ -3,6 +3,7 @@
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
 @inject IAdminService AdminService
+@inject ISecretsService SecretsService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
@@ -56,6 +57,11 @@ else
         <li class="nav-item">
             <a class="nav-link @(ActiveTab == "audit" ? "active" : "")" @onclick='() => ActiveTab = "audit"' style="cursor: pointer;">
                 <i class="bi bi-journal-text"></i> Audit Logs
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ActiveTab == "secrets" ? "active" : "")" @onclick='() => ActiveTab = "secrets"' style="cursor: pointer;">
+                <i class="bi bi-key"></i> Global Secrets
             </a>
         </li>
         <li class="nav-item">
@@ -445,6 +451,77 @@ else
             </div>
         </div>
     }
+    else if (ActiveTab == "secrets")
+    {
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-key"></i> Global Secrets</h5>
+                        <button class="btn btn-sm btn-primary" @onclick="() => showAddGlobalSecret = true">
+                            <i class="bi bi-plus-circle me-1"></i> Add secret
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Global secrets are available to all workflow runs. Repository-level secrets with the same name will override global secrets.</p>
+                        @if (!string.IsNullOrEmpty(globalSecretMessage))
+                        {
+                            <div class="alert alert-info py-2">@globalSecretMessage</div>
+                        }
+                        @if (globalSecrets.Any())
+                        {
+                            <div class="list-group">
+                                @foreach (var secret in globalSecrets)
+                                {
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <code class="fw-bold">@secret.Name</code>
+                                            <small class="text-muted ms-2">Updated @secret.UpdatedAt.ToString("MMM d, yyyy")</small>
+                                        </div>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" @onclick="() => StartEditGlobalSecret(secret.Name)">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" @onclick="() => DeleteGlobalSecret(secret.Name)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No global secrets configured.</p>
+                        }
+                        @if (showAddGlobalSecret)
+                        {
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <label class="form-label fw-bold small">Name</label>
+                                        <input type="text" class="form-control form-control-sm" @bind="newGlobalSecretName" placeholder="SECRET_NAME"
+                                               disabled="@(!string.IsNullOrEmpty(editingGlobalSecretName))" />
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label fw-bold small">Value</label>
+                                        <input type="password" class="form-control form-control-sm" @bind="newGlobalSecretValue" placeholder="Secret value" />
+                                    </div>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-success" @onclick="SaveGlobalSecret"
+                                                disabled="@(string.IsNullOrWhiteSpace(newGlobalSecretName) || string.IsNullOrWhiteSpace(newGlobalSecretValue))">
+                                            <i class="bi bi-check me-1"></i> Save
+                                        </button>
+                                        <button class="btn btn-secondary" @onclick="CancelAddGlobalSecret">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
     else if (ActiveTab == "backups")
     {
         <div class="row">
@@ -610,6 +687,14 @@ else
     private string? RestoreMessage;
     private bool RestoreSuccess;
 
+    // Global secrets
+    private List<GlobalSecret> globalSecrets = new();
+    private bool showAddGlobalSecret;
+    private string newGlobalSecretName = "";
+    private string newGlobalSecretValue = "";
+    private string? editingGlobalSecretName;
+    private string globalSecretMessage = "";
+
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
@@ -622,6 +707,7 @@ else
         Statistics = await AdminService.GetSystemStatisticsAsync();
         AuditLogs = await AdminService.GetAuditLogsAsync();
         Users = await AdminService.GetAllUsersAsync();
+        globalSecrets = await SecretsService.GetGlobalSecretsAsync();
     }
 
     private async Task SaveSettings()
@@ -717,6 +803,38 @@ else
             len = len / 1024;
         }
         return $"{len:0.##} {sizes[order]}";
+    }
+
+    private void StartEditGlobalSecret(string name)
+    {
+        editingGlobalSecretName = name;
+        newGlobalSecretName = name;
+        newGlobalSecretValue = "";
+        showAddGlobalSecret = true;
+    }
+
+    private void CancelAddGlobalSecret()
+    {
+        showAddGlobalSecret = false;
+        newGlobalSecretName = "";
+        newGlobalSecretValue = "";
+        editingGlobalSecretName = null;
+    }
+
+    private async Task SaveGlobalSecret()
+    {
+        if (string.IsNullOrWhiteSpace(newGlobalSecretName) || string.IsNullOrWhiteSpace(newGlobalSecretValue)) return;
+        await SecretsService.SetGlobalSecretAsync(newGlobalSecretName.Trim().ToUpperInvariant(), newGlobalSecretValue);
+        await AdminService.AddAuditLogAsync(UserService.Username, "SET_GLOBAL_SECRET", $"Set global secret: {newGlobalSecretName}");
+        CancelAddGlobalSecret();
+        await LoadData();
+    }
+
+    private async Task DeleteGlobalSecret(string name)
+    {
+        await SecretsService.DeleteGlobalSecretAsync(name);
+        await AdminService.AddAuditLogAsync(UserService.Username, "DELETE_GLOBAL_SECRET", $"Deleted global secret: {name}");
+        await LoadData();
     }
 
     private async Task DownloadBackup()

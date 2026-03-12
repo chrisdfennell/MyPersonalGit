@@ -47,9 +47,18 @@
                         <div class="d-flex gap-2 align-items-center">
                             @if (currentPR.State == PullRequestState.Open)
                             {
-                                <span class="badge bg-success d-flex align-items-center gap-1">
-                                    <i class="bi bi-git"></i> Open
-                                </span>
+                                @if (currentPR.IsDraft)
+                                {
+                                    <span class="badge bg-secondary d-flex align-items-center gap-1">
+                                        <i class="bi bi-git"></i> Draft
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success d-flex align-items-center gap-1">
+                                        <i class="bi bi-git"></i> Open
+                                    </span>
+                                }
                             }
                             else if (currentPR.State == PullRequestState.Merged)
                             {
@@ -108,6 +117,37 @@
                                 <button class="btn btn-outline-danger btn-sm" @onclick="ClosePR">
                                     <i class="bi bi-x-circle me-1"></i> Close
                                 </button>
+                                @if (currentPR.IsDraft)
+                                {
+                                    <button class="btn btn-outline-success btn-sm" @onclick="ToggleDraft" disabled="@isTogglingDraft">
+                                        @if (isTogglingDraft) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                                        <i class="bi bi-check-circle me-1"></i> Ready for review
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-outline-secondary btn-sm" @onclick="ToggleDraft" disabled="@isTogglingDraft">
+                                        @if (isTogglingDraft) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                                        <i class="bi bi-pencil me-1"></i> Convert to draft
+                                    </button>
+                                }
+                            </div>
+                            <div class="d-flex align-items-center gap-2 mt-2">
+                                @if (currentPR.AutoMergeEnabled)
+                                {
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-robot me-1"></i> Auto-merge enabled (@(currentPR.AutoMergeStrategy ?? "MergeCommit"))
+                                    </span>
+                                    <button class="btn btn-outline-secondary btn-sm" @onclick="DisableAutoMerge">
+                                        <i class="bi bi-x me-1"></i> Disable auto-merge
+                                    </button>
+                                }
+                                else if (!canMerge)
+                                {
+                                    <button class="btn btn-outline-info btn-sm" @onclick="EnableAutoMerge">
+                                        <i class="bi bi-robot me-1"></i> Enable auto-merge
+                                    </button>
+                                }
                             </div>
                         </div>
                     </div>
@@ -372,7 +412,7 @@
             </div>
             @if (UserService.IsLoggedIn)
             {
-                <button class="btn btn-success btn-sm" @onclick="() => showNewPRModal = true">
+                <button class="btn btn-success btn-sm" @onclick="OpenNewPRModal">
                     <i class="bi bi-plus-circle me-1"></i> New pull request
                 </button>
             }
@@ -556,6 +596,8 @@
     private string? mergeReason;
     private string mergeError = "";
     private bool isMerging;
+    private bool isTogglingDraft;
+    private string? prTemplate;
 
     // Commits & diff state
     private List<Commit> prCommits = new();
@@ -586,6 +628,7 @@
     {
         await LoadPRs();
         await LoadBranches();
+        LoadPRTemplate();
         if (currentPR != null)
         {
             LoadPRCommitsAndDiff();
@@ -605,6 +648,23 @@
         {
             currentPR = await PRService.GetPullRequestAsync(RepoName, Number.Value);
         }
+    }
+
+    private void LoadPRTemplate()
+    {
+        try
+        {
+            var repoPath = GetRepoPathSync();
+            if (repoPath == null || !LibGit2Sharp.Repository.IsValid(repoPath)) return;
+            using var repo = new LibGit2Sharp.Repository(repoPath);
+            if (repo.Head?.Tip == null) return;
+            var entry = repo.Head.Tip.Tree[".github/PULL_REQUEST_TEMPLATE.md"];
+            if (entry?.Target is LibGit2Sharp.Blob blob)
+            {
+                prTemplate = blob.GetContentText();
+            }
+        }
+        catch { }
     }
 
     private async Task LoadBranches()
@@ -674,6 +734,12 @@
         activeTab = tab;
     }
 
+    private void OpenNewPRModal()
+    {
+        newPRBody = prTemplate ?? "";
+        showNewPRModal = true;
+    }
+
     private async Task CreatePR()
     {
         if (!UserService.IsLoggedIn) return;
@@ -739,6 +805,37 @@
             await PRService.ClosePullRequestAsync(RepoName, Number.Value);
             await LoadPRs();
         }
+    }
+
+    private async Task ToggleDraft()
+    {
+        if (!UserService.IsLoggedIn || !Number.HasValue) return;
+        isTogglingDraft = true;
+        StateHasChanged();
+        try
+        {
+            await PRService.ToggleDraftAsync(RepoName, Number.Value);
+            await LoadPRs();
+        }
+        finally
+        {
+            isTogglingDraft = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task EnableAutoMerge()
+    {
+        if (!UserService.IsLoggedIn || !Number.HasValue) return;
+        await PRService.EnableAutoMergeAsync(RepoName, Number.Value, selectedStrategy);
+        await LoadPRs();
+    }
+
+    private async Task DisableAutoMerge()
+    {
+        if (!UserService.IsLoggedIn || !Number.HasValue) return;
+        await PRService.DisableAutoMergeAsync(RepoName, Number.Value);
+        await LoadPRs();
     }
 
     private async Task<string?> GetRepoPath()

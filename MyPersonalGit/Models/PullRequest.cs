@@ -20,6 +20,8 @@ public class PullRequest
     public List<IssueComment> Comments { get; set; } = new();
     public List<string> Labels { get; set; } = new();
     public bool IsDraft { get; set; }
+    public bool AutoMergeEnabled { get; set; }
+    public string? AutoMergeStrategy { get; set; } // "MergeCommit", "Squash", "Rebase"
 }
 
 public enum PullRequestState
