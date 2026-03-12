@@ -3,7 +3,10 @@
 @using Markdig
 @using MyPersonalGit.Models
 @using MyPersonalGit.Data
+@using LibGit2Sharp
 @inject IIssueService IssueService
+@inject IConfiguration Config
+@inject IAdminService AdminService
 @inject NavigationManager Nav
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
@@ -155,7 +158,7 @@
             </div>
             @if (UserService.IsLoggedIn)
             {
-                <button class="btn btn-success btn-sm" @onclick="() => showNewIssueModal = true">
+                <button class="btn btn-success btn-sm" @onclick="OpenNewIssueModal">
                     <i class="bi bi-plus-circle me-1"></i> New issue
                 </button>
             }
@@ -255,6 +258,7 @@
     private string newIssueBody = "";
     private string newIssueLabels = "";
     private string newCommentBody = "";
+    private string? issueTemplate;
 
     private List<Issue> filteredIssues => issues
         .Where(i => filterState == "open" ? i.State == IssueState.Open : i.State == IssueState.Closed)
@@ -267,6 +271,7 @@
     protected override async Task OnParametersSetAsync()
     {
         await LoadIssues();
+        LoadTemplate();
     }
 
     private async Task LoadIssues()
@@ -276,6 +281,40 @@
         {
             currentIssue = await IssueService.GetIssueAsync(RepoName, Number.Value);
         }
+    }
+
+    private void LoadTemplate()
+    {
+        try
+        {
+            var repoPath = GetRepoPathSync();
+            if (repoPath == null || !LibGit2Sharp.Repository.IsValid(repoPath)) return;
+            using var repo = new LibGit2Sharp.Repository(repoPath);
+            var head = repo.Head;
+            if (head?.Tip == null) return;
+            var tree = head.Tip.Tree;
+            var entry = tree[".github/ISSUE_TEMPLATE.md"];
+            if (entry?.Target is Blob blob)
+            {
+                issueTemplate = blob.GetContentText();
+            }
+        }
+        catch { }
+    }
+
+    private string? GetRepoPathSync()
+    {
+        var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+        var path = System.IO.Path.Combine(projectRoot, RepoName);
+        if (LibGit2Sharp.Repository.IsValid(path)) return path;
+        if (LibGit2Sharp.Repository.IsValid(path + ".git")) return path + ".git";
+        return null;
+    }
+
+    private void OpenNewIssueModal()
+    {
+        newIssueBody = issueTemplate ?? "";
+        showNewIssueModal = true;
     }
 
     private async Task CreateIssue()

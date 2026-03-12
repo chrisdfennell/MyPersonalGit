@@ -18,6 +18,8 @@ public interface IRepositoryService
     Task<RepositoryFork?> ForkRepositoryAsync(string sourceRepoName, string newOwner, string projectRoot);
     Task<List<RepositoryFork>> GetForksAsync(string repoName);
     Task<bool> IsForkedAsync(string repoName, string username);
+    Task<(bool Success, string Message)> SyncForkWithUpstreamAsync(string forkedRepoName, string projectRoot);
+    Task<Repository?> GetUpstreamRepositoryAsync(string repoName);
     Task<bool> DeleteRepositoryAsync(string name);
     Task<bool> ArchiveRepositoryAsync(string name);
     Task<bool> UnarchiveRepositoryAsync(string name);
@@ -291,5 +293,101 @@ public class RepositoryService : IRepositoryService
         await db.SaveChangesAsync();
         _logger.LogInformation("Repository unarchived: {Name}", name);
         return true;
+    }
+
+    public async Task<Repository?> GetUpstreamRepositoryAsync(string repoName)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var repo = await db.Repositories.FirstOrDefaultAsync(r => r.Name.ToLower() == repoName.ToLower());
+        if (repo?.ForkedFrom == null) return null;
+
+        return await db.Repositories.FirstOrDefaultAsync(r =>
+            r.Name.ToLower() == repo.ForkedFrom.ToLower() ||
+            r.Name.ToLower() == (repo.ForkedFrom + ".git").ToLower());
+    }
+
+    public async Task<(bool Success, string Message)> SyncForkWithUpstreamAsync(string forkedRepoName, string projectRoot)
+    {
+        using var db = _dbFactory.CreateDbContext();
+
+        var forkedMeta = await db.Repositories.FirstOrDefaultAsync(r => r.Name.ToLower() == forkedRepoName.ToLower());
+        if (forkedMeta == null)
+            return (false, "Forked repository not found");
+
+        if (string.IsNullOrEmpty(forkedMeta.ForkedFrom))
+            return (false, "Repository is not a fork");
+
+        // Find the forked repo path on disk
+        var forkedPath = Path.Combine(projectRoot, forkedRepoName);
+        if (!LibGit2Sharp.Repository.IsValid(forkedPath))
+        {
+            forkedPath = Path.Combine(projectRoot, forkedRepoName + ".git");
+            if (!LibGit2Sharp.Repository.IsValid(forkedPath))
+                return (false, "Forked repository not found on disk");
+        }
+
+        // Find the upstream repo path
+        var upstreamName = forkedMeta.ForkedFrom;
+        var upstreamPath = Path.Combine(projectRoot, upstreamName);
+        if (!LibGit2Sharp.Repository.IsValid(upstreamPath))
+        {
+            upstreamPath = Path.Combine(projectRoot, upstreamName + ".git");
+            if (!LibGit2Sharp.Repository.IsValid(upstreamPath))
+                return (false, "Upstream repository not found on disk");
+        }
+
+        try
+        {
+            using var forkedRepo = new LibGit2Sharp.Repository(forkedPath);
+
+            // Add or update the "upstream" remote
+            var upstream = forkedRepo.Network.Remotes["upstream"];
+            if (upstream == null)
+            {
+                forkedRepo.Network.Remotes.Add("upstream", upstreamPath);
+            }
+            else if (upstream.Url != upstreamPath)
+            {
+                forkedRepo.Network.Remotes.Update("upstream", r => r.Url = upstreamPath);
+            }
+
+            // Fetch from upstream
+            var remote = forkedRepo.Network.Remotes["upstream"];
+            var refSpecs = remote.FetchRefSpecs.Select(x => x.Specification);
+            Commands.Fetch(forkedRepo, "upstream", refSpecs, new FetchOptions(), "Sync with upstream");
+
+            // For bare repos, update refs directly
+            // Copy upstream's HEAD ref branches to the fork
+            int updatedBranches = 0;
+            foreach (var reference in forkedRepo.Refs.Where(r => r.CanonicalName.StartsWith("refs/remotes/upstream/")))
+            {
+                var branchName = reference.CanonicalName.Replace("refs/remotes/upstream/", "");
+                var localRef = $"refs/heads/{branchName}";
+
+                if (reference is DirectReference directRef)
+                {
+                    // Only update if the local branch exists (don't create new branches)
+                    var existingRef = forkedRepo.Refs[localRef];
+                    if (existingRef != null)
+                    {
+                        forkedRepo.Refs.UpdateTarget(existingRef, directRef.Target.Id, "Sync with upstream");
+                        updatedBranches++;
+                    }
+                }
+            }
+
+            forkedMeta.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+
+            _logger.LogInformation("Fork {ForkedRepo} synced with upstream {Upstream}, {Count} branches updated",
+                forkedRepoName, upstreamName, updatedBranches);
+
+            return (true, $"Successfully synced with upstream. {updatedBranches} branch(es) updated.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to sync fork {ForkedRepo} with upstream", forkedRepoName);
+            return (false, $"Sync failed: {ex.Message}");
+        }
     }
 }

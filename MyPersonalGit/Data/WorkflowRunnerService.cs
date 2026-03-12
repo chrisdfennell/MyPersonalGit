@@ -97,6 +97,51 @@ public class WorkflowRunnerService : BackgroundService
         await db.SaveChangesAsync(ct);
 
         _logger.LogInformation("Workflow run {RunId} completed with status {Status}", run.Id, run.Status);
+
+        // Auto-merge: if the run succeeded, check for PRs with auto-merge enabled
+        if (runSuccess)
+        {
+            await TryAutoMerge(run.RepoName, ct);
+        }
+    }
+
+    private async Task TryAutoMerge(string repoName, CancellationToken ct)
+    {
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var prService = scope.ServiceProvider.GetRequiredService<IPullRequestService>();
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+            using var db = dbFactory.CreateDbContext();
+
+            var autoMergePrs = await db.PullRequests
+                .Where(p => p.RepoName == repoName &&
+                            p.State == PullRequestState.Open &&
+                            p.AutoMergeEnabled &&
+                            !p.IsDraft)
+                .ToListAsync(ct);
+
+            foreach (var pr in autoMergePrs)
+            {
+                var (canMerge, _) = await prService.CanMergeAsync(repoName, pr.Number);
+                if (!canMerge) continue;
+
+                var strategy = Enum.TryParse<MergeStrategy>(pr.AutoMergeStrategy, out var s)
+                    ? s : MergeStrategy.MergeCommit;
+
+                var (success, error) = await prService.MergePullRequestAsync(
+                    repoName, pr.Number, "auto-merge", strategy);
+
+                if (success)
+                    _logger.LogInformation("Auto-merged PR #{Number} in {RepoName}", pr.Number, repoName);
+                else
+                    _logger.LogWarning("Auto-merge failed for PR #{Number} in {RepoName}: {Error}", pr.Number, repoName, error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error checking auto-merge for {RepoName}", repoName);
+        }
     }
 
     private async Task<bool> ExecuteJob(AppDbContext db, WorkflowRun run, WorkflowJob job, CancellationToken ct)
@@ -121,18 +166,52 @@ public class WorkflowRunnerService : BackgroundService
             // Resolve repo path
             var repoMount = GetRepoPath(run.RepoName);
 
+            // Load repository secrets and inject as environment variables
+            var envVars = new List<string>();
+            try
+            {
+                using var secretsScope = _scopeFactory.CreateScope();
+                var secretsService = secretsScope.ServiceProvider.GetRequiredService<ISecretsService>();
+                var secrets = await secretsService.GetAllSecretsForRunAsync(run.RepoName);
+                foreach (var (name, value) in secrets)
+                {
+                    envVars.Add($"{name}={value}");
+                }
+                if (secrets.Count > 0)
+                    _logger.LogInformation("Injecting {Count} secret(s) into job {JobName}", secrets.Count, job.Name);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load secrets for {RepoName}", run.RepoName);
+            }
+
+            // Setup artifact directory for this run
+            string? artifactHostDir = null;
+            try
+            {
+                using var artifactScope = _scopeFactory.CreateScope();
+                var artifactService = artifactScope.ServiceProvider.GetRequiredService<IArtifactService>();
+                artifactHostDir = Path.Combine(artifactService.GetArtifactsDirectory(), run.Id.ToString());
+                if (!Directory.Exists(artifactHostDir))
+                    Directory.CreateDirectory(artifactHostDir);
+            }
+            catch { }
+
             // Create container
+            var binds = new List<string>();
+            if (repoMount != null) binds.Add($"{repoMount}:/repo:ro");
+            if (artifactHostDir != null) binds.Add($"{artifactHostDir}:/artifacts");
+
             var createParams = new CreateContainerParameters
             {
                 Image = image,
                 Cmd = new[] { "sleep", "3600" },
+                Env = envVars,
                 HostConfig = new HostConfig
                 {
                     Memory = 512 * 1024 * 1024, // 512MB
                     NanoCPUs = 1_000_000_000,    // 1 CPU
-                    Binds = repoMount != null
-                        ? new[] { $"{repoMount}:/repo:ro" }
-                        : Array.Empty<string>()
+                    Binds = binds
                 },
                 WorkingDir = "/workspace"
             };
@@ -181,6 +260,25 @@ public class WorkflowRunnerService : BackgroundService
 
                 step.Status = WorkflowStatus.Success;
                 await db.SaveChangesAsync(ct);
+            }
+
+            // Collect artifacts from /artifacts directory
+            if (artifactHostDir != null && Directory.Exists(artifactHostDir))
+            {
+                try
+                {
+                    using var artScope = _scopeFactory.CreateScope();
+                    var artService = artScope.ServiceProvider.GetRequiredService<IArtifactService>();
+                    foreach (var file in Directory.GetFiles(artifactHostDir))
+                    {
+                        using var fs = File.OpenRead(file);
+                        await artService.SaveArtifactAsync(run.Id, Path.GetFileName(file), fs);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to collect artifacts for run {RunId}", run.Id);
+                }
             }
 
             job.Status = WorkflowStatus.Success;

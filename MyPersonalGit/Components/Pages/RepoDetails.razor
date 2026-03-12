@@ -24,7 +24,9 @@
 @inject ICollaboratorService CollaboratorService
 @inject IReleaseService ReleaseService
 @inject IMirrorService MirrorService
+@inject ISecretsService SecretsService
 @using MyPersonalGit.Services
+@using RepositorySecret = MyPersonalGit.Models.RepositorySecret
 @inject CurrentUserService UserService
 @rendermode InteractiveServer
 
@@ -119,7 +121,21 @@ else
 
             @if (!string.IsNullOrEmpty(repoForkedFrom))
             {
-                <p class="text-muted small mb-2"><i class="bi bi-diagram-3 me-1"></i>forked from <a href="/repo/@repoForkedFrom" class="text-decoration-none">@repoForkedFrom</a></p>
+                <div class="d-flex align-items-center mb-2">
+                    <p class="text-muted small mb-0"><i class="bi bi-diagram-3 me-1"></i>forked from <a href="/repo/@repoForkedFrom" class="text-decoration-none">@repoForkedFrom</a></p>
+                    @if (UserService.IsLoggedIn)
+                    {
+                        <button class="btn btn-outline-primary btn-sm ms-2 py-0 px-2" style="font-size: 11px;" @onclick="SyncForkWithUpstream" disabled="@isSyncingFork">
+                            <i class="bi bi-arrow-repeat me-1 @(isSyncingFork ? "spin" : "")"></i>@(isSyncingFork ? "Syncing..." : "Sync fork")
+                        </button>
+                        @if (!string.IsNullOrEmpty(forkSyncMessage))
+                        {
+                            <span class="small ms-2 @(forkSyncSuccess ? "text-success" : "text-danger")">
+                                <i class="bi @(forkSyncSuccess ? "bi-check-circle" : "bi-x-circle") me-1"></i>@forkSyncMessage
+                            </span>
+                        }
+                    }
+                </div>
             }
             @if (!string.IsNullOrEmpty(repoDescription))
             {
@@ -989,6 +1005,76 @@ else
                                 </div>
                             }
                             <button class="btn btn-gh-primary btn-sm" @onclick="SavePagesSettings">Save</button>
+                        </div>
+                    </div>
+
+                    <div class="card border shadow-sm mb-4">
+                        <div class="card-header bg-light-subtle py-2 small fw-bold">
+                            <i class="bi bi-key-fill me-1"></i> Secrets
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">Encrypted environment variables injected into CI/CD workflow runs.</p>
+                            @if (repoSecrets.Any())
+                            {
+                                <div class="list-group list-group-flush mb-3">
+                                    @foreach (var secret in repoSecrets)
+                                    {
+                                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                            <div>
+                                                <span class="fw-bold font-monospace">@secret.Name</span>
+                                                <span class="text-muted small ms-2">Updated @secret.UpdatedAt.ToString("yyyy-MM-dd")</span>
+                                            </div>
+                                            <div class="d-flex gap-1">
+                                                <button class="btn btn-outline-secondary btn-sm" @onclick="() => StartEditSecret(secret.Name)" title="Update value">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteSecret(secret.Name)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted small mb-3">No secrets configured yet.</p>
+                            }
+
+                            @if (showAddSecret)
+                            {
+                                <div class="border rounded p-3 bg-light-subtle">
+                                    <h6 class="fw-bold small mb-3">@(editingSecretName != null ? "Update secret" : "Add secret")</h6>
+                                    <div class="mb-2">
+                                        <label class="form-label small fw-bold">Name</label>
+                                        <input type="text" class="form-control form-control-sm font-monospace" @bind="newSecretName"
+                                               placeholder="MY_SECRET" disabled="@(editingSecretName != null)" style="max-width: 300px;" />
+                                        <div class="form-text">Uppercase letters, numbers, and underscores only.</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Value</label>
+                                        <input type="password" class="form-control form-control-sm" @bind="newSecretValue"
+                                               placeholder="Enter secret value" style="max-width: 400px;" />
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(secretErrorMessage))
+                                    {
+                                        <div class="alert alert-danger py-1 small mb-2">@secretErrorMessage</div>
+                                    }
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-gh-primary btn-sm" @onclick="SaveSecret"
+                                                disabled="@(string.IsNullOrWhiteSpace(newSecretName) || string.IsNullOrWhiteSpace(newSecretValue))">
+                                            Save secret
+                                        </button>
+                                        <button class="btn btn-light btn-sm border" @onclick="CancelAddSecret">Cancel</button>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-primary btn-sm" @onclick="() => { showAddSecret = true; editingSecretName = null; newSecretName = string.Empty; newSecretValue = string.Empty; }">
+                                    <i class="bi bi-plus-lg me-1"></i>Add secret
+                                </button>
+                            }
                         </div>
                     </div>
 
@@ -2361,6 +2447,9 @@ else
     private string repoForkedFrom = "";
     private bool repoIsForked = false;
     private int repoForkCount = 0;
+    private bool isSyncingFork = false;
+    private string forkSyncMessage = "";
+    private bool forkSyncSuccess = false;
 
     // Settings tab state
     private bool settingsIsPrivate = false;
@@ -2368,6 +2457,14 @@ else
     private string settingsSaveMessage = "";
     private bool settingsHasPages = false;
     private string settingsPagesBranch = "gh-pages";
+
+    // Secrets state
+    private List<RepositorySecret> repoSecrets = new();
+    private bool showAddSecret = false;
+    private string newSecretName = "";
+    private string newSecretValue = "";
+    private string? editingSecretName = null;
+    private string secretErrorMessage = "";
 
     // Container registry
     private List<ContainerManifest> containerTags = new();
@@ -2497,6 +2594,13 @@ else
                 await CollaboratorService.IsCollaboratorAsync(dirName, UserService.Username));
             if (!hasAccess)
                 notFound = true;
+        }
+
+        // Load repository secrets (metadata only — values are encrypted)
+        if (UserService.IsLoggedIn)
+        {
+            try { repoSecrets = await SecretsService.GetSecretsAsync(dirName); }
+            catch { repoSecrets = new(); }
         }
     }
 
@@ -3119,6 +3223,76 @@ else
             var forkedDisplayName = fork.ForkedRepo.EndsWith(".git") ? fork.ForkedRepo[..^4] : fork.ForkedRepo;
             Nav.NavigateTo($"/repo/{forkedDisplayName}");
         }
+    }
+
+    private async Task SyncForkWithUpstream()
+    {
+        if (!UserService.IsLoggedIn || string.IsNullOrEmpty(repoForkedFrom)) return;
+        isSyncingFork = true;
+        forkSyncMessage = "";
+        StateHasChanged();
+
+        try
+        {
+            var dirName = System.IO.Path.GetFileName(RepoFullPath);
+            var (success, message) = await RepoService.SyncForkWithUpstreamAsync(dirName, RootPath);
+            forkSyncSuccess = success;
+            forkSyncMessage = message;
+            if (success) LoadRepoData();
+        }
+        catch (Exception ex)
+        {
+            forkSyncSuccess = false;
+            forkSyncMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isSyncingFork = false;
+            StateHasChanged();
+        }
+    }
+
+    // --- Secrets management ---
+    private void StartEditSecret(string name)
+    {
+        editingSecretName = name;
+        newSecretName = name;
+        newSecretValue = "";
+        secretErrorMessage = "";
+        showAddSecret = true;
+    }
+
+    private void CancelAddSecret()
+    {
+        showAddSecret = false;
+        editingSecretName = null;
+        newSecretName = "";
+        newSecretValue = "";
+        secretErrorMessage = "";
+    }
+
+    private async Task SaveSecret()
+    {
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        var name = editingSecretName ?? newSecretName;
+
+        var success = await SecretsService.SetSecretAsync(dirName, name, newSecretValue);
+        if (success)
+        {
+            repoSecrets = await SecretsService.GetSecretsAsync(dirName);
+            CancelAddSecret();
+        }
+        else
+        {
+            secretErrorMessage = "Invalid secret name. Use uppercase letters, numbers, and underscores only (e.g. MY_SECRET).";
+        }
+    }
+
+    private async Task DeleteSecret(string name)
+    {
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        await SecretsService.DeleteSecretAsync(dirName, name);
+        repoSecrets = await SecretsService.GetSecretsAsync(dirName);
     }
 
     private void CreateBranch()

@@ -10,6 +10,8 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Repository Management** — Create, browse, and delete Git repositories with a full code browser, file editor, commit history, branches, and tags
 - **Repository Archiving** — Mark repositories as read-only with visual badges; pushes are blocked for archived repos
 - **Git Smart HTTP** — Clone, fetch, and push over HTTP with Basic Auth
+- **SSH Key Authentication** — Add SSH public keys to your account and authenticate Git operations via SSH with auto-managed `authorized_keys`
+- **Forks & Upstream Sync** — Fork repositories, sync forks with upstream with one click, and see fork relationships in the UI
 - **Git LFS** — Large File Storage support for tracking binary files
 - **Repository Mirroring** — Mirror repositories to/from external Git remotes
 - **Compare View** — Compare branches with ahead/behind commit counts and full diff rendering
@@ -25,6 +27,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 
 ### CI/CD & DevOps
 - **CI/CD Runner** — Define workflows in `.github/workflows/*.yml` and run them in Docker containers
+- **Secrets Management** — Encrypted repository secrets (AES-256) injected as environment variables into CI/CD workflow runs
 - **Webhooks** — Trigger external services on repository events
 - **Prometheus Metrics** — Built-in `/metrics` endpoint for monitoring
 
@@ -114,6 +117,9 @@ The app starts at **http://localhost:5146**.
 | `Git__RequireAuth` | Require auth for Git HTTP operations | `true` |
 | `Git__Users__<username>` | Set password for Git HTTP Basic Auth user | — |
 | `RESET_ADMIN_PASSWORD` | Emergency admin password reset on startup | — |
+| `Secrets__EncryptionKey` | Custom encryption key for repository secrets | Derived from DB connection string |
+| `Ssh__DataDir` | Directory for SSH data (authorized_keys) | `~/.mypersonalgit/ssh` |
+| `Ssh__AuthorizedKeysPath` | Path to generated authorized_keys file | `<DataDir>/authorized_keys` |
 
 ## Usage
 
@@ -211,6 +217,51 @@ Serve static websites from a repository branch:
 ### 9. Push Notifications
 
 Configure Ntfy or Gotify in **Admin > System Settings** to receive push notifications on your phone or desktop when issues, PRs, or comments are created. Users can opt in/out in **Settings > Notifications**.
+
+### 10. SSH Key Authentication
+
+Use SSH keys for passwordless Git operations:
+
+1. Go to **Settings > SSH Keys** and add your public key (`~/.ssh/id_ed25519.pub`)
+2. MyPersonalGit automatically maintains an `authorized_keys` file from all registered SSH keys
+3. Configure your server's OpenSSH to use the generated authorized_keys file:
+   ```
+   # In /etc/ssh/sshd_config
+   AuthorizedKeysFile /path/to/.mypersonalgit/ssh/authorized_keys
+   ```
+4. Clone via SSH:
+   ```bash
+   git clone ssh://git@yourserver:22/repos/MyRepo.git
+   ```
+
+The SSH auth service also exposes an API at `/api/ssh/authorized-keys` for use with OpenSSH's `AuthorizedKeysCommand` directive.
+
+### 11. Repository Secrets
+
+Add encrypted secrets to repositories for use in CI/CD workflows:
+
+1. Go to your repository's **Settings** tab
+2. Scroll to the **Secrets** card and click **Add secret**
+3. Enter a name (e.g., `DEPLOY_TOKEN`) and value — the value is encrypted with AES-256
+4. Secrets are automatically injected as environment variables into every workflow run
+
+Reference secrets in your workflow:
+```yaml
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        run: curl -H "Authorization: Bearer $DEPLOY_TOKEN" https://api.example.com/deploy
+```
+
+### 12. Forking & Upstream Sync
+
+Fork a repository and keep it in sync:
+
+1. Click the **Fork** button on any repository page
+2. A fork is created under your username with a link back to the original
+3. Click **Sync fork** next to the "forked from" badge to pull latest changes from upstream
 
 ## Deploy to a NAS
 

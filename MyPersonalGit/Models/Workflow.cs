@@ -72,3 +72,34 @@ public class WebhookDelivery
     public DateTime DeliveredAt { get; set; }
     public bool Success { get; set; }
 }
+
+public class WorkflowArtifact
+{
+    public int Id { get; set; }
+    public int WorkflowRunId { get; set; }
+    public required string Name { get; set; }
+    public required string FilePath { get; set; }
+    public long SizeBytes { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? ExpiresAt { get; set; }
+}
+
+public class GlobalSecret
+{
+    public int Id { get; set; }
+    public required string Name { get; set; }
+    public required string EncryptedValue { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}
+
+public class WorkflowSchedule
+{
+    public int Id { get; set; }
+    public required string RepoName { get; set; }
+    public required string WorkflowFileName { get; set; }
+    public required string CronExpression { get; set; }
+    public bool IsEnabled { get; set; } = true;
+    public DateTime? LastRunAt { get; set; }
+    public DateTime? NextRunAt { get; set; }
+}
