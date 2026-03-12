@@ -15,6 +15,7 @@ public class Issue
     public List<IssueComment> Comments { get; set; } = new();
     public int Number { get; set; }
     public int? MilestoneId { get; set; }
+    public bool IsDraft { get; set; }
 }
 
 public enum IssueState

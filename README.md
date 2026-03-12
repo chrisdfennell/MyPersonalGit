@@ -17,13 +17,22 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Compare View** — Compare branches with ahead/behind commit counts and full diff rendering
 - **Language Stats** — GitHub-style language breakdown bar on each repository page
 - **Branch Protection** — Configurable rules for required reviews, status checks, and force-push prevention
+- **Explore** — Browse all accessible repositories with search, sort, and topic filtering
 - **Search** — Full-text search across repositories, issues, PRs, and code
 
 ### Collaboration
 - **Issues & Pull Requests** — Create, comment on, close/reopen issues and PRs with labels, assignees, and reviews. Merge PRs with merge commit, squash, or rebase strategies
+- **Discussions** — GitHub Discussions-style threaded conversations per repository with categories (General, Q&A, Announcements, Ideas, Show & Tell, Polls), pin/lock, mark as answer, and upvoting
+- **Code Review Suggestions** — "Suggest changes" mode in PR inline reviews lets reviewers propose code replacements directly in the diff
+- **Reaction Emoji** — React to issues, PRs, discussions, and comments with thumbs up/down, heart, laugh, hooray, confused, rocket, and eyes
+- **Draft Issues & Issue Templates** — Create draft issues (work-in-progress) and define reusable issue templates (bug report, feature request) per repository with default labels
 - **Wiki** — Markdown-based wiki pages per repository with revision history
 - **Projects** — Kanban boards with drag-and-drop cards for organizing work
 - **Snippets** — Share code snippets (like GitHub Gists) with syntax highlighting and multiple files
+- **Organizations & Teams** — Create organizations with members and teams, assign team permissions to repositories
+- **Milestones** — Track issue progress toward milestones with progress bars and due dates
+- **Commit Comments** — Comment on individual commits with optional file/line references
+- **Repository Topics** — Tag repositories with topics for discovery and filtering on the Explore page
 
 ### CI/CD & DevOps
 - **CI/CD Runner** — Define workflows in `.github/workflows/*.yml` and run them in Docker containers

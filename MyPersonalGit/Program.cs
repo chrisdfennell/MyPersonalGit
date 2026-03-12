@@ -88,6 +88,9 @@ builder.Services.AddSingleton<IMarkdownService, MarkdownService>();
 builder.Services.AddSingleton<IOrganizationService, OrganizationService>();
 builder.Services.AddSingleton<IMilestoneService, MilestoneService>();
 builder.Services.AddSingleton<ICommitCommentService, CommitCommentService>();
+builder.Services.AddSingleton<IDiscussionService, DiscussionService>();
+builder.Services.AddSingleton<IReactionService, ReactionService>();
+builder.Services.AddSingleton<IIssueTemplateService, IssueTemplateService>();
 builder.Services.AddHostedService<WorkflowSchedulerService>();
 builder.Services.AddScoped<CurrentUserService>();
 
