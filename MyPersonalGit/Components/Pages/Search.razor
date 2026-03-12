@@ -9,6 +9,7 @@
 @inject IPullRequestService PRService
 @inject IRepositoryService RepoService
 @inject IAdminService AdminService
+@inject ICollaboratorService CollaboratorService
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
 @rendermode InteractiveServer
@@ -31,7 +32,14 @@
         </div>
     </div>
 
-    @if (!string.IsNullOrWhiteSpace(searchQuery) && hasSearched)
+    @if (isSearching)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p class="text-muted">Searching across all repositories...</p>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(searchQuery) && hasSearched)
     {
         <ul class="nav nav-tabs mb-4">
             <li class="nav-item">
@@ -72,7 +80,7 @@
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <h6 class="mb-1">
-                                            <i class="bi bi-journal-bookmark text-muted me-2"></i>
+                                            <i class="bi @(repo.IsPrivate ? "bi-lock" : "bi-journal-bookmark") text-muted me-2"></i>
                                             @repo.Name
                                         </h6>
                                         <p class="text-muted small mb-0">@repo.Description</p>
@@ -100,16 +108,20 @@
             {
                 @if (codeResults.Any())
                 {
+                    <p class="text-muted small mb-2">Showing @codeResults.Count result@(codeResults.Count != 1 ? "s" : "") (max 50)</p>
                     <div class="list-group">
                         @foreach (var result in codeResults)
                         {
-                            <a href="/repo/@result.RepoName/@result.FilePath" class="list-group-item list-group-item-action">
+                            <a href="/repo/@result.RepoName/blob/main/@result.FilePath" class="list-group-item list-group-item-action">
                                 <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
+                                    <div class="flex-grow-1 overflow-hidden">
                                         <h6 class="mb-1">
+                                            <i class="bi bi-file-earmark-code text-muted me-1"></i>
                                             <span class="text-muted">@result.RepoName /</span> @result.FilePath
                                         </h6>
-                                        <pre class="bg-light p-2 rounded small mb-0"><code>@result.MatchedLine</code></pre>
+                                        <div class="bg-light border rounded small p-2 font-monospace overflow-auto" style="max-height: 80px;">
+                                            <span class="text-muted me-2 user-select-none">@result.LineNumber</span>@result.MatchedLine
+                                        </div>
                                     </div>
                                 </div>
                             </a>
@@ -214,6 +226,7 @@
     private string searchQuery = "";
     private string activeTab = "repositories";
     private bool hasSearched = false;
+    private bool isSearching = false;
 
     private List<RepositoryResult> repositoryResults = new();
     private List<CodeResult> codeResults = new();
@@ -245,18 +258,26 @@
         if (string.IsNullOrWhiteSpace(searchQuery))
             return;
 
+        isSearching = true;
         hasSearched = true;
         repositoryResults.Clear();
         codeResults.Clear();
         issueResults.Clear();
         prResults.Clear();
-
-        await SearchRepositories();
-        await SearchCode();
-        await SearchIssues();
-        await SearchPullRequests();
-
         StateHasChanged();
+
+        try
+        {
+            await SearchRepositories();
+            await SearchCode();
+            await SearchIssues();
+            await SearchPullRequests();
+        }
+        finally
+        {
+            isSearching = false;
+            StateHasChanged();
+        }
     }
 
     private async Task<string> GetProjectRoot()
@@ -274,7 +295,9 @@
     {
         var meta = await RepoService.GetRepositoryAsync(repoName);
         if (meta == null || !meta.IsPrivate) return true;
-        return UserService.IsLoggedIn && meta.Owner.Equals(UserService.Username, StringComparison.OrdinalIgnoreCase);
+        if (!UserService.IsLoggedIn) return false;
+        if (meta.Owner.Equals(UserService.Username, StringComparison.OrdinalIgnoreCase)) return true;
+        return await CollaboratorService.HasPermissionAsync(repoName, UserService.Username, CollaboratorPermission.Read);
     }
 
     private async Task SearchRepositories()
@@ -289,16 +312,19 @@
             foreach (var dir in directories)
             {
                 var repoName = Path.GetFileName(dir);
-                if (repoName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (!await IsRepoAccessible(repoName)) continue;
+                if (!await IsRepoAccessible(repoName)) continue;
 
-                    var meta = await RepoService.GetRepositoryAsync(repoName);
+                var meta = await RepoService.GetRepositoryAsync(repoName);
+                var description = meta?.Description ?? "";
+                if (repoName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+                {
                     repositoryResults.Add(new RepositoryResult
                     {
                         Name = repoName,
-                        Description = meta?.Description ?? "Git repository",
-                        Stars = meta?.Stars ?? 0
+                        Description = !string.IsNullOrEmpty(description) ? description : "Git repository",
+                        Stars = meta?.Stars ?? 0,
+                        IsPrivate = meta?.IsPrivate ?? false
                     });
                 }
             }
@@ -440,6 +466,7 @@
         public string Name { get; set; } = "";
         public string Description { get; set; } = "";
         public int Stars { get; set; }
+        public bool IsPrivate { get; set; }
     }
 
     public class CodeResult

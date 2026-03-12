@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using MyPersonalGit.Data;
+using MyPersonalGit.Models;
 
 namespace MyPersonalGit.Services;
 
@@ -26,7 +27,7 @@ public sealed class BasicAuthMiddleware
 
     public BasicAuthMiddleware(RequestDelegate next) => _next = next;
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, ICollaboratorService collaboratorService, IAuthService authService)
     {
         if (!context.Request.Path.StartsWithSegments("/git"))
         {
@@ -88,14 +89,62 @@ public sealed class BasicAuthMiddleware
         var user = decoded.Substring(0, idx);
         var pass = decoded.Substring(idx + 1);
 
-        // Load config users
+        // Try config-based users first (legacy), then database users
+        var authenticated = false;
         var usersSection = config.GetSection("Git:Users");
         var expected = usersSection[user];
 
-        if (string.IsNullOrEmpty(expected) || !FixedTimeEquals(expected, pass))
+        if (!string.IsNullOrEmpty(expected) && FixedTimeEquals(expected, pass))
+        {
+            authenticated = true;
+        }
+        else
+        {
+            // Try database user authentication
+            var dbUser = await authService.GetUserByUsernameAsync(user);
+            if (dbUser != null && dbUser.IsActive && BCrypt.Net.BCrypt.Verify(pass, dbUser.PasswordHash))
+            {
+                authenticated = true;
+            }
+        }
+
+        if (!authenticated)
         {
             Challenge(context);
             return;
+        }
+
+        // Check repository-level permissions
+        if (!string.IsNullOrEmpty(repoName))
+        {
+            var requiredPermission = isReadOperation
+                ? CollaboratorPermission.Read
+                : CollaboratorPermission.Write;
+
+            // Admin users bypass permission checks
+            var dbUser = await authService.GetUserByUsernameAsync(user);
+            var isAdmin = dbUser?.IsAdmin == true;
+
+            if (!isAdmin)
+            {
+                var hasPermission = await collaboratorService.HasPermissionAsync(repoName, user, requiredPermission);
+
+                // For private repos, enforce read permission; for push, always enforce write permission
+                var repoMeta = await repoService.GetRepositoryAsync(repoName);
+                if (repoMeta?.IsPrivate == true && !hasPermission)
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await context.Response.WriteAsync("You do not have permission to access this repository.");
+                    return;
+                }
+
+                if (!isReadOperation && !hasPermission)
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await context.Response.WriteAsync("You do not have write access to this repository.");
+                    return;
+                }
+            }
         }
 
         var identity = new ClaimsIdentity(new[]
