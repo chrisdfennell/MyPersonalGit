@@ -224,6 +224,182 @@ namespace MyPersonalGit.Migrations
                     b.ToTable("CommitComments");
                 });
 
+            modelBuilder.Entity("MyPersonalGit.Models.Discussion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("AnswerCommentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Author")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsAnswered")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RepoName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RepoName", "Number")
+                        .IsUnique();
+
+                    b.ToTable("Discussions");
+                });
+
+            modelBuilder.Entity("MyPersonalGit.Models.DiscussionComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Author")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DiscussionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsAnswer")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ParentCommentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UpvoteCount")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DiscussionId");
+
+                    b.ToTable("DiscussionComments");
+                });
+
+            modelBuilder.Entity("MyPersonalGit.Models.IssueTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Labels")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RepoName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RepoName", "Name")
+                        .IsUnique();
+
+                    b.ToTable("IssueTemplates");
+                });
+
+            modelBuilder.Entity("MyPersonalGit.Models.Reaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CommitCommentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("DiscussionCommentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DiscussionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Emoji")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("IssueCommentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("IssueId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("PullRequestId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ReviewCommentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Username", "Emoji", "IssueId", "IssueCommentId", "PullRequestId", "ReviewCommentId", "CommitCommentId", "DiscussionId", "DiscussionCommentId");
+
+                    b.ToTable("Reactions");
+                });
+
             modelBuilder.Entity("MyPersonalGit.Models.Organization", b =>
                 {
                     b.Property<int>("Id")
@@ -563,6 +739,9 @@ namespace MyPersonalGit.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDraft")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Labels")
                         .IsRequired()
@@ -1076,6 +1255,9 @@ namespace MyPersonalGit.Migrations
 
                     b.Property<string>("Side")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SuggestionBody")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -2408,9 +2590,23 @@ namespace MyPersonalGit.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MyPersonalGit.Models.DiscussionComment", b =>
+                {
+                    b.HasOne("MyPersonalGit.Models.Discussion", null)
+                        .WithMany("Comments")
+                        .HasForeignKey("DiscussionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MyPersonalGit.Models.Dependency", b =>
                 {
                     b.Navigation("Vulnerabilities");
+                });
+
+            modelBuilder.Entity("MyPersonalGit.Models.Discussion", b =>
+                {
+                    b.Navigation("Comments");
                 });
 
             modelBuilder.Entity("MyPersonalGit.Models.Issue", b =>

@@ -23,6 +23,7 @@ public interface IPullRequestService
     Task<List<ReviewComment>> GetReviewCommentsAsync(string repoName, int number);
     Task<ReviewComment> AddReviewCommentAsync(string repoName, int number, string author, string body, string filePath, int lineNumber, string side = "RIGHT", int? replyToId = null);
     Task<bool> DeleteReviewCommentAsync(int commentId);
+    Task<bool> UpdateReviewCommentSuggestionAsync(int commentId, string suggestionBody);
 }
 
 public class PullRequestService : IPullRequestService
@@ -582,6 +583,17 @@ public class PullRequestService : IPullRequestService
         if (comment == null) return false;
 
         db.ReviewComments.Remove(comment);
+        await db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> UpdateReviewCommentSuggestionAsync(int commentId, string suggestionBody)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var comment = await db.ReviewComments.FindAsync(commentId);
+        if (comment == null) return false;
+
+        comment.SuggestionBody = suggestionBody;
         await db.SaveChangesAsync();
         return true;
     }

@@ -7,6 +7,8 @@
 @using LibGit2Sharp
 @inject IIssueService IssueService
 @inject IMilestoneService MilestoneService
+@inject IIssueTemplateService TemplateService
+@inject IReactionService ReactionService
 @inject IConfiguration Config
 @inject IAdminService AdminService
 @inject NavigationManager Nav
@@ -40,12 +42,77 @@
                     <span class="badge bg-secondary ms-1">@milestones.Count</span>
                 </button>
             </li>
+            <li class="nav-item">
+                <button class="nav-link @(viewMode == "templates" ? "active" : "")" @onclick='() => viewMode = "templates"'>
+                    <i class="bi bi-file-earmark-text me-1"></i> Templates
+                    <span class="badge bg-secondary ms-1">@issueTemplates.Count</span>
+                </button>
+            </li>
         </ul>
     </div>
 </div>
 
 <div class="container-xl px-3">
-    @if (viewMode == "milestones")
+    @if (viewMode == "templates")
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
+            <h5 class="mb-0">Issue Templates</h5>
+            @if (UserService.IsLoggedIn)
+            {
+                <button class="btn btn-success btn-sm" @onclick="() => showNewTemplateModal = true">
+                    <i class="bi bi-plus-lg me-1"></i> New template
+                </button>
+            }
+        </div>
+
+        @if (issueTemplates.Any())
+        {
+            <div class="list-group">
+                @foreach (var tmpl in issueTemplates)
+                {
+                    <div class="list-group-item py-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1 fw-bold"><i class="bi bi-file-earmark-text me-1"></i>@tmpl.Name</h6>
+                                @if (!string.IsNullOrEmpty(tmpl.Description))
+                                {
+                                    <p class="text-muted small mb-1">@tmpl.Description</p>
+                                }
+                                @if (!string.IsNullOrEmpty(tmpl.Labels))
+                                {
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach (var label in tmpl.Labels.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(l => l.Trim()))
+                                        {
+                                            <span class="badge bg-primary" style="font-size: 10px;">@label</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-primary btn-sm" @onclick="() => UseTemplate(tmpl)">
+                                    <i class="bi bi-plus-circle me-1"></i>Use
+                                </button>
+                                @if (UserService.IsLoggedIn)
+                                {
+                                    <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteTemplate(tmpl.Id)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-file-earmark-text display-4 text-muted"></i>
+                <p class="text-muted mt-3">No issue templates configured.</p>
+            </div>
+        }
+    }
+    else if (viewMode == "milestones")
     {
         <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
             <div class="btn-group">
@@ -130,7 +197,13 @@
                             <span class="text-muted fw-normal">#@currentIssue.Number</span>
                         </h1>
                         <div class="d-flex gap-2 align-items-center">
-                            @if (currentIssue.State == IssueState.Open)
+                            @if (currentIssue.IsDraft)
+                            {
+                                <span class="badge bg-secondary d-flex align-items-center gap-1">
+                                    <i class="bi bi-pencil"></i> Draft
+                                </span>
+                            }
+                            else if (currentIssue.State == IssueState.Open)
                             {
                                 <span class="badge bg-success d-flex align-items-center gap-1">
                                     <i class="bi bi-circle-fill" style="font-size: 8px;"></i> Open
@@ -154,6 +227,12 @@
                     @if (UserService.IsLoggedIn)
                     {
                         <div class="btn-group">
+                            @if (currentIssue.IsDraft)
+                            {
+                                <button class="btn btn-outline-success btn-sm" @onclick="ConvertDraftToIssue">
+                                    <i class="bi bi-check-circle me-1"></i> Convert to issue
+                                </button>
+                            }
                             @if (currentIssue.State == IssueState.Open)
                             {
                                 <button class="btn btn-outline-danger btn-sm" @onclick="CloseIssue">
@@ -288,6 +367,10 @@
                                         <i class="bi bi-check-circle-fill text-danger"></i>
                                     }
                                     <h6 class="mb-0">@issue.Title</h6>
+                                    @if (issue.IsDraft)
+                                    {
+                                        <span class="badge bg-secondary" style="font-size: 10px;">Draft</span>
+                                    }
                                     @foreach (var label in issue.Labels)
                                     {
                                         <span class="badge bg-primary" style="font-size: 10px;">@label</span>
@@ -339,6 +422,19 @@
                         <label class="form-label fw-bold">Labels (comma-separated)</label>
                         <input type="text" class="form-control" @bind="newIssueLabels" placeholder="bug, enhancement, documentation" />
                     </div>
+                    @if (issueTemplates.Any())
+                    {
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Template</label>
+                            <select class="form-select" @bind="selectedTemplateId" @bind:after="ApplyTemplate">
+                                <option value="0">No template</option>
+                                @foreach (var tmpl in issueTemplates)
+                                {
+                                    <option value="@tmpl.Id">@tmpl.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
                     @if (milestones.Any(m => m.State == MilestoneState.Open))
                     {
                         <div class="mb-3">
@@ -352,11 +448,18 @@
                             </select>
                         </div>
                     }
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" @bind="newIssueIsDraft" id="issueDraftCheck">
+                        <label class="form-check-label" for="issueDraftCheck">
+                            Create as draft
+                        </label>
+                        <div class="form-text">Draft issues are visible but marked as work-in-progress.</div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="() => showNewIssueModal = false">Cancel</button>
                     <button type="button" class="btn btn-success" @onclick="CreateIssue" disabled="@string.IsNullOrWhiteSpace(newIssueTitle)">
-                        <i class="bi bi-plus-circle me-1"></i> Create issue
+                        <i class="bi bi-plus-circle me-1"></i> @(newIssueIsDraft ? "Create draft" : "Create issue")
                     </button>
                 </div>
             </div>
@@ -383,6 +486,16 @@
     private string? issueTemplate;
     private int newIssueMilestoneId;
     private int filterMilestoneId;
+    private bool newIssueIsDraft;
+    private int selectedTemplateId;
+
+    // Issue Templates
+    private List<IssueTemplate> issueTemplates = new();
+    private bool showNewTemplateModal;
+    private string newTemplateName = "";
+    private string newTemplateBody = "";
+    private string newTemplateDescription = "";
+    private string newTemplateLabels = "";
 
     // Milestones
     private List<Milestone> milestones = new();
@@ -415,6 +528,7 @@
 
         await LoadIssues();
         await LoadMilestones();
+        await LoadTemplates();
         LoadTemplate();
     }
 
@@ -496,11 +610,17 @@
         {
             await IssueService.UpdateIssueAsync(RepoName, issue.Number, i => i.MilestoneId = newIssueMilestoneId);
         }
+        if (newIssueIsDraft)
+        {
+            await IssueService.UpdateIssueAsync(RepoName, issue.Number, i => i.IsDraft = true);
+        }
 
         newIssueTitle = "";
         newIssueBody = "";
         newIssueLabels = "";
         newIssueMilestoneId = 0;
+        newIssueIsDraft = false;
+        selectedTemplateId = 0;
         showNewIssueModal = false;
 
         Nav.NavigateTo($"/repo/{RepoName}/issues/{issue.Number}");
@@ -594,6 +714,58 @@
         await MilestoneService.DeleteMilestoneAsync(RepoName, number);
         await LoadMilestones();
     }
+
+    // Issue Templates
+    private async Task LoadTemplates()
+    {
+        issueTemplates = await TemplateService.GetTemplatesAsync(RepoName);
+    }
+
+    private void ApplyTemplate()
+    {
+        if (selectedTemplateId <= 0) return;
+        var tmpl = issueTemplates.FirstOrDefault(t => t.Id == selectedTemplateId);
+        if (tmpl == null) return;
+        newIssueBody = tmpl.Body;
+        if (!string.IsNullOrEmpty(tmpl.Labels))
+            newIssueLabels = tmpl.Labels;
+    }
+
+    private void UseTemplate(IssueTemplate tmpl)
+    {
+        selectedTemplateId = tmpl.Id;
+        newIssueBody = tmpl.Body;
+        if (!string.IsNullOrEmpty(tmpl.Labels))
+            newIssueLabels = tmpl.Labels;
+        viewMode = "issues";
+        showNewIssueModal = true;
+    }
+
+    private async Task CreateTemplate()
+    {
+        if (!UserService.IsLoggedIn || string.IsNullOrWhiteSpace(newTemplateName)) return;
+        await TemplateService.CreateTemplateAsync(RepoName, newTemplateName, newTemplateBody, newTemplateDescription, newTemplateLabels);
+        newTemplateName = "";
+        newTemplateBody = "";
+        newTemplateDescription = "";
+        newTemplateLabels = "";
+        showNewTemplateModal = false;
+        await LoadTemplates();
+    }
+
+    private async Task DeleteTemplate(int id)
+    {
+        await TemplateService.DeleteTemplateAsync(id);
+        await LoadTemplates();
+    }
+
+    // Draft issue conversion
+    private async Task ConvertDraftToIssue()
+    {
+        if (!UserService.IsLoggedIn || currentIssue == null) return;
+        await IssueService.UpdateIssueAsync(RepoName, currentIssue.Number, i => i.IsDraft = false);
+        await LoadIssues();
+    }
 }
 
 @if (showNewMilestoneModal)
@@ -622,6 +794,42 @@
                 <div class="modal-footer border-top-0">
                     <button class="btn btn-light border" @onclick="() => showNewMilestoneModal = false">Cancel</button>
                     <button class="btn btn-gh-primary" @onclick="CreateMilestone" disabled="@string.IsNullOrWhiteSpace(newMilestoneTitle)">Create milestone</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showNewTemplateModal)
+{
+    <div class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">New Issue Template</h5>
+                    <button type="button" class="btn-close" @onclick="() => showNewTemplateModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Template Name</label>
+                        <input type="text" class="form-control" @bind="newTemplateName" placeholder="Bug Report" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Description</label>
+                        <input type="text" class="form-control" @bind="newTemplateDescription" placeholder="File a bug report" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Default Labels (comma-separated)</label>
+                        <input type="text" class="form-control" @bind="newTemplateLabels" placeholder="bug, triage" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Template Body (Markdown)</label>
+                        <textarea class="form-control font-monospace" rows="10" @bind="newTemplateBody" placeholder="## Description&#10;&#10;## Steps to Reproduce&#10;&#10;## Expected Behavior&#10;&#10;## Actual Behavior"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button class="btn btn-light border" @onclick="() => showNewTemplateModal = false">Cancel</button>
+                    <button class="btn btn-success" @onclick="CreateTemplate" disabled="@(string.IsNullOrWhiteSpace(newTemplateName) || string.IsNullOrWhiteSpace(newTemplateBody))">Create template</button>
                 </div>
             </div>
         </div>

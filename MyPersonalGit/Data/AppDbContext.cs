@@ -115,6 +115,16 @@ public class AppDbContext : DbContext
     // Commit Comments
     public DbSet<CommitComment> CommitComments => Set<CommitComment>();
 
+    // Discussions
+    public DbSet<Discussion> Discussions => Set<Discussion>();
+    public DbSet<DiscussionComment> DiscussionComments => Set<DiscussionComment>();
+
+    // Reactions
+    public DbSet<Reaction> Reactions => Set<Reaction>();
+
+    // Issue Templates
+    public DbSet<IssueTemplate> IssueTemplates => Set<IssueTemplate>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Shared JSON value converters + comparers for List<string> and string[]
@@ -433,6 +443,33 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<CommitComment>(e =>
         {
             e.HasIndex(c => new { c.RepoName, c.CommitSha });
+        });
+
+        // --- Discussion ---
+        modelBuilder.Entity<Discussion>(e =>
+        {
+            e.HasIndex(d => new { d.RepoName, d.Number }).IsUnique();
+            e.HasMany(d => d.Comments)
+                .WithOne()
+                .HasForeignKey(c => c.DiscussionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<DiscussionComment>(e =>
+        {
+            e.HasIndex(c => c.DiscussionId);
+        });
+
+        // --- Reaction ---
+        modelBuilder.Entity<Reaction>(e =>
+        {
+            e.HasIndex(r => new { r.Username, r.Emoji, r.IssueId, r.IssueCommentId, r.PullRequestId, r.ReviewCommentId, r.CommitCommentId, r.DiscussionId, r.DiscussionCommentId });
+        });
+
+        // --- IssueTemplate ---
+        modelBuilder.Entity<IssueTemplate>(e =>
+        {
+            e.HasIndex(t => new { t.RepoName, t.Name }).IsUnique();
         });
     }
 }

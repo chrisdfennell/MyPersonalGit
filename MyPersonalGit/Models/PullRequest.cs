@@ -61,4 +61,5 @@ public class ReviewComment
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
     public int? ReplyToId { get; set; } // for threaded replies
+    public string? SuggestionBody { get; set; } // code suggestion content for "suggest changes"
 }
