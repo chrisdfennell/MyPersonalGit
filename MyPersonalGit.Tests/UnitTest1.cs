@@ -273,7 +273,8 @@ public class PullRequestServiceTests
         var activityService = Substitute.For<IActivityService>();
         var adminService = Substitute.For<IAdminService>();
         var config = Substitute.For<IConfiguration>();
-        _service = new PullRequestService(factory, NullLogger<PullRequestService>.Instance, _notifications, activityService, adminService, config);
+        var branchProtection = Substitute.For<IBranchProtectionService>();
+        _service = new PullRequestService(factory, NullLogger<PullRequestService>.Instance, _notifications, activityService, adminService, branchProtection, config);
     }
 
     [Fact]
@@ -1100,7 +1101,8 @@ public class BranchProtectionServiceTests
             .Options;
 
         var factory = new TestDbContextFactory(options);
-        _service = new BranchProtectionService(factory, NullLogger<BranchProtectionService>.Instance);
+        var config = Substitute.For<IConfiguration>();
+        _service = new BranchProtectionService(factory, NullLogger<BranchProtectionService>.Instance, config);
     }
 
     [Fact]

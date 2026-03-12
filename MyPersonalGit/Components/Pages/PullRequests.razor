@@ -173,6 +173,10 @@
                             <li class="nav-item">
                                 <button class="nav-link @(activeTab == "files" ? "active" : "")" @onclick='() => SetTab("files")'>
                                     <i class="bi bi-file-diff me-1"></i> Files changed
+                                    @if (reviewComments.Any())
+                                    {
+                                        <span class="badge bg-secondary ms-1">@reviewComments.Count</span>
+                                    }
                                     @if (filePatches.Any())
                                     {
                                         <span class="badge bg-secondary bg-opacity-25 ms-1">@filePatches.Count</span>
@@ -313,12 +317,88 @@
                                                     <tbody>
                                                         @foreach (var row in GetUnifiedDiffRows(patch.DiffLines))
                                                         {
-                                                            <tr class="@row.CssClass diff-line">
+                                                            var lineNum = row.Sign == '+' ? int.TryParse(row.NewNum, out var n) ? n : 0 : row.Sign == '-' ? int.TryParse(row.OldNum, out var o) ? o : 0 : 0;
+                                                            var side = row.Sign == '-' ? "LEFT" : "RIGHT";
+                                                            <tr class="@row.CssClass diff-line diff-line-hover">
                                                                 <td class="text-muted px-2 text-end diff-linenum" style="width: 50px; user-select: none;">@row.OldNum</td>
                                                                 <td class="text-muted px-2 text-end diff-linenum" style="width: 50px; user-select: none;">@row.NewNum</td>
-                                                                <td class="px-1 diff-sign" style="width: 20px; user-select: none;">@(row.Sign == ' ' ? "" : row.Sign.ToString())</td>
+                                                                <td class="px-1 diff-sign" style="width: 20px; user-select: none;">
+                                                                    @if (row.CssClass != "diff-hunk" && UserService.IsLoggedIn && lineNum > 0)
+                                                                    {
+                                                                        <button class="btn-comment-add" title="Add comment" @onclick="() => StartComment(patch.Path, lineNum, side)">+</button>
+                                                                    }
+                                                                    @(row.Sign == ' ' ? "" : row.Sign.ToString())
+                                                                </td>
                                                                 <td class="px-2 diff-text" style="white-space: pre-wrap; word-break: break-all;">@row.Content</td>
                                                             </tr>
+                                                            @* Inline comments for this line *@
+                                                            @foreach (var comment in (lineNum > 0 ? GetCommentsForLine(patch.Path, lineNum, side) : new()))
+                                                            {
+                                                                <tr class="diff-comment-row">
+                                                                    <td colspan="4" class="p-0">
+                                                                        <div class="diff-comment-thread mx-3 my-1">
+                                                                            <div class="diff-comment border rounded-2 p-2 mb-1 bg-light-subtle">
+                                                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                                                    <span class="fw-semibold small">@comment.Author</span>
+                                                                                    <span class="text-muted" style="font-size: 11px;">@FormatDate(comment.CreatedAt)</span>
+                                                                                </div>
+                                                                                <div class="small" style="font-family: var(--bs-body-font-family);">@((MarkupString)Markdig.Markdown.ToHtml(comment.Body, _mdPipeline))</div>
+                                                                                <div class="mt-1">
+                                                                                    @if (UserService.IsLoggedIn)
+                                                                                    {
+                                                                                        <button class="btn btn-link btn-sm p-0 text-muted" @onclick="() => StartComment(patch.Path, lineNum, side, comment.Id)">Reply</button>
+                                                                                    }
+                                                                                    @if (UserService.Username == comment.Author)
+                                                                                    {
+                                                                                        <button class="btn btn-link btn-sm p-0 text-danger ms-2" @onclick="() => DeleteInlineComment(comment.Id)">Delete</button>
+                                                                                    }
+                                                                                </div>
+                                                                            </div>
+                                                                            @foreach (var reply in GetReplies(comment.Id))
+                                                                            {
+                                                                                <div class="diff-comment border rounded-2 p-2 mb-1 bg-light-subtle ms-3">
+                                                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                                                        <span class="fw-semibold small">@reply.Author</span>
+                                                                                        <span class="text-muted" style="font-size: 11px;">@FormatDate(reply.CreatedAt)</span>
+                                                                                    </div>
+                                                                                    <div class="small" style="font-family: var(--bs-body-font-family);">@((MarkupString)Markdig.Markdown.ToHtml(reply.Body, _mdPipeline))</div>
+                                                                                    @if (UserService.Username == reply.Author)
+                                                                                    {
+                                                                                        <button class="btn btn-link btn-sm p-0 text-danger mt-1" @onclick="() => DeleteInlineComment(reply.Id)">Delete</button>
+                                                                                    }
+                                                                                </div>
+                                                                            }
+                                                                            @if (commentingOnFile == patch.Path && commentingOnLine == lineNum && commentingOnSide == side && replyToCommentId == comment.Id)
+                                                                            {
+                                                                                <div class="border rounded-2 p-2 ms-3 bg-white">
+                                                                                    <textarea class="form-control form-control-sm mb-1" rows="2" @bind="newCommentBody" placeholder="Reply..."></textarea>
+                                                                                    <div class="d-flex gap-1">
+                                                                                        <button class="btn btn-primary btn-sm" @onclick="SubmitInlineComment" disabled="@string.IsNullOrWhiteSpace(newCommentBody)">Reply</button>
+                                                                                        <button class="btn btn-outline-secondary btn-sm" @onclick="CancelComment">Cancel</button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            }
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            }
+                                                            @* New comment form (not a reply) *@
+                                                            @if (commentingOnFile == patch.Path && commentingOnLine == lineNum && commentingOnSide == side && replyToCommentId == null)
+                                                            {
+                                                                <tr class="diff-comment-row">
+                                                                    <td colspan="4" class="p-0">
+                                                                        <div class="diff-comment-thread mx-3 my-1">
+                                                                            <div class="border rounded-2 p-2 bg-white">
+                                                                                <textarea class="form-control form-control-sm mb-1" rows="3" @bind="newCommentBody" placeholder="Leave a comment on this line..."></textarea>
+                                                                                <div class="d-flex gap-1">
+                                                                                    <button class="btn btn-primary btn-sm" @onclick="SubmitInlineComment" disabled="@string.IsNullOrWhiteSpace(newCommentBody)">Comment</button>
+                                                                                    <button class="btn btn-outline-secondary btn-sm" @onclick="CancelComment">Cancel</button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            }
                                                         }
                                                     </tbody>
                                                 </table>
@@ -329,12 +409,100 @@
                                                     <tbody>
                                                         @foreach (var pair in GetSplitDiffWithLineNumbers(patch.DiffLines))
                                                         {
-                                                            <tr class="diff-line">
-                                                                <td class="text-muted text-end px-1 diff-linenum @(pair.Left != null && pair.Left.StartsWith("-") ? "diff-removed" : "diff-context")" style="width: 40px; user-select: none;">@(pair.LeftLineNum > 0 ? pair.LeftLineNum.ToString() : "")</td>
+                                                            <tr class="diff-line diff-line-hover">
+                                                                <td class="text-muted text-end px-1 diff-linenum @(pair.Left != null && pair.Left.StartsWith("-") ? "diff-removed" : "diff-context")" style="width: 40px; user-select: none;">
+                                                                    @if (pair.LeftLineNum > 0 && pair.Left != null && pair.Left.StartsWith("-") && UserService.IsLoggedIn)
+                                                                    {
+                                                                        <button class="btn-comment-add" title="Add comment" @onclick="() => StartComment(patch.Path, pair.LeftLineNum, SideLeft)">+</button>
+                                                                    }
+                                                                    @(pair.LeftLineNum > 0 ? pair.LeftLineNum.ToString() : "")
+                                                                </td>
                                                                 <td class="px-2 @(pair.Left == null ? "diff-empty" : pair.Left.StartsWith("-") ? "diff-removed" : "diff-context")" style="width: 50%; white-space: pre-wrap; word-break: break-all;">@(pair.Left != null && pair.Left.Length > 1 ? pair.Left.Substring(1) : pair.Left ?? "")</td>
-                                                                <td class="text-muted text-end px-1 diff-linenum @(pair.Right != null && pair.Right.StartsWith("+") ? "diff-added" : "diff-context")" style="width: 40px; user-select: none;">@(pair.RightLineNum > 0 ? pair.RightLineNum.ToString() : "")</td>
+                                                                <td class="text-muted text-end px-1 diff-linenum @(pair.Right != null && pair.Right.StartsWith("+") ? "diff-added" : "diff-context")" style="width: 40px; user-select: none;">
+                                                                    @if (pair.RightLineNum > 0 && UserService.IsLoggedIn)
+                                                                    {
+                                                                        <button class="btn-comment-add" title="Add comment" @onclick="() => StartComment(patch.Path, pair.RightLineNum, SideRight)">+</button>
+                                                                    }
+                                                                    @(pair.RightLineNum > 0 ? pair.RightLineNum.ToString() : "")
+                                                                </td>
                                                                 <td class="px-2 @(pair.Right == null ? "diff-empty" : pair.Right.StartsWith("+") ? "diff-added" : "diff-context")" style="width: 50%; white-space: pre-wrap; word-break: break-all;">@(pair.Right != null && pair.Right.Length > 1 ? pair.Right.Substring(1) : pair.Right ?? "")</td>
                                                             </tr>
+                                                            @* Inline comments for left (removed) side *@
+                                                            @if (pair.LeftLineNum > 0 && pair.Left != null && pair.Left.StartsWith("-"))
+                                                            {
+                                                                var leftComments = GetCommentsForLine(patch.Path, pair.LeftLineNum, "LEFT");
+                                                                @foreach (var comment in leftComments)
+                                                                {
+                                                                    <tr class="diff-comment-row"><td colspan="4" class="p-0">
+                                                                        <div class="diff-comment-thread mx-3 my-1">
+                                                                            <div class="diff-comment border rounded-2 p-2 mb-1 bg-light-subtle">
+                                                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                                                    <span class="fw-semibold small">@comment.Author</span>
+                                                                                    <span class="text-muted" style="font-size: 11px;">@FormatDate(comment.CreatedAt)</span>
+                                                                                </div>
+                                                                                <div class="small" style="font-family: var(--bs-body-font-family);">@((MarkupString)Markdig.Markdown.ToHtml(comment.Body, _mdPipeline))</div>
+                                                                                <div class="mt-1">
+                                                                                    @if (UserService.IsLoggedIn) { <button class="btn btn-link btn-sm p-0 text-muted" @onclick="() => StartComment(patch.Path, pair.LeftLineNum, SideLeft, comment.Id)">Reply</button> }
+                                                                                    @if (UserService.Username == comment.Author) { <button class="btn btn-link btn-sm p-0 text-danger ms-2" @onclick="() => DeleteInlineComment(comment.Id)">Delete</button> }
+                                                                                </div>
+                                                                            </div>
+                                                                            @foreach (var reply in GetReplies(comment.Id))
+                                                                            {
+                                                                                <div class="diff-comment border rounded-2 p-2 mb-1 bg-light-subtle ms-3">
+                                                                                    <div class="d-flex justify-content-between align-items-center mb-1"><span class="fw-semibold small">@reply.Author</span><span class="text-muted" style="font-size: 11px;">@FormatDate(reply.CreatedAt)</span></div>
+                                                                                    <div class="small" style="font-family: var(--bs-body-font-family);">@((MarkupString)Markdig.Markdown.ToHtml(reply.Body, _mdPipeline))</div>
+                                                                                    @if (UserService.Username == reply.Author) { <button class="btn btn-link btn-sm p-0 text-danger mt-1" @onclick="() => DeleteInlineComment(reply.Id)">Delete</button> }
+                                                                                </div>
+                                                                            }
+                                                                        </div>
+                                                                    </td></tr>
+                                                                }
+                                                                @if (commentingOnFile == patch.Path && commentingOnLine == pair.LeftLineNum && commentingOnSide == "LEFT" && replyToCommentId == null)
+                                                                {
+                                                                    <tr class="diff-comment-row"><td colspan="4" class="p-0"><div class="diff-comment-thread mx-3 my-1"><div class="border rounded-2 p-2 bg-white">
+                                                                        <textarea class="form-control form-control-sm mb-1" rows="3" @bind="newCommentBody" placeholder="Leave a comment..."></textarea>
+                                                                        <div class="d-flex gap-1"><button class="btn btn-primary btn-sm" @onclick="SubmitInlineComment" disabled="@string.IsNullOrWhiteSpace(newCommentBody)">Comment</button><button class="btn btn-outline-secondary btn-sm" @onclick="CancelComment">Cancel</button></div>
+                                                                    </div></div></td></tr>
+                                                                }
+                                                            }
+                                                            @* Inline comments for right (added) side *@
+                                                            @if (pair.RightLineNum > 0)
+                                                            {
+                                                                var rightComments = GetCommentsForLine(patch.Path, pair.RightLineNum, "RIGHT");
+                                                                @foreach (var comment in rightComments)
+                                                                {
+                                                                    <tr class="diff-comment-row"><td colspan="4" class="p-0">
+                                                                        <div class="diff-comment-thread mx-3 my-1">
+                                                                            <div class="diff-comment border rounded-2 p-2 mb-1 bg-light-subtle">
+                                                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                                                    <span class="fw-semibold small">@comment.Author</span>
+                                                                                    <span class="text-muted" style="font-size: 11px;">@FormatDate(comment.CreatedAt)</span>
+                                                                                </div>
+                                                                                <div class="small" style="font-family: var(--bs-body-font-family);">@((MarkupString)Markdig.Markdown.ToHtml(comment.Body, _mdPipeline))</div>
+                                                                                <div class="mt-1">
+                                                                                    @if (UserService.IsLoggedIn) { <button class="btn btn-link btn-sm p-0 text-muted" @onclick="() => StartComment(patch.Path, pair.RightLineNum, SideRight, comment.Id)">Reply</button> }
+                                                                                    @if (UserService.Username == comment.Author) { <button class="btn btn-link btn-sm p-0 text-danger ms-2" @onclick="() => DeleteInlineComment(comment.Id)">Delete</button> }
+                                                                                </div>
+                                                                            </div>
+                                                                            @foreach (var reply in GetReplies(comment.Id))
+                                                                            {
+                                                                                <div class="diff-comment border rounded-2 p-2 mb-1 bg-light-subtle ms-3">
+                                                                                    <div class="d-flex justify-content-between align-items-center mb-1"><span class="fw-semibold small">@reply.Author</span><span class="text-muted" style="font-size: 11px;">@FormatDate(reply.CreatedAt)</span></div>
+                                                                                    <div class="small" style="font-family: var(--bs-body-font-family);">@((MarkupString)Markdig.Markdown.ToHtml(reply.Body, _mdPipeline))</div>
+                                                                                    @if (UserService.Username == reply.Author) { <button class="btn btn-link btn-sm p-0 text-danger mt-1" @onclick="() => DeleteInlineComment(reply.Id)">Delete</button> }
+                                                                                </div>
+                                                                            }
+                                                                        </div>
+                                                                    </td></tr>
+                                                                }
+                                                                @if (commentingOnFile == patch.Path && commentingOnLine == pair.RightLineNum && commentingOnSide == "RIGHT" && replyToCommentId == null)
+                                                                {
+                                                                    <tr class="diff-comment-row"><td colspan="4" class="p-0"><div class="diff-comment-thread mx-3 my-1"><div class="border rounded-2 p-2 bg-white">
+                                                                        <textarea class="form-control form-control-sm mb-1" rows="3" @bind="newCommentBody" placeholder="Leave a comment..."></textarea>
+                                                                        <div class="d-flex gap-1"><button class="btn btn-primary btn-sm" @onclick="SubmitInlineComment" disabled="@string.IsNullOrWhiteSpace(newCommentBody)">Comment</button><button class="btn btn-outline-secondary btn-sm" @onclick="CancelComment">Cancel</button></div>
+                                                                    </div></div></td></tr>
+                                                                }
+                                                            }
                                                         }
                                                     </tbody>
                                                 </table>
@@ -538,6 +706,13 @@
     .diff-sign { opacity: 0.6; }
     .diff-linenum { font-size: 11px; }
     .diff-hunk .diff-text { font-style: italic; font-size: 11px; }
+    .btn-comment-add { display: none; position: absolute; left: -2px; top: 0; width: 18px; height: 18px; border: none; border-radius: 50%; background: #0969da; color: white; font-size: 12px; line-height: 18px; padding: 0; cursor: pointer; z-index: 1; }
+    .diff-line-hover { position: relative; }
+    .diff-line-hover:hover .btn-comment-add { display: inline-block; }
+    .diff-comment-row { background: var(--bs-light, #f8f9fa); }
+    .diff-comment-thread { max-width: 700px; }
+    [data-bs-theme="dark"] .diff-comment-row { background: #161b22; }
+    [data-bs-theme="dark"] .diff-comment-thread .bg-white { background: #0d1117 !important; }
     .markdown-body h1, .markdown-body h2 { border-bottom: 1px solid #d0d7de; padding-bottom: 0.3em; margin-top: 24px; margin-bottom: 16px; font-weight: 600; }
     .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 { margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; }
     .markdown-body p { margin-bottom: 16px; }
@@ -605,6 +780,16 @@
     private int totalAdded;
     private int totalDeleted;
 
+    // Inline review comments
+    private List<ReviewComment> reviewComments = new();
+    private string? commentingOnFile;
+    private int commentingOnLine;
+    private string commentingOnSide = "RIGHT";
+    private string newCommentBody = "";
+    private int? replyToCommentId;
+    private const string SideLeft = "LEFT";
+    private const string SideRight = "RIGHT";
+
     private static readonly MarkdownPipeline _mdPipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
         .Build();
@@ -632,6 +817,7 @@
         if (currentPR != null)
         {
             LoadPRCommitsAndDiff();
+            reviewComments = await PRService.GetReviewCommentsAsync(RepoName, currentPR.Number);
             if (currentPR.State == PullRequestState.Open)
             {
                 var (cm, reason) = await PRService.CanMergeAsync(RepoName, currentPR.Number);
@@ -836,6 +1022,54 @@
         if (!UserService.IsLoggedIn || !Number.HasValue) return;
         await PRService.DisableAutoMergeAsync(RepoName, Number.Value);
         await LoadPRs();
+    }
+
+    private void StartComment(string filePath, int lineNumber, string side = "RIGHT", int? replyTo = null)
+    {
+        commentingOnFile = filePath;
+        commentingOnLine = lineNumber;
+        commentingOnSide = side;
+        replyToCommentId = replyTo;
+        newCommentBody = "";
+    }
+
+    private void CancelComment()
+    {
+        commentingOnFile = null;
+        newCommentBody = "";
+        replyToCommentId = null;
+    }
+
+    private async Task SubmitInlineComment()
+    {
+        if (!UserService.IsLoggedIn || !Number.HasValue || string.IsNullOrWhiteSpace(newCommentBody) || commentingOnFile == null) return;
+
+        await PRService.AddReviewCommentAsync(RepoName, Number.Value, UserService.Username, newCommentBody, commentingOnFile, commentingOnLine, commentingOnSide, replyToCommentId);
+        reviewComments = await PRService.GetReviewCommentsAsync(RepoName, Number.Value);
+        CancelComment();
+    }
+
+    private async Task DeleteInlineComment(int commentId)
+    {
+        await PRService.DeleteReviewCommentAsync(commentId);
+        if (Number.HasValue)
+            reviewComments = await PRService.GetReviewCommentsAsync(RepoName, Number.Value);
+    }
+
+    private List<ReviewComment> GetCommentsForLine(string filePath, int lineNumber, string side)
+    {
+        return reviewComments
+            .Where(c => c.FilePath == filePath && c.LineNumber == lineNumber && c.Side == side && c.ReplyToId == null)
+            .OrderBy(c => c.CreatedAt)
+            .ToList();
+    }
+
+    private List<ReviewComment> GetReplies(int parentId)
+    {
+        return reviewComments
+            .Where(c => c.ReplyToId == parentId)
+            .OrderBy(c => c.CreatedAt)
+            .ToList();
     }
 
     private async Task<string?> GetRepoPath()

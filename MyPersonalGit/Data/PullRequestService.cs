@@ -20,6 +20,9 @@ public interface IPullRequestService
     Task<bool> EnableAutoMergeAsync(string repoName, int number, MergeStrategy strategy);
     Task<bool> DisableAutoMergeAsync(string repoName, int number);
     Task<bool> ReopenPullRequestAsync(string repoName, int number);
+    Task<List<ReviewComment>> GetReviewCommentsAsync(string repoName, int number);
+    Task<ReviewComment> AddReviewCommentAsync(string repoName, int number, string author, string body, string filePath, int lineNumber, string side = "RIGHT", int? replyToId = null);
+    Task<bool> DeleteReviewCommentAsync(int commentId);
 }
 
 public class PullRequestService : IPullRequestService
@@ -151,7 +154,7 @@ public class PullRequestService : IPullRequestService
                     return (false, "Changes have been requested — address review feedback before merging");
             }
 
-            // Check required status checks
+            // Check required status checks (workflow runs + commit statuses)
             if (protectionRule.RequireStatusChecks && protectionRule.RequiredStatusChecks.Any())
             {
                 var workflowRuns = await db.WorkflowRuns
@@ -161,11 +164,25 @@ public class PullRequestService : IPullRequestService
 
                 foreach (var requiredCheck in protectionRule.RequiredStatusChecks)
                 {
+                    // Check workflow runs first
                     var latestRun = workflowRuns.FirstOrDefault(w => w.WorkflowName == requiredCheck);
-                    if (latestRun == null)
+                    if (latestRun != null)
+                    {
+                        if (latestRun.Status != WorkflowStatus.Success)
+                            return (false, $"Required status check '{requiredCheck}' has not passed (status: {latestRun.Status})");
+                        continue;
+                    }
+
+                    // Fall back to commit status API
+                    var commitStatus = await db.CommitStatuses
+                        .Where(s => s.RepoName == repoName && s.Context == requiredCheck)
+                        .OrderByDescending(s => s.UpdatedAt)
+                        .FirstOrDefaultAsync();
+
+                    if (commitStatus == null)
                         return (false, $"Required status check '{requiredCheck}' has not run");
-                    if (latestRun.Status != WorkflowStatus.Success)
-                        return (false, $"Required status check '{requiredCheck}' has not passed (status: {latestRun.Status})");
+                    if (commitStatus.State != CommitStatusState.Success)
+                        return (false, $"Required status check '{requiredCheck}' has not passed (status: {commitStatus.State})");
                 }
             }
 
@@ -250,8 +267,18 @@ public class PullRequestService : IPullRequestService
                     .ToListAsync();
                 foreach (var check in protectionRule.RequiredStatusChecks)
                 {
-                    var latest = workflowRuns.FirstOrDefault(w => w.WorkflowName == check);
-                    if (latest == null || latest.Status != WorkflowStatus.Success)
+                    var latestWf = workflowRuns.FirstOrDefault(w => w.WorkflowName == check);
+                    if (latestWf != null)
+                    {
+                        if (latestWf.Status != WorkflowStatus.Success)
+                            return (false, $"Branch protection: required status check '{check}' has not passed");
+                        continue;
+                    }
+                    var commitStatus = await db.CommitStatuses
+                        .Where(s => s.RepoName == repoName && s.Context == check)
+                        .OrderByDescending(s => s.UpdatedAt)
+                        .FirstOrDefaultAsync();
+                    if (commitStatus == null || commitStatus.State != CommitStatusState.Success)
                         return (false, $"Branch protection: required status check '{check}' has not passed");
                 }
             }
@@ -508,6 +535,54 @@ public class PullRequestService : IPullRequestService
         await db.SaveChangesAsync();
 
         _logger.LogInformation("PR #{Number} reopened in {RepoName}", number, repoName);
+        return true;
+    }
+
+    public async Task<List<ReviewComment>> GetReviewCommentsAsync(string repoName, int number)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var pr = await db.PullRequests.FirstOrDefaultAsync(p => p.RepoName == repoName && p.Number == number);
+        if (pr == null) return new();
+
+        return await db.ReviewComments
+            .Where(c => c.PullRequestId == pr.Id)
+            .OrderBy(c => c.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<ReviewComment> AddReviewCommentAsync(string repoName, int number, string author, string body, string filePath, int lineNumber, string side = "RIGHT", int? replyToId = null)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var pr = await db.PullRequests.FirstOrDefaultAsync(p => p.RepoName == repoName && p.Number == number);
+        if (pr == null) throw new InvalidOperationException("Pull request not found");
+
+        var comment = new ReviewComment
+        {
+            PullRequestId = pr.Id,
+            Author = author,
+            Body = body,
+            FilePath = filePath,
+            LineNumber = lineNumber,
+            Side = side,
+            ReplyToId = replyToId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        db.ReviewComments.Add(comment);
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Review comment added to PR #{Number} in {RepoName} at {FilePath}:{LineNumber} by {Author}", number, repoName, filePath, lineNumber, author);
+        return comment;
+    }
+
+    public async Task<bool> DeleteReviewCommentAsync(int commentId)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var comment = await db.ReviewComments.FindAsync(commentId);
+        if (comment == null) return false;
+
+        db.ReviewComments.Remove(comment);
+        await db.SaveChangesAsync();
         return true;
     }
 

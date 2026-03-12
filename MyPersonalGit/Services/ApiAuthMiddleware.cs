@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
+using MyPersonalGit.Data;
 using MyPersonalGit.Models;
 
 namespace MyPersonalGit.Services;
@@ -15,7 +16,7 @@ public sealed class ApiAuthMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, ICollaboratorService collaboratorService, IAuthService authService)
     {
         if (!context.Request.Path.StartsWithSegments("/api"))
         {
@@ -89,6 +90,32 @@ public sealed class ApiAuthMiddleware
         }
 
         context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "ApiToken"));
+
+        // Check repository permissions for repo-scoped API requests
+        // Path format: /api/v1/repos/{repoName}/...
+        if (context.Request.Path.StartsWithSegments("/api/v1/repos"))
+        {
+            var segments = context.Request.Path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (segments?.Length >= 4) // ["api", "v1", "repos", "{repoName}", ...]
+            {
+                var repoName = segments[3];
+                var isWriteMethod = context.Request.Method != "GET" && context.Request.Method != "HEAD";
+                var requiredPermission = isWriteMethod ? CollaboratorPermission.Write : CollaboratorPermission.Read;
+
+                var dbUser = await authService.GetUserByUsernameAsync(matchedToken.Username);
+                if (dbUser?.IsAdmin != true)
+                {
+                    var hasPermission = await collaboratorService.HasPermissionAsync(repoName, matchedToken.Username, requiredPermission);
+                    if (!hasPermission && isWriteMethod)
+                    {
+                        context.Response.StatusCode = 403;
+                        context.Response.ContentType = "application/json";
+                        await context.Response.WriteAsync(JsonSerializer.Serialize(new { error = "You do not have write access to this repository" }));
+                        return;
+                    }
+                }
+            }
+        }
 
         await _next(context);
     }

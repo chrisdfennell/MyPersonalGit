@@ -137,6 +137,52 @@ namespace MyPersonalGit.Migrations
                     b.ToTable("BranchProtectionRules");
                 });
 
+            modelBuilder.Entity("MyPersonalGit.Models.CommitStatus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Context")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Creator")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RepoName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sha")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("State")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TargetUrl")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RepoName", "Sha");
+
+                    b.HasIndex("RepoName", "Sha", "Context")
+                        .IsUnique();
+
+                    b.ToTable("CommitStatuses");
+                });
+
             modelBuilder.Entity("MyPersonalGit.Models.ContainerBlob", b =>
                 {
                     b.Property<int>("Id")
@@ -763,6 +809,52 @@ namespace MyPersonalGit.Migrations
                     b.HasIndex("PullRequestId");
 
                     b.ToTable("PullRequestReviews");
+                });
+
+            modelBuilder.Entity("MyPersonalGit.Models.ReviewComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Author")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("LineNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PullRequestId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ReplyToId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Side")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PullRequestId");
+
+                    b.HasIndex("PullRequestId", "FilePath");
+
+                    b.ToTable("ReviewComments");
                 });
 
             modelBuilder.Entity("MyPersonalGit.Models.Release", b =>

@@ -48,3 +48,17 @@ public enum ReviewState
     ChangesRequested,
     Commented
 }
+
+public class ReviewComment
+{
+    public int Id { get; set; }
+    public int PullRequestId { get; set; }
+    public required string Author { get; set; }
+    public required string Body { get; set; }
+    public required string FilePath { get; set; }
+    public int LineNumber { get; set; }
+    public string Side { get; set; } = "RIGHT"; // LEFT = old, RIGHT = new
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
+    public int? ReplyToId { get; set; } // for threaded replies
+}

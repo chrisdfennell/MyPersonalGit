@@ -31,6 +31,10 @@ public class AppDbContext : DbContext
     // Pull Requests
     public DbSet<PullRequest> PullRequests => Set<PullRequest>();
     public DbSet<PullRequestReview> PullRequestReviews => Set<PullRequestReview>();
+    public DbSet<ReviewComment> ReviewComments => Set<ReviewComment>();
+
+    // Commit Statuses
+    public DbSet<CommitStatus> CommitStatuses => Set<CommitStatus>();
 
     // Projects
     public DbSet<Project> Projects => Set<Project>();
@@ -365,6 +369,20 @@ public class AppDbContext : DbContext
                 .WithOne()
                 .HasForeignKey(f => f.PackageVersionId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // --- ReviewComment (inline diff comments) ---
+        modelBuilder.Entity<ReviewComment>(e =>
+        {
+            e.HasIndex(c => c.PullRequestId);
+            e.HasIndex(c => new { c.PullRequestId, c.FilePath });
+        });
+
+        // --- CommitStatus ---
+        modelBuilder.Entity<CommitStatus>(e =>
+        {
+            e.HasIndex(s => new { s.RepoName, s.Sha });
+            e.HasIndex(s => new { s.RepoName, s.Sha, s.Context }).IsUnique();
         });
     }
 }
