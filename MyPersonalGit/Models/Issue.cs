@@ -14,6 +14,7 @@ public class Issue
     public List<string> Labels { get; set; } = new();
     public List<IssueComment> Comments { get; set; } = new();
     public int Number { get; set; }
+    public int? MilestoneId { get; set; }
 }
 
 public enum IssueState
