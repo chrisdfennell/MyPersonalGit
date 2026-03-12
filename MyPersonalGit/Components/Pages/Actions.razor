@@ -263,69 +263,165 @@
         }
         else if (ActiveTab == "webhooks")
         {
-            @if (UserService.IsLoggedIn)
+            @if (selectedWebhook == null)
             {
-                <div class="d-flex justify-content-end mb-3">
-                    <button class="btn btn-primary" @onclick="ShowCreateWebhookModal">
-                        <i class="bi bi-plus-circle me-2"></i>Add webhook
-                    </button>
-                </div>
-            }
-
-            @if (Webhooks.Count == 0)
-            {
-                <div class="card">
-                    <div class="card-body text-center py-5">
-                        <i class="bi bi-webhook" style="font-size: 4rem; color: #6c757d;"></i>
-                        <h3 class="mt-3">No webhooks configured</h3>
-                        <p class="text-muted">Add webhooks to receive notifications about repository events</p>
+                @if (UserService.IsLoggedIn)
+                {
+                    <div class="d-flex justify-content-end mb-3">
+                        <button class="btn btn-primary" @onclick="ShowCreateWebhookModal">
+                            <i class="bi bi-plus-circle me-2"></i>Add webhook
+                        </button>
                     </div>
-                </div>
+                }
+
+                @if (Webhooks.Count == 0)
+                {
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-webhook" style="font-size: 4rem; color: #6c757d;"></i>
+                            <h3 class="mt-3">No webhooks configured</h3>
+                            <p class="text-muted">Add webhooks to receive notifications about repository events</p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="list-group">
+                        @foreach (var webhook in Webhooks)
+                        {
+                            <div class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => ViewWebhookDetails(webhook)">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h6 class="mb-0">@webhook.Url</h6>
+                                            <span class="badge @(webhook.IsActive ? "bg-success" : "bg-secondary") ms-2">
+                                                @(webhook.IsActive ? "Active" : "Inactive")
+                                            </span>
+                                        </div>
+                                        <div class="mb-2">
+                                            @foreach (var evt in webhook.Events)
+                                            {
+                                                <span class="badge bg-secondary me-1">@evt</span>
+                                            }
+                                        </div>
+                                        <small class="text-muted">
+                                            Created @FormatDate(webhook.CreatedAt)
+                                            @if (webhook.LastTriggeredAt.HasValue)
+                                            {
+                                                <span class="mx-2">·</span>
+                                                <span>Last triggered @FormatDate(webhook.LastTriggeredAt.Value)</span>
+                                            }
+                                        </small>
+                                    </div>
+                                    @if (UserService.IsLoggedIn)
+                                    {
+                                        <div class="btn-group" @onclick:stopPropagation="true">
+                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => StartEditWebhook(webhook)" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => ToggleWebhook(webhook.Id)" title="@(webhook.IsActive ? "Disable" : "Enable")">
+                                                <i class="bi bi-@(webhook.IsActive ? "pause" : "play")-circle"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteWebhook(webhook.Id)" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
             }
             else
             {
-                <div class="list-group">
-                    @foreach (var webhook in Webhooks)
-                    {
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div class="flex-grow-1">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <h6 class="mb-0">@webhook.Url</h6>
-                                        <span class="badge @(webhook.IsActive ? "bg-success" : "bg-secondary") ms-2">
-                                            @(webhook.IsActive ? "Active" : "Inactive")
-                                        </span>
-                                    </div>
-                                    <div class="mb-2">
-                                        @foreach (var evt in webhook.Events)
-                                        {
-                                            <span class="badge bg-secondary me-1">@evt</span>
-                                        }
-                                    </div>
-                                    <small class="text-muted">
-                                        Created @FormatDate(webhook.CreatedAt)
-                                        @if (webhook.LastTriggeredAt.HasValue)
-                                        {
-                                            <span class="mx-2">·</span>
-                                            <span>Last triggered @FormatDate(webhook.LastTriggeredAt.Value)</span>
-                                        }
-                                    </small>
-                                </div>
-                                @if (UserService.IsLoggedIn)
+                @* Webhook detail view with delivery history *@
+                <div class="mb-3">
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="() => { selectedWebhook = null; webhookDeliveries.Clear(); }">
+                        <i class="bi bi-arrow-left me-1"></i>Back to webhooks
+                    </button>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Webhook Details</h5>
+                        <span class="badge @(selectedWebhook.IsActive ? "bg-success" : "bg-secondary")">
+                            @(selectedWebhook.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <p class="mb-1"><strong>URL:</strong> <code>@selectedWebhook.Url</code></p>
+                                <p class="mb-1"><strong>Events:</strong>
+                                    @foreach (var evt in selectedWebhook.Events)
+                                    {
+                                        <span class="badge bg-secondary me-1">@evt</span>
+                                    }
+                                </p>
+                                <p class="mb-1"><strong>Created:</strong> @FormatDate(selectedWebhook.CreatedAt)</p>
+                                @if (selectedWebhook.LastTriggeredAt.HasValue)
                                 {
-                                    <div class="btn-group">
-                                        <button class="btn btn-sm btn-outline-primary" @onclick="() => ToggleWebhook(webhook.Id)">
-                                            <i class="bi bi-@(webhook.IsActive ? "pause" : "play")-circle"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteWebhook(webhook.Id)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
+                                    <p class="mb-0"><strong>Last triggered:</strong> @FormatDate(selectedWebhook.LastTriggeredAt.Value)</p>
                                 }
                             </div>
                         </div>
-                    }
+                    </div>
                 </div>
+
+                <h5>Recent Deliveries</h5>
+                @if (webhookDeliveries.Count == 0)
+                {
+                    <div class="text-muted py-3">No deliveries yet.</div>
+                }
+                else
+                {
+                    <div class="list-group">
+                        @foreach (var delivery in webhookDeliveries)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-1">
+                                            <i class="bi @(delivery.Success ? "bi-check-circle-fill text-success" : "bi-x-circle-fill text-danger") me-2"></i>
+                                            <strong>@delivery.Event</strong>
+                                            <span class="badge @(delivery.Success ? "bg-success" : "bg-danger") ms-2">@(delivery.StatusCode > 0 ? delivery.StatusCode.ToString() : "Error")</span>
+                                        </div>
+                                        <small class="text-muted">Delivered @FormatDate(delivery.DeliveredAt)</small>
+
+                                        @if (expandedDeliveryId == delivery.Id)
+                                        {
+                                            <div class="mt-2">
+                                                <div class="mb-2">
+                                                    <strong class="small">Request Payload:</strong>
+                                                    <pre class="bg-dark text-light p-2 rounded mt-1" style="max-height: 200px; overflow-y: auto; font-size: 12px;">@delivery.Payload</pre>
+                                                </div>
+                                                @if (!string.IsNullOrEmpty(delivery.Response))
+                                                {
+                                                    <div>
+                                                        <strong class="small">Response:</strong>
+                                                        <pre class="bg-dark text-light p-2 rounded mt-1" style="max-height: 200px; overflow-y: auto; font-size: 12px;">@delivery.Response</pre>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-secondary" @onclick="() => ToggleDeliveryDetails(delivery.Id)" title="@(expandedDeliveryId == delivery.Id ? "Collapse" : "Expand")">
+                                            <i class="bi bi-@(expandedDeliveryId == delivery.Id ? "chevron-up" : "chevron-down")"></i>
+                                        </button>
+                                        @if (UserService.IsLoggedIn)
+                                        {
+                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => RedeliverWebhook(delivery.Id)" title="Redeliver">
+                                                <i class="bi bi-arrow-repeat"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
             }
         }
     }
@@ -373,7 +469,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add Webhook</h5>
+                    <h5 class="modal-title">@(editingWebhookId.HasValue ? "Edit Webhook" : "Add Webhook")</h5>
                     <button type="button" class="btn-close" @onclick="() => ShowWebhookModal = false"></button>
                 </div>
                 <div class="modal-body">
@@ -382,28 +478,54 @@
                         <input type="url" class="form-control" @bind="NewWebhookUrl" placeholder="https://example.com/webhook" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Secret</label>
-                        <input type="text" class="form-control" @bind="NewWebhookSecret" placeholder="Enter webhook secret" />
+                        <label class="form-label">Secret @(editingWebhookId.HasValue ? "(leave blank to keep current)" : "")</label>
+                        <input type="password" class="form-control" @bind="NewWebhookSecret" placeholder="@(editingWebhookId.HasValue ? "Leave blank to keep current" : "Enter webhook secret")" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Events</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="push" @onchange="@((e) => ToggleEvent(e, "push"))" />
-                            <label class="form-check-label">Push</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="pull_request" @onchange="@((e) => ToggleEvent(e, "pull_request"))" />
-                            <label class="form-check-label">Pull Request</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="issues" @onchange="@((e) => ToggleEvent(e, "issues"))" />
-                            <label class="form-check-label">Issues</label>
+                        <label class="form-label fw-bold">Events</label>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("push")" @onchange="@((e) => ToggleEvent(e, "push"))" />
+                                    <label class="form-check-label">Push</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("pull_request")" @onchange="@((e) => ToggleEvent(e, "pull_request"))" />
+                                    <label class="form-check-label">Pull Request</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("issues")" @onchange="@((e) => ToggleEvent(e, "issues"))" />
+                                    <label class="form-check-label">Issues</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("release")" @onchange="@((e) => ToggleEvent(e, "release"))" />
+                                    <label class="form-check-label">Release</label>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("workflow_run")" @onchange="@((e) => ToggleEvent(e, "workflow_run"))" />
+                                    <label class="form-check-label">Workflow Run</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("create")" @onchange="@((e) => ToggleEvent(e, "create"))" />
+                                    <label class="form-check-label">Branch/Tag Create</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("delete")" @onchange="@((e) => ToggleEvent(e, "delete"))" />
+                                    <label class="form-check-label">Branch/Tag Delete</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("fork")" @onchange="@((e) => ToggleEvent(e, "fork"))" />
+                                    <label class="form-check-label">Fork</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="() => ShowWebhookModal = false">Cancel</button>
-                    <button type="button" class="btn btn-primary" @onclick="CreateWebhook">Add webhook</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveWebhook">@(editingWebhookId.HasValue ? "Save changes" : "Add webhook")</button>
                 </div>
             </div>
         </div>
@@ -435,6 +557,10 @@
     private string NewWebhookUrl { get; set; } = "";
     private string NewWebhookSecret { get; set; } = "";
     private List<string> SelectedEvents { get; set; } = new();
+    private int? editingWebhookId;
+    private Webhook? selectedWebhook;
+    private List<WebhookDelivery> webhookDeliveries = new();
+    private int? expandedDeliveryId;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -608,20 +734,56 @@
         SelectedEvents.Clear();
     }
 
-    private async Task CreateWebhook()
+    private async Task SaveWebhook()
     {
         if (!UserService.IsLoggedIn) return;
         if (string.IsNullOrWhiteSpace(NewWebhookUrl) || SelectedEvents.Count == 0)
             return;
 
-        await WorkflowService.CreateWebhookAsync(RepoName, NewWebhookUrl, NewWebhookSecret, SelectedEvents);
+        if (editingWebhookId.HasValue)
+        {
+            await WorkflowService.UpdateWebhookAsync(RepoName, editingWebhookId.Value, NewWebhookUrl, NewWebhookSecret, SelectedEvents);
+        }
+        else
+        {
+            await WorkflowService.CreateWebhookAsync(RepoName, NewWebhookUrl, NewWebhookSecret, SelectedEvents);
+        }
 
         ShowWebhookModal = false;
+        editingWebhookId = null;
         NewWebhookUrl = "";
         NewWebhookSecret = "";
         SelectedEvents.Clear();
 
         await LoadData();
+    }
+
+    private void StartEditWebhook(Webhook webhook)
+    {
+        editingWebhookId = webhook.Id;
+        NewWebhookUrl = webhook.Url;
+        NewWebhookSecret = "";
+        SelectedEvents = new List<string>(webhook.Events);
+        ShowWebhookModal = true;
+    }
+
+    private async Task ViewWebhookDetails(Webhook webhook)
+    {
+        selectedWebhook = webhook;
+        webhookDeliveries = await WorkflowService.GetWebhookDeliveriesAsync(RepoName, webhook.Id);
+    }
+
+    private void ToggleDeliveryDetails(int deliveryId)
+    {
+        expandedDeliveryId = expandedDeliveryId == deliveryId ? null : deliveryId;
+    }
+
+    private async Task RedeliverWebhook(int deliveryId)
+    {
+        if (!UserService.IsLoggedIn) return;
+        await WorkflowService.RedeliverWebhookAsync(RepoName, deliveryId);
+        if (selectedWebhook != null)
+            webhookDeliveries = await WorkflowService.GetWebhookDeliveriesAsync(RepoName, selectedWebhook.Id);
     }
 
     private async Task ToggleWebhook(int webhookId)

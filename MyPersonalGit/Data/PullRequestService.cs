@@ -29,6 +29,7 @@ public class PullRequestService : IPullRequestService
     private readonly INotificationService _notificationService;
     private readonly IActivityService _activityService;
     private readonly IAdminService _adminService;
+    private readonly IBranchProtectionService _branchProtectionService;
     private readonly IConfiguration _config;
 
     public PullRequestService(
@@ -37,6 +38,7 @@ public class PullRequestService : IPullRequestService
         INotificationService notificationService,
         IActivityService activityService,
         IAdminService adminService,
+        IBranchProtectionService branchProtectionService,
         IConfiguration config)
     {
         _dbFactory = dbFactory;
@@ -44,6 +46,7 @@ public class PullRequestService : IPullRequestService
         _notificationService = notificationService;
         _activityService = activityService;
         _adminService = adminService;
+        _branchProtectionService = branchProtectionService;
         _config = config;
     }
 
@@ -111,9 +114,68 @@ public class PullRequestService : IPullRequestService
     public async Task<(bool CanMerge, string? Reason)> CanMergeAsync(string repoName, int number)
     {
         using var db = _dbFactory.CreateDbContext();
-        var pr = await db.PullRequests.FirstOrDefaultAsync(p => p.RepoName == repoName && p.Number == number);
+        var pr = await db.PullRequests
+            .Include(p => p.Reviews)
+            .FirstOrDefaultAsync(p => p.RepoName == repoName && p.Number == number);
         if (pr == null) return (false, "Pull request not found");
         if (pr.State != PullRequestState.Open) return (false, "Pull request is not open");
+        if (pr.IsDraft) return (false, "Cannot merge a draft pull request");
+
+        // Check branch protection rules
+        var protectionRule = await _branchProtectionService.GetMatchingRuleAsync(repoName, pr.TargetBranch);
+        if (protectionRule != null)
+        {
+            // Check required approvals
+            if (protectionRule.RequirePullRequest && protectionRule.RequiredApprovals > 0)
+            {
+                var approvalCount = pr.Reviews
+                    .Where(r => r.State == ReviewState.Approved)
+                    .Select(r => r.Author)
+                    .Distinct()
+                    .Count();
+
+                if (approvalCount < protectionRule.RequiredApprovals)
+                    return (false, $"Requires {protectionRule.RequiredApprovals} approval(s), has {approvalCount}");
+            }
+
+            // Check for changes-requested reviews that haven't been resolved
+            if (protectionRule.RequirePullRequest)
+            {
+                var latestReviewByAuthor = pr.Reviews
+                    .GroupBy(r => r.Author)
+                    .Select(g => g.OrderByDescending(r => r.CreatedAt).First())
+                    .ToList();
+
+                var hasChangesRequested = latestReviewByAuthor.Any(r => r.State == ReviewState.ChangesRequested);
+                if (hasChangesRequested)
+                    return (false, "Changes have been requested — address review feedback before merging");
+            }
+
+            // Check required status checks
+            if (protectionRule.RequireStatusChecks && protectionRule.RequiredStatusChecks.Any())
+            {
+                var workflowRuns = await db.WorkflowRuns
+                    .Where(w => w.RepoName == repoName && w.Branch == pr.SourceBranch)
+                    .OrderByDescending(w => w.CreatedAt)
+                    .ToListAsync();
+
+                foreach (var requiredCheck in protectionRule.RequiredStatusChecks)
+                {
+                    var latestRun = workflowRuns.FirstOrDefault(w => w.WorkflowName == requiredCheck);
+                    if (latestRun == null)
+                        return (false, $"Required status check '{requiredCheck}' has not run");
+                    if (latestRun.Status != WorkflowStatus.Success)
+                        return (false, $"Required status check '{requiredCheck}' has not passed (status: {latestRun.Status})");
+                }
+            }
+
+            // Check linear history requirement
+            if (protectionRule.RequireLinearHistory)
+            {
+                // Linear history is enforced by only allowing squash or rebase merges
+                // This is informational — actual enforcement is in MergePullRequestAsync
+            }
+        }
 
         var repoPath = await GetRepoPath(repoName);
         if (repoPath == null || !GitRepository.IsValid(repoPath)) return (false, "Repository not found on disk");
@@ -143,6 +205,7 @@ public class PullRequestService : IPullRequestService
         using var db = _dbFactory.CreateDbContext();
 
         var pr = await db.PullRequests
+            .Include(p => p.Reviews)
             .FirstOrDefaultAsync(p => p.RepoName == repoName && p.Number == number);
 
         if (pr == null)
@@ -150,6 +213,52 @@ public class PullRequestService : IPullRequestService
 
         if (pr.State != PullRequestState.Open)
             return (false, "Pull request is not open");
+
+        if (pr.IsDraft)
+            return (false, "Cannot merge a draft pull request");
+
+        // Enforce branch protection rules
+        var protectionRule = await _branchProtectionService.GetMatchingRuleAsync(repoName, pr.TargetBranch);
+        if (protectionRule != null)
+        {
+            if (protectionRule.RequirePullRequest && protectionRule.RequiredApprovals > 0)
+            {
+                var approvalCount = pr.Reviews
+                    .Where(r => r.State == ReviewState.Approved)
+                    .Select(r => r.Author)
+                    .Distinct()
+                    .Count();
+                if (approvalCount < protectionRule.RequiredApprovals)
+                    return (false, $"Branch protection: requires {protectionRule.RequiredApprovals} approval(s), has {approvalCount}");
+            }
+
+            if (protectionRule.RequirePullRequest)
+            {
+                var latestReviewByAuthor = pr.Reviews
+                    .GroupBy(r => r.Author)
+                    .Select(g => g.OrderByDescending(r => r.CreatedAt).First())
+                    .ToList();
+                if (latestReviewByAuthor.Any(r => r.State == ReviewState.ChangesRequested))
+                    return (false, "Branch protection: changes requested — address feedback before merging");
+            }
+
+            if (protectionRule.RequireStatusChecks && protectionRule.RequiredStatusChecks.Any())
+            {
+                var workflowRuns = await db.WorkflowRuns
+                    .Where(w => w.RepoName == repoName && w.Branch == pr.SourceBranch)
+                    .OrderByDescending(w => w.CreatedAt)
+                    .ToListAsync();
+                foreach (var check in protectionRule.RequiredStatusChecks)
+                {
+                    var latest = workflowRuns.FirstOrDefault(w => w.WorkflowName == check);
+                    if (latest == null || latest.Status != WorkflowStatus.Success)
+                        return (false, $"Branch protection: required status check '{check}' has not passed");
+                }
+            }
+
+            if (protectionRule.RequireLinearHistory && strategy == MergeStrategy.MergeCommit)
+                return (false, "Branch protection: linear history required — use squash or rebase merge strategy");
+        }
 
         var repoPath = await GetRepoPath(repoName);
         if (repoPath == null || !GitRepository.IsValid(repoPath))
