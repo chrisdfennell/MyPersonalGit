@@ -183,6 +183,236 @@ namespace MyPersonalGit.Migrations
                     b.ToTable("CommitStatuses");
                 });
 
+            modelBuilder.Entity("MyPersonalGit.Models.CommitComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Author")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CommitSha")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FilePath")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("LineNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RepoName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RepoName", "CommitSha");
+
+                    b.ToTable("CommitComments");
+                });
+
+            modelBuilder.Entity("MyPersonalGit.Models.Organization", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Owner")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Organizations");
+                });
+
+            modelBuilder.Entity("MyPersonalGit.Models.OrganizationMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OrganizationName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationName", "Username")
+                        .IsUnique();
+
+                    b.ToTable("OrganizationMembers");
+                });
+
+            modelBuilder.Entity("MyPersonalGit.Models.Team", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OrganizationName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Permission")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationName", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Teams");
+                });
+
+            modelBuilder.Entity("MyPersonalGit.Models.TeamMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("TeamMembers");
+                });
+
+            modelBuilder.Entity("MyPersonalGit.Models.TeamRepository", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RepoName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("TeamRepositories");
+                });
+
+            modelBuilder.Entity("MyPersonalGit.Models.Milestone", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Creator")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RepoName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("State")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RepoName", "Number")
+                        .IsUnique();
+
+                    b.ToTable("Milestones");
+                });
+
             modelBuilder.Entity("MyPersonalGit.Models.ContainerBlob", b =>
                 {
                     b.Property<int>("Id")
@@ -337,6 +567,9 @@ namespace MyPersonalGit.Migrations
                     b.Property<string>("Labels")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("MilestoneId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Number")
                         .HasColumnType("INTEGER");
@@ -2157,6 +2390,24 @@ namespace MyPersonalGit.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MyPersonalGit.Models.TeamMember", b =>
+                {
+                    b.HasOne("MyPersonalGit.Models.Team", null)
+                        .WithMany("Members")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MyPersonalGit.Models.TeamRepository", b =>
+                {
+                    b.HasOne("MyPersonalGit.Models.Team", null)
+                        .WithMany("Repositories")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MyPersonalGit.Models.Dependency", b =>
                 {
                     b.Navigation("Vulnerabilities");
@@ -2217,6 +2468,13 @@ namespace MyPersonalGit.Migrations
             modelBuilder.Entity("MyPersonalGit.Models.WorkflowJob", b =>
                 {
                     b.Navigation("Steps");
+                });
+
+            modelBuilder.Entity("MyPersonalGit.Models.Team", b =>
+                {
+                    b.Navigation("Members");
+
+                    b.Navigation("Repositories");
                 });
 
             modelBuilder.Entity("MyPersonalGit.Models.WorkflowRun", b =>

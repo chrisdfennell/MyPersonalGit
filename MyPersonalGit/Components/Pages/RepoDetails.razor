@@ -12,6 +12,7 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using MyPersonalGit.Data
 @using Microsoft.EntityFrameworkCore
+@using CommitComment = MyPersonalGit.Models.CommitComment
 @using ContainerManifest = MyPersonalGit.Models.ContainerManifest
 @using BranchProtectionRule = MyPersonalGit.Models.BranchProtectionRule
 @inject IConfiguration Config
@@ -25,6 +26,7 @@
 @inject IReleaseService ReleaseService
 @inject IMirrorService MirrorService
 @inject ISecretsService SecretsService
+@inject ICommitCommentService CommitCommentService
 @using MyPersonalGit.Services
 @using RepositorySecret = MyPersonalGit.Models.RepositorySecret
 @inject CurrentUserService UserService
@@ -832,6 +834,23 @@ else
                                     </label>
                                 </div>
                             </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Topics</label>
+                                <div class="d-flex flex-wrap gap-1 mb-2">
+                                    @foreach (var topic in settingsTopics)
+                                    {
+                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill d-flex align-items-center gap-1 py-1 px-2">
+                                            @topic
+                                            <button type="button" class="btn-close" style="font-size: 8px;" @onclick="() => RemoveTopic(topic)"></button>
+                                        </span>
+                                    }
+                                </div>
+                                <div class="input-group input-group-sm" style="max-width: 300px;">
+                                    <input type="text" class="form-control" @bind="newTopicInput" @bind:event="oninput" @onkeyup="HandleTopicKeyPress" placeholder="Add a topic..." />
+                                    <button class="btn btn-outline-primary" type="button" @onclick="AddTopic" disabled="@string.IsNullOrWhiteSpace(newTopicInput)">Add</button>
+                                </div>
+                                <div class="form-text">Topics help users discover your repository.</div>
+                            </div>
                             <button class="btn btn-gh-primary btn-sm" @onclick="SaveGeneralSettings">Save changes</button>
                             @if (!string.IsNullOrEmpty(settingsSaveMessage))
                             {
@@ -1494,6 +1513,57 @@ else
                         </div>
                     </div>
                 }
+
+                <!-- Commit Comments Section -->
+                <div class="mt-4">
+                    <h6 class="fw-bold text-muted small text-uppercase mb-3">
+                        <i class="bi bi-chat-left-text me-1"></i> Discussion
+                        @if (commitComments.Any())
+                        {
+                            <span class="badge bg-secondary ms-1">@commitComments.Count</span>
+                        }
+                    </h6>
+
+                    @foreach (var comment in commitComments)
+                    {
+                        <div class="card mb-3">
+                            <div class="card-header bg-light-subtle d-flex justify-content-between align-items-center py-2">
+                                <div>
+                                    <strong class="small">@comment.Author</strong>
+                                    <span class="text-muted small ms-2">@GetRelativeTime(comment.CreatedAt)</span>
+                                    @if (!string.IsNullOrEmpty(comment.FilePath))
+                                    {
+                                        <span class="text-muted small ms-2">on <code>@comment.FilePath</code>@(comment.LineNumber.HasValue ? $" line {comment.LineNumber}" : "")</span>
+                                    }
+                                </div>
+                                @if (UserService.IsLoggedIn && comment.Author == UserService.Username)
+                                {
+                                    <button class="btn btn-outline-danger btn-sm" style="padding: 0 6px; font-size: 11px;" @onclick="() => DeleteCommitComment(comment.Id)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                }
+                            </div>
+                            <div class="card-body py-2">
+                                <div class="markdown-body small">@ConvertMarkdownToHtml(comment.Body)</div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (UserService.IsLoggedIn)
+                    {
+                        <div class="card">
+                            <div class="card-header bg-light-subtle py-2">
+                                <strong class="small">Add a comment</strong>
+                            </div>
+                            <div class="card-body py-2">
+                                <textarea class="form-control form-control-sm mb-2" rows="3" @bind="newCommitCommentBody" placeholder="Leave a comment on this commit..."></textarea>
+                                <button class="btn btn-gh-primary btn-sm" @onclick="AddCommitComment" disabled="@string.IsNullOrWhiteSpace(newCommitCommentBody)">
+                                    <i class="bi bi-chat-left-text me-1"></i> Comment
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
             </div>
         }
     </div>
@@ -2273,6 +2343,10 @@ else
     private GitCommit? selectedCommit;
     private List<FilePatch> commitPatches = new();
 
+    // Commit comments
+    private List<CommitComment> commitComments = new();
+    private string newCommitCommentBody = "";
+
     // Blame view state
     private List<BlameLine> blameLines = new();
 
@@ -2457,6 +2531,8 @@ else
     private string settingsSaveMessage = "";
     private bool settingsHasPages = false;
     private string settingsPagesBranch = "gh-pages";
+    private List<string> settingsTopics = new();
+    private string newTopicInput = "";
 
     // Secrets state
     private List<RepositorySecret> repoSecrets = new();
@@ -2569,6 +2645,7 @@ else
             settingsDescription = meta.Description ?? "";
             settingsHasPages = meta.HasPages;
             settingsPagesBranch = meta.PagesBranch ?? "gh-pages";
+            settingsTopics = new List<string>(meta.Topics ?? new());
         }
         else
         {
@@ -2613,11 +2690,32 @@ else
         {
             repo.Description = settingsDescription;
             repo.IsPrivate = settingsIsPrivate;
+            repo.Topics = new List<string>(settingsTopics);
         });
         repoIsPrivate = settingsIsPrivate;
         repoDescription = settingsDescription;
         settingsSaveMessage = "Settings saved!";
         StateHasChanged();
+    }
+
+    private void AddTopic()
+    {
+        var topic = newTopicInput?.Trim().ToLowerInvariant();
+        if (!string.IsNullOrEmpty(topic) && !settingsTopics.Contains(topic))
+        {
+            settingsTopics.Add(topic);
+        }
+        newTopicInput = "";
+    }
+
+    private void RemoveTopic(string topic)
+    {
+        settingsTopics.Remove(topic);
+    }
+
+    private void HandleTopicKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") AddTopic();
     }
 
     private async Task ToggleArchive()
@@ -2876,6 +2974,7 @@ else
                     {
                         selectedCommit = MapCommit(rawCommit);
                         LoadCommitDetail(repo, rawCommit);
+                        LoadCommitComments();
                     }
                 }
                 else if (string.IsNullOrEmpty(Path))
@@ -3029,6 +3128,34 @@ else
                 LinesDeleted = change.LinesDeleted,
                 DiffLines = change.Patch.Split('\n').ToList()
             });
+        }
+    }
+
+    private async void LoadCommitComments()
+    {
+        if (string.IsNullOrEmpty(CommitHash)) return;
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        commitComments = await CommitCommentService.GetCommentsAsync(dirName, CommitHash);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task AddCommitComment()
+    {
+        if (!UserService.IsLoggedIn || string.IsNullOrWhiteSpace(newCommitCommentBody) || string.IsNullOrEmpty(CommitHash)) return;
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        await CommitCommentService.AddCommentAsync(dirName, CommitHash, UserService.Username, newCommitCommentBody);
+        newCommitCommentBody = "";
+        commitComments = await CommitCommentService.GetCommentsAsync(dirName, CommitHash);
+    }
+
+    private async Task DeleteCommitComment(int commentId)
+    {
+        if (!UserService.IsLoggedIn) return;
+        await CommitCommentService.DeleteCommentAsync(commentId, UserService.Username);
+        if (!string.IsNullOrEmpty(CommitHash))
+        {
+            var dirName = System.IO.Path.GetFileName(RepoFullPath);
+            commitComments = await CommitCommentService.GetCommentsAsync(dirName, CommitHash);
         }
     }
 

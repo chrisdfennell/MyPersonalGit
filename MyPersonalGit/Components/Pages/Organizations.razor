@@ -1,0 +1,513 @@
+@page "/orgs"
+@page "/org/{OrgName}"
+@page "/org/{OrgName}/teams/{TeamName}"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using MyPersonalGit.Services
+@inject IOrganizationService OrgService
+@inject IRepositoryService RepoService
+@inject CurrentUserService UserService
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<PageTitle>@(string.IsNullOrEmpty(OrgName) ? "Organizations" : OrgName) · Personal Git</PageTitle>
+
+<div class="container-xl px-3 py-4">
+    @if (string.IsNullOrEmpty(OrgName))
+    {
+        <!-- Organizations List -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h4 mb-0">Organizations</h2>
+            @if (UserService.IsLoggedIn)
+            {
+                <button class="btn btn-gh-primary btn-sm" @onclick="() => showCreateModal = true">
+                    <i class="bi bi-plus-lg me-1"></i> New organization
+                </button>
+            }
+        </div>
+
+        @if (organizations.Any())
+        {
+            <div class="list-group">
+                @foreach (var org in organizations)
+                {
+                    <a href="/org/@org.Name" class="list-group-item list-group-item-action py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="bi bi-people text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">@(org.DisplayName ?? org.Name)</h6>
+                                @if (!string.IsNullOrEmpty(org.Description))
+                                {
+                                    <small class="text-muted">@org.Description</small>
+                                }
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-people display-4 text-muted"></i>
+                <p class="text-muted mt-3">No organizations yet.</p>
+            </div>
+        }
+    }
+    else if (currentOrg == null)
+    {
+        <div class="text-center py-5">
+            <h3 class="text-muted">Organization not found</h3>
+            <a href="/orgs" class="btn btn-primary mt-3">Back to organizations</a>
+        </div>
+    }
+    else
+    {
+        <!-- Organization Detail -->
+        <div class="d-flex align-items-center mb-4">
+            <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                <i class="bi bi-people text-primary h5 mb-0"></i>
+            </div>
+            <div>
+                <h2 class="h4 mb-0">@(currentOrg.DisplayName ?? currentOrg.Name)</h2>
+                @if (!string.IsNullOrEmpty(currentOrg.Description))
+                {
+                    <p class="text-muted small mb-0">@currentOrg.Description</p>
+                }
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <button class="nav-link @(orgTab == "members" ? "active" : "")" @onclick='() => orgTab = "members"'>
+                    <i class="bi bi-people me-1"></i> Members
+                    <span class="badge bg-secondary ms-1">@orgMembers.Count</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(orgTab == "teams" ? "active" : "")" @onclick='() => orgTab = "teams"'>
+                    <i class="bi bi-diagram-3 me-1"></i> Teams
+                    <span class="badge bg-secondary ms-1">@orgTeams.Count</span>
+                </button>
+            </li>
+            @if (isOrgOwner)
+            {
+                <li class="nav-item">
+                    <button class="nav-link @(orgTab == "settings" ? "active" : "")" @onclick='() => orgTab = "settings"'>
+                        <i class="bi bi-gear me-1"></i> Settings
+                    </button>
+                </li>
+            }
+        </ul>
+
+        @if (orgTab == "members")
+        {
+            @if (isOrgOwner)
+            {
+                <div class="mb-3">
+                    <div class="input-group" style="max-width: 400px;">
+                        <input type="text" class="form-control form-control-sm" @bind="newMemberUsername" placeholder="Username to add..." />
+                        <select class="form-select form-select-sm" style="max-width: 120px;" @bind="newMemberRole">
+                            <option value="@OrgRole.Member">Member</option>
+                            <option value="@OrgRole.Owner">Owner</option>
+                        </select>
+                        <button class="btn btn-gh-primary btn-sm" @onclick="AddMember">Add</button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(memberMessage))
+                    {
+                        <small class="@(memberMessageSuccess ? "text-success" : "text-danger") mt-1 d-block">@memberMessage</small>
+                    }
+                </div>
+            }
+
+            <div class="list-group">
+                @foreach (var member in orgMembers)
+                {
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                <i class="bi bi-person text-muted"></i>
+                            </div>
+                            <a href="/profile/@member.Username" class="text-decoration-none fw-bold">@member.Username</a>
+                            <span class="badge @(member.Role == OrgRole.Owner ? "bg-warning text-dark" : "bg-secondary bg-opacity-25 text-body") ms-2">@member.Role</span>
+                        </div>
+                        @if (isOrgOwner && member.Username != currentOrg.Owner)
+                        {
+                            <button class="btn btn-outline-danger btn-sm" @onclick="() => RemoveMember(member.Username)">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else if (orgTab == "teams")
+        {
+            @if (isOrgOwner)
+            {
+                <button class="btn btn-gh-primary btn-sm mb-3" @onclick="() => showCreateTeamModal = true">
+                    <i class="bi bi-plus-lg me-1"></i> New team
+                </button>
+            }
+
+            @if (!string.IsNullOrEmpty(TeamName) && currentTeam != null)
+            {
+                <!-- Team Detail View -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light-subtle d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0 fw-bold">@currentTeam.Name</h5>
+                            @if (!string.IsNullOrEmpty(currentTeam.Description))
+                            {
+                                <small class="text-muted">@currentTeam.Description</small>
+                            }
+                        </div>
+                        <span class="badge bg-info">@currentTeam.Permission permission</span>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="fw-bold small text-uppercase text-muted mb-2">Members (@currentTeam.Members.Count)</h6>
+                        @if (isOrgOwner)
+                        {
+                            <div class="input-group mb-3" style="max-width: 350px;">
+                                <input type="text" class="form-control form-control-sm" @bind="newTeamMemberUsername" placeholder="Add member..." />
+                                <button class="btn btn-outline-primary btn-sm" @onclick="AddTeamMember">Add</button>
+                            </div>
+                        }
+                        <div class="list-group list-group-flush mb-4">
+                            @foreach (var member in currentTeam.Members)
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-person text-muted me-2"></i>
+                                        <span>@member.Username</span>
+                                        <span class="badge bg-secondary bg-opacity-25 text-body ms-2" style="font-size: 10px;">@member.Role</span>
+                                    </div>
+                                    @if (isOrgOwner)
+                                    {
+                                        <button class="btn btn-outline-danger btn-sm" @onclick="() => RemoveTeamMember(member.Username)"><i class="bi bi-x-lg"></i></button>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <h6 class="fw-bold small text-uppercase text-muted mb-2">Repositories (@currentTeam.Repositories.Count)</h6>
+                        @if (isOrgOwner)
+                        {
+                            <div class="input-group mb-3" style="max-width: 350px;">
+                                <input type="text" class="form-control form-control-sm" @bind="newTeamRepoName" placeholder="Add repository..." />
+                                <button class="btn btn-outline-primary btn-sm" @onclick="AddTeamRepo">Add</button>
+                            </div>
+                        }
+                        <div class="list-group list-group-flush">
+                            @foreach (var repo in currentTeam.Repositories)
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <a href="/repo/@repo.RepoName" class="text-decoration-none">
+                                        <i class="bi bi-journal-bookmark text-muted me-2"></i>@repo.RepoName
+                                    </a>
+                                    @if (isOrgOwner)
+                                    {
+                                        <button class="btn btn-outline-danger btn-sm" @onclick="() => RemoveTeamRepo(repo.RepoName)"><i class="bi bi-x-lg"></i></button>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-link btn-sm text-decoration-none" @onclick="BackToTeams">
+                    <i class="bi bi-arrow-left me-1"></i> Back to teams
+                </button>
+            }
+            else
+            {
+                @if (orgTeams.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var team in orgTeams)
+                        {
+                            <a href="/org/@OrgName/teams/@team.Name" class="list-group-item list-group-item-action">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 fw-bold"><i class="bi bi-diagram-3 text-muted me-2"></i>@team.Name</h6>
+                                        @if (!string.IsNullOrEmpty(team.Description))
+                                        {
+                                            <small class="text-muted">@team.Description</small>
+                                        }
+                                    </div>
+                                    <div class="d-flex gap-3 small text-muted">
+                                        <span><i class="bi bi-people me-1"></i>@team.Members.Count</span>
+                                        <span><i class="bi bi-journal-bookmark me-1"></i>@team.Repositories.Count</span>
+                                        <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle">@team.Permission</span>
+                                    </div>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">No teams yet.</p>
+                }
+            }
+        }
+        else if (orgTab == "settings" && isOrgOwner)
+        {
+            <div class="card shadow-sm" style="max-width: 600px;">
+                <div class="card-header bg-light-subtle py-2 fw-bold small">Organization Settings</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Display Name</label>
+                        <input type="text" class="form-control form-control-sm" @bind="settingsDisplayName" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Description</label>
+                        <textarea class="form-control form-control-sm" rows="3" @bind="settingsDescription"></textarea>
+                    </div>
+                    <button class="btn btn-gh-primary btn-sm" @onclick="SaveOrgSettings">Save changes</button>
+                    @if (!string.IsNullOrEmpty(settingsMessage))
+                    {
+                        <span class="text-success small ms-2">@settingsMessage</span>
+                    }
+                </div>
+            </div>
+
+            <div class="card border-danger mt-4" style="max-width: 600px;">
+                <div class="card-header bg-danger bg-opacity-10 py-2 fw-bold small text-danger">Danger Zone</div>
+                <div class="card-body">
+                    <button class="btn btn-outline-danger btn-sm" @onclick="DeleteOrganization">Delete organization</button>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@* Create Organization Modal *@
+@if (showCreateModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">Create organization</h5>
+                    <button type="button" class="btn-close" @onclick="() => showCreateModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Name</label>
+                        <input type="text" class="form-control" @bind="newOrgName" placeholder="my-org" />
+                        <div class="form-text">Lowercase letters, numbers, and hyphens only.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Display Name</label>
+                        <input type="text" class="form-control" @bind="newOrgDisplayName" placeholder="My Organization" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Description</label>
+                        <textarea class="form-control" rows="2" @bind="newOrgDescription"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button class="btn btn-light border" @onclick="() => showCreateModal = false">Cancel</button>
+                    <button class="btn btn-gh-primary" @onclick="CreateOrganization" disabled="@string.IsNullOrWhiteSpace(newOrgName)">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* Create Team Modal *@
+@if (showCreateTeamModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">Create team</h5>
+                    <button type="button" class="btn-close" @onclick="() => showCreateTeamModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Team name</label>
+                        <input type="text" class="form-control" @bind="newTeamName" placeholder="developers" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Description</label>
+                        <textarea class="form-control" rows="2" @bind="newTeamDescription"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Permission</label>
+                        <select class="form-select" @bind="newTeamPermission">
+                            <option value="@TeamPermission.Read">Read</option>
+                            <option value="@TeamPermission.Write">Write</option>
+                            <option value="@TeamPermission.Admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button class="btn btn-light border" @onclick="() => showCreateTeamModal = false">Cancel</button>
+                    <button class="btn btn-gh-primary" @onclick="CreateTeam" disabled="@string.IsNullOrWhiteSpace(newTeamName)">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string? OrgName { get; set; }
+    [Parameter] public string? TeamName { get; set; }
+
+    private List<Organization> organizations = new();
+    private Organization? currentOrg;
+    private List<OrganizationMember> orgMembers = new();
+    private List<Team> orgTeams = new();
+    private Team? currentTeam;
+    private bool isOrgOwner;
+    private string orgTab = "members";
+
+    // Create org
+    private bool showCreateModal;
+    private string newOrgName = "";
+    private string newOrgDisplayName = "";
+    private string newOrgDescription = "";
+
+    // Add member
+    private string newMemberUsername = "";
+    private OrgRole newMemberRole = OrgRole.Member;
+    private string memberMessage = "";
+    private bool memberMessageSuccess;
+
+    // Create team
+    private bool showCreateTeamModal;
+    private string newTeamName = "";
+    private string newTeamDescription = "";
+    private TeamPermission newTeamPermission = TeamPermission.Read;
+
+    // Team members/repos
+    private string newTeamMemberUsername = "";
+    private string newTeamRepoName = "";
+
+    // Settings
+    private string settingsDisplayName = "";
+    private string settingsDescription = "";
+    private string settingsMessage = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrEmpty(OrgName))
+        {
+            if (UserService.IsLoggedIn)
+                organizations = await OrgService.GetUserOrganizationsAsync(UserService.Username);
+            else
+                organizations = (await OrgService.GetOrganizationsAsync()).Where(o => o.IsPublic).ToList();
+        }
+        else
+        {
+            currentOrg = await OrgService.GetOrganizationAsync(OrgName);
+            if (currentOrg != null)
+            {
+                orgMembers = await OrgService.GetMembersAsync(OrgName);
+                orgTeams = await OrgService.GetTeamsAsync(OrgName);
+                isOrgOwner = UserService.IsLoggedIn && await OrgService.IsOwnerAsync(OrgName, UserService.Username);
+                settingsDisplayName = currentOrg.DisplayName ?? "";
+                settingsDescription = currentOrg.Description ?? "";
+
+                if (!string.IsNullOrEmpty(TeamName))
+                {
+                    currentTeam = await OrgService.GetTeamAsync(OrgName, TeamName);
+                    orgTab = "teams";
+                }
+            }
+        }
+    }
+
+    private async Task CreateOrganization()
+    {
+        if (string.IsNullOrWhiteSpace(newOrgName) || !UserService.IsLoggedIn) return;
+        await OrgService.CreateOrganizationAsync(newOrgName.Trim().ToLower(), UserService.Username, newOrgDisplayName, newOrgDescription);
+        showCreateModal = false;
+        Nav.NavigateTo($"/org/{newOrgName.Trim().ToLower()}", true);
+    }
+
+    private async Task AddMember()
+    {
+        if (string.IsNullOrWhiteSpace(newMemberUsername)) return;
+        var result = await OrgService.AddMemberAsync(OrgName!, newMemberUsername.Trim(), newMemberRole);
+        memberMessage = result ? "Member added." : "User is already a member.";
+        memberMessageSuccess = result;
+        if (result)
+        {
+            orgMembers = await OrgService.GetMembersAsync(OrgName!);
+            newMemberUsername = "";
+        }
+    }
+
+    private async Task RemoveMember(string username)
+    {
+        await OrgService.RemoveMemberAsync(OrgName!, username);
+        orgMembers = await OrgService.GetMembersAsync(OrgName!);
+    }
+
+    private async Task CreateTeam()
+    {
+        if (string.IsNullOrWhiteSpace(newTeamName)) return;
+        await OrgService.CreateTeamAsync(OrgName!, newTeamName.Trim(), newTeamDescription, newTeamPermission);
+        showCreateTeamModal = false;
+        orgTeams = await OrgService.GetTeamsAsync(OrgName!);
+        newTeamName = "";
+        newTeamDescription = "";
+    }
+
+    private async Task AddTeamMember()
+    {
+        if (currentTeam == null || string.IsNullOrWhiteSpace(newTeamMemberUsername)) return;
+        await OrgService.AddTeamMemberAsync(currentTeam.Id, newTeamMemberUsername.Trim());
+        currentTeam = await OrgService.GetTeamAsync(OrgName!, TeamName!);
+        newTeamMemberUsername = "";
+    }
+
+    private async Task RemoveTeamMember(string username)
+    {
+        if (currentTeam == null) return;
+        await OrgService.RemoveTeamMemberAsync(currentTeam.Id, username);
+        currentTeam = await OrgService.GetTeamAsync(OrgName!, TeamName!);
+    }
+
+    private async Task AddTeamRepo()
+    {
+        if (currentTeam == null || string.IsNullOrWhiteSpace(newTeamRepoName)) return;
+        await OrgService.AddTeamRepositoryAsync(currentTeam.Id, newTeamRepoName.Trim());
+        currentTeam = await OrgService.GetTeamAsync(OrgName!, TeamName!);
+        newTeamRepoName = "";
+    }
+
+    private async Task RemoveTeamRepo(string repoName)
+    {
+        if (currentTeam == null) return;
+        await OrgService.RemoveTeamRepositoryAsync(currentTeam.Id, repoName);
+        currentTeam = await OrgService.GetTeamAsync(OrgName!, TeamName!);
+    }
+
+    private async Task SaveOrgSettings()
+    {
+        await OrgService.UpdateOrganizationAsync(OrgName!, org =>
+        {
+            org.DisplayName = settingsDisplayName;
+            org.Description = settingsDescription;
+        });
+        settingsMessage = "Settings saved.";
+        currentOrg = await OrgService.GetOrganizationAsync(OrgName!);
+    }
+
+    private void BackToTeams()
+    {
+        Nav.NavigateTo($"/org/{OrgName}");
+    }
+
+    private async Task DeleteOrganization()
+    {
+        await OrgService.DeleteOrganizationAsync(OrgName!);
+        Nav.NavigateTo("/orgs", true);
+    }
+}

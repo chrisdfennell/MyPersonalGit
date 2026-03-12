@@ -102,6 +102,19 @@ public class AppDbContext : DbContext
     public DbSet<PackageVersion> PackageVersions => Set<PackageVersion>();
     public DbSet<PackageFile> PackageFiles => Set<PackageFile>();
 
+    // Organizations & Teams
+    public DbSet<Organization> Organizations => Set<Organization>();
+    public DbSet<OrganizationMember> OrganizationMembers => Set<OrganizationMember>();
+    public DbSet<Team> Teams => Set<Team>();
+    public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
+    public DbSet<TeamRepository> TeamRepositories => Set<TeamRepository>();
+
+    // Milestones
+    public DbSet<Milestone> Milestones => Set<Milestone>();
+
+    // Commit Comments
+    public DbSet<CommitComment> CommitComments => Set<CommitComment>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Shared JSON value converters + comparers for List<string> and string[]
@@ -383,6 +396,43 @@ public class AppDbContext : DbContext
         {
             e.HasIndex(s => new { s.RepoName, s.Sha });
             e.HasIndex(s => new { s.RepoName, s.Sha, s.Context }).IsUnique();
+        });
+
+        // --- Organization ---
+        modelBuilder.Entity<Organization>(e =>
+        {
+            e.HasIndex(o => o.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<OrganizationMember>(e =>
+        {
+            e.HasIndex(m => new { m.OrganizationName, m.Username }).IsUnique();
+        });
+
+        // --- Team ---
+        modelBuilder.Entity<Team>(e =>
+        {
+            e.HasIndex(t => new { t.OrganizationName, t.Name }).IsUnique();
+            e.HasMany(t => t.Members)
+                .WithOne()
+                .HasForeignKey(m => m.TeamId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasMany(t => t.Repositories)
+                .WithOne()
+                .HasForeignKey(r => r.TeamId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // --- Milestone ---
+        modelBuilder.Entity<Milestone>(e =>
+        {
+            e.HasIndex(m => new { m.RepoName, m.Number }).IsUnique();
+        });
+
+        // --- CommitComment ---
+        modelBuilder.Entity<CommitComment>(e =>
+        {
+            e.HasIndex(c => new { c.RepoName, c.CommitSha });
         });
     }
 }

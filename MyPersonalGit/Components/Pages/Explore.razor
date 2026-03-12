@@ -1,0 +1,224 @@
+@page "/explore"
+@using System.IO
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using MyPersonalGit.Services
+@inject IConfiguration Config
+@inject IRepositoryService RepoService
+@inject IAdminService AdminService
+@inject ICollaboratorService CollaboratorService
+@inject CurrentUserService UserService
+@rendermode InteractiveServer
+
+<PageTitle>Explore · Personal Git</PageTitle>
+
+<div class="container-xl px-3 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h4 mb-0">Explore repositories</h2>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Search repositories..." @bind="searchQuery" @bind:event="oninput" @onkeyup="HandleKeyPress" />
+                <button class="btn btn-outline-secondary" @onclick="FilterRepos"><i class="bi bi-search"></i></button>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select class="form-select" @bind="sortBy" @bind:after="FilterRepos">
+                <option value="updated">Recently updated</option>
+                <option value="name">Name</option>
+                <option value="stars">Most stars</option>
+                <option value="forks">Most forks</option>
+            </select>
+        </div>
+    </div>
+
+    @if (allTopics.Any())
+    {
+        <div class="mb-4">
+            <h6 class="small fw-bold text-muted text-uppercase mb-2">Topics</h6>
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var topic in allTopics)
+                {
+                    <button class="btn btn-sm @(selectedTopic == topic ? "btn-primary" : "btn-outline-primary") rounded-pill"
+                            @onclick="() => ToggleTopic(topic)">
+                        @topic
+                        <span class="badge bg-white text-primary ms-1">@topicCounts[topic]</span>
+                    </button>
+                }
+                @if (!string.IsNullOrEmpty(selectedTopic))
+                {
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="() => ToggleTopic(null)">
+                        <i class="bi bi-x me-1"></i>Clear
+                    </button>
+                }
+            </div>
+        </div>
+    }
+
+    <p class="text-muted small mb-3">Showing @filteredRepos.Count repositories</p>
+
+    @if (filteredRepos.Any())
+    {
+        <div class="list-group">
+            @foreach (var repo in filteredRepos)
+            {
+                <a href="/repo/@repo.Name" class="list-group-item list-group-item-action py-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="bi @(repo.IsPrivate ? "bi-lock" : "bi-journal-bookmark") text-muted me-2"></i>
+                                <h6 class="mb-0 fw-bold">
+                                    @if (!string.IsNullOrEmpty(repo.Owner))
+                                    {
+                                        <span class="text-muted fw-normal">@repo.Owner /</span>
+                                    }
+                                    @repo.Name
+                                </h6>
+                                @if (repo.IsPrivate)
+                                {
+                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle ms-2" style="font-size: 10px;">Private</span>
+                                }
+                                @if (repo.IsArchived)
+                                {
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border ms-2" style="font-size: 10px;">Archived</span>
+                                }
+                                @if (!string.IsNullOrEmpty(repo.ForkedFrom))
+                                {
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle ms-2" style="font-size: 10px;">
+                                        <i class="bi bi-diagram-3 me-1"></i>Fork
+                                    </span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(repo.Description))
+                            {
+                                <p class="text-muted small mb-2">@repo.Description</p>
+                            }
+                            @if (repo.Topics.Any())
+                            {
+                                <div class="d-flex flex-wrap gap-1 mb-1">
+                                    @foreach (var topic in repo.Topics)
+                                    {
+                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill" style="font-size: 10px;">@topic</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        <div class="d-flex gap-3 text-muted small ms-3">
+                            @if (repo.Stars > 0)
+                            {
+                                <span><i class="bi bi-star-fill text-warning me-1"></i>@repo.Stars</span>
+                            }
+                            @if (repo.Forks > 0)
+                            {
+                                <span><i class="bi bi-diagram-3 me-1"></i>@repo.Forks</span>
+                            }
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-search display-4 text-muted"></i>
+            <p class="text-muted mt-3">No repositories found matching your criteria.</p>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Repository> allRepos = new();
+    private List<Repository> filteredRepos = new();
+    private List<string> allTopics = new();
+    private Dictionary<string, int> topicCounts = new();
+    private string searchQuery = "";
+    private string sortBy = "updated";
+    private string? selectedTopic;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRepositories();
+    }
+
+    private async Task LoadRepositories()
+    {
+        var repos = await RepoService.GetRepositoriesAsync();
+
+        // Filter out private repos the user can't see
+        var accessibleRepos = new List<Repository>();
+        foreach (var repo in repos)
+        {
+            if (!repo.IsPrivate)
+            {
+                accessibleRepos.Add(repo);
+            }
+            else if (UserService.IsLoggedIn)
+            {
+                if (repo.Owner.Equals(UserService.Username, StringComparison.OrdinalIgnoreCase) ||
+                    await CollaboratorService.HasPermissionAsync(repo.Name, UserService.Username, CollaboratorPermission.Read))
+                {
+                    accessibleRepos.Add(repo);
+                }
+            }
+        }
+
+        allRepos = accessibleRepos;
+
+        // Build topic index
+        topicCounts.Clear();
+        foreach (var repo in allRepos)
+        {
+            foreach (var topic in repo.Topics)
+            {
+                if (topicCounts.ContainsKey(topic))
+                    topicCounts[topic]++;
+                else
+                    topicCounts[topic] = 1;
+            }
+        }
+        allTopics = topicCounts.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToList();
+
+        FilterRepos();
+    }
+
+    private void FilterRepos()
+    {
+        var query = allRepos.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            query = query.Where(r =>
+                r.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                (r.Description?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+
+        if (!string.IsNullOrEmpty(selectedTopic))
+        {
+            query = query.Where(r => r.Topics.Contains(selectedTopic));
+        }
+
+        query = sortBy switch
+        {
+            "name" => query.OrderBy(r => r.Name),
+            "stars" => query.OrderByDescending(r => r.Stars),
+            "forks" => query.OrderByDescending(r => r.Forks),
+            _ => query.OrderByDescending(r => r.UpdatedAt)
+        };
+
+        filteredRepos = query.ToList();
+    }
+
+    private void HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") FilterRepos();
+    }
+
+    private void ToggleTopic(string? topic)
+    {
+        selectedTopic = selectedTopic == topic ? null : topic;
+        FilterRepos();
+    }
+}
