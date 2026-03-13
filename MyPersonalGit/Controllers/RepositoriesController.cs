@@ -14,15 +14,19 @@ public class RepositoriesController : ControllerBase
     private readonly IReleaseService _releaseService;
     private readonly IArchiveService _archiveService;
     private readonly IBlameService _blameService;
+    private readonly ITemplateService _templateService;
+    private readonly ICodeOwnersService _codeOwnersService;
     private readonly IConfiguration _config;
     private readonly ILogger<RepositoriesController> _logger;
 
-    public RepositoriesController(IRepositoryService repoService, IReleaseService releaseService, IArchiveService archiveService, IBlameService blameService, IConfiguration config, ILogger<RepositoriesController> logger)
+    public RepositoriesController(IRepositoryService repoService, IReleaseService releaseService, IArchiveService archiveService, IBlameService blameService, ITemplateService templateService, ICodeOwnersService codeOwnersService, IConfiguration config, ILogger<RepositoriesController> logger)
     {
         _repoService = repoService;
         _releaseService = releaseService;
         _archiveService = archiveService;
         _blameService = blameService;
+        _templateService = templateService;
+        _codeOwnersService = codeOwnersService;
         _config = config;
         _logger = logger;
     }
@@ -320,6 +324,63 @@ public class RepositoriesController : ControllerBase
         return File(data, asset.ContentType, asset.FileName);
     }
 
+    [HttpGet("templates")]
+    public async Task<IActionResult> ListTemplates()
+    {
+        var templates = await _templateService.GetTemplatesAsync();
+        var currentUser = User.Identity?.Name;
+        // Filter private templates unless the caller is the owner
+        templates = templates.Where(r => !r.IsPrivate || (currentUser != null && r.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))).ToList();
+
+        return Ok(templates.Select(r => new
+        {
+            r.Id,
+            r.Name,
+            r.Description,
+            r.Owner,
+            r.IsPrivate,
+            r.DefaultBranch,
+            created_at = r.CreatedAt,
+            updated_at = r.UpdatedAt
+        }));
+    }
+
+    [HttpPost("create-from-template")]
+    public async Task<IActionResult> CreateFromTemplate([FromBody] CreateFromTemplateRequest request)
+    {
+        var currentUser = User.Identity?.Name;
+        if (string.IsNullOrEmpty(currentUser))
+            return Unauthorized(new { error = "Authentication required" });
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { error = "Repository name is required" });
+
+        var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
+        var repo = await _templateService.CreateFromTemplateAsync(request.TemplateId, currentUser, request.Name, request.Description, request.IsPrivate, projectRoot);
+
+        if (repo == null)
+            return BadRequest(new { error = "Failed to create repository from template. Template may not exist or repository name is taken." });
+
+        return Ok(new
+        {
+            repo.Id,
+            repo.Name,
+            repo.Description,
+            repo.Owner,
+            repo.IsPrivate,
+            template_id = repo.TemplateRepositoryId,
+            created_at = repo.CreatedAt
+        });
+    }
+
+    public class CreateFromTemplateRequest
+    {
+        public int TemplateId { get; set; }
+        public string Name { get; set; } = "";
+        public string? Description { get; set; }
+        public bool IsPrivate { get; set; }
+    }
+
     [HttpGet("{owner}/{repoName}/blame/{branch}/{**path}")]
     public async Task<IActionResult> GetBlame(string owner, string repoName, string branch, string path)
     {
@@ -357,6 +418,52 @@ public class RepositoriesController : ControllerBase
                 message = h.MessageSummary,
                 lines = h.Lines
             })
+        });
+    }
+
+    [HttpGet("{owner}/{repoName}/codeowners/{**path}")]
+    public async Task<IActionResult> GetCodeOwners(string owner, string repoName, string path, [FromQuery] string? branch = null)
+    {
+        if (string.IsNullOrEmpty(path))
+            return BadRequest(new { error = "File path is required" });
+
+        // Enforce private repo access
+        var meta = await _repoService.GetRepositoryAsync(repoName);
+        if (meta is { IsPrivate: true })
+        {
+            var currentUser = User.Identity?.Name;
+            if (currentUser == null || !meta.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))
+                return NotFound(new { error = $"Repository '{repoName}' not found" });
+        }
+
+        var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
+        var repoPath = Path.Combine(projectRoot, repoName);
+        if (!Repository.IsValid(repoPath))
+        {
+            repoPath = Path.Combine(projectRoot, repoName + ".git");
+            if (!Repository.IsValid(repoPath))
+                return NotFound(new { error = $"Repository '{repoName}' not found" });
+        }
+
+        var targetBranch = branch ?? "main";
+        try
+        {
+            using var repo = new Repository(repoPath);
+            var branchRef = repo.Branches[targetBranch] ?? repo.Branches["main"] ?? repo.Branches["master"] ?? repo.Head;
+            if (branchRef != null)
+                targetBranch = branchRef.FriendlyName;
+        }
+        catch { }
+
+        var owners = _codeOwnersService.GetCodeOwnersForFile(repoPath, targetBranch, path);
+
+        return Ok(new
+        {
+            repository = repoName,
+            owner,
+            branch = targetBranch,
+            path,
+            owners
         });
     }
 

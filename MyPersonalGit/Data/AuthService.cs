@@ -9,6 +9,8 @@ public interface IAuthService
 {
     Task<User?> RegisterAsync(string username, string email, string password, string? fullName = null);
     Task<UserSession?> LoginAsync(string usernameOrEmail, string password);
+    Task<User?> ValidatePasswordAsync(string usernameOrEmail, string password);
+    Task<UserSession?> CreateSessionAsync(User user);
     Task<bool> LogoutAsync(string sessionId);
     Task<User?> GetUserBySessionAsync(string sessionId);
     Task<User?> GetUserByUsernameAsync(string username);
@@ -62,6 +64,15 @@ public class AuthService : IAuthService
 
     public async Task<UserSession?> LoginAsync(string usernameOrEmail, string password)
     {
+        var user = await ValidatePasswordAsync(usernameOrEmail, password);
+        if (user == null)
+            return null;
+
+        return await CreateSessionAsync(user);
+    }
+
+    public async Task<User?> ValidatePasswordAsync(string usernameOrEmail, string password)
+    {
         using var db = _dbFactory.CreateDbContext();
 
         var user = await db.Users.FirstOrDefaultAsync(u =>
@@ -78,10 +89,20 @@ public class AuthService : IAuthService
         if (!user.PasswordHash.StartsWith("$2"))
         {
             user.PasswordHash = HashPassword(password);
+            await db.SaveChangesAsync();
             _logger.LogInformation("Migrated password hash to bcrypt for {Username}", user.Username);
         }
 
-        user.LastLoginAt = DateTime.UtcNow;
+        return user;
+    }
+
+    public async Task<UserSession?> CreateSessionAsync(User user)
+    {
+        using var db = _dbFactory.CreateDbContext();
+
+        var trackedUser = await db.Users.FindAsync(user.Id);
+        if (trackedUser != null)
+            trackedUser.LastLoginAt = DateTime.UtcNow;
 
         var session = new UserSession
         {

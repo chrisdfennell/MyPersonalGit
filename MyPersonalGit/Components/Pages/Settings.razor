@@ -6,6 +6,7 @@
 @using UserProfileModel = MyPersonalGit.Models.UserProfile
 @inject IUserProfileService ProfileService
 @inject IGpgKeyService GpgKeyService
+@inject ITwoFactorService TwoFactorService
 @inject IAuthService AuthService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
@@ -142,15 +143,95 @@ else
                         <h5 class="mb-0">Two-Factor Authentication</h5>
                     </div>
                     <div class="card-body">
-                        @if (TwoFactor.IsEnabled)
+                        @if (!string.IsNullOrEmpty(TwoFactorMessage))
+                        {
+                            <div class="alert @(TwoFactorMessageIsError ? "alert-danger" : "alert-success") alert-dismissible">
+                                @TwoFactorMessage
+                                <button type="button" class="btn-close" @onclick='() => TwoFactorMessage = ""'></button>
+                            </div>
+                        }
+
+                        @if (TwoFactor.IsEnabled && !ShowTwoFactorSetup)
                         {
                             <div class="alert alert-success">
                                 <i class="bi bi-shield-check"></i> Two-factor authentication is enabled
                             </div>
                             <p>Enabled on @TwoFactor.EnabledAt?.ToString("g")</p>
-                            <button class="btn btn-danger" @onclick="Disable2FA">
-                                <i class="bi bi-x-circle"></i> Disable 2FA
-                            </button>
+
+                            @if (ShowRecoveryCodes && RecoveryCodes.Length > 0)
+                            {
+                                <div class="alert alert-warning">
+                                    <strong>Recovery Codes</strong>
+                                    <p class="mb-2">Save these codes in a safe place. Each code can only be used once.</p>
+                                    <div class="bg-dark text-light p-3 rounded font-monospace">
+                                        @foreach (var recoveryCode in RecoveryCodes)
+                                        {
+                                            <div>@recoveryCode</div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-primary" @onclick="RegenerateRecoveryCodes">
+                                    <i class="bi bi-arrow-repeat"></i> Regenerate Recovery Codes
+                                </button>
+                                <button class="btn btn-danger" @onclick='() => ShowDisable2FAConfirm = true'>
+                                    <i class="bi bi-x-circle"></i> Disable 2FA
+                                </button>
+                            </div>
+
+                            @if (ShowDisable2FAConfirm)
+                            {
+                                <div class="mt-3 p-3 border rounded">
+                                    <p class="mb-2"><strong>Enter your current TOTP code to disable 2FA:</strong></p>
+                                    <div class="input-group" style="max-width: 300px;">
+                                        <input type="text" class="form-control font-monospace" @bind="Disable2FACode"
+                                               placeholder="000000" maxlength="6" inputmode="numeric" />
+                                        <button class="btn btn-danger" @onclick="Disable2FA">Confirm</button>
+                                        <button class="btn btn-secondary" @onclick='() => { ShowDisable2FAConfirm = false; Disable2FACode = ""; }'>Cancel</button>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else if (ShowTwoFactorSetup)
+                        {
+                            <div class="mb-3">
+                                <h6>Step 1: Add to your authenticator app</h6>
+                                <p>Scan the QR code or manually enter this URI in your authenticator app:</p>
+                                <div class="bg-light p-3 rounded mb-3">
+                                    <code class="text-break">@TwoFactorSetupUri</code>
+                                </div>
+                                <p class="small text-muted">
+                                    <strong>Secret key:</strong> <code>@TwoFactorSetupSecret</code>
+                                </p>
+                            </div>
+
+                            <div class="mb-3">
+                                <h6>Step 2: Verify setup</h6>
+                                <p>Enter the 6-digit code from your authenticator app to confirm setup:</p>
+                                <div class="input-group" style="max-width: 300px;">
+                                    <input type="text" class="form-control font-monospace text-center" @bind="VerifySetupCode"
+                                           placeholder="000000" maxlength="6" inputmode="numeric" />
+                                    <button class="btn btn-primary" @onclick="VerifyAndActivate2FA">Verify</button>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-secondary" @onclick="Cancel2FASetup">Cancel</button>
+
+                            @if (ShowRecoveryCodes && RecoveryCodes.Length > 0)
+                            {
+                                <div class="alert alert-warning mt-3">
+                                    <strong>Save your recovery codes!</strong>
+                                    <p class="mb-2">These codes can be used to access your account if you lose your authenticator device. Each code can only be used once. Store them securely.</p>
+                                    <div class="bg-dark text-light p-3 rounded font-monospace">
+                                        @foreach (var recoveryCode in RecoveryCodes)
+                                        {
+                                            <div>@recoveryCode</div>
+                                        }
+                                    </div>
+                                </div>
+                            }
                         }
                         else
                         {
@@ -545,6 +626,18 @@ else
     private string NewPassword = "";
     private string ConfirmPassword = "";
 
+    // 2FA setup state
+    private bool ShowTwoFactorSetup = false;
+    private string TwoFactorSetupSecret = "";
+    private string TwoFactorSetupUri = "";
+    private string VerifySetupCode = "";
+    private bool ShowRecoveryCodes = false;
+    private string[] RecoveryCodes = Array.Empty<string>();
+    private bool ShowDisable2FAConfirm = false;
+    private string Disable2FACode = "";
+    private string TwoFactorMessage = "";
+    private bool TwoFactorMessageIsError = false;
+
     // Notification preferences now stored in UserProfileData
 
     private bool ShowAddSshKey = false;
@@ -616,14 +709,107 @@ else
 
     private async Task Enable2FA()
     {
-        await ProfileService.Enable2FAAsync(UserService.Username);
-        await LoadData();
+        TwoFactorMessage = "";
+        var user = await AuthService.GetUserByUsernameAsync(UserService.Username);
+        if (user == null) return;
+
+        try
+        {
+            var setupInfo = await TwoFactorService.EnableTwoFactor(user.Id);
+            TwoFactorSetupSecret = setupInfo.Secret;
+            TwoFactorSetupUri = setupInfo.TotpUri;
+            ShowTwoFactorSetup = true;
+            ShowRecoveryCodes = false;
+            VerifySetupCode = "";
+        }
+        catch (Exception)
+        {
+            TwoFactorMessage = "Failed to initiate 2FA setup. Please try again.";
+            TwoFactorMessageIsError = true;
+        }
+    }
+
+    private async Task VerifyAndActivate2FA()
+    {
+        TwoFactorMessage = "";
+        var user = await AuthService.GetUserByUsernameAsync(UserService.Username);
+        if (user == null) return;
+
+        var success = await TwoFactorService.VerifyAndActivate(user.Id, VerifySetupCode);
+        if (success)
+        {
+            TwoFactorMessage = "Two-factor authentication has been enabled successfully.";
+            TwoFactorMessageIsError = false;
+
+            // Reload the 2FA data to get the recovery codes
+            await LoadData();
+            var twoFa = await ProfileService.Get2FAAsync(UserService.Username);
+            if (twoFa != null)
+            {
+                RecoveryCodes = twoFa.BackupCodes;
+                ShowRecoveryCodes = true;
+            }
+            ShowTwoFactorSetup = true; // Keep showing setup page with recovery codes
+        }
+        else
+        {
+            TwoFactorMessage = "Invalid verification code. Please check the code and try again.";
+            TwoFactorMessageIsError = true;
+        }
+    }
+
+    private void Cancel2FASetup()
+    {
+        ShowTwoFactorSetup = false;
+        TwoFactorSetupSecret = "";
+        TwoFactorSetupUri = "";
+        VerifySetupCode = "";
+        ShowRecoveryCodes = false;
+        RecoveryCodes = Array.Empty<string>();
     }
 
     private async Task Disable2FA()
     {
-        await ProfileService.Disable2FAAsync(UserService.Username);
-        await LoadData();
+        TwoFactorMessage = "";
+        var user = await AuthService.GetUserByUsernameAsync(UserService.Username);
+        if (user == null) return;
+
+        var success = await TwoFactorService.DisableTwoFactor(user.Id, Disable2FACode);
+        if (success)
+        {
+            TwoFactorMessage = "Two-factor authentication has been disabled.";
+            TwoFactorMessageIsError = false;
+            ShowDisable2FAConfirm = false;
+            Disable2FACode = "";
+            ShowRecoveryCodes = false;
+            RecoveryCodes = Array.Empty<string>();
+            await LoadData();
+        }
+        else
+        {
+            TwoFactorMessage = "Invalid TOTP code. Please try again.";
+            TwoFactorMessageIsError = true;
+        }
+    }
+
+    private async Task RegenerateRecoveryCodes()
+    {
+        TwoFactorMessage = "";
+        var user = await AuthService.GetUserByUsernameAsync(UserService.Username);
+        if (user == null) return;
+
+        RecoveryCodes = await TwoFactorService.GenerateRecoveryCodes(user.Id);
+        if (RecoveryCodes.Length > 0)
+        {
+            ShowRecoveryCodes = true;
+            TwoFactorMessage = "Recovery codes have been regenerated. Save them securely.";
+            TwoFactorMessageIsError = false;
+        }
+        else
+        {
+            TwoFactorMessage = "Failed to regenerate recovery codes.";
+            TwoFactorMessageIsError = true;
+        }
     }
 
     private async Task AddSshKey()

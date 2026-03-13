@@ -29,10 +29,12 @@
 @inject ICommitCommentService CommitCommentService
 @inject IDeployKeyService DeployKeyService
 @inject IGpgKeyService GpgKeyService
+@inject IIssueAutoCloseService IssueAutoCloseService
 @using MyPersonalGit.Services
 @using RepositorySecret = MyPersonalGit.Models.RepositorySecret
 @using DeployKey = MyPersonalGit.Models.DeployKey
 @inject CurrentUserService UserService
+@inject ICodeOwnersService CodeOwnersService
 @rendermode InteractiveServer
 
 <PageTitle>@GetPageTitle() · Personal Git</PageTitle>
@@ -65,6 +67,12 @@ else
                     <span class="badge rounded-pill border @(repoIsPrivate ? "bg-warning bg-opacity-10 text-warning border-warning-subtle" : "text-muted") fw-normal ms-2" style="font-size: 12px;">
                         @(repoIsPrivate ? "Private" : "Public")
                     </span>
+                    @if (repoIsTemplate)
+                    {
+                        <span class="badge rounded-pill border bg-info bg-opacity-10 text-info border-info-subtle fw-normal ms-1" style="font-size: 12px;">
+                            <i class="bi bi-copy me-1"></i>Template
+                        </span>
+                    }
                     @if (repoIsArchived)
                     {
                         <span class="badge rounded-pill border bg-secondary bg-opacity-10 text-secondary fw-normal ms-1" style="font-size: 12px;">
@@ -143,6 +151,12 @@ else
                             </span>
                         }
                     }
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(repoTemplateFromName))
+            {
+                <div class="d-flex align-items-center mb-2">
+                    <p class="text-muted small mb-0"><i class="bi bi-copy me-1"></i>generated from <a href="/repo/@repoTemplateFromName" class="text-decoration-none">@repoTemplateFromName</a></p>
                 </div>
             }
             @if (!string.IsNullOrEmpty(repoDescription))
@@ -299,6 +313,12 @@ else
                         <div class="card-header bg-light-subtle d-flex justify-content-between align-items-center py-2 px-3">
                             <span class="small text-muted">@lineCount lines · @fileSize bytes</span>
                             <div class="d-flex gap-2">
+                                @if (fileCodeOwners.Any())
+                                {
+                                    <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning-subtle" style="font-size: 10px;">
+                                        <i class="bi bi-shield-check me-1"></i>Owned by: @string.Join(", ", fileCodeOwners.Select(o => $"@{o}"))
+                                    </span>
+                                }
                                 @if (Path?.EndsWith(".md", StringComparison.OrdinalIgnoreCase) == true)
                                 {
                                     <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle" style="font-size: 10px;">Markdown</span>
@@ -861,6 +881,14 @@ else
                                     <button class="btn btn-outline-primary" type="button" @onclick="AddTopic" disabled="@string.IsNullOrWhiteSpace(newTopicInput)">Add</button>
                                 </div>
                                 <div class="form-text">Topics help users discover your repository.</div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" @bind="settingsIsTemplate" id="settingsIsTemplate" />
+                                    <label class="form-check-label small" for="settingsIsTemplate">
+                                        <i class="bi bi-copy me-1"></i> <strong>Template repository</strong> — allow this repo to be used as a template
+                                    </label>
+                                </div>
                             </div>
                             <button class="btn btn-gh-primary btn-sm" @onclick="SaveGeneralSettings">Save changes</button>
                             @if (!string.IsNullOrEmpty(settingsSaveMessage))
@@ -1470,8 +1498,14 @@ else
                         <div class="card border shadow-sm">
                             <div class="card-body py-2 px-3">
                                 <div class="d-flex justify-content-between align-items-start">
-                                    <h6 class="mb-1 fw-bold">@commit.Message</h6>
+                                    <h6 class="mb-1 fw-bold">@((MarkupString)IssueAutoCloseService.RenderIssueLinks(commit.Message, dirName))</h6>
                                     <div class="d-flex align-items-center gap-2">
+                                        @if (HasClosingKeywords(commit.Message))
+                                        {
+                                            <span class="badge text-white" title="This commit closes an issue" style="background-color: #8957e5;">
+                                                <i class="bi bi-check2-circle"></i>
+                                            </span>
+                                        }
                                         @if (commit.IsSigned)
                                         {
                                             @if (commit.IsVerified)
@@ -1556,7 +1590,7 @@ else
             <div class="commit-detail mb-5">
                 <div class="card border shadow-sm mb-4">
                     <div class="card-body bg-light-subtle">
-                        <h4 class="fw-bold mb-1">@selectedCommit.Message</h4>
+                        <h4 class="fw-bold mb-1">@((MarkupString)IssueAutoCloseService.RenderIssueLinks(selectedCommit.Message, dirName))</h4>
                         <div class="text-muted small">
                             <strong>@selectedCommit.AuthorName</strong> authored @selectedCommit.Date.ToString("f")
                             @if (selectedCommit.IsSigned)
@@ -2341,6 +2375,7 @@ else
     private int lineCount = 0;
     private string readmeContent = "";
     private List<LanguageStat> languageStats = new();
+    private List<string> fileCodeOwners = new();
 
     // UI States
     private string editingContent = "";
@@ -2641,6 +2676,8 @@ else
     // Repository metadata (from DB)
     private bool repoIsPrivate = false;
     private bool repoIsArchived = false;
+    private bool repoIsTemplate = false;
+    private string repoTemplateFromName = "";
     private string repoDescription = "";
     private string repoOwner = "";
     private string repoForkedFrom = "";
@@ -2652,6 +2689,7 @@ else
 
     // Settings tab state
     private bool settingsIsPrivate = false;
+    private bool settingsIsTemplate = false;
     private string settingsDescription = "";
     private string settingsSaveMessage = "";
     private bool settingsHasPages = false;
@@ -2712,6 +2750,14 @@ else
 
     private string RootPath = "/repos";
     private string RepoFullPath => GetRepoFullPath();
+    private string dirName => System.IO.Path.GetFileName(RepoFullPath);
+
+    private static readonly System.Text.RegularExpressions.Regex ClosingKeywordRegex = new(
+        @"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#\d+",
+        System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private bool HasClosingKeywords(string message) =>
+        !string.IsNullOrEmpty(message) && ClosingKeywordRegex.IsMatch(message);
 
     private string GetRepoFullPath()
     {
@@ -2771,25 +2817,42 @@ else
         {
             repoIsPrivate = meta.IsPrivate;
             repoIsArchived = meta.IsArchived;
+            repoIsTemplate = meta.IsTemplate;
             repoDescription = meta.Description ?? "";
             repoOwner = meta.Owner;
             repoForkedFrom = meta.ForkedFrom ?? "";
             repoForkCount = meta.Forks;
             settingsIsPrivate = meta.IsPrivate;
+            settingsIsTemplate = meta.IsTemplate;
             settingsDescription = meta.Description ?? "";
             settingsHasPages = meta.HasPages;
             settingsPagesBranch = meta.PagesBranch ?? "gh-pages";
             settingsTopics = new List<string>(meta.Topics ?? new());
+
+            // Look up template source name
+            repoTemplateFromName = "";
+            if (meta.TemplateRepositoryId.HasValue)
+            {
+                using var db = DbFactory.CreateDbContext();
+                var templateRepo = await db.Repositories.FirstOrDefaultAsync(r => r.Id == meta.TemplateRepositoryId.Value);
+                if (templateRepo != null)
+                {
+                    repoTemplateFromName = templateRepo.Name.EndsWith(".git") ? templateRepo.Name[..^4] : templateRepo.Name;
+                }
+            }
         }
         else
         {
             repoIsPrivate = false;
             repoIsArchived = false;
+            repoIsTemplate = false;
+            repoTemplateFromName = "";
             repoDescription = "";
             repoOwner = "";
             repoForkedFrom = "";
             repoForkCount = 0;
             settingsIsPrivate = false;
+            settingsIsTemplate = false;
             settingsDescription = "";
         }
 
@@ -2831,9 +2894,11 @@ else
         {
             repo.Description = settingsDescription;
             repo.IsPrivate = settingsIsPrivate;
+            repo.IsTemplate = settingsIsTemplate;
             repo.Topics = new List<string>(settingsTopics);
         });
         repoIsPrivate = settingsIsPrivate;
+        repoIsTemplate = settingsIsTemplate;
         repoDescription = settingsDescription;
         settingsSaveMessage = "Settings saved!";
         StateHasChanged();
@@ -3143,6 +3208,13 @@ else
                         using var reader = new StreamReader(blob.GetContentStream(), Encoding.UTF8);
                         fileContent = reader.ReadToEnd();
                         lineCount = fileContent.Split('\n').Length;
+
+                        // Load CODEOWNERS for this file
+                        try
+                        {
+                            fileCodeOwners = CodeOwnersService.GetCodeOwnersForFile(RepoFullPath, currentBranch, Path);
+                        }
+                        catch { fileCodeOwners = new(); }
                     }
                 }
             }

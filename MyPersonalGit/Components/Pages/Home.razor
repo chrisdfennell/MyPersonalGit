@@ -10,6 +10,7 @@
 @inject IRepositoryService RepoService
 @inject IAdminService AdminService
 @inject IActivityService ActivityService
+@inject ITemplateService TemplateService
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
 @rendermode InteractiveServer
@@ -127,6 +128,12 @@
                                     <span class="badge rounded-pill border @(repo.IsPrivate ? "bg-warning bg-opacity-10 text-warning border-warning-subtle" : "text-muted") fw-normal px-2" style="font-size: 12px;">
                                         @(repo.IsPrivate ? "Private" : "Public")
                                     </span>
+                                    @if (repo.IsTemplate)
+                                    {
+                                        <span class="badge rounded-pill border bg-info bg-opacity-10 text-info border-info-subtle fw-normal px-2 ms-1" style="font-size: 12px;">
+                                            <i class="bi bi-copy me-1"></i>Template
+                                        </span>
+                                    }
                                     @if (repo.IsArchived)
                                     {
                                         <span class="badge rounded-pill border bg-secondary bg-opacity-10 text-secondary fw-normal px-2 ms-1" style="font-size: 12px;">
@@ -225,6 +232,19 @@
                     <button type="button" class="btn-close shadow-none" @onclick="() => showModal = false"></button>
                 </div>
                 <div class="modal-body">
+                    @if (templateRepos.Any())
+                    {
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Repository template <span class="fw-normal text-muted">(optional)</span></label>
+                            <select class="form-select form-select-sm shadow-none" @onchange="OnTemplateSelected">
+                                <option value="">No template</option>
+                                @foreach (var tmpl in templateRepos)
+                                {
+                                    <option value="@tmpl.Id">@(tmpl.Name.EndsWith(".git") ? tmpl.Name[..^4] : tmpl.Name) @(!string.IsNullOrEmpty(tmpl.Description) ? $"— {tmpl.Description}" : "")</option>
+                                }
+                            </select>
+                        </div>
+                    }
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Repository name</label>
                         <input type="text" class="form-control shadow-none" @bind="newRepoName" @bind:event="oninput" placeholder="my-awesome-project" />
@@ -311,7 +331,7 @@
                         }
                         else
                         {
-                            <span>Create repository</span>
+                            <span>@(selectedTemplateId > 0 ? "Use this template" : "Create repository")</span>
                         }
                     </button>
                 </div>
@@ -331,6 +351,8 @@
     private string newRepoDescription = "";
     private bool newRepoIsPrivate = false;
     private string customRepoPath = "";
+    private List<MyPersonalGit.Models.Repository> templateRepos = new();
+    private int selectedTemplateId = 0;
 
     // Upload-on-create state
     private const long maxFileSize = long.MaxValue;
@@ -474,6 +496,7 @@
                             IsStarred = isStarred,
                             IsPrivate = repoMeta?.IsPrivate ?? false,
                             IsArchived = repoMeta?.IsArchived ?? false,
+                            IsTemplate = repoMeta?.IsTemplate ?? false,
                             Description = repoMeta?.Description ?? "",
                             Owner = repoMeta?.Owner ?? "",
                             Forks = repoMeta?.Forks ?? 0
@@ -485,10 +508,29 @@
         }
     }
 
-    private void ShowCreateModal()
+    private async Task ShowCreateModal()
     {
         customRepoPath = RootPath;
+        selectedTemplateId = 0;
+        try { templateRepos = await TemplateService.GetTemplatesAsync(); } catch { templateRepos = new(); }
         showModal = true;
+    }
+
+    private void OnTemplateSelected(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+        {
+            selectedTemplateId = id;
+            var tmpl = templateRepos.FirstOrDefault(t => t.Id == id);
+            if (tmpl != null && string.IsNullOrEmpty(newRepoDescription))
+            {
+                newRepoDescription = tmpl.Description ?? "";
+            }
+        }
+        else
+        {
+            selectedTemplateId = 0;
+        }
     }
 
     private void ResetRepoPath() => customRepoPath = RootPath;
@@ -621,6 +663,26 @@
             var basePath = string.IsNullOrWhiteSpace(customRepoPath) ? RootPath : customRepoPath;
             var repoNameClean = newRepoName.EndsWith(".git") ? newRepoName[..^4] : newRepoName;
             var folderName = $"{repoNameClean}.git";
+
+            // If creating from a template, use the TemplateService
+            if (selectedTemplateId > 0)
+            {
+                var result = await TemplateService.CreateFromTemplateAsync(selectedTemplateId, UserService.Username, repoNameClean, newRepoDescription, newRepoIsPrivate, basePath);
+                if (result == null)
+                {
+                    createError = "Failed to create repository from template. Template may not exist or repository name is taken.";
+                    return;
+                }
+
+                showModal = false;
+                newRepoName = "";
+                newRepoDescription = "";
+                newRepoIsPrivate = false;
+                selectedTemplateId = 0;
+                ClearInitFiles();
+                Nav.NavigateTo($"/repo/{repoNameClean}");
+                return;
+            }
 
             // Prevent double-nesting: if basePath already ends with the repo name, use parent
             var baseDir = Path.GetFileName(basePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
@@ -941,6 +1003,7 @@
         public bool IsStarred { get; set; }
         public bool IsPrivate { get; set; }
         public bool IsArchived { get; set; }
+        public bool IsTemplate { get; set; }
         public string Description { get; set; } = "";
         public string Owner { get; set; } = "";
         public int Forks { get; set; }

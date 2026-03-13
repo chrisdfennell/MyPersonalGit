@@ -274,7 +274,9 @@ public class PullRequestServiceTests
         var adminService = Substitute.For<IAdminService>();
         var config = Substitute.For<IConfiguration>();
         var branchProtection = Substitute.For<IBranchProtectionService>();
-        _service = new PullRequestService(factory, NullLogger<PullRequestService>.Instance, _notifications, activityService, adminService, branchProtection, config);
+        var codeOwners = Substitute.For<ICodeOwnersService>();
+        var issueAutoClose = Substitute.For<IIssueAutoCloseService>();
+        _service = new PullRequestService(factory, NullLogger<PullRequestService>.Instance, _notifications, activityService, adminService, branchProtection, codeOwners, issueAutoClose, config);
     }
 
     [Fact]
@@ -463,7 +465,8 @@ public class NotificationServiceTests
         _factory = new TestDbContextFactory(options);
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
         var adminService = Substitute.For<IAdminService>();
-        _service = new NotificationService(_factory, NullLogger<NotificationService>.Instance, httpClientFactory, adminService);
+        var emailService = Substitute.For<IEmailService>();
+        _service = new NotificationService(_factory, NullLogger<NotificationService>.Instance, httpClientFactory, adminService, emailService);
     }
 
     [Fact]

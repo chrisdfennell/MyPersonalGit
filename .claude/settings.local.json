@@ -2,7 +2,16 @@
   "permissions": {
     "allow": [
       "Bash(ssh:*)",
-      "Bash(docker tag:*)"
+      "Bash(docker tag:*)",
+      "Bash(dotnet ef:*)",
+      "Bash(dotnet tool:*)",
+      "Bash(docker --version)",
+      "Bash(docker build:*)",
+      "Bash(docker push:*)",
+      "Bash(grep -E \"\\\\.razor$\")",
+      "Bash(grep -E \"public class|public enum\" \"f:/Programming/C#/MyPersonalGit/MyPersonalGit/Models\"/*.cs)",
+      "Bash(grep -E \"Controller\\\\.cs$\")",
+      "Read(//f/Programming/C#/MyPersonalGit/**)"
     ]
   }
 }

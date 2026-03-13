@@ -10,13 +10,15 @@ namespace MyPersonalGit.Services;
 public class CurrentUserService
 {
     private readonly IAuthService _authService;
+    private readonly ITwoFactorService _twoFactorService;
     private User? _currentUser;
     private string? _sessionId;
     private bool _initialized;
 
-    public CurrentUserService(IAuthService authService)
+    public CurrentUserService(IAuthService authService, ITwoFactorService twoFactorService)
     {
         _authService = authService;
+        _twoFactorService = twoFactorService;
     }
 
     public User? CurrentUser => _currentUser;
@@ -53,7 +55,44 @@ public class CurrentUserService
     }
 
     /// <summary>
-    /// Called after successful login. Returns the session ID to store in browser.
+    /// Validates the user's password. Returns the user if valid, or null.
+    /// If the user has 2FA enabled, the caller must then call CompleteTwoFactorLoginAsync.
+    /// </summary>
+    public async Task<(User? user, bool requires2FA)> ValidatePasswordAsync(string usernameOrEmail, string password)
+    {
+        var user = await _authService.ValidatePasswordAsync(usernameOrEmail, password);
+        if (user == null)
+            return (null, false);
+
+        var has2FA = await _twoFactorService.HasTwoFactorEnabled(user.Id);
+        return (user, has2FA);
+    }
+
+    /// <summary>
+    /// Completes login after 2FA verification. Returns the session ID to store in browser.
+    /// </summary>
+    public async Task<string?> CompleteTwoFactorLoginAsync(User user, string code, bool isRecoveryCode)
+    {
+        bool valid;
+        if (isRecoveryCode)
+            valid = await _twoFactorService.UseRecoveryCode(user.Id, code);
+        else
+            valid = await _twoFactorService.ValidateLogin(user.Id, code);
+
+        if (!valid)
+            return null;
+
+        var session = await _authService.CreateSessionAsync(user);
+        if (session == null) return null;
+
+        _sessionId = session.SessionId;
+        _currentUser = user;
+        _initialized = true;
+        return session.SessionId;
+    }
+
+    /// <summary>
+    /// Called after successful login (no 2FA). Returns the session ID to store in browser.
     /// </summary>
     public async Task<string?> LoginAsync(string usernameOrEmail, string password)
     {
@@ -62,6 +101,20 @@ public class CurrentUserService
 
         _sessionId = session.SessionId;
         _currentUser = await _authService.GetUserByUsernameAsync(session.Username);
+        _initialized = true;
+        return session.SessionId;
+    }
+
+    /// <summary>
+    /// Creates a session for an already-validated user (no 2FA required).
+    /// </summary>
+    public async Task<string?> CreateSessionForUserAsync(User user)
+    {
+        var session = await _authService.CreateSessionAsync(user);
+        if (session == null) return null;
+
+        _sessionId = session.SessionId;
+        _currentUser = user;
         _initialized = true;
         return session.SessionId;
     }
