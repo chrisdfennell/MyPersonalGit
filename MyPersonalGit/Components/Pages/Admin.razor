@@ -5,6 +5,7 @@
 @inject IAdminService AdminService
 @inject IEmailService EmailService
 @inject ISecretsService SecretsService
+@inject IOAuthService OAuthService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
@@ -68,6 +69,11 @@ else
         <li class="nav-item">
             <a class="nav-link @(ActiveTab == "backups" ? "active" : "")" @onclick='() => ActiveTab = "backups"' style="cursor: pointer;">
                 <i class="bi bi-cloud-download"></i> Backups
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ActiveTab == "oauth" ? "active" : "")" @onclick='() => ActiveTab = "oauth"' style="cursor: pointer;">
+                <i class="bi bi-shield-check"></i> OAuth / SSO
             </a>
         </li>
     </ul>
@@ -602,6 +608,88 @@ else
             </div>
         </div>
     }
+    else if (ActiveTab == "oauth")
+    {
+        <div class="row">
+            <div class="col-md-10">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-shield-check"></i> OAuth / SSO Providers</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Configure external authentication providers. Only providers with both Client ID and Client Secret filled in will appear on the login page.</p>
+
+                        @if (!string.IsNullOrEmpty(OAuthMessage))
+                        {
+                            <div class="alert alert-success alert-dismissible fade show">
+                                @OAuthMessage
+                                <button type="button" class="btn-close" @onclick="() => OAuthMessage = null"></button>
+                            </div>
+                        }
+
+                        <div class="row">
+                            @foreach (var provider in oauthProviders)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <div class="card @(IsOAuthConfigured(provider) ? "border-success" : "")">
+                                        <div class="card-header d-flex align-items-center justify-content-between py-2">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi @MyPersonalGit.Data.OAuthService.GetProviderIcon(provider.ProviderName) me-2"
+                                                   style="color: @MyPersonalGit.Data.OAuthService.GetProviderColor(provider.ProviderName); font-size: 1.2rem;"></i>
+                                                <strong>@(provider.DisplayName ?? provider.ProviderName)</strong>
+                                            </div>
+                                            @if (IsOAuthConfigured(provider))
+                                            {
+                                                <span class="badge bg-success">Enabled</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Not configured</span>
+                                            }
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="mb-2">
+                                                <label class="form-label small fw-bold mb-1">Client ID</label>
+                                                <input type="text" class="form-control form-control-sm"
+                                                       value="@provider.ClientId"
+                                                       @onchange="e => provider.ClientId = e.Value?.ToString() ?? string.Empty"
+                                                       placeholder="Enter Client ID" />
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label small fw-bold mb-1">Client Secret</label>
+                                                <input type="password" class="form-control form-control-sm"
+                                                       value="@provider.ClientSecret"
+                                                       @onchange="e => provider.ClientSecret = e.Value?.ToString() ?? string.Empty"
+                                                       placeholder="Enter Client Secret" />
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" checked="@provider.IsEnabled"
+                                                       @onchange="e => provider.IsEnabled = (bool)(e.Value ?? false)"
+                                                       id="oauth-@provider.ProviderName" />
+                                                <label class="form-check-label small" for="oauth-@provider.ProviderName">
+                                                    Enable this provider
+                                                </label>
+                                            </div>
+                                            <button class="btn btn-sm btn-primary" @onclick="() => SaveOAuthProvider(provider)">
+                                                <i class="bi bi-check-lg me-1"></i>Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="alert alert-info mt-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <strong>Callback URL:</strong> Each provider should be configured with the callback URL:
+                            <code>@(Navigation.BaseUri)oauth/callback/{provider-name}</code>
+                            <br/><small class="text-muted">Replace <code>{provider-name}</code> with: github, google, microsoft, gitlab, bitbucket, facebook, discord, or twitter</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @if (ShowAddUser)
@@ -739,6 +827,10 @@ else
     private string? editingGlobalSecretName;
     private string globalSecretMessage = "";
 
+    // OAuth providers
+    private List<OAuthProviderConfig> oauthProviders = new();
+    private string? OAuthMessage;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
@@ -752,6 +844,7 @@ else
         AuditLogs = await AdminService.GetAuditLogsAsync();
         Users = await AdminService.GetAllUsersAsync();
         globalSecrets = await SecretsService.GetGlobalSecretsAsync();
+        oauthProviders = await OAuthService.GetAllProvidersAsync();
     }
 
     private async Task SaveSettings()
@@ -905,6 +998,21 @@ else
         await SecretsService.DeleteGlobalSecretAsync(name);
         await AdminService.AddAuditLogAsync(UserService.Username, "DELETE_GLOBAL_SECRET", $"Deleted global secret: {name}");
         await LoadData();
+    }
+
+    private bool IsOAuthConfigured(OAuthProviderConfig provider) =>
+        !string.IsNullOrWhiteSpace(provider.ClientId) && !string.IsNullOrWhiteSpace(provider.ClientSecret) && provider.IsEnabled;
+
+    private async Task SaveOAuthProvider(OAuthProviderConfig provider)
+    {
+        await OAuthService.SaveProviderConfigAsync(provider);
+        await AdminService.AddAuditLogAsync(UserService.Username, "UPDATE_OAUTH", $"Updated OAuth provider: {provider.ProviderName}");
+        OAuthMessage = $"{provider.DisplayName ?? provider.ProviderName} settings saved!";
+        oauthProviders = await OAuthService.GetAllProvidersAsync();
+        StateHasChanged();
+        await Task.Delay(3000);
+        OAuthMessage = null;
+        StateHasChanged();
     }
 
     private async Task DownloadBackup()

@@ -101,6 +101,11 @@ builder.Services.AddSingleton<ITemplateService, TemplateService>();
 builder.Services.AddSingleton<ICodeOwnersService, CodeOwnersService>();
 builder.Services.AddSingleton<ITwoFactorService, TwoFactorService>();
 builder.Services.AddHostedService<WorkflowSchedulerService>();
+builder.Services.AddSingleton<IOAuthService, OAuthService>();
+builder.Services.AddSingleton<IMigrationService, MigrationService>();
+builder.Services.AddSingleton<MigrationChannel>();
+builder.Services.AddHostedService<MigrationWorkerService>();
+builder.Services.AddSingleton<IConflictResolutionService, ConflictResolutionService>();
 builder.Services.AddScoped<CurrentUserService>();
 
 var app = builder.Build();

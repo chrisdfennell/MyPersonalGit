@@ -8,6 +8,7 @@
 @inject IGpgKeyService GpgKeyService
 @inject ITwoFactorService TwoFactorService
 @inject IAuthService AuthService
+@inject IOAuthService OAuthService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
@@ -53,9 +54,13 @@ else
                    @onclick='() => SetTab("sessions")' style="cursor: pointer;">
                     <i class="bi bi-laptop"></i> Sessions
                 </a>
-                <a class="list-group-item list-group-item-action @(ActiveTab == "notifications" ? "active" : "")" 
+                <a class="list-group-item list-group-item-action @(ActiveTab == "notifications" ? "active" : "")"
                    @onclick='() => SetTab("notifications")' style="cursor: pointer;">
                     <i class="bi bi-bell"></i> Notifications
+                </a>
+                <a class="list-group-item list-group-item-action @(ActiveTab == "linked" ? "active" : "")"
+                   @onclick='() => SetTab("linked")' style="cursor: pointer;">
+                    <i class="bi bi-link-45deg"></i> Linked Accounts
                 </a>
             </div>
         </div>
@@ -502,6 +507,65 @@ else
                     </div>
                 </div>
             }
+            else if (ActiveTab == "linked")
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Linked Accounts</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Manage external accounts linked to your MyPersonalGit profile for single sign-on.</p>
+
+                        @if (!string.IsNullOrEmpty(LinkedAccountMessage))
+                        {
+                            <div class="alert alert-info">@LinkedAccountMessage</div>
+                        }
+
+                        @if (externalLogins.Any())
+                        {
+                            <div class="list-group mb-3">
+                                @foreach (var login in externalLogins)
+                                {
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="bi @MyPersonalGit.Data.OAuthService.GetProviderIcon(login.Provider) me-2"
+                                               style="color: @MyPersonalGit.Data.OAuthService.GetProviderColor(login.Provider);"></i>
+                                            <strong>@GetProviderDisplayName(login.Provider)</strong>
+                                            @if (!string.IsNullOrEmpty(login.ProviderUsername))
+                                            {
+                                                <span class="text-muted ms-1">(@login.ProviderUsername)</span>
+                                            }
+                                            <br /><small class="text-muted">Linked @login.LinkedAt.ToString("MMM d, yyyy")</small>
+                                        </div>
+                                        <button class="btn btn-outline-danger btn-sm" @onclick="() => UnlinkAccount(login.Provider)">
+                                            <i class="bi bi-x-lg me-1"></i> Unlink
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No linked accounts.</p>
+                        }
+
+                        @if (enabledOAuthProviders.Any())
+                        {
+                            <h6 class="mt-3">Link a new account</h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var provider in enabledOAuthProviders.Where(p => !externalLogins.Any(l => l.Provider == p.ProviderName)))
+                                {
+                                    <a href="/oauth/login/@provider.ProviderName" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi @MyPersonalGit.Data.OAuthService.GetProviderIcon(provider.ProviderName) me-1"
+                                           style="color: @MyPersonalGit.Data.OAuthService.GetProviderColor(provider.ProviderName);"></i>
+                                        Link @(provider.DisplayName ?? provider.ProviderName)
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>
@@ -655,6 +719,11 @@ else
     private bool TokenScopeAdmin = false;
     private int TokenExpirationDays = 30;
 
+    // Linked accounts
+    private List<ExternalLogin> externalLogins = new();
+    private List<OAuthProviderConfig> enabledOAuthProviders = new();
+    private string? LinkedAccountMessage;
+
     protected override async Task OnInitializedAsync()
     {
         if (!string.IsNullOrEmpty(Tab))
@@ -690,7 +759,11 @@ else
 
         var user = await AuthService.GetUserByUsernameAsync(UserService.Username);
         if (user != null)
+        {
             GpgKeys = await GpgKeyService.GetUserGpgKeysAsync(user.Id);
+            externalLogins = await OAuthService.GetExternalLoginsAsync(user.Id);
+        }
+        enabledOAuthProviders = await OAuthService.GetEnabledProvidersAsync();
     }
 
     private async Task SaveProfile()
@@ -884,4 +957,28 @@ else
     {
         await ProfileService.SaveProfileAsync(UserProfileData);
     }
+
+    private async Task UnlinkAccount(string provider)
+    {
+        var user = await AuthService.GetUserByUsernameAsync(UserService.Username);
+        if (user != null)
+        {
+            await OAuthService.UnlinkExternalLoginAsync(user.Id, provider);
+            LinkedAccountMessage = $"{GetProviderDisplayName(provider)} account unlinked.";
+            await LoadData();
+        }
+    }
+
+    private static string GetProviderDisplayName(string provider) => provider.ToLowerInvariant() switch
+    {
+        "github" => "GitHub",
+        "google" => "Google",
+        "microsoft" => "Microsoft",
+        "gitlab" => "GitLab",
+        "bitbucket" => "Bitbucket",
+        "facebook" => "Facebook",
+        "discord" => "Discord",
+        "twitter" => "X (Twitter)",
+        _ => provider
+    };
 }

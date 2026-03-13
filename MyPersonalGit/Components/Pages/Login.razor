@@ -3,6 +3,7 @@
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
+@inject IOAuthService OAuthService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @rendermode InteractiveServer
@@ -64,6 +65,26 @@
                                 }
                             </button>
                         </EditForm>
+
+                        @if (oauthProviders.Any())
+                        {
+                            <div class="d-flex align-items-center my-3">
+                                <hr class="flex-grow-1" />
+                                <span class="px-3 text-muted small">or continue with</span>
+                                <hr class="flex-grow-1" />
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                @foreach (var provider in oauthProviders)
+                                {
+                                    <a href="/oauth/login/@provider.ProviderName" class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
+                                       style="border-color: @MyPersonalGit.Data.OAuthService.GetProviderColor(provider.ProviderName); color: @MyPersonalGit.Data.OAuthService.GetProviderColor(provider.ProviderName);">
+                                        <i class="bi @MyPersonalGit.Data.OAuthService.GetProviderIcon(provider.ProviderName) me-2"></i>
+                                        Sign in with @(provider.DisplayName ?? provider.ProviderName)
+                                    </a>
+                                }
+                            </div>
+                        }
                     }
                     else
                     {
@@ -119,7 +140,7 @@
 
                     @if (!ShowTwoFactorStep)
                     {
-                        <div class="text-center">
+                        <div class="text-center mt-3">
                             <p class="text-muted mb-0">
                                 Don't have an account? <a href="/register" class="text-decoration-none">Sign up</a>
                             </p>
@@ -139,6 +160,19 @@
     private bool UseRecoveryCode { get; set; }
     private string TwoFactorCode { get; set; } = "";
     private User? _pendingUser;
+    private List<OAuthProviderConfig> oauthProviders = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        oauthProviders = await OAuthService.GetEnabledProvidersAsync();
+
+        // Check for OAuth error in query string
+        var uri = new Uri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        var error = query["error"];
+        if (!string.IsNullOrEmpty(error))
+            ErrorMessage = error.Replace('+', ' ');
+    }
 
     private async Task HandleLogin()
     {
