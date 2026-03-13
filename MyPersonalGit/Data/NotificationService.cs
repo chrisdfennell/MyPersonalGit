@@ -20,14 +20,16 @@ public class NotificationService : INotificationService
     private readonly ILogger<NotificationService> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IAdminService _adminService;
+    private readonly IEmailService _emailService;
 
     public NotificationService(IDbContextFactory<AppDbContext> dbFactory, ILogger<NotificationService> logger,
-        IHttpClientFactory httpClientFactory, IAdminService adminService)
+        IHttpClientFactory httpClientFactory, IAdminService adminService, IEmailService emailService)
     {
         _dbFactory = dbFactory;
         _logger = logger;
         _httpClientFactory = httpClientFactory;
         _adminService = adminService;
+        _emailService = emailService;
     }
 
     public async Task<List<Notification>> GetNotificationsAsync(string username, bool unreadOnly = false)
@@ -73,6 +75,13 @@ public class NotificationService : INotificationService
             try { await DispatchPushNotificationAsync(username, title, message); }
             catch (Exception ex) { _logger.LogWarning(ex, "Failed to dispatch push notification"); }
         });
+
+        // Dispatch email notification (fire-and-forget)
+        _ = Task.Run(async () =>
+        {
+            try { await DispatchEmailNotificationAsync(username, title, message, url); }
+            catch (Exception ex) { _logger.LogWarning(ex, "Failed to dispatch email notification"); }
+        });
     }
 
     private async Task DispatchPushNotificationAsync(string username, string title, string message)
@@ -113,6 +122,31 @@ public class NotificationService : INotificationService
             }
             catch (Exception ex) { _logger.LogWarning(ex, "Gotify push failed"); }
         }
+    }
+
+    private async Task DispatchEmailNotificationAsync(string username, string title, string message, string? url)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var profile = await db.UserProfiles.FirstOrDefaultAsync(p => p.Username == username);
+        if (profile is { EmailNotificationsEnabled: false }) return;
+
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (user == null || string.IsNullOrEmpty(user.Email)) return;
+
+        var htmlBody = $@"
+<html>
+<body style=""font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #24292e;"">
+    <div style=""max-width: 600px; margin: 0 auto; padding: 20px;"">
+        <h2 style=""border-bottom: 1px solid #e1e4e8; padding-bottom: 10px;"">{System.Net.WebUtility.HtmlEncode(title)}</h2>
+        <p>{System.Net.WebUtility.HtmlEncode(message)}</p>
+        {(string.IsNullOrEmpty(url) ? "" : $@"<p><a href=""{System.Net.WebUtility.HtmlEncode(url)}"" style=""color: #0366d6;"">View on MyPersonalGit</a></p>")}
+        <hr style=""border: none; border-top: 1px solid #e1e4e8; margin-top: 20px;"" />
+        <p style=""color: #6a737d; font-size: 12px;"">You received this because of your notification settings. Manage preferences in your account settings.</p>
+    </div>
+</body>
+</html>";
+
+        await _emailService.SendEmailAsync(user.Email, title, htmlBody);
     }
 
     public async Task MarkAsReadAsync(string username, int notificationId)

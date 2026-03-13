@@ -9,6 +9,7 @@ public interface ISshAuthService
 {
     Task<string?> AuthenticateByKeyAsync(string keyContent);
     Task<string?> AuthenticateByFingerprintAsync(string fingerprint);
+    Task<DeployKeyValidationResult?> AuthenticateDeployKeyByFingerprintAsync(string fingerprint, string repoPath);
     Task RegenerateAuthorizedKeysAsync();
     string GetAuthorizedKeysPath();
 }
@@ -21,14 +22,16 @@ public interface ISshAuthService
 public class SshAuthService : ISshAuthService
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
+    private readonly IDeployKeyService _deployKeyService;
     private readonly ILogger<SshAuthService> _logger;
     private readonly IConfiguration _config;
     private readonly string _authorizedKeysPath;
     private readonly string _dataDir;
 
-    public SshAuthService(IDbContextFactory<AppDbContext> dbFactory, ILogger<SshAuthService> logger, IConfiguration config)
+    public SshAuthService(IDbContextFactory<AppDbContext> dbFactory, IDeployKeyService deployKeyService, ILogger<SshAuthService> logger, IConfiguration config)
     {
         _dbFactory = dbFactory;
+        _deployKeyService = deployKeyService;
         _logger = logger;
         _config = config;
 
@@ -77,6 +80,15 @@ public class SshAuthService : ISshAuthService
             sshKey.Username, fingerprint);
 
         return sshKey.Username;
+    }
+
+    /// <summary>
+    /// Authenticate a deploy key by fingerprint for a specific repository path.
+    /// Deploy keys grant access only to their associated repository.
+    /// </summary>
+    public async Task<DeployKeyValidationResult?> AuthenticateDeployKeyByFingerprintAsync(string fingerprint, string repoPath)
+    {
+        return await _deployKeyService.ValidateDeployKeyAsync(fingerprint, repoPath);
     }
 
     /// <summary>

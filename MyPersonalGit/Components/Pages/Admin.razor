@@ -3,6 +3,7 @@
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
 @inject IAdminService AdminService
+@inject IEmailService EmailService
 @inject ISecretsService SecretsService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
@@ -264,7 +265,16 @@ else
                                 </div>
                             </div>
 
-                            <h6 class="mt-4 mb-3">Email Settings (SMTP)</h6>
+                            <h6 class="mt-4 mb-3">Email Notifications (SMTP)</h6>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.EmailNotificationsEnabled" id="emailEnabled" />
+                                    <label class="form-check-label" for="emailEnabled">
+                                        Enable Email Notifications
+                                    </label>
+                                </div>
+                            </div>
 
                             <div class="mb-3">
                                 <label class="form-label">SMTP Server</label>
@@ -293,6 +303,34 @@ else
                                         Enable SSL/TLS
                                     </label>
                                 </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">From Address</label>
+                                <InputText class="form-control" @bind-Value="Settings.SmtpFromAddress" placeholder="noreply@example.com" />
+                                <small class="form-text text-muted">Defaults to SMTP username if empty</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">From Name</label>
+                                <InputText class="form-control" @bind-Value="Settings.SmtpFromName" placeholder="MyPersonalGit" />
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="input-group">
+                                    <input type="email" class="form-control" @bind="TestEmailAddress" placeholder="test@example.com" />
+                                    <button type="button" class="btn btn-outline-secondary" @onclick="SendTestEmail" disabled="@SendingTestEmail">
+                                        @if (SendingTestEmail)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1"></span>
+                                        }
+                                        <i class="bi bi-envelope"></i> Send Test Email
+                                    </button>
+                                </div>
+                                @if (!string.IsNullOrEmpty(TestEmailMessage))
+                                {
+                                    <div class="alert @(TestEmailSuccess ? "alert-success" : "alert-danger") mt-2 py-2">@TestEmailMessage</div>
+                                }
                             </div>
 
                             <h6 class="mt-4 mb-3">Push Notifications (ntfy / Gotify)</h6>
@@ -687,6 +725,12 @@ else
     private string? RestoreMessage;
     private bool RestoreSuccess;
 
+    // Test email
+    private string TestEmailAddress = "";
+    private string? TestEmailMessage;
+    private bool TestEmailSuccess;
+    private bool SendingTestEmail;
+
     // Global secrets
     private List<GlobalSecret> globalSecrets = new();
     private bool showAddGlobalSecret;
@@ -717,6 +761,32 @@ else
         SettingsMessage = "Settings saved successfully!";
         await Task.Delay(3000);
         SettingsMessage = "";
+    }
+
+    private async Task SendTestEmail()
+    {
+        if (string.IsNullOrWhiteSpace(TestEmailAddress)) return;
+        SendingTestEmail = true;
+        TestEmailMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            // Save current settings first so the email service picks them up
+            await AdminService.SaveSystemSettingsAsync(Settings);
+            var (success, message) = await EmailService.SendTestEmailAsync(TestEmailAddress);
+            TestEmailSuccess = success;
+            TestEmailMessage = message;
+        }
+        catch (Exception ex)
+        {
+            TestEmailSuccess = false;
+            TestEmailMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            SendingTestEmail = false;
+        }
     }
 
     private void ShowAddUserModal()

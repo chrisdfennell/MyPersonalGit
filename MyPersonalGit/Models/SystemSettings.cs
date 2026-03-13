@@ -13,11 +13,14 @@ public class SystemSettings
     public bool EnableWiki { get; set; } = true;
     public bool EnableIssues { get; set; } = true;
     public bool EnableProjects { get; set; } = true;
+    public bool EmailNotificationsEnabled { get; set; }
     public string SmtpServer { get; set; } = string.Empty;
     public int SmtpPort { get; set; } = 587;
     public string SmtpUsername { get; set; } = string.Empty;
     public string SmtpPassword { get; set; } = string.Empty;
     public bool SmtpEnableSsl { get; set; } = true;
+    public string SmtpFromAddress { get; set; } = string.Empty;
+    public string SmtpFromName { get; set; } = "MyPersonalGit";
 
     // Push notifications
     public bool EnablePushNotifications { get; set; }

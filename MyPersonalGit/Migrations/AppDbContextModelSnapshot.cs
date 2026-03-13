@@ -1557,6 +1557,52 @@ namespace MyPersonalGit.Migrations
                     b.ToTable("RepositorySecrets");
                 });
 
+            modelBuilder.Entity("MyPersonalGit.Models.GpgKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Emails")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("KeyId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LongKeyId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PrimaryEmail")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PublicKey")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "LongKeyId")
+                        .IsUnique();
+
+                    b.ToTable("GpgKeys");
+                });
+
             modelBuilder.Entity("MyPersonalGit.Models.GlobalSecret", b =>
                 {
                     b.Property<int>("Id")
@@ -2458,6 +2504,17 @@ namespace MyPersonalGit.Migrations
                         .HasForeignKey("SecurityScanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("MyPersonalGit.Models.GpgKey", b =>
+                {
+                    b.HasOne("MyPersonalGit.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("MyPersonalGit.Models.IssueComment", b =>

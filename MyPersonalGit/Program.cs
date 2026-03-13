@@ -57,6 +57,7 @@ builder.Services.AddDbContextFactory<AppDbContext>(options =>
         ?? "Data Source=mypersonalgit.db"));
 
 // Domain services (registered as interfaces for testability)
+builder.Services.AddSingleton<IEmailService, EmailService>();
 builder.Services.AddSingleton<INotificationService, NotificationService>();
 builder.Services.AddSingleton<IIssueService, IssueService>();
 builder.Services.AddSingleton<IPullRequestService, PullRequestService>();
@@ -91,6 +92,10 @@ builder.Services.AddSingleton<ICommitCommentService, CommitCommentService>();
 builder.Services.AddSingleton<IDiscussionService, DiscussionService>();
 builder.Services.AddSingleton<IReactionService, ReactionService>();
 builder.Services.AddSingleton<IIssueTemplateService, IssueTemplateService>();
+builder.Services.AddSingleton<IBlameService, BlameService>();
+builder.Services.AddSingleton<IArchiveService, ArchiveService>();
+builder.Services.AddSingleton<IDeployKeyService, DeployKeyService>();
+builder.Services.AddSingleton<IGpgKeyService, GpgKeyService>();
 builder.Services.AddHostedService<WorkflowSchedulerService>();
 builder.Services.AddScoped<CurrentUserService>();
 
