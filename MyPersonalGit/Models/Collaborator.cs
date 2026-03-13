@@ -2,9 +2,11 @@ namespace MyPersonalGit.Models;
 
 public enum CollaboratorPermission
 {
-    Read,
-    Write,
-    Admin
+    Read = 0,
+    Triage = 1,
+    Write = 2,
+    Maintain = 3,
+    Admin = 4
 }
 
 public class RepositoryCollaborator

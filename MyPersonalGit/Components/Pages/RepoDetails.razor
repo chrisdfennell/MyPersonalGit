@@ -1028,9 +1028,11 @@ else
                             }
                             <div class="d-flex gap-2">
                                 <input type="text" class="form-control form-control-sm" @bind="newCollaboratorUsername" placeholder="Username" style="max-width: 200px;" />
-                                <select class="form-select form-select-sm" @bind="newCollaboratorPermission" style="max-width: 120px;">
+                                <select class="form-select form-select-sm" @bind="newCollaboratorPermission" style="max-width: 140px;">
                                     <option value="Read">Read</option>
+                                    <option value="Triage">Triage</option>
                                     <option value="Write">Write</option>
+                                    <option value="Maintain">Maintain</option>
                                     <option value="Admin">Admin</option>
                                 </select>
                                 <button class="btn btn-gh-primary btn-sm" @onclick="AddCollaborator" disabled="@string.IsNullOrWhiteSpace(newCollaboratorUsername)">

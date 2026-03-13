@@ -1,0 +1,347 @@
+@page "/import"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using MyPersonalGit.Services
+@inject IMigrationService MigrationService
+@inject CurrentUserService UserService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Import Repository - MyPersonalGit</PageTitle>
+
+@if (!UserService.IsLoggedIn)
+{
+    <div class="container py-5 text-center">
+        <i class="bi bi-box-arrow-in-down" style="font-size: 4rem; color: #6c757d;"></i>
+        <h3 class="mt-3">Authentication Required</h3>
+        <p class="text-muted">Please sign in to import a repository.</p>
+        <a href="/login" class="btn btn-primary">Sign in</a>
+    </div>
+}
+else
+{
+    <div class="container-xl px-3 mt-4">
+        <div class="d-flex align-items-center mb-4">
+            <i class="bi bi-box-arrow-in-down h3 mb-0 me-2 text-primary"></i>
+            <h2 class="mb-0">Import Repository</h2>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-cloud-download me-1"></i> Import from external source</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle me-1"></i> @errorMessage
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Source type</label>
+                            <select class="form-select" @bind="sourceType">
+                                <option value="GitUrl">Git URL (code only)</option>
+                                <option value="GitHub">GitHub (with optional issues/PRs)</option>
+                                <option value="GitLab">GitLab (with optional issues/PRs)</option>
+                                <option value="Bitbucket">Bitbucket (with optional issues)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Repository URL</label>
+                            <input type="text" class="form-control" @bind="sourceUrl"
+                                   placeholder="@GetUrlPlaceholder()" />
+                            <div class="form-text">
+                                @if (sourceType == "GitHub") { <span>e.g., https://github.com/owner/repo</span> }
+                                else if (sourceType == "GitLab") { <span>e.g., https://gitlab.com/owner/repo</span> }
+                                else if (sourceType == "Bitbucket") { <span>e.g., https://bitbucket.org/owner/repo</span> }
+                                else { <span>Any valid Git URL (HTTPS or SSH)</span> }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Repository name</label>
+                            <input type="text" class="form-control" @bind="targetRepoName"
+                                   placeholder="my-imported-repo" />
+                            <div class="form-text">The name for the new local repository</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Authentication token <span class="text-muted fw-normal">(optional)</span></label>
+                            <input type="password" class="form-control" @bind="authToken"
+                                   placeholder="Personal access token for private repos" />
+                            <div class="form-text">Required for private repositories. Use a personal access token with read access.</div>
+                        </div>
+
+                        @if (sourceType != "GitUrl")
+                        {
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Import options</label>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" @bind="importIssues" id="importIssues" />
+                                    <label class="form-check-label" for="importIssues">
+                                        Import issues
+                                    </label>
+                                </div>
+                                @if (sourceType != "Bitbucket")
+                                {
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" @bind="importPullRequests" id="importPRs" />
+                                        <label class="form-check-label" for="importPRs">
+                                            Import pull requests (as issues)
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" @bind="makePrivate" id="makePrivate" />
+                            <label class="form-check-label" for="makePrivate">
+                                Make repository private
+                            </label>
+                        </div>
+
+                        <button class="btn btn-primary" @onclick="StartImport" disabled="@importing">
+                            @if (importing)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1"></span>
+                                <span>Starting import...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-box-arrow-in-down me-1"></i>
+                                <span>Begin Import</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+
+                @if (migrationTasks.Any())
+                {
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-clock-history me-1"></i> Import History</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Repository</th>
+                                            <th>Source</th>
+                                            <th>Status</th>
+                                            <th>Progress</th>
+                                            <th>Started</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var task in migrationTasks)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    @if (task.Status == MigrationStatus.Completed)
+                                                    {
+                                                        <a href="/repo/@task.TargetRepoName" class="text-decoration-none fw-bold">@task.TargetRepoName</a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="fw-bold">@task.TargetRepoName</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-secondary">@task.Source</span>
+                                                    <br /><small class="text-muted text-truncate d-inline-block" style="max-width: 200px;">@task.SourceUrl</small>
+                                                </td>
+                                                <td>
+                                                    @switch (task.Status)
+                                                    {
+                                                        case MigrationStatus.Pending:
+                                                            <span class="badge bg-warning text-dark">Pending</span>
+                                                            break;
+                                                        case MigrationStatus.Cloning:
+                                                            <span class="badge bg-info">Cloning</span>
+                                                            break;
+                                                        case MigrationStatus.ImportingIssues:
+                                                            <span class="badge bg-info">Importing Issues</span>
+                                                            break;
+                                                        case MigrationStatus.ImportingPullRequests:
+                                                            <span class="badge bg-info">Importing PRs</span>
+                                                            break;
+                                                        case MigrationStatus.Completed:
+                                                            <span class="badge bg-success">Completed</span>
+                                                            break;
+                                                        case MigrationStatus.Failed:
+                                                            <span class="badge bg-danger">Failed</span>
+                                                            if (!string.IsNullOrEmpty(task.ErrorMessage))
+                                                            {
+                                                                <br /><small class="text-danger">@task.ErrorMessage</small>
+                                                            }
+                                                            break;
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <div class="progress" style="height: 20px; min-width: 100px;">
+                                                        <div class="progress-bar @(task.Status == MigrationStatus.Failed ? "bg-danger" : task.Status == MigrationStatus.Completed ? "bg-success" : "progress-bar-striped progress-bar-animated")"
+                                                             style="width: @(task.ProgressPercent)%">
+                                                            @(task.ProgressPercent)%
+                                                        </div>
+                                                    </div>
+                                                    @if (!string.IsNullOrEmpty(task.StatusMessage))
+                                                    {
+                                                        <small class="text-muted">@task.StatusMessage</small>
+                                                    }
+                                                </td>
+                                                <td><small class="text-muted">@task.CreatedAt.ToString("g")</small></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-info-circle me-1"></i> About Import</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted">
+                            Import repositories from GitHub, GitLab, Bitbucket, or any Git URL. The repository
+                            will be cloned with its full history.
+                        </p>
+                        <p class="small text-muted mb-2"><strong>GitHub / GitLab imports can also include:</strong></p>
+                        <ul class="small text-muted">
+                            <li>Issues with their descriptions and state</li>
+                            <li>Pull requests / merge requests (imported as issues)</li>
+                        </ul>
+                        <p class="small text-muted mb-0">
+                            For private repositories, provide a personal access token with the appropriate read permissions.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string sourceType = "GitUrl";
+    private string sourceUrl = "";
+    private string targetRepoName = "";
+    private string authToken = "";
+    private bool importIssues = true;
+    private bool importPullRequests;
+    private bool makePrivate;
+    private bool importing;
+    private string? errorMessage;
+    private List<MigrationTask> migrationTasks = new();
+    private System.Threading.Timer? _refreshTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTasks();
+    }
+
+    private async Task LoadTasks()
+    {
+        if (!UserService.IsLoggedIn) return;
+        migrationTasks = await MigrationService.GetMigrationTasksAsync(UserService.Username);
+
+        // Auto-refresh if any tasks are in progress
+        var hasActive = migrationTasks.Any(t => t.Status is MigrationStatus.Pending or MigrationStatus.Cloning
+            or MigrationStatus.ImportingIssues or MigrationStatus.ImportingPullRequests);
+
+        if (hasActive && _refreshTimer == null)
+        {
+            _refreshTimer = new System.Threading.Timer(async _ =>
+            {
+                migrationTasks = await MigrationService.GetMigrationTasksAsync(UserService.Username);
+                var stillActive = migrationTasks.Any(t => t.Status is MigrationStatus.Pending or MigrationStatus.Cloning
+                    or MigrationStatus.ImportingIssues or MigrationStatus.ImportingPullRequests);
+
+                if (!stillActive)
+                {
+                    _refreshTimer?.Dispose();
+                    _refreshTimer = null;
+                }
+
+                await InvokeAsync(StateHasChanged);
+            }, null, 3000, 3000);
+        }
+    }
+
+    private async Task StartImport()
+    {
+        errorMessage = null;
+
+        if (string.IsNullOrWhiteSpace(sourceUrl))
+        {
+            errorMessage = "Please enter a repository URL.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(targetRepoName))
+        {
+            // Auto-detect name from URL
+            try
+            {
+                var uri = new Uri(sourceUrl.TrimEnd('/').Replace(".git", ""));
+                targetRepoName = uri.Segments.LastOrDefault()?.Trim('/') ?? "";
+            }
+            catch { }
+
+            if (string.IsNullOrWhiteSpace(targetRepoName))
+            {
+                errorMessage = "Please enter a repository name.";
+                return;
+            }
+        }
+
+        importing = true;
+        try
+        {
+            var source = Enum.Parse<MigrationSource>(sourceType);
+            await MigrationService.CreateMigrationTaskAsync(
+                sourceUrl, source, targetRepoName, UserService.Username,
+                importIssues && source != MigrationSource.GitUrl,
+                importPullRequests && source != MigrationSource.GitUrl,
+                makePrivate,
+                string.IsNullOrWhiteSpace(authToken) ? null : authToken);
+
+            // Reset form
+            sourceUrl = "";
+            targetRepoName = "";
+            authToken = "";
+
+            await LoadTasks();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to start import: {ex.Message}";
+        }
+        finally
+        {
+            importing = false;
+        }
+    }
+
+    private string GetUrlPlaceholder() => sourceType switch
+    {
+        "GitHub" => "https://github.com/owner/repo",
+        "GitLab" => "https://gitlab.com/owner/repo",
+        "Bitbucket" => "https://bitbucket.org/owner/repo",
+        _ => "https://github.com/owner/repo.git"
+    };
+
+    public void Dispose()
+    {
+        _refreshTimer?.Dispose();
+    }
+}

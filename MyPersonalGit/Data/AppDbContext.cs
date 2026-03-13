@@ -131,6 +131,13 @@ public class AppDbContext : DbContext
     // GPG Keys
     public DbSet<GpgKey> GpgKeys => Set<GpgKey>();
 
+    // OAuth Providers
+    public DbSet<OAuthProviderConfig> OAuthProviderConfigs => Set<OAuthProviderConfig>();
+    public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
+
+    // Migration Tasks
+    public DbSet<MigrationTask> MigrationTasks => Set<MigrationTask>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Shared JSON value converters + comparers for List<string> and string[]
@@ -497,6 +504,26 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(k => k.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // --- OAuthProviderConfig ---
+        modelBuilder.Entity<OAuthProviderConfig>(e =>
+        {
+            e.HasIndex(o => o.ProviderName).IsUnique();
+        });
+
+        // --- ExternalLogin ---
+        modelBuilder.Entity<ExternalLogin>(e =>
+        {
+            e.HasIndex(l => new { l.Provider, l.ProviderUserId }).IsUnique();
+            e.HasIndex(l => l.UserId);
+        });
+
+        // --- MigrationTask ---
+        modelBuilder.Entity<MigrationTask>(e =>
+        {
+            e.HasIndex(m => m.Owner);
+            e.HasIndex(m => m.Status);
         });
     }
 }

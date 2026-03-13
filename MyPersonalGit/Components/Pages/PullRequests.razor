@@ -14,6 +14,7 @@
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
 @inject ICodeOwnersService CodeOwnersService
+@inject IConflictResolutionService ConflictService
 @rendermode InteractiveServer
 
 <PageTitle>Pull Requests · @RepoName</PageTitle>
@@ -100,6 +101,12 @@
                             {
                                 <div class="alert alert-warning py-2 mb-2">
                                     <i class="bi bi-exclamation-triangle me-1"></i> @mergeReason
+                                    @if (mergeReason.Contains("conflicts", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <button class="btn btn-warning btn-sm ms-2" @onclick="ShowConflictResolver">
+                                            <i class="bi bi-tools me-1"></i> Resolve conflicts
+                                        </button>
+                                    }
                                 </div>
                             }
                             <div class="d-flex align-items-center gap-2">
@@ -150,6 +157,113 @@
                                     </button>
                                 }
                             </div>
+                        </div>
+                    </div>
+                }
+
+                @* Conflict resolution UI *@
+                @if (showConflictResolver && conflictFiles.Any())
+                {
+                    <div class="card mb-3 border-warning">
+                        <div class="card-header bg-warning bg-opacity-10 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-tools me-1"></i> Resolve Merge Conflicts</h5>
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => showConflictResolver = false">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="list-group">
+                                        @for (var i = 0; i < conflictFiles.Count; i++)
+                                        {
+                                            var idx = i;
+                                            var file = conflictFiles[idx];
+                                            <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center @(selectedConflictIndex == idx ? "active" : "")"
+                                                    @onclick="() => SelectConflictFile(idx)">
+                                                <span class="text-truncate small">@file.FilePath</span>
+                                                @if (resolvedFiles.ContainsKey(file.FilePath))
+                                                {
+                                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-exclamation-circle text-warning"></i>
+                                                }
+                                            </button>
+                                        }
+                                    </div>
+                                    <div class="mt-2 small text-muted">
+                                        @resolvedFiles.Count / @conflictFiles.Count files resolved
+                                    </div>
+                                </div>
+                                <div class="col-md-9">
+                                    @if (selectedConflictIndex >= 0 && selectedConflictIndex < conflictFiles.Count)
+                                    {
+                                        var currentConflict = conflictFiles[selectedConflictIndex];
+                                        <div class="mb-2 d-flex gap-2">
+                                            <button class="btn btn-sm @(conflictViewMode == "edit" ? "btn-primary" : "btn-outline-primary")" @onclick='() => conflictViewMode = "edit"'>
+                                                <i class="bi bi-pencil me-1"></i> Edit
+                                            </button>
+                                            <button class="btn btn-sm @(conflictViewMode == "ours" ? "btn-primary" : "btn-outline-primary")" @onclick='() => conflictViewMode = "ours"'>
+                                                Target (ours)
+                                            </button>
+                                            <button class="btn btn-sm @(conflictViewMode == "theirs" ? "btn-primary" : "btn-outline-primary")" @onclick='() => conflictViewMode = "theirs"'>
+                                                Source (theirs)
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-success ms-auto" @onclick="() => UseOurs(currentConflict)">
+                                                Accept target
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-info" @onclick="() => UseTheirs(currentConflict)">
+                                                Accept source
+                                            </button>
+                                        </div>
+
+                                        @if (conflictViewMode == "edit")
+                                        {
+                                            <textarea class="form-control font-monospace" rows="20" style="font-size: 0.8rem; tab-size: 4;"
+                                                      @bind="currentEditContent" @bind:event="oninput"></textarea>
+                                            <div class="mt-2 d-flex gap-2">
+                                                <button class="btn btn-sm btn-success" @onclick="() => MarkResolved(currentConflict)"
+                                                        disabled="@HasConflictMarkers(currentEditContent)">
+                                                    <i class="bi bi-check-lg me-1"></i> Mark as resolved
+                                                </button>
+                                                @if (HasConflictMarkers(currentEditContent))
+                                                {
+                                                    <span class="text-warning small align-self-center">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i> Remove all conflict markers before marking as resolved
+                                                    </span>
+                                                }
+                                            </div>
+                                        }
+                                        else if (conflictViewMode == "ours")
+                                        {
+                                            <pre class="border rounded p-3" style="font-size: 0.8rem; max-height: 500px; overflow: auto;">@currentConflict.OursContent</pre>
+                                        }
+                                        else
+                                        {
+                                            <pre class="border rounded p-3" style="font-size: 0.8rem; max-height: 500px; overflow: auto;">@currentConflict.TheirsContent</pre>
+                                        }
+                                    }
+                                </div>
+                            </div>
+
+                            <hr />
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">All conflicts must be resolved before committing the merge.</span>
+                                <button class="btn btn-success" @onclick="CommitConflictResolution"
+                                        disabled="@(resolvedFiles.Count < conflictFiles.Count || isResolvingConflicts)">
+                                    @if (isResolvingConflicts)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                    }
+                                    <i class="bi bi-check2-all me-1"></i> Commit merge (@resolvedFiles.Count/@conflictFiles.Count resolved)
+                                </button>
+                            </div>
+                            @if (!string.IsNullOrEmpty(conflictResolutionError))
+                            {
+                                <div class="alert alert-danger mt-2 py-2">@conflictResolutionError</div>
+                            }
                         </div>
                     </div>
                 }
@@ -802,6 +916,16 @@
     private bool isTogglingDraft;
     private string? prTemplate;
 
+    // Conflict resolution state
+    private bool showConflictResolver;
+    private List<MergeConflict> conflictFiles = new();
+    private Dictionary<string, string> resolvedFiles = new();
+    private int selectedConflictIndex;
+    private string currentEditContent = "";
+    private string conflictViewMode = "edit";
+    private bool isResolvingConflicts;
+    private string? conflictResolutionError;
+
     // Commits & diff state
     private List<Commit> prCommits = new();
     private List<FilePatch> filePatches = new();
@@ -1307,4 +1431,94 @@
     public class FilePatch { public string Path { get; set; } = ""; public int LinesAdded { get; set; } public int LinesDeleted { get; set; } public List<string> DiffLines { get; set; } = new(); }
     public class DiffPair { public string? Left { get; set; } public string? Right { get; set; } public int LeftLineNum { get; set; } public int RightLineNum { get; set; } }
     public class UnifiedDiffRow { public string OldNum { get; set; } = ""; public string NewNum { get; set; } = ""; public char Sign { get; set; } public string Content { get; set; } = ""; public string CssClass { get; set; } = ""; }
+
+    // --- Conflict Resolution Methods ---
+
+    private async Task ShowConflictResolver()
+    {
+        if (currentPR == null) return;
+        conflictFiles = await ConflictService.GetConflictsAsync(RepoName, currentPR.SourceBranch, currentPR.TargetBranch);
+        resolvedFiles.Clear();
+        selectedConflictIndex = 0;
+        conflictResolutionError = null;
+        showConflictResolver = conflictFiles.Any();
+
+        if (conflictFiles.Any())
+        {
+            currentEditContent = conflictFiles[0].ConflictMarkerContent;
+            conflictViewMode = "edit";
+        }
+    }
+
+    private void SelectConflictFile(int index)
+    {
+        selectedConflictIndex = index;
+        var file = conflictFiles[index];
+        currentEditContent = resolvedFiles.TryGetValue(file.FilePath, out var resolved)
+            ? resolved
+            : file.ConflictMarkerContent;
+        conflictViewMode = "edit";
+    }
+
+    private void UseOurs(MergeConflict conflict)
+    {
+        currentEditContent = conflict.OursContent;
+        resolvedFiles[conflict.FilePath] = conflict.OursContent;
+    }
+
+    private void UseTheirs(MergeConflict conflict)
+    {
+        currentEditContent = conflict.TheirsContent;
+        resolvedFiles[conflict.FilePath] = conflict.TheirsContent;
+    }
+
+    private void MarkResolved(MergeConflict conflict)
+    {
+        if (!HasConflictMarkers(currentEditContent))
+        {
+            resolvedFiles[conflict.FilePath] = currentEditContent;
+        }
+    }
+
+    private static bool HasConflictMarkers(string? content)
+    {
+        if (string.IsNullOrEmpty(content)) return false;
+        return content.Contains("<<<<<<<") || content.Contains(">>>>>>>") || content.Contains("=======\n") || content.Contains("=======\r");
+    }
+
+    private async Task CommitConflictResolution()
+    {
+        if (currentPR == null || resolvedFiles.Count < conflictFiles.Count) return;
+
+        isResolvingConflicts = true;
+        conflictResolutionError = null;
+
+        try
+        {
+            var (success, error) = await ConflictService.ApplyResolutionsAsync(
+                RepoName, currentPR.Number, UserService.Username, resolvedFiles);
+
+            if (success)
+            {
+                showConflictResolver = false;
+                // Reload the PR to show merged state
+                currentPR = await PRService.GetPullRequestAsync(RepoName, currentPR.Number);
+                var (cm, mr) = await PRService.CanMergeAsync(RepoName, currentPR!.Number);
+                canMerge = cm;
+                mergeReason = mr;
+            }
+            else
+            {
+                conflictResolutionError = error ?? "Failed to apply conflict resolutions";
+            }
+        }
+        catch (Exception ex)
+        {
+            conflictResolutionError = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isResolvingConflicts = false;
+        }
+    }
 }
