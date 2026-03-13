@@ -34,6 +34,8 @@ public class PullRequestService : IPullRequestService
     private readonly IActivityService _activityService;
     private readonly IAdminService _adminService;
     private readonly IBranchProtectionService _branchProtectionService;
+    private readonly ICodeOwnersService _codeOwnersService;
+    private readonly IIssueAutoCloseService _issueAutoCloseService;
     private readonly IConfiguration _config;
 
     public PullRequestService(
@@ -43,6 +45,8 @@ public class PullRequestService : IPullRequestService
         IActivityService activityService,
         IAdminService adminService,
         IBranchProtectionService branchProtectionService,
+        ICodeOwnersService codeOwnersService,
+        IIssueAutoCloseService issueAutoCloseService,
         IConfiguration config)
     {
         _dbFactory = dbFactory;
@@ -51,6 +55,8 @@ public class PullRequestService : IPullRequestService
         _activityService = activityService;
         _adminService = adminService;
         _branchProtectionService = branchProtectionService;
+        _codeOwnersService = codeOwnersService;
+        _issueAutoCloseService = issueAutoCloseService;
         _config = config;
     }
 
@@ -95,6 +101,50 @@ public class PullRequestService : IPullRequestService
             IsDraft = isDraft,
             CreatedAt = DateTime.UtcNow
         };
+
+        // Auto-assign reviewers from CODEOWNERS
+        try
+        {
+            var repoPath = await GetRepoPath(repoName);
+            if (repoPath != null && GitRepository.IsValid(repoPath))
+            {
+                using var repo = new GitRepository(repoPath);
+                var source = repo.Branches[sourceBranch];
+                var target = repo.Branches[targetBranch];
+
+                if (source?.Tip != null && target?.Tip != null)
+                {
+                    var diff = repo.Diff.Compare<TreeChanges>(target.Tip.Tree, source.Tip.Tree);
+                    var changedFiles = diff.Select(c => c.Path).ToList();
+
+                    var ownersByFile = _codeOwnersService.GetCodeOwnersForPullRequest(repoPath, targetBranch, changedFiles);
+                    var allOwners = ownersByFile.Values.SelectMany(o => o).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+                    // Filter out the PR author and only include users that exist in the system
+                    var validReviewers = new List<string>();
+                    foreach (var owner in allOwners)
+                    {
+                        if (owner.Equals(author, StringComparison.OrdinalIgnoreCase))
+                            continue;
+
+                        var user = await db.Users.FirstOrDefaultAsync(u => u.Username == owner);
+                        if (user != null)
+                            validReviewers.Add(owner);
+                    }
+
+                    if (validReviewers.Any())
+                    {
+                        pr.Reviewers = validReviewers;
+                        _logger.LogInformation("CODEOWNERS auto-assigned reviewers [{Reviewers}] to PR #{Number} in {RepoName}",
+                            string.Join(", ", validReviewers), pr.Number, repoName);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to auto-assign CODEOWNERS reviewers for PR in {RepoName}", repoName);
+        }
 
         db.PullRequests.Add(pr);
         await db.SaveChangesAsync();
@@ -424,6 +474,45 @@ public class PullRequestService : IPullRequestService
             repoName,
             $"/repo/{repoName}/pulls/{number}"
         );
+
+        // Auto-close referenced issues from PR commit messages and title/body
+        try
+        {
+            var commitMessages = new List<string>();
+
+            // Include PR title and body as sources of closing keywords
+            commitMessages.Add(pr.Title);
+            if (!string.IsNullOrEmpty(pr.Body))
+                commitMessages.Add(pr.Body);
+
+            // Collect commit messages from the merged branch
+            var mergeRepoPath = await GetRepoPath(repoName);
+            if (mergeRepoPath != null && GitRepository.IsValid(mergeRepoPath))
+            {
+                using var mergeRepo = new GitRepository(mergeRepoPath);
+                var mergeTargetBranch = mergeRepo.Branches[pr.TargetBranch];
+                if (mergeTargetBranch?.Tip != null)
+                {
+                    // Get recent commits on the target branch (the merge just landed)
+                    var recentFilter = new CommitFilter
+                    {
+                        IncludeReachableFrom = mergeTargetBranch.Tip,
+                        SortBy = CommitSortStrategies.Topological | CommitSortStrategies.Time
+                    };
+                    // Take enough commits to cover the PR's changes
+                    foreach (var c in mergeRepo.Commits.QueryBy(recentFilter).Take(50))
+                    {
+                        commitMessages.Add(c.Message);
+                    }
+                }
+            }
+
+            await _issueAutoCloseService.ProcessPullRequestMerge(repoName, number, commitMessages, mergedBy);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to process issue auto-close for PR #{Number} in {RepoName}", number, repoName);
+        }
 
         return (true, null);
     }

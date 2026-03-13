@@ -13,6 +13,7 @@
 @inject NavigationManager Nav
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
+@inject ICodeOwnersService CodeOwnersService
 @rendermode InteractiveServer
 
 <PageTitle>Pull Requests · @RepoName</PageTitle>
@@ -551,7 +552,13 @@
                                     <ul class="list-unstyled">
                                         @foreach (var reviewer in currentPR.Reviewers)
                                         {
-                                            <li><i class="bi bi-person"></i> @reviewer</li>
+                                            <li>
+                                                <i class="bi bi-person"></i> @reviewer
+                                                @if (codeOwnersReviewers.Contains(reviewer, StringComparer.OrdinalIgnoreCase))
+                                                {
+                                                    <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning-subtle ms-1" style="font-size: 9px;">CODEOWNERS</span>
+                                                }
+                                            </li>
                                         }
                                     </ul>
                                 }
@@ -801,6 +808,9 @@
     private int totalAdded;
     private int totalDeleted;
 
+    // CODEOWNERS reviewers
+    private HashSet<string> codeOwnersReviewers = new(StringComparer.OrdinalIgnoreCase);
+
     // Inline review comments
     private List<ReviewComment> reviewComments = new();
     private string? commentingOnFile;
@@ -840,6 +850,7 @@
         if (currentPR != null)
         {
             LoadPRCommitsAndDiff();
+            LoadCodeOwnersReviewers();
             reviewComments = await PRService.GetReviewCommentsAsync(RepoName, currentPR.Number);
             if (currentPR.State == PullRequestState.Open)
             {
@@ -933,6 +944,31 @@
                 });
                 totalAdded += added;
                 totalDeleted += deleted;
+            }
+        }
+        catch { }
+    }
+
+    private void LoadCodeOwnersReviewers()
+    {
+        codeOwnersReviewers.Clear();
+        if (currentPR == null) return;
+
+        try
+        {
+            var repoPath = GetRepoPathSync();
+            if (repoPath == null || !LibGit2Sharp.Repository.IsValid(repoPath)) return;
+
+            var changedFiles = filePatches.Select(p => p.Path).ToList();
+            if (!changedFiles.Any()) return;
+
+            var ownersByFile = CodeOwnersService.GetCodeOwnersForPullRequest(repoPath, currentPR.TargetBranch, changedFiles);
+            var allOwners = ownersByFile.Values.SelectMany(o => o).Distinct(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var owner in allOwners)
+            {
+                if (currentPR.Reviewers.Contains(owner, StringComparer.OrdinalIgnoreCase))
+                    codeOwnersReviewers.Add(owner);
             }
         }
         catch { }

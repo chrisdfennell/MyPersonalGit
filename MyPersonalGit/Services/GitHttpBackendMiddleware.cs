@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using LibGit2Sharp;
 using MyPersonalGit.Data;
 
 namespace MyPersonalGit.Services;
@@ -31,7 +32,7 @@ public sealed class GitHttpBackendMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, IIssueAutoCloseService issueAutoCloseService)
     {
         // Only handle /git/* paths; let everything else pass through.
         if (!context.Request.Path.StartsWithSegments("/git", out var remaining))
@@ -258,6 +259,47 @@ public sealed class GitHttpBackendMiddleware
             _logger.LogWarning("git http-backend stderr: {stderr}", stderr);
 
         try { await process.WaitForExitAsync(context.RequestAborted); } catch { }
+
+        // After a successful push, scan new commits for issue auto-close keywords
+        if (process.ExitCode == 0 &&
+            (service == "git-receive-pack" || pathInfo.EndsWith("/git-receive-pack")) &&
+            context.Request.Method == "POST")
+        {
+            try
+            {
+                var segments = pathInfo.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                if (segments.Length >= 1)
+                {
+                    var repoDir = Path.Combine(projectRoot, segments[0]);
+                    if (Repository.IsValid(repoDir))
+                    {
+                        var repoName = segments[0].EndsWith(".git", StringComparison.OrdinalIgnoreCase)
+                            ? segments[0][..^4] : segments[0];
+                        var remoteUser = context.User?.Identity?.Name ?? "system";
+
+                        using var repo = new Repository(repoDir);
+                        var defaultBranch = repo.Branches["main"] ?? repo.Branches["master"] ?? repo.Head;
+                        if (defaultBranch?.Tip != null)
+                        {
+                            // Scan the most recent commits on the default branch for issue references
+                            var filter = new CommitFilter
+                            {
+                                IncludeReachableFrom = defaultBranch.Tip,
+                                SortBy = CommitSortStrategies.Time
+                            };
+                            foreach (var commit in repo.Commits.QueryBy(filter).Take(20))
+                            {
+                                await issueAutoCloseService.ProcessCommitMessage(repoName, commit.Message, commit.Sha, remoteUser);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to process issue auto-close after push.");
+            }
+        }
     }
 }
 

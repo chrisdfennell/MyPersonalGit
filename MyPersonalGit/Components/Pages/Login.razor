@@ -16,7 +16,16 @@
                 <div class="card-body p-4">
                     <div class="text-center mb-4">
                         <h2 class="fw-bold">MyPersonalGit</h2>
-                        <p class="text-muted">Sign in to your account</p>
+                        <p class="text-muted">
+                            @if (ShowTwoFactorStep)
+                            {
+                                <span>Two-factor authentication</span>
+                            }
+                            else
+                            {
+                                <span>Sign in to your account</span>
+                            }
+                        </p>
                     </div>
 
                     @if (!string.IsNullOrEmpty(ErrorMessage))
@@ -26,39 +35,96 @@
                         </div>
                     }
 
-                    <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
-                        <DataAnnotationsValidator />
-                        
-                        <div class="mb-3">
-                            <label for="usernameOrEmail" class="form-label">Username or Email</label>
-                            <InputText id="usernameOrEmail" class="form-control" @bind-Value="loginModel.UsernameOrEmail" placeholder="Enter username or email" />
-                            <ValidationMessage For="@(() => loginModel.UsernameOrEmail)" />
-                        </div>
+                    @if (!ShowTwoFactorStep)
+                    {
+                        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+                            <DataAnnotationsValidator />
 
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" placeholder="Enter password" />
-                            <ValidationMessage For="@(() => loginModel.Password)" />
-                        </div>
+                            <div class="mb-3">
+                                <label for="usernameOrEmail" class="form-label">Username or Email</label>
+                                <InputText id="usernameOrEmail" class="form-control" @bind-Value="loginModel.UsernameOrEmail" placeholder="Enter username or email" />
+                                <ValidationMessage For="@(() => loginModel.UsernameOrEmail)" />
+                            </div>
 
-                        <button type="submit" class="btn btn-primary w-100 mb-3" disabled="@IsLoading">
-                            @if (IsLoading)
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" placeholder="Enter password" />
+                                <ValidationMessage For="@(() => loginModel.Password)" />
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 mb-3" disabled="@IsLoading">
+                                @if (IsLoading)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Signing in...</span>
+                                }
+                                else
+                                {
+                                    <span>Sign in</span>
+                                }
+                            </button>
+                        </EditForm>
+                    }
+                    else
+                    {
+                        <div class="mb-3">
+                            @if (UseRecoveryCode)
                             {
-                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                <span>Signing in...</span>
+                                <label for="recoveryCode" class="form-label">Recovery Code</label>
+                                <input id="recoveryCode" type="text" class="form-control font-monospace" @bind="TwoFactorCode" placeholder="Enter 8-digit recovery code" />
+                                <div class="form-text">Enter one of your recovery codes.</div>
                             }
                             else
                             {
-                                <span>Sign in</span>
+                                <label for="totpCode" class="form-label">Authentication Code</label>
+                                <input id="totpCode" type="text" class="form-control font-monospace text-center" @bind="TwoFactorCode"
+                                       placeholder="000000" maxlength="6" inputmode="numeric" />
+                                <div class="form-text">Enter the 6-digit code from your authenticator app.</div>
+                            }
+                        </div>
+
+                        <button class="btn btn-primary w-100 mb-3" @onclick="HandleTwoFactorLogin" disabled="@IsLoading">
+                            @if (IsLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Verifying...</span>
+                            }
+                            else
+                            {
+                                <span>Verify</span>
                             }
                         </button>
-                    </EditForm>
 
-                    <div class="text-center">
-                        <p class="text-muted mb-0">
-                            Don't have an account? <a href="/register" class="text-decoration-none">Sign up</a>
-                        </p>
-                    </div>
+                        <div class="text-center mb-2">
+                            @if (UseRecoveryCode)
+                            {
+                                <a href="javascript:void(0)" class="text-decoration-none" @onclick="ToggleRecoveryCode">
+                                    Use authenticator code instead
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="javascript:void(0)" class="text-decoration-none" @onclick="ToggleRecoveryCode">
+                                    Use a recovery code
+                                </a>
+                            }
+                        </div>
+
+                        <div class="text-center">
+                            <a href="javascript:void(0)" class="text-decoration-none text-muted" @onclick="BackToLogin">
+                                <i class="bi bi-arrow-left me-1"></i>Back to login
+                            </a>
+                        </div>
+                    }
+
+                    @if (!ShowTwoFactorStep)
+                    {
+                        <div class="text-center">
+                            <p class="text-muted mb-0">
+                                Don't have an account? <a href="/register" class="text-decoration-none">Sign up</a>
+                            </p>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -69,6 +135,10 @@
     private LoginModel loginModel = new();
     private string? ErrorMessage { get; set; }
     private bool IsLoading { get; set; }
+    private bool ShowTwoFactorStep { get; set; }
+    private bool UseRecoveryCode { get; set; }
+    private string TwoFactorCode { get; set; } = "";
+    private User? _pendingUser;
 
     private async Task HandleLogin()
     {
@@ -77,8 +147,25 @@
 
         try
         {
-            var sessionId = await UserService.LoginAsync(loginModel.UsernameOrEmail, loginModel.Password);
+            var (user, requires2FA) = await UserService.ValidatePasswordAsync(loginModel.UsernameOrEmail, loginModel.Password);
 
+            if (user == null)
+            {
+                ErrorMessage = "Invalid username/email or password";
+                return;
+            }
+
+            if (requires2FA)
+            {
+                _pendingUser = user;
+                ShowTwoFactorStep = true;
+                TwoFactorCode = "";
+                UseRecoveryCode = false;
+                return;
+            }
+
+            // No 2FA — create session directly
+            var sessionId = await UserService.CreateSessionForUserAsync(user);
             if (sessionId != null)
             {
                 await JS.InvokeVoidAsync("sessionHelper.set", "sessionId", sessionId);
@@ -86,7 +173,7 @@
             }
             else
             {
-                ErrorMessage = "Invalid username/email or password";
+                ErrorMessage = "An error occurred during login. Please try again.";
             }
         }
         catch
@@ -97,6 +184,59 @@
         {
             IsLoading = false;
         }
+    }
+
+    private async Task HandleTwoFactorLogin()
+    {
+        if (_pendingUser == null)
+        {
+            BackToLogin();
+            return;
+        }
+
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var sessionId = await UserService.CompleteTwoFactorLoginAsync(_pendingUser, TwoFactorCode, UseRecoveryCode);
+
+            if (sessionId != null)
+            {
+                await JS.InvokeVoidAsync("sessionHelper.set", "sessionId", sessionId);
+                Navigation.NavigateTo("/", forceLoad: true);
+            }
+            else
+            {
+                ErrorMessage = UseRecoveryCode
+                    ? "Invalid recovery code. Please try again."
+                    : "Invalid authentication code. Please try again.";
+            }
+        }
+        catch
+        {
+            ErrorMessage = "An error occurred during verification. Please try again.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void ToggleRecoveryCode()
+    {
+        UseRecoveryCode = !UseRecoveryCode;
+        TwoFactorCode = "";
+        ErrorMessage = null;
+    }
+
+    private void BackToLogin()
+    {
+        ShowTwoFactorStep = false;
+        UseRecoveryCode = false;
+        TwoFactorCode = "";
+        _pendingUser = null;
+        ErrorMessage = null;
     }
 
     private class LoginModel

@@ -1389,6 +1389,9 @@ namespace MyPersonalGit.Migrations
                     b.Property<bool>("IsPrivate")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsTemplate")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -1402,6 +1405,9 @@ namespace MyPersonalGit.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Stars")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("TemplateRepositoryId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Topics")

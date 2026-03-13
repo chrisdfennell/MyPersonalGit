@@ -21,6 +21,8 @@ public class Repository
     public DateTime? ArchivedAt { get; set; }
     public bool HasPages { get; set; }
     public string PagesBranch { get; set; } = "gh-pages";
+    public bool IsTemplate { get; set; }
+    public int? TemplateRepositoryId { get; set; }
 }
 
 public class RepositoryStar

@@ -92,10 +92,14 @@ builder.Services.AddSingleton<ICommitCommentService, CommitCommentService>();
 builder.Services.AddSingleton<IDiscussionService, DiscussionService>();
 builder.Services.AddSingleton<IReactionService, ReactionService>();
 builder.Services.AddSingleton<IIssueTemplateService, IssueTemplateService>();
+builder.Services.AddSingleton<IIssueAutoCloseService, IssueAutoCloseService>();
 builder.Services.AddSingleton<IBlameService, BlameService>();
 builder.Services.AddSingleton<IArchiveService, ArchiveService>();
 builder.Services.AddSingleton<IDeployKeyService, DeployKeyService>();
 builder.Services.AddSingleton<IGpgKeyService, GpgKeyService>();
+builder.Services.AddSingleton<ITemplateService, TemplateService>();
+builder.Services.AddSingleton<ICodeOwnersService, CodeOwnersService>();
+builder.Services.AddSingleton<ITwoFactorService, TwoFactorService>();
 builder.Services.AddHostedService<WorkflowSchedulerService>();
 builder.Services.AddScoped<CurrentUserService>();
 
