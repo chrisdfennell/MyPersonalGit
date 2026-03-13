@@ -8,6 +8,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 
 ### Code & Repositories
 - **Repository Management** — Create, browse, and delete Git repositories with a full code browser, file editor, commit history, branches, and tags
+- **Repository Import/Migration** — Import repositories from GitHub, GitLab, Bitbucket, or any Git URL with optional issue and PR import. Background processing with progress tracking
 - **Repository Archiving** — Mark repositories as read-only with visual badges; pushes are blocked for archived repos
 - **Git Smart HTTP** — Clone, fetch, and push over HTTP with Basic Auth
 - **SSH Key Authentication** — Add SSH public keys to your account and authenticate Git operations via SSH with auto-managed `authorized_keys`
@@ -21,7 +22,8 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Search** — Full-text search across repositories, issues, PRs, and code
 
 ### Collaboration
-- **Issues & Pull Requests** — Create, comment on, close/reopen issues and PRs with labels, assignees, and reviews. Merge PRs with merge commit, squash, or rebase strategies
+- **Issues & Pull Requests** — Create, comment on, close/reopen issues and PRs with labels, assignees, and reviews. Merge PRs with merge commit, squash, or rebase strategies. Web-based merge conflict resolution with side-by-side diff view
+- **Merge Conflict Resolution** — Resolve merge conflicts directly in the browser with a visual editor showing base/ours/theirs views, quick accept buttons, and conflict marker validation
 - **Discussions** — GitHub Discussions-style threaded conversations per repository with categories (General, Q&A, Announcements, Ideas, Show & Tell, Polls), pin/lock, mark as answer, and upvoting
 - **Code Review Suggestions** — "Suggest changes" mode in PR inline reviews lets reviewers propose code replacements directly in the diff
 - **Reaction Emoji** — React to issues, PRs, discussions, and comments with thumbs up/down, heart, laugh, hooray, confused, rocket, and eyes
@@ -30,6 +32,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Projects** — Kanban boards with drag-and-drop cards for organizing work
 - **Snippets** — Share code snippets (like GitHub Gists) with syntax highlighting and multiple files
 - **Organizations & Teams** — Create organizations with members and teams, assign team permissions to repositories
+- **Granular Permissions** — Five-tier permission model (Read, Triage, Write, Maintain, Admin) for fine-grained access control on repositories
 - **Milestones** — Track issue progress toward milestones with progress bars and due dates
 - **Commit Comments** — Comment on individual commits with optional file/line references
 - **Repository Topics** — Tag repositories with topics for discovery and filtering on the Explore page
@@ -53,6 +56,11 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **In-App Notifications** — Mentions, comments, and repository activity
 - **Push Notifications** — Ntfy and Gotify integration for real-time mobile/desktop alerts with per-user opt-in
 
+### Authentication
+- **OAuth2 / SSO** — Sign in with GitHub, Google, Microsoft, GitLab, Bitbucket, Facebook, Discord, or Twitter/X. Admins configure Client ID and Secret per provider in the Admin dashboard — only providers with credentials filled in are shown to users
+- **Two-Factor Authentication** — TOTP-based 2FA with authenticator app support and recovery codes
+- **Linked Accounts** — Users can link multiple OAuth providers to their account from Settings
+
 ### Administration
 - **Admin Dashboard** — System settings, user management, audit logs, and statistics
 - **User Profiles** — Contribution heatmap, activity feed, and stats per user
@@ -69,7 +77,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 | Frontend | Blazor Server (interactive server-side rendering) |
 | Database | SQLite via Entity Framework Core 8 |
 | Git Engine | LibGit2Sharp |
-| Auth | BCrypt password hashing, session-based authentication, PAT tokens |
+| Auth | BCrypt password hashing, session-based auth, PAT tokens, OAuth2 (8 providers), TOTP 2FA |
 | Markdown | Markdig |
 | CI/CD | Docker.DotNet, YamlDotNet |
 | Monitoring | Prometheus metrics |
@@ -264,7 +272,30 @@ jobs:
         run: curl -H "Authorization: Bearer $DEPLOY_TOKEN" https://api.example.com/deploy
 ```
 
-### 12. Forking & Upstream Sync
+### 12. OAuth / SSO Login
+
+Sign in with external identity providers:
+
+1. Go to **Admin > OAuth / SSO** and configure the providers you want to enable
+2. Enter the **Client ID** and **Client Secret** from the provider's developer console
+3. Check **Enable** — only providers with both credentials filled in will appear on the login page
+4. The callback URL for each provider is shown in the admin panel (e.g., `https://yourserver/oauth/callback/github`)
+
+Supported providers: GitHub, Google, Microsoft, GitLab, Bitbucket, Facebook, Discord, Twitter/X.
+
+Users can link multiple providers to their account in **Settings > Linked Accounts**.
+
+### 13. Import Repository
+
+Import repositories from external sources with full history:
+
+1. Click **Import** on the home page
+2. Select a source type (Git URL, GitHub, GitLab, or Bitbucket)
+3. Enter the repository URL and optionally an auth token for private repos
+4. For GitHub/GitLab/Bitbucket imports, optionally import issues and pull requests
+5. Track import progress in real-time on the Import page
+
+### 14. Forking & Upstream Sync
 
 Fork a repository and keep it in sync:
 
@@ -299,6 +330,7 @@ All settings can be configured in `appsettings.json`, via environment variables,
 - Max repository size and count per user
 - SMTP settings for email notifications
 - Push notification settings (Ntfy/Gotify)
+- OAuth/SSO provider configuration (Client ID/Secret per provider)
 
 ## Project Structure
 
