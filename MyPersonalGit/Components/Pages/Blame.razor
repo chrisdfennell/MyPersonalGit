@@ -1,0 +1,252 @@
+@page "/blame/{Owner}/{RepoName}/{Branch}/{**FilePath}"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Services
+@inject IBlameService BlameService
+@inject IRepositoryService RepoService
+@inject IConfiguration Config
+@inject NavigationManager Nav
+@inject CurrentUserService UserService
+@rendermode InteractiveServer
+
+<PageTitle>Blame @FileName - @RepoName · Personal Git</PageTitle>
+
+@if (notFound)
+{
+    <div class="container py-5 text-center">
+        <h1 class="display-4 text-muted">File not found</h1>
+        <p class="text-muted">Unable to load blame information for this file.</p>
+        <a href="/repo/@RepoName/@FilePath" class="btn btn-primary mt-3">Back to file</a>
+    </div>
+}
+else
+{
+    <div class="container-fluid px-4 py-3">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
+                @if (!string.IsNullOrEmpty(FilePath))
+                {
+                    var parts = FilePath.Split('/');
+                    var accumulated = "";
+                    @for (int i = 0; i < parts.Length - 1; i++)
+                    {
+                        accumulated = string.IsNullOrEmpty(accumulated) ? parts[i] : accumulated + "/" + parts[i];
+                        var linkPath = accumulated;
+                        <li class="breadcrumb-item"><a href="/repo/@RepoName/@linkPath" class="text-decoration-none">@parts[i]</a></li>
+                    }
+                    <li class="breadcrumb-item active">@parts[^1]</li>
+                }
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle px-2 py-1">
+                    <i class="bi bi-branches me-1"></i>@Branch
+                </span>
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-person-lines-fill me-1 text-muted"></i> Blame: <span class="text-muted">@FileName</span>
+                </h5>
+            </div>
+            <div class="btn-group shadow-sm">
+                <a href="/repo/@RepoName/@FilePath" class="btn btn-light btn-sm border">
+                    <i class="bi bi-arrow-left me-1"></i> Back to file
+                </a>
+                <a href="/repo/@RepoName" class="btn btn-light btn-sm border">
+                    <i class="bi bi-folder me-1"></i> Repository
+                </a>
+            </div>
+        </div>
+
+        @if (loading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted mt-2">Loading blame data...</p>
+            </div>
+        }
+        else if (blameLines.Any())
+        {
+            <div class="card shadow-sm overflow-hidden">
+                <div class="card-header bg-light-subtle py-2 px-3 d-flex justify-content-between align-items-center">
+                    <span class="small fw-bold"><i class="bi bi-person-lines-fill me-1"></i> @blameLines.Count lines · @hunkCount commits</span>
+                    <span class="small text-muted">@FilePath</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-borderless mb-0 font-monospace blame-table" style="font-size: 12px;">
+                            <tbody>
+                            @foreach (var line in blameLines)
+                            {
+                                <tr class="blame-line @(line.HunkIndex % 2 == 0 ? "blame-even" : "blame-odd")">
+                                    @if (line.IsFirstInHunk)
+                                    {
+                                        <td class="blame-gutter text-muted border-end px-2 py-0 text-nowrap align-top" style="width: 220px; max-width: 220px; overflow: hidden; text-overflow: ellipsis;" rowspan="@line.HunkLineCount">
+                                            <div class="d-flex flex-column py-1">
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <a href="/repo/@RepoName/commit/@line.CommitSha" class="text-decoration-none text-primary fw-semibold" style="font-size: 11px;" title="@line.CommitSha">@line.ShortSha</a>
+                                                    <span class="text-truncate" style="font-size: 11px; max-width: 120px;" title="@line.Author">@line.Author</span>
+                                                </div>
+                                                <span style="font-size: 10px;" class="text-muted" title="@line.Date.ToString("yyyy-MM-dd HH:mm:ss UTC")">@FormatRelativeDate(line.Date)</span>
+                                                <span class="text-truncate" style="font-size: 10px; max-width: 200px;" title="@line.Message">@TruncateMessage(line.Message, 40)</span>
+                                            </div>
+                                        </td>
+                                    }
+                                    <td class="text-muted text-end border-end px-2 py-0 select-none" style="width: 40px; user-select: none;">@line.LineNumber</td>
+                                    <td class="px-2 py-0"><pre class="m-0 d-inline" style="white-space: pre-wrap; tab-size: 4;">@line.Content</pre></td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i>Unable to load blame information for this file.
+            </div>
+        }
+    </div>
+}
+
+<style>
+    .blame-table tr.blame-even {
+        background-color: var(--bs-body-bg, #fff);
+    }
+    .blame-table tr.blame-odd {
+        background-color: var(--bs-tertiary-bg, #f8f9fa);
+    }
+    .blame-gutter {
+        background-color: var(--bs-secondary-bg, #e9ecef);
+        vertical-align: top;
+    }
+    .blame-line td {
+        border-bottom: none !important;
+    }
+    .blame-line:hover td {
+        background-color: var(--bs-primary-bg-subtle, #cfe2ff) !important;
+    }
+    .select-none {
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    @@media (prefers-color-scheme: dark) {
+        .blame-table tr.blame-even {
+            background-color: var(--bs-body-bg, #212529);
+        }
+        .blame-table tr.blame-odd {
+            background-color: var(--bs-tertiary-bg, #2b3035);
+        }
+        .blame-gutter {
+            background-color: var(--bs-secondary-bg, #343a40);
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public string Owner { get; set; } = "";
+    [Parameter] public string RepoName { get; set; } = "";
+    [Parameter] public string Branch { get; set; } = "";
+    [Parameter] public string? FilePath { get; set; }
+
+    private bool notFound = false;
+    private bool loading = true;
+    private int hunkCount = 0;
+    private List<BlameLine> blameLines = new();
+
+    private string FileName => FilePath?.Split('/').LastOrDefault() ?? "";
+
+    private class BlameLine
+    {
+        public int HunkIndex { get; set; }
+        public int HunkLineCount { get; set; }
+        public bool IsFirstInHunk { get; set; }
+        public string CommitSha { get; set; } = "";
+        public string ShortSha { get; set; } = "";
+        public string Author { get; set; } = "";
+        public string Message { get; set; } = "";
+        public DateTime Date { get; set; }
+        public int LineNumber { get; set; }
+        public string Content { get; set; } = "";
+    }
+
+    protected override void OnParametersSet()
+    {
+        LoadBlame();
+    }
+
+    private void LoadBlame()
+    {
+        loading = true;
+        blameLines.Clear();
+        hunkCount = 0;
+
+        if (string.IsNullOrEmpty(FilePath))
+        {
+            notFound = true;
+            loading = false;
+            return;
+        }
+
+        try
+        {
+            var hunks = BlameService.GetBlame(Owner, RepoName, Branch, FilePath);
+            if (!hunks.Any())
+            {
+                notFound = true;
+                loading = false;
+                return;
+            }
+
+            hunkCount = hunks.Count;
+            int hunkIndex = 0;
+            foreach (var hunk in hunks)
+            {
+                for (int i = 0; i < hunk.LineCount; i++)
+                {
+                    blameLines.Add(new BlameLine
+                    {
+                        HunkIndex = hunkIndex,
+                        HunkLineCount = hunk.LineCount,
+                        IsFirstInHunk = i == 0,
+                        CommitSha = hunk.CommitSha,
+                        ShortSha = hunk.ShortSha,
+                        Author = hunk.AuthorName,
+                        Message = hunk.MessageSummary,
+                        Date = hunk.Date,
+                        LineNumber = hunk.FinalStartLineNumber + i + 1,
+                        Content = i < hunk.Lines.Count ? hunk.Lines[i] : ""
+                    });
+                }
+                hunkIndex++;
+            }
+        }
+        catch
+        {
+            notFound = true;
+        }
+
+        loading = false;
+    }
+
+    private static string TruncateMessage(string msg, int max)
+    {
+        return msg.Length <= max ? msg : msg[..max] + "...";
+    }
+
+    private static string FormatRelativeDate(DateTime date)
+    {
+        var diff = DateTime.UtcNow - date;
+        if (diff.TotalMinutes < 1) return "just now";
+        if (diff.TotalHours < 1) return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalDays < 1) return $"{(int)diff.TotalHours}h ago";
+        if (diff.TotalDays < 30) return $"{(int)diff.TotalDays}d ago";
+        if (diff.TotalDays < 365) return $"{(int)(diff.TotalDays / 30)}mo ago";
+        return date.ToString("yyyy-MM-dd");
+    }
+}

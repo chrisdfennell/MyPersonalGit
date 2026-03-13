@@ -27,8 +27,11 @@
 @inject IMirrorService MirrorService
 @inject ISecretsService SecretsService
 @inject ICommitCommentService CommitCommentService
+@inject IDeployKeyService DeployKeyService
+@inject IGpgKeyService GpgKeyService
 @using MyPersonalGit.Services
 @using RepositorySecret = MyPersonalGit.Models.RepositorySecret
+@using DeployKey = MyPersonalGit.Models.DeployKey
 @inject CurrentUserService UserService
 @rendermode InteractiveServer
 
@@ -94,8 +97,11 @@ else
 
                             <hr class="my-2" />
                             <h6 class="fw-bold small mb-2">Download</h6>
-                            <a href="/api/v1/repos/@(System.IO.Path.GetFileName(RepoFullPath))/archive/zip?ref=@currentBranch" class="btn btn-sm btn-outline-secondary w-100 text-start">
+                            <a href="/api/v1/repos/@(System.IO.Path.GetFileName(RepoFullPath))/archive/@(currentBranch).zip" class="btn btn-sm btn-outline-secondary w-100 text-start mb-1">
                                 <i class="bi bi-file-earmark-zip me-2"></i>Download ZIP
+                            </a>
+                            <a href="/api/v1/repos/@(System.IO.Path.GetFileName(RepoFullPath))/archive/@(currentBranch).tar.gz" class="btn btn-sm btn-outline-secondary w-100 text-start">
+                                <i class="bi bi-file-earmark me-2"></i>Download TAR.GZ
                             </a>
 
                             @if (UserService.IsLoggedIn && !repoIsArchived)
@@ -279,7 +285,7 @@ else
                                 <button class="btn btn-light btn-sm border" @onclick="EnterEditMode"><i class="bi bi-pencil me-1"></i> Edit</button>
                             }
                             <button class="btn btn-light btn-sm border" @onclick="ViewFileHistory"><i class="bi bi-clock-history me-1"></i> History</button>
-                            <button class="btn @(activeTab == "blame" ? "btn-secondary" : "btn-light") btn-sm border" @onclick="ToggleBlameView"><i class="bi bi-person-lines-fill me-1"></i> Blame</button>
+                            <a href="/blame/@repoOwner/@RepoName/@currentBranch/@Path" class="btn btn-light btn-sm border"><i class="bi bi-person-lines-fill me-1"></i> Blame</a>
                             @if (UserService.IsLoggedIn)
                             {
                                 <button class="btn btn-light btn-sm border" @onclick="() => showDeleteModal = true"><i class="bi bi-trash me-1 text-danger"></i> Delete</button>
@@ -1102,6 +1108,88 @@ else
                         </div>
                     </div>
 
+                    <div class="card border shadow-sm mb-4">
+                        <div class="card-header bg-light-subtle py-2 small fw-bold">
+                            <i class="bi bi-key me-1"></i> Deploy Keys
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">Deploy keys grant read-only or read-write access to this repository for automated systems.</p>
+                            @if (deployKeys.Any())
+                            {
+                                <div class="list-group list-group-flush mb-3">
+                                    @foreach (var dk in deployKeys)
+                                    {
+                                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                            <div>
+                                                <span class="fw-bold">@dk.Title</span>
+                                                <span class="badge @(dk.ReadOnly ? "bg-info bg-opacity-10 text-info border border-info-subtle" : "bg-warning bg-opacity-10 text-warning border border-warning-subtle") ms-2">@(dk.ReadOnly ? "Read-only" : "Read-write")</span>
+                                                <div class="small text-muted mt-1">
+                                                    <code class="me-2">@dk.KeyFingerprint</code>
+                                                    Added @dk.CreatedAt.ToString("yyyy-MM-dd")
+                                                    @if (dk.LastUsedAt.HasValue)
+                                                    {
+                                                        <span class="ms-2">· Last used @dk.LastUsedAt.Value.ToString("yyyy-MM-dd")</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="ms-2">· Never used</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteDeployKey(dk.Id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted small mb-3">No deploy keys configured yet.</p>
+                            }
+
+                            @if (showAddDeployKey)
+                            {
+                                <div class="border rounded p-3 bg-light-subtle">
+                                    <h6 class="fw-bold small mb-3">Add deploy key</h6>
+                                    <div class="mb-2">
+                                        <label class="form-label small fw-bold">Title</label>
+                                        <input type="text" class="form-control form-control-sm" @bind="newDeployKeyTitle"
+                                               placeholder="e.g. CI Server" style="max-width: 300px;" />
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small fw-bold">Public Key</label>
+                                        <textarea class="form-control form-control-sm font-monospace" @bind="newDeployKeyPublicKey"
+                                                  rows="4" placeholder="ssh-rsa AAAA... or ssh-ed25519 AAAA..."></textarea>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" class="form-check-input" id="deployKeyReadOnly" @bind="newDeployKeyReadOnly" />
+                                        <label class="form-check-label small" for="deployKeyReadOnly">
+                                            Allow read access only (uncheck for read-write)
+                                        </label>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(deployKeyErrorMessage))
+                                    {
+                                        <div class="alert alert-danger py-1 small mb-2">@deployKeyErrorMessage</div>
+                                    }
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-gh-primary btn-sm" @onclick="SaveDeployKey"
+                                                disabled="@(string.IsNullOrWhiteSpace(newDeployKeyTitle) || string.IsNullOrWhiteSpace(newDeployKeyPublicKey))">
+                                            Add key
+                                        </button>
+                                        <button class="btn btn-light btn-sm border" @onclick="() => { showAddDeployKey = false; deployKeyErrorMessage = string.Empty; }">Cancel</button>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-primary btn-sm" @onclick="() => { showAddDeployKey = true; newDeployKeyTitle = string.Empty; newDeployKeyPublicKey = string.Empty; newDeployKeyReadOnly = true; deployKeyErrorMessage = string.Empty; }">
+                                    <i class="bi bi-plus-lg me-1"></i>Add deploy key
+                                </button>
+                            }
+                        </div>
+                    </div>
+
                     <div class="card shadow-sm mb-4">
                         <div class="card-header py-2 small fw-bold">
                             <i class="bi bi-arrow-repeat me-1"></i> Mirrors
@@ -1383,7 +1471,24 @@ else
                             <div class="card-body py-2 px-3">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <h6 class="mb-1 fw-bold">@commit.Message</h6>
-                                    <a href="/repo/@RepoName/commit/@commit.Sha" class="badge bg-light text-primary border border-primary-subtle font-monospace text-decoration-none">@commit.ShortSha</a>
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if (commit.IsSigned)
+                                        {
+                                            @if (commit.IsVerified)
+                                            {
+                                                <span class="badge bg-success" title="Verified: signed with a trusted GPG key (@commit.SignerKeyId)">
+                                                    <i class="bi bi-shield-fill-check"></i> Verified
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning text-dark" title="Signed with GPG key @commit.SignerKeyId">
+                                                    <i class="bi bi-shield-fill-exclamation"></i> Signed
+                                                </span>
+                                            }
+                                        }
+                                        <a href="/repo/@RepoName/commit/@commit.Sha" class="badge bg-light text-primary border border-primary-subtle font-monospace text-decoration-none">@commit.ShortSha</a>
+                                    </div>
                                 </div>
                                 <div class="text-muted small">
                                     <strong>@commit.AuthorName</strong> committed @GetRelativeTime(commit.Date)
@@ -1454,6 +1559,21 @@ else
                         <h4 class="fw-bold mb-1">@selectedCommit.Message</h4>
                         <div class="text-muted small">
                             <strong>@selectedCommit.AuthorName</strong> authored @selectedCommit.Date.ToString("f")
+                            @if (selectedCommit.IsSigned)
+                            {
+                                @if (selectedCommit.IsVerified)
+                                {
+                                    <span class="badge bg-success ms-2" title="Verified: signed with a trusted GPG key (@selectedCommit.SignerKeyId)">
+                                        <i class="bi bi-shield-fill-check"></i> Verified
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark ms-2" title="Signed with GPG key @selectedCommit.SignerKeyId">
+                                        <i class="bi bi-shield-fill-exclamation"></i> Signed
+                                    </span>
+                                }
+                            }
                         </div>
                         <hr />
                         <div class="d-flex justify-content-between align-items-center">
@@ -2547,6 +2667,14 @@ else
     private string? editingSecretName = null;
     private string secretErrorMessage = "";
 
+    // Deploy keys state
+    private List<DeployKey> deployKeys = new();
+    private bool showAddDeployKey = false;
+    private string newDeployKeyTitle = "";
+    private string newDeployKeyPublicKey = "";
+    private bool newDeployKeyReadOnly = true;
+    private string deployKeyErrorMessage = "";
+
     // Container registry
     private List<ContainerManifest> containerTags = new();
     private string containerRegistryName = "";
@@ -2629,6 +2757,7 @@ else
         }
 
         LoadRepoData();
+        await VerifyCommitSignatures();
         await LoadRepoMetadata();
         await LoadReleases();
     }
@@ -2683,6 +2812,13 @@ else
         {
             try { repoSecrets = await SecretsService.GetSecretsAsync(dirName); }
             catch { repoSecrets = new(); }
+        }
+
+        // Load deploy keys
+        if (UserService.IsLoggedIn && meta != null)
+        {
+            try { deployKeys = await DeployKeyService.GetDeployKeysAsync(meta.Id); }
+            catch { deployKeys = new(); }
         }
     }
 
@@ -2928,7 +3064,7 @@ else
         if (tab == "code" && string.IsNullOrEmpty(Path)) Nav.NavigateTo($"/repo/{RepoName}");
         else LoadRepoData();
         if (tab == "settings" || tab == "branches") await LoadBranchProtectionRules();
-        if (tab == "settings") { await LoadCollaborators(); await LoadMirrors(); }
+        if (tab == "settings") { await LoadCollaborators(); await LoadMirrors(); await LoadDeployKeys(); }
         if (tab == "releases") await LoadReleases();
         if (tab == "packages") await LoadContainerTags();
         if (tab == "graph") LoadGraph();
@@ -2953,7 +3089,7 @@ else
 
             if (branch.Tip != null)
             {
-                latestCommit = MapCommit(branch.Tip);
+                latestCommit = MapCommit(branch.Tip, repo);
                 isEmpty = false;
 
                 if (activeTab == "commits")
@@ -2961,12 +3097,12 @@ else
                     var filter = new CommitFilter { IncludeReachableFrom = branch.Tip };
                     if (isFile && !string.IsNullOrEmpty(Path))
                     {
-                        commitHistory = repo.Commits.QueryBy(Path, filter).Select(c => MapCommit(c.Commit)).Take(20).ToList();
+                        commitHistory = repo.Commits.QueryBy(Path, filter).Select(c => MapCommit(c.Commit, repo)).Take(20).ToList();
                         commitCount = repo.Commits.QueryBy(Path, filter).Count();
                     }
                     else
                     {
-                        commitHistory = repo.Commits.QueryBy(filter).Select(c => MapCommit(c)).Take(20).ToList();
+                        commitHistory = repo.Commits.QueryBy(filter).Select(c => MapCommit(c, repo)).Take(20).ToList();
                         commitCount = repo.Commits.QueryBy(filter).Count();
                     }
                 }
@@ -2977,7 +3113,7 @@ else
                     var rawCommit = repo.Lookup<Commit>(CommitHash);
                     if (rawCommit != null)
                     {
-                        selectedCommit = MapCommit(rawCommit);
+                        selectedCommit = MapCommit(rawCommit, repo);
                         LoadCommitDetail(repo, rawCommit);
                         LoadCommitComments();
                     }
@@ -3019,14 +3155,49 @@ else
         catch { notFound = true; }
     }
 
-    private GitCommit MapCommit(Commit c) => new GitCommit
+    private GitCommit MapCommit(Commit c, LibGit2Sharp.Repository? repo = null)
     {
-        Sha = c.Sha,
-        ShortSha = c.Id.ToString(7),
-        AuthorName = c.Author.Name,
-        Message = c.MessageShort,
-        Date = c.Author.When.UtcDateTime
-    };
+        var gc = new GitCommit
+        {
+            Sha = c.Sha,
+            ShortSha = c.Id.ToString(7),
+            AuthorName = c.Author.Name,
+            Message = c.MessageShort,
+            Date = c.Author.When.UtcDateTime
+        };
+
+        // Check for GPG signature using raw commit object parsing
+        if (repo != null)
+        {
+            try
+            {
+                gc.IsSigned = MyPersonalGit.Data.GpgKeyService.CommitHasSignature(c.Sha, RepoFullPath);
+            }
+            catch { /* No signature */ }
+        }
+
+        return gc;
+    }
+
+    private async Task VerifyCommitSignatures()
+    {
+        var signedCommits = commitHistory.Where(c => c.IsSigned).ToList();
+        if (selectedCommit?.IsSigned == true)
+            signedCommits.Add(selectedCommit);
+
+        if (!signedCommits.Any()) return;
+
+        foreach (var commit in signedCommits)
+        {
+            try
+            {
+                var result = await GpgKeyService.VerifyCommitSignatureAsync(commit.Sha, RepoFullPath);
+                commit.IsVerified = result.IsVerified;
+                commit.SignerKeyId = result.SignerKeyId;
+            }
+            catch { /* ignore verification errors */ }
+        }
+    }
 
     private static readonly MarkdownPipeline _markdownPipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
@@ -3425,6 +3596,54 @@ else
         var dirName = System.IO.Path.GetFileName(RepoFullPath);
         await SecretsService.DeleteSecretAsync(dirName, name);
         repoSecrets = await SecretsService.GetSecretsAsync(dirName);
+    }
+
+    private async Task LoadDeployKeys()
+    {
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        var meta = await RepoService.GetRepositoryAsync(dirName);
+        if (meta != null)
+            deployKeys = await DeployKeyService.GetDeployKeysAsync(meta.Id);
+        else
+            deployKeys = new();
+    }
+
+    private async Task SaveDeployKey()
+    {
+        deployKeyErrorMessage = "";
+        if (string.IsNullOrWhiteSpace(newDeployKeyTitle) || string.IsNullOrWhiteSpace(newDeployKeyPublicKey))
+        {
+            deployKeyErrorMessage = "Title and public key are required.";
+            return;
+        }
+
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        var meta = await RepoService.GetRepositoryAsync(dirName);
+        if (meta == null)
+        {
+            deployKeyErrorMessage = "Repository not found.";
+            return;
+        }
+
+        var result = await DeployKeyService.AddDeployKeyAsync(meta.Id, newDeployKeyTitle, newDeployKeyPublicKey, newDeployKeyReadOnly);
+        if (result == null)
+        {
+            deployKeyErrorMessage = "Failed to add deploy key. A key with this fingerprint may already exist.";
+            return;
+        }
+
+        showAddDeployKey = false;
+        newDeployKeyTitle = "";
+        newDeployKeyPublicKey = "";
+        newDeployKeyReadOnly = true;
+        deployKeyErrorMessage = "";
+        await LoadDeployKeys();
+    }
+
+    private async Task DeleteDeployKey(int id)
+    {
+        await DeployKeyService.DeleteDeployKeyAsync(id);
+        await LoadDeployKeys();
     }
 
     private void CreateBranch()
@@ -4041,7 +4260,7 @@ else
         };
     }
 
-    public class GitCommit { public string Sha { get; set; } = ""; public string ShortSha { get; set; } = ""; public string AuthorName { get; set; } = ""; public string Message { get; set; } = ""; public DateTime Date { get; set; } }
+    public class GitCommit { public string Sha { get; set; } = ""; public string ShortSha { get; set; } = ""; public string AuthorName { get; set; } = ""; public string Message { get; set; } = ""; public DateTime Date { get; set; } public bool IsSigned { get; set; } public bool IsVerified { get; set; } public string SignerKeyId { get; set; } = ""; }
     public class TreeItem { public string Name { get; set; } = ""; public bool IsDirectory { get; set; } public string LastCommitMessage { get; set; } = ""; public DateTime? LastCommitDate { get; set; } }
     public class Crumb { public string Name { get; set; } = ""; public string Path { get; set; } = ""; public bool IsLast { get; set; } }
     public class BranchSummary { public string Name { get; set; } = ""; public bool IsCurrent { get; set; } }

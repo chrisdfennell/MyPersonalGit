@@ -1,4 +1,3 @@
-using System.IO.Compression;
 using LibGit2Sharp;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -13,13 +12,17 @@ public class RepositoriesController : ControllerBase
 {
     private readonly IRepositoryService _repoService;
     private readonly IReleaseService _releaseService;
+    private readonly IArchiveService _archiveService;
+    private readonly IBlameService _blameService;
     private readonly IConfiguration _config;
     private readonly ILogger<RepositoriesController> _logger;
 
-    public RepositoriesController(IRepositoryService repoService, IReleaseService releaseService, IConfiguration config, ILogger<RepositoriesController> logger)
+    public RepositoriesController(IRepositoryService repoService, IReleaseService releaseService, IArchiveService archiveService, IBlameService blameService, IConfiguration config, ILogger<RepositoriesController> logger)
     {
         _repoService = repoService;
         _releaseService = releaseService;
+        _archiveService = archiveService;
+        _blameService = blameService;
         _config = config;
         _logger = logger;
     }
@@ -234,7 +237,36 @@ public class RepositoriesController : ControllerBase
     }
 
     [HttpGet("{repoName}/archive/zip")]
-    public async Task<IActionResult> DownloadZip(string repoName, [FromQuery] string? @ref = null)
+    public async Task<IActionResult> DownloadZipLegacy(string repoName, [FromQuery] string? @ref = null)
+    {
+        return await DownloadArchive(repoName, @ref, ArchiveFormat.Zip);
+    }
+
+    [HttpGet("{repoName}/archive/{refAndFormat}")]
+    public async Task<IActionResult> DownloadArchiveByRef(string repoName, string refAndFormat)
+    {
+        ArchiveFormat format;
+        string gitRef;
+
+        if (refAndFormat.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
+        {
+            format = ArchiveFormat.TarGz;
+            gitRef = refAndFormat[..^7]; // remove ".tar.gz"
+        }
+        else if (refAndFormat.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            format = ArchiveFormat.Zip;
+            gitRef = refAndFormat[..^4]; // remove ".zip"
+        }
+        else
+        {
+            return BadRequest(new { error = "Unsupported archive format. Use .zip or .tar.gz" });
+        }
+
+        return await DownloadArchive(repoName, gitRef, format);
+    }
+
+    private async Task<IActionResult> DownloadArchive(string repoName, string? gitRef, ArchiveFormat format)
     {
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
         var repoPath = Path.Combine(projectRoot, repoName);
@@ -254,19 +286,18 @@ public class RepositoriesController : ControllerBase
                 return NotFound(new { error = $"Repository '{repoName}' not found" });
         }
 
-        using var repo = new Repository(repoPath);
-        var branch = repo.Branches[@ref ?? ""] ?? repo.Branches["main"] ?? repo.Branches["master"] ?? repo.Head;
-        if (branch?.Tip == null)
-            return NotFound(new { error = "No commits found" });
-
         var displayName = repoName.EndsWith(".git") ? repoName[..^4] : repoName;
-        var ms = new MemoryStream();
-        using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
+        var stream = _archiveService.CreateArchive(repoPath, gitRef, format, out var resolvedRef);
+        if (stream == null)
+            return NotFound(new { error = "Invalid ref or empty repository" });
+
+        var (contentType, extension) = format switch
         {
-            AddTreeToZip(archive, branch.Tip.Tree, $"{displayName}/");
-        }
-        ms.Position = 0;
-        return File(ms, "application/zip", $"{displayName}-{branch.FriendlyName}.zip");
+            ArchiveFormat.TarGz => ("application/gzip", ".tar.gz"),
+            _ => ("application/zip", ".zip")
+        };
+
+        return File(stream, contentType, $"{displayName}-{resolvedRef}{extension}");
     }
 
     [HttpGet("{repoName}/releases")]
@@ -289,23 +320,44 @@ public class RepositoriesController : ControllerBase
         return File(data, asset.ContentType, asset.FileName);
     }
 
-    private static void AddTreeToZip(ZipArchive archive, Tree tree, string basePath)
+    [HttpGet("{owner}/{repoName}/blame/{branch}/{**path}")]
+    public async Task<IActionResult> GetBlame(string owner, string repoName, string branch, string path)
     {
-        foreach (var entry in tree)
+        if (string.IsNullOrEmpty(path))
+            return BadRequest(new { error = "File path is required" });
+
+        // Enforce private repo access
+        var meta = await _repoService.GetRepositoryAsync(repoName);
+        if (meta is { IsPrivate: true })
         {
-            var entryPath = basePath + entry.Name;
-            if (entry.TargetType == TreeEntryTargetType.Tree)
-            {
-                AddTreeToZip(archive, (Tree)entry.Target, entryPath + "/");
-            }
-            else if (entry.TargetType == TreeEntryTargetType.Blob)
-            {
-                var blob = (Blob)entry.Target;
-                var zipEntry = archive.CreateEntry(entryPath);
-                using var blobStream = blob.GetContentStream();
-                using var zipStream = zipEntry.Open();
-                blobStream.CopyTo(zipStream);
-            }
+            var currentUser = User.Identity?.Name;
+            if (currentUser == null || !meta.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))
+                return NotFound(new { error = $"Repository '{repoName}' not found" });
         }
+
+        var hunks = _blameService.GetBlame(owner, repoName, branch, path);
+        if (!hunks.Any())
+            return NotFound(new { error = $"Unable to get blame for '{path}'" });
+
+        return Ok(new
+        {
+            repository = repoName,
+            owner,
+            branch,
+            path,
+            hunks = hunks.Select(h => new
+            {
+                start_line = h.FinalStartLineNumber + 1,
+                line_count = h.LineCount,
+                commit_sha = h.CommitSha,
+                short_sha = h.ShortSha,
+                author_name = h.AuthorName,
+                author_email = h.AuthorEmail,
+                date = h.Date,
+                message = h.MessageSummary,
+                lines = h.Lines
+            })
+        });
     }
+
 }

@@ -14,12 +14,14 @@ public class SshController : ControllerBase
 {
     private readonly ISshAuthService _sshAuthService;
     private readonly IRepositoryService _repoService;
+    private readonly IDeployKeyService _deployKeyService;
     private readonly ILogger<SshController> _logger;
 
-    public SshController(ISshAuthService sshAuthService, IRepositoryService repoService, ILogger<SshController> logger)
+    public SshController(ISshAuthService sshAuthService, IRepositoryService repoService, IDeployKeyService deployKeyService, ILogger<SshController> logger)
     {
         _sshAuthService = sshAuthService;
         _repoService = repoService;
+        _deployKeyService = deployKeyService;
         _logger = logger;
     }
 
@@ -51,11 +53,28 @@ public class SshController : ControllerBase
     /// <summary>
     /// Validate that a user has access to a repository for a given git operation.
     /// Called by the git-shell wrapper to check permissions before executing.
+    /// Also supports deploy key authentication via fingerprint.
     /// POST /api/ssh/check-access
     /// </summary>
     [HttpPost("check-access")]
     public async Task<IActionResult> CheckAccess([FromBody] SshAccessCheckRequest request)
     {
+        // Deploy key authentication path: if a fingerprint is provided, check deploy keys first
+        if (!string.IsNullOrEmpty(request.KeyFingerprint) && !string.IsNullOrEmpty(request.RepoName))
+        {
+            var deployKeyResult = await _sshAuthService.AuthenticateDeployKeyByFingerprintAsync(request.KeyFingerprint, request.RepoName);
+            if (deployKeyResult != null)
+            {
+                // Deploy keys with read-only access can only do git-upload-pack (fetch/clone)
+                if (deployKeyResult.ReadOnly && request.Operation == "git-receive-pack")
+                {
+                    return Ok(new { allowed = false, reason = "deploy_key_read_only" });
+                }
+
+                return Ok(new { allowed = true, reason = "deploy_key", read_only = deployKeyResult.ReadOnly });
+            }
+        }
+
         if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.RepoName))
             return BadRequest();
 
@@ -108,4 +127,5 @@ public class SshAccessCheckRequest
     public string Username { get; set; } = "";
     public string RepoName { get; set; } = "";
     public string Operation { get; set; } = ""; // "git-upload-pack" or "git-receive-pack"
+    public string? KeyFingerprint { get; set; } // Optional: for deploy key authentication
 }

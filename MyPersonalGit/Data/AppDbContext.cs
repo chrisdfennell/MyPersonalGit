@@ -125,6 +125,12 @@ public class AppDbContext : DbContext
     // Issue Templates
     public DbSet<IssueTemplate> IssueTemplates => Set<IssueTemplate>();
 
+    // Deploy Keys
+    public DbSet<DeployKey> DeployKeys => Set<DeployKey>();
+
+    // GPG Keys
+    public DbSet<GpgKey> GpgKeys => Set<GpgKey>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Shared JSON value converters + comparers for List<string> and string[]
@@ -470,6 +476,27 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<IssueTemplate>(e =>
         {
             e.HasIndex(t => new { t.RepoName, t.Name }).IsUnique();
+        });
+
+        // --- DeployKey ---
+        modelBuilder.Entity<DeployKey>(e =>
+        {
+            e.HasIndex(d => new { d.RepositoryId, d.KeyFingerprint }).IsUnique();
+            e.HasOne(d => d.Repository)
+                .WithMany()
+                .HasForeignKey(d => d.RepositoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // --- GpgKey ---
+        modelBuilder.Entity<GpgKey>(e =>
+        {
+            e.HasIndex(k => new { k.UserId, k.LongKeyId }).IsUnique();
+            e.Property(k => k.Emails).HasConversion(listStringConverter, listStringComparer);
+            e.HasOne(k => k.User)
+                .WithMany()
+                .HasForeignKey(k => k.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

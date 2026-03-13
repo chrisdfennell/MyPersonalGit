@@ -5,6 +5,8 @@
 @using MyPersonalGit.Services
 @using UserProfileModel = MyPersonalGit.Models.UserProfile
 @inject IUserProfileService ProfileService
+@inject IGpgKeyService GpgKeyService
+@inject IAuthService AuthService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
@@ -34,9 +36,13 @@ else
                    @onclick='() => SetTab("account")' style="cursor: pointer;">
                     <i class="bi bi-shield-lock"></i> Account Security
                 </a>
-                <a class="list-group-item list-group-item-action @(ActiveTab == "ssh" ? "active" : "")" 
+                <a class="list-group-item list-group-item-action @(ActiveTab == "ssh" ? "active" : "")"
                    @onclick='() => SetTab("ssh")' style="cursor: pointer;">
                     <i class="bi bi-key"></i> SSH Keys
+                </a>
+                <a class="list-group-item list-group-item-action @(ActiveTab == "gpg" ? "active" : "")"
+                   @onclick='() => SetTab("gpg")' style="cursor: pointer;">
+                    <i class="bi bi-shield-lock-fill"></i> GPG Keys
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "tokens" ? "active" : "")" 
                    @onclick='() => SetTab("tokens")' style="cursor: pointer;">
@@ -202,6 +208,65 @@ else
                     </div>
                 </div>
             }
+            else if (ActiveTab == "gpg")
+            {
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">GPG Keys</h5>
+                        <button class="btn btn-primary btn-sm" @onclick='() => ShowAddGpgKey = true'>
+                            <i class="bi bi-plus-lg"></i> Add GPG Key
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        @if (GpgKeys.Count == 0)
+                        {
+                            <p class="text-muted">No GPG keys configured. Add a GPG key to sign and verify commits.</p>
+                        }
+                        else
+                        {
+                            <div class="list-group">
+                                @foreach (var key in GpgKeys)
+                                {
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <i class="bi bi-shield-lock-fill text-success"></i>
+                                                    <span class="font-monospace">@key.KeyId</span>
+                                                    @if (key.IsVerified)
+                                                    {
+                                                        <span class="badge bg-success ms-2">Verified</span>
+                                                    }
+                                                </h6>
+                                                <p class="mb-1 small">
+                                                    <strong>Key ID:</strong> <span class="font-monospace">@key.LongKeyId</span>
+                                                </p>
+                                                <p class="mb-1 small">
+                                                    <strong>Email:</strong> @key.PrimaryEmail
+                                                    @if (key.Emails.Count > 1)
+                                                    {
+                                                        <span class="text-muted">(+@(key.Emails.Count - 1) more)</span>
+                                                    }
+                                                </p>
+                                                <small class="text-muted">
+                                                    Added @key.CreatedAt.ToString("MMM d, yyyy")
+                                                    @if (key.ExpiresAt.HasValue)
+                                                    {
+                                                        <span> &middot; Expires @key.ExpiresAt.Value.ToString("MMM d, yyyy")</span>
+                                                    }
+                                                </small>
+                                            </div>
+                                            <button class="btn btn-danger btn-sm" @onclick="() => DeleteGpgKey(key.Id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
             else if (ActiveTab == "tokens")
             {
                 <div class="card">
@@ -305,6 +370,15 @@ else
                                 <label class="form-check-label" for="pushEnabled">
                                     <strong>Push notifications (ntfy/Gotify)</strong>
                                     <small class="text-muted d-block">Send notifications to external push services when configured by admin</small>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" @bind="UserProfileData.EmailNotificationsEnabled" id="emailEnabled" />
+                                <label class="form-check-label" for="emailEnabled">
+                                    <strong>Email notifications</strong>
+                                    <small class="text-muted d-block">Receive email notifications when SMTP is configured by admin</small>
                                 </label>
                             </div>
                         </div>
@@ -422,6 +496,36 @@ else
         </div>
     </div>
 }
+@if (ShowAddGpgKey)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add GPG Key</h5>
+                    <button type="button" class="btn-close" @onclick='() => ShowAddGpgKey = false'></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">GPG Public Key</label>
+                        <textarea class="form-control font-monospace" rows="10" @bind="NewGpgKeyContent"
+                                  placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----&#10;&#10;...&#10;&#10;-----END PGP PUBLIC KEY BLOCK-----"></textarea>
+                        <div class="form-text">Paste your ASCII-armored GPG public key.</div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(GpgKeyError))
+                    {
+                        <div class="alert alert-danger small">@GpgKeyError</div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick='() => ShowAddGpgKey = false'>Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="AddGpgKey">Add Key</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 } @* end else (IsLoggedIn) *@
 
 @code {
@@ -433,6 +537,7 @@ else
     private UserProfileModel UserProfileData = new();
     private TwoFactorAuth TwoFactor = new();
     private List<SshKey> SshKeys = new();
+    private List<GpgKey> GpgKeys = new();
     private List<PersonalAccessToken> Tokens = new();
     private List<ActiveUserSession> Sessions = new();
 
@@ -445,6 +550,10 @@ else
     private bool ShowAddSshKey = false;
     private string NewSshKeyTitle = "";
     private string NewSshKeyContent = "";
+
+    private bool ShowAddGpgKey = false;
+    private string NewGpgKeyContent = "";
+    private string GpgKeyError = "";
 
     private bool ShowAddToken = false;
     private string NewTokenName = "";
@@ -485,6 +594,10 @@ else
         SshKeys = await ProfileService.GetSshKeysAsync(UserService.Username);
         Tokens = await ProfileService.GetTokensAsync(UserService.Username);
         Sessions = await ProfileService.GetSessionsAsync(UserService.Username);
+
+        var user = await AuthService.GetUserByUsernameAsync(UserService.Username);
+        if (user != null)
+            GpgKeys = await GpgKeyService.GetUserGpgKeysAsync(user.Id);
     }
 
     private async Task SaveProfile()
@@ -525,6 +638,30 @@ else
     private async Task DeleteSshKey(int id)
     {
         await ProfileService.DeleteSshKeyAsync(UserService.Username, id);
+        await LoadData();
+    }
+
+    private async Task AddGpgKey()
+    {
+        GpgKeyError = "";
+        var user = await AuthService.GetUserByUsernameAsync(UserService.Username);
+        if (user == null) return;
+
+        var key = await GpgKeyService.AddGpgKeyAsync(user.Id, NewGpgKeyContent);
+        if (key == null)
+        {
+            GpgKeyError = "Invalid GPG public key or key already exists. Please paste a valid ASCII-armored PGP public key.";
+            return;
+        }
+
+        ShowAddGpgKey = false;
+        NewGpgKeyContent = "";
+        await LoadData();
+    }
+
+    private async Task DeleteGpgKey(int id)
+    {
+        await GpgKeyService.DeleteGpgKeyAsync(id);
         await LoadData();
     }
 

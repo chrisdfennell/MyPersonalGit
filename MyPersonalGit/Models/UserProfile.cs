@@ -18,6 +18,7 @@ public class UserProfile
 
     // Notification preferences
     public bool PushNotificationsEnabled { get; set; } = true;
+    public bool EmailNotificationsEnabled { get; set; } = true;
     public bool NotifyOnPullRequest { get; set; } = true;
     public bool NotifyOnIssue { get; set; } = true;
     public bool NotifyOnMention { get; set; } = true;
