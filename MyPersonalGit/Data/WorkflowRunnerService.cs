@@ -177,8 +177,8 @@ public class WorkflowRunnerService : BackgroundService
                 {
                     envVars.Add($"{name}={value}");
                 }
-                if (secrets.Count > 0)
-                    _logger.LogInformation("Injecting {Count} secret(s) into job {JobName}", secrets.Count, job.Name);
+                _logger.LogInformation("Loaded {Count} secret(s) for repo '{RepoName}': [{Keys}]",
+                    secrets.Count, run.RepoName, string.Join(", ", secrets.Keys));
             }
             catch (Exception ex)
             {
@@ -253,7 +253,9 @@ public class WorkflowRunnerService : BackgroundService
                 await db.SaveChangesAsync(ct);
 
                 var command = step.Command ?? step.Name ?? "echo 'No command'";
-                var (exitCode, output) = await ExecInContainer(containerId, new[] { "sh", "-c", command }, ct);
+                // Run all commands from /workspace (the cloned repo directory)
+                var wrappedCommand = $"cd /workspace 2>/dev/null; {command}";
+                var (exitCode, output) = await ExecInContainer(containerId, new[] { "sh", "-c", wrappedCommand }, ct);
 
                 step.Output = output;
                 step.CompletedAt = DateTime.UtcNow;
