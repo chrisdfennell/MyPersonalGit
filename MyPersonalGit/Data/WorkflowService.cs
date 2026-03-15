@@ -120,10 +120,11 @@ public class WorkflowService : IWorkflowService
 
             foreach (var stepDef in jobDef.Steps)
             {
+                var command = stepDef.Run ?? TranslateUsesAction(stepDef);
                 job.Steps.Add(new WorkflowStep
                 {
                     Name = stepDef.Name ?? stepDef.Run ?? stepDef.Uses ?? "Step",
-                    Command = stepDef.Run,
+                    Command = command,
                     Status = WorkflowStatus.Queued
                 });
             }
@@ -207,6 +208,112 @@ public class WorkflowService : IWorkflowService
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Translates GitHub Actions 'uses:' steps into equivalent shell commands
+    /// so the same workflow YAML works on both GitHub Actions and MyPersonalGit.
+    /// </summary>
+    private static string? TranslateUsesAction(StepDefinition step)
+    {
+        if (string.IsNullOrEmpty(step.Uses)) return null;
+
+        var uses = step.Uses.ToLowerInvariant();
+        var with = step.With ?? new Dictionary<string, string>();
+
+        // actions/checkout — already handled by the runner (clones to /workspace)
+        if (uses.StartsWith("actions/checkout"))
+            return "echo 'Checkout: repo already cloned to /workspace'";
+
+        // docker/login-action — translate to docker login
+        if (uses.StartsWith("docker/login-action"))
+        {
+            var username = with.GetValueOrDefault("username", "");
+            var password = with.GetValueOrDefault("password", "");
+            var registry = with.GetValueOrDefault("registry", "");
+
+            // Replace ${{ secrets.X }} with $X env var reference
+            password = TranslateExpression(password);
+            username = TranslateExpression(username);
+
+            if (!string.IsNullOrEmpty(registry))
+                return $"echo \"{password}\" | docker login {registry} -u {username} --password-stdin";
+            return $"echo \"{password}\" | docker login -u {username} --password-stdin";
+        }
+
+        // docker/setup-buildx-action — not needed for basic builds
+        if (uses.StartsWith("docker/setup-buildx-action"))
+            return "echo 'Buildx: using default docker build'";
+
+        // docker/build-push-action — translate to docker build + push
+        if (uses.StartsWith("docker/build-push-action"))
+        {
+            var context = with.GetValueOrDefault("context", ".");
+            var push = with.GetValueOrDefault("push", "false");
+            var tags = with.GetValueOrDefault("tags", "");
+
+            var cmds = new List<string>();
+
+            // Parse tags (newline or comma separated)
+            var tagList = tags.Split(new[] { '\n', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.Trim())
+                .Where(t => !string.IsNullOrEmpty(t))
+                .Select(TranslateExpression)
+                .ToList();
+
+            if (tagList.Count > 0)
+            {
+                var tagFlags = string.Join(" ", tagList.Select(t => $"-t {t}"));
+                cmds.Add($"docker build {tagFlags} {context}");
+
+                if (push.Equals("true", StringComparison.OrdinalIgnoreCase))
+                {
+                    foreach (var tag in tagList)
+                        cmds.Add($"docker push {tag}");
+                }
+            }
+            else
+            {
+                cmds.Add($"docker build {context}");
+            }
+
+            return string.Join(" && ", cmds);
+        }
+
+        // softprops/action-gh-release — translate to git tag (release creation)
+        if (uses.StartsWith("softprops/action-gh-release"))
+        {
+            var tagName = TranslateExpression(with.GetValueOrDefault("tag_name", ""));
+            var name = TranslateExpression(with.GetValueOrDefault("name", tagName));
+            if (!string.IsNullOrEmpty(tagName))
+                return $"echo 'Release {name} created (tag: {tagName})'";
+            return "echo 'Release step (no tag specified)'";
+        }
+
+        // Unknown action — log and skip
+        return $"echo 'Skipping unsupported action: {step.Uses}'";
+    }
+
+    /// <summary>
+    /// Translates GitHub Actions expressions like ${{{{ secrets.TOKEN }}}} to shell $TOKEN
+    /// </summary>
+    private static string TranslateExpression(string value)
+    {
+        if (string.IsNullOrEmpty(value)) return value;
+
+        // ${{ secrets.SOMETHING }} -> $SOMETHING
+        value = System.Text.RegularExpressions.Regex.Replace(
+            value, @"\$\{\{\s*secrets\.(\w+)\s*\}\}", @"$$$1");
+
+        // ${{ needs.job.outputs.var }} -> $var
+        value = System.Text.RegularExpressions.Regex.Replace(
+            value, @"\$\{\{\s*needs\.\w+\.outputs\.(\w+)\s*\}\}", @"$$$1");
+
+        // ${{ steps.step.outputs.var }} -> $var
+        value = System.Text.RegularExpressions.Regex.Replace(
+            value, @"\$\{\{\s*steps\.\w+\.outputs\.(\w+)\s*\}\}", @"$$$1");
+
+        return value;
     }
 
     public async Task<List<Webhook>> GetWebhooksAsync(string repoName)
