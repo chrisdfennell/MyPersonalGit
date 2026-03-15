@@ -116,6 +116,13 @@ namespace MyPersonalGit.Migrations
                 type: "TEXT",
                 nullable: false,
                 defaultValue: "");
+
+            migrationBuilder.AddColumn<bool>(
+                name: "LdapSkipCertificateValidation",
+                table: "SystemSettings",
+                type: "INTEGER",
+                nullable: false,
+                defaultValue: true);
         }
 
         /// <inheritdoc />
