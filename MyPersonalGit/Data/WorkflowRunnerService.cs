@@ -426,8 +426,7 @@ public class WorkflowRunnerService : BackgroundService
         foreach (var file in files)
         {
             var relativePath = Path.GetRelativePath(sourceDir, file).Replace('\\', '/');
-            // Skip .git directory for cleaner workspace
-            if (relativePath.StartsWith(".git/") || relativePath == ".git") continue;
+            // Keep .git directory so git commands (tags, log) work in workflow steps
 
             var fileInfo = new FileInfo(file);
             var content = await File.ReadAllBytesAsync(file);
