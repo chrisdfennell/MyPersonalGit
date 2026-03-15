@@ -29,4 +29,22 @@
     #components-reconnect-modal.components-reconnect-show {
         display: block;
     }
+
+    /* Override the scoped CSS white background for dark mode */
+    [data-bs-theme="dark"] dialog#components-reconnect-modal,
+    dialog#components-reconnect-modal {
+        background-color: #1e1e2e !important;
+        color: #c9d1d9 !important;
+        border: 1px solid #444 !important;
+    }
+
+    [data-bs-theme="dark"] dialog#components-reconnect-modal p,
+    [data-bs-theme="dark"] dialog#components-reconnect-modal .components-rejoining-animation div {
+        color: #c9d1d9;
+        border-color: #58a6ff;
+    }
+
+    dialog#components-reconnect-modal .components-reconnect-container p {
+        color: inherit;
+    }
 </style>
