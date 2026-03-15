@@ -11,7 +11,22 @@
       "Bash(grep -E \"\\\\.razor$\")",
       "Bash(grep -E \"public class|public enum\" \"f:/Programming/C#/MyPersonalGit/MyPersonalGit/Models\"/*.cs)",
       "Bash(grep -E \"Controller\\\\.cs$\")",
-      "Read(//f/Programming/C#/MyPersonalGit/**)"
+      "Read(//f/Programming/C#/MyPersonalGit/**)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://fennell-nas:54123/)",
+      "Bash(curl -s -w \"\\\\n%{http_code}\" http://fennell-nas:54123/git/MyPersonalGit.git/info/refs?service=git-upload-pack)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet --list-sdks)",
+      "Bash(dotnet --list-runtimes)",
+      "Bash(./tools/dotnet-ef migrations:*)",
+      "Bash(DOTNET_ROLL_FORWARD=LatestMajor dotnet ef migrations add AddOAuthImportAndGranularPermissions --project MyPersonalGit/MyPersonalGit.csproj)",
+      "Bash(find \"f:/Programming/C#/MyPersonalGit/tools\" -delete)",
+      "Bash(cmd //c \"rmdir /s /q f:\\\\Programming\\\\C#\\\\MyPersonalGit\\\\tools\")",
+      "Bash(docker version:*)",
+      "Bash(dotnet package:*)",
+      "Bash(dotnet nuget:*)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
     ]
   }
 }
