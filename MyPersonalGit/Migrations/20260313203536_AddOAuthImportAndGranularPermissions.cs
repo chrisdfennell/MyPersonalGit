@@ -11,33 +11,8 @@ namespace MyPersonalGit.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<bool>(
-                name: "EmailNotificationsEnabled",
-                table: "UserProfiles",
-                type: "INTEGER",
-                nullable: false,
-                defaultValue: false);
-
-            migrationBuilder.AddColumn<bool>(
-                name: "EmailNotificationsEnabled",
-                table: "SystemSettings",
-                type: "INTEGER",
-                nullable: false,
-                defaultValue: false);
-
-            migrationBuilder.AddColumn<string>(
-                name: "SmtpFromAddress",
-                table: "SystemSettings",
-                type: "TEXT",
-                nullable: false,
-                defaultValue: "");
-
-            migrationBuilder.AddColumn<string>(
-                name: "SmtpFromName",
-                table: "SystemSettings",
-                type: "TEXT",
-                nullable: false,
-                defaultValue: "");
+            // EmailNotificationsEnabled, SmtpFromAddress, SmtpFromName already added
+            // by AddEmailNotifications migration — removed duplicates here.
 
             migrationBuilder.AddColumn<int>(
                 name: "DiscussionCommentId",
