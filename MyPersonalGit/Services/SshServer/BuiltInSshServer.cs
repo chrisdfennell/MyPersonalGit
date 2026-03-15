@@ -37,39 +37,40 @@ public sealed class BuiltInSshServer : BackgroundService
         await Task.Delay(2000, stoppingToken);
 
         int port;
-        using (var scope = _scopeFactory.CreateScope())
+        var dbFactory = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+
+        using (var db = dbFactory.CreateDbContext())
         {
-            var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
             var settings = await db.SystemSettings.FirstOrDefaultAsync(stoppingToken);
-            if (settings is not { EnableBuiltInSshServer: true })
+            if (settings is { EnableBuiltInSshServer: true })
             {
-                _logger.LogInformation("Built-in SSH server is disabled");
-                // Keep running but idle — poll for setting changes
-                while (!stoppingToken.IsCancellationRequested)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
-                    using var db2 = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
-                    var s = await db2.SystemSettings.FirstOrDefaultAsync(stoppingToken);
-                    if (s is { EnableBuiltInSshServer: true })
-                    {
-                        port = s.SshServerPort > 0 ? s.SshServerPort : 2222;
-                        goto start;
-                    }
-                }
+                port = settings.SshServerPort > 0 ? settings.SshServerPort : 2222;
+                LoadOrGenerateHostKey();
+                await RunListener(port, stoppingToken);
                 return;
             }
-            port = settings.SshServerPort > 0 ? settings.SshServerPort : 2222;
         }
 
-        start:
-        LoadOrGenerateHostKey();
-        await RunListener(port, stoppingToken);
+        _logger.LogInformation("Built-in SSH server is disabled — polling for setting changes");
+
+        // Poll for setting changes every 30 seconds
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+            using var db = dbFactory.CreateDbContext();
+            var s = await db.SystemSettings.FirstOrDefaultAsync(stoppingToken);
+            if (s is { EnableBuiltInSshServer: true })
+            {
+                port = s.SshServerPort > 0 ? s.SshServerPort : 2222;
+                LoadOrGenerateHostKey();
+                await RunListener(port, stoppingToken);
+                return;
+            }
+        }
     }
 
     private async Task RunListener(int port, CancellationToken stoppingToken)
     {
-        LoadOrGenerateHostKey();
-
         _listener = new TcpListener(IPAddress.Any, port);
         try
         {

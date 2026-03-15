@@ -182,7 +182,7 @@ public sealed class SshSession : IDisposable
 
         // Extract the raw point from the client's key
         // Client sends the uncompressed point Q_C directly
-        var clientEcdhKey = ECDiffieHellman.Create();
+        using var clientEcdhKey = ECDiffieHellman.Create();
         var ecParams = new ECParameters
         {
             Curve = ECCurve.NamedCurves.nistP256,
@@ -234,8 +234,6 @@ public sealed class SshSession : IDisposable
         // Derive encryption keys
         DeriveKeys(sharedSecret, exchangeHash);
         _encrypted = true;
-
-        clientEcdhKey.Dispose();
     }
 
     private void NegotiateAlgorithms(byte[] clientKexInit)
@@ -791,8 +789,16 @@ public sealed class SshSession : IDisposable
             return;
         }
 
-        // Security: reject path traversal
-        if (repoPath.Contains(".."))
+        // Check access permissions
+        var repoName = repoPath.TrimEnd('/');
+        if (repoName.EndsWith(".git", StringComparison.OrdinalIgnoreCase))
+            repoName = repoName[..^4];
+
+        // Security: reject path traversal — resolve and verify the path stays within project root
+        var fullCheck = Path.GetFullPath(Path.Combine(_projectRoot, repoName));
+        var rootCheck = Path.GetFullPath(_projectRoot);
+        if (!fullCheck.StartsWith(rootCheck, StringComparison.OrdinalIgnoreCase)
+            || repoName.Contains("..") || repoName.Contains('/') || repoName.Contains('\\'))
         {
             await SendChannelData(channelId,
                 Encoding.UTF8.GetBytes("Error: Invalid repository path.\n"), ct);
@@ -800,11 +806,6 @@ public sealed class SshSession : IDisposable
             await SendChannelEofAndClose(channelId, ct);
             return;
         }
-
-        // Check access permissions
-        var repoName = repoPath.TrimEnd('/');
-        if (repoName.EndsWith(".git", StringComparison.OrdinalIgnoreCase))
-            repoName = repoName[..^4];
 
         var allowed = await CheckAccess(_authenticatedUser!, repoName, operation);
         if (!allowed)
@@ -1033,18 +1034,19 @@ public sealed class SshSession : IDisposable
         command = command.Trim();
 
         string? op = null;
+        int argStart;
         if (command.StartsWith("git-upload-pack "))
-            op = "git-upload-pack";
+        { op = "git-upload-pack"; argStart = "git-upload-pack ".Length; }
         else if (command.StartsWith("git-receive-pack "))
-            op = "git-receive-pack";
+        { op = "git-receive-pack"; argStart = "git-receive-pack ".Length; }
         else if (command.StartsWith("git upload-pack "))
-            op = "git-upload-pack";
+        { op = "git-upload-pack"; argStart = "git upload-pack ".Length; }
         else if (command.StartsWith("git receive-pack "))
-            op = "git-receive-pack";
+        { op = "git-receive-pack"; argStart = "git receive-pack ".Length; }
         else
             return (null, null);
 
-        var rest = command[(command.IndexOf(' ') + 1)..].Trim();
+        var rest = command[argStart..].Trim();
         // Remove quotes and leading slash
         rest = rest.Trim('\'', '"').TrimStart('/');
 

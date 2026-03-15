@@ -23,11 +23,13 @@ public interface IDatabaseConfigService
 public class DatabaseConfigService : IDatabaseConfigService
 {
     private readonly IConfiguration _configuration;
+    private readonly ILogger<DatabaseConfigService> _logger;
     private readonly string _configPath;
 
-    public DatabaseConfigService(IConfiguration configuration)
+    public DatabaseConfigService(IConfiguration configuration, ILogger<DatabaseConfigService>? logger = null)
     {
         _configuration = configuration;
+        _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<DatabaseConfigService>.Instance;
 
         var dataDir = configuration["Ssh:DataDir"]
             ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".mypersonalgit");
@@ -50,7 +52,10 @@ public class DatabaseConfigService : IDatabaseConfigService
                 var config = JsonSerializer.Deserialize<DatabaseConfig>(json);
                 if (config != null) return config;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to read database config from {Path}, using defaults", _configPath);
+            }
         }
 
         // Fall back to what's in appsettings / env vars (the active config)
@@ -68,6 +73,10 @@ public class DatabaseConfigService : IDatabaseConfigService
             Directory.CreateDirectory(dir);
 
         var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(_configPath, json);
+
+        // Atomic write: write to temp file then rename to avoid corruption on crash
+        var tempPath = _configPath + ".tmp";
+        File.WriteAllText(tempPath, json);
+        File.Move(tempPath, _configPath, overwrite: true);
     }
 }

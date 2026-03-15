@@ -3839,3 +3839,558 @@ public class ReactionServiceTests
         Assert.Equal(2, reactions.Count);
     }
 }
+
+// ─── DatabaseConfigService Tests ─────────────────────────────────────────
+
+public class DatabaseConfigServiceTests : IDisposable
+{
+    private readonly string _tempDir;
+    private readonly IConfiguration _config;
+
+    public DatabaseConfigServiceTests()
+    {
+        _tempDir = Path.Combine(Path.GetTempPath(), "mypg_test_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(_tempDir);
+
+        var sshDir = Path.Combine(_tempDir, "ssh");
+        _config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Ssh:DataDir"] = sshDir,
+                ["Database:Provider"] = "sqlite",
+                ["ConnectionStrings:Default"] = "Data Source=test.db"
+            })
+            .Build();
+    }
+
+    public void Dispose()
+    {
+        try { Directory.Delete(_tempDir, true); } catch { }
+    }
+
+    [Fact]
+    public void GetCurrentConfig_NoFile_ReturnsFallbackFromConfig()
+    {
+        var service = new DatabaseConfigService(_config);
+        var config = service.GetCurrentConfig();
+
+        Assert.Equal("sqlite", config.Provider);
+        Assert.Equal("Data Source=test.db", config.ConnectionString);
+    }
+
+    [Fact]
+    public void SaveConfig_CreatesFile_AndCanBeReadBack()
+    {
+        var service = new DatabaseConfigService(_config);
+
+        service.SaveConfig(new DatabaseConfig
+        {
+            Provider = "postgresql",
+            ConnectionString = "Host=localhost;Database=test"
+        });
+
+        var readBack = service.GetCurrentConfig();
+        Assert.Equal("postgresql", readBack.Provider);
+        Assert.Equal("Host=localhost;Database=test", readBack.ConnectionString);
+    }
+
+    [Fact]
+    public void SaveConfig_OverwritesExisting()
+    {
+        var service = new DatabaseConfigService(_config);
+
+        service.SaveConfig(new DatabaseConfig { Provider = "postgresql", ConnectionString = "conn1" });
+        service.SaveConfig(new DatabaseConfig { Provider = "sqlite", ConnectionString = "conn2" });
+
+        var readBack = service.GetCurrentConfig();
+        Assert.Equal("sqlite", readBack.Provider);
+        Assert.Equal("conn2", readBack.ConnectionString);
+    }
+
+    [Fact]
+    public void GetCurrentConfig_CorruptFile_ReturnsFallback()
+    {
+        var service = new DatabaseConfigService(_config);
+        var path = service.GetConfigFilePath();
+
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, "NOT VALID JSON {{{");
+
+        var config = service.GetCurrentConfig();
+        // Falls back to appsettings values
+        Assert.Equal("sqlite", config.Provider);
+    }
+
+    [Fact]
+    public void GetConfigFilePath_ReturnsPathInDataDir()
+    {
+        var service = new DatabaseConfigService(_config);
+        var path = service.GetConfigFilePath();
+
+        Assert.Contains(_tempDir, path);
+        Assert.EndsWith("database.json", path);
+    }
+}
+
+// ─── LdapAuthService Tests ──────────────────────────────────────────────
+
+public class LdapAuthServiceTests
+{
+    private readonly IDbContextFactory<AppDbContext> _factory;
+    private readonly IAdminService _adminService;
+    private readonly LdapAuthService _service;
+
+    public LdapAuthServiceTests()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        _factory = new TestDbContextFactory(options);
+        _adminService = Substitute.For<IAdminService>();
+        _service = new LdapAuthService(_factory, _adminService, NullLogger<LdapAuthService>.Instance);
+    }
+
+    [Fact]
+    public async Task AuthenticateAsync_LdapDisabled_ReturnsNull()
+    {
+        _adminService.GetSystemSettingsAsync().Returns(new SystemSettings
+        {
+            LdapEnabled = false,
+            LdapServer = "ldap.example.com"
+        });
+
+        var result = await _service.AuthenticateAsync("testuser", "password");
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task AuthenticateAsync_EmptyServer_ReturnsNull()
+    {
+        _adminService.GetSystemSettingsAsync().Returns(new SystemSettings
+        {
+            LdapEnabled = true,
+            LdapServer = ""
+        });
+
+        var result = await _service.AuthenticateAsync("testuser", "password");
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task AuthenticateAsync_InvalidServer_ReturnsNull()
+    {
+        _adminService.GetSystemSettingsAsync().Returns(new SystemSettings
+        {
+            LdapEnabled = true,
+            LdapServer = "nonexistent.invalid.server.test",
+            LdapPort = 389,
+            LdapSearchBase = "DC=test,DC=local",
+            LdapUserFilter = "(uid={0})"
+        });
+
+        // Should return null (connection fails gracefully)
+        var result = await _service.AuthenticateAsync("testuser", "password");
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task TestConnectionAsync_LdapDisabled_ReturnsFailure()
+    {
+        _adminService.GetSystemSettingsAsync().Returns(new SystemSettings
+        {
+            LdapEnabled = false
+        });
+
+        var (success, message) = await _service.TestConnectionAsync();
+        Assert.False(success);
+        Assert.Contains("not enabled", message);
+    }
+
+    [Fact]
+    public async Task TestConnectionAsync_EmptyServer_ReturnsFailure()
+    {
+        _adminService.GetSystemSettingsAsync().Returns(new SystemSettings
+        {
+            LdapEnabled = true,
+            LdapServer = ""
+        });
+
+        var (success, message) = await _service.TestConnectionAsync();
+        Assert.False(success);
+        Assert.Contains("not configured", message.ToLowerInvariant());
+    }
+}
+
+// ─── SshSession Helper Tests ────────────────────────────────────────────
+
+public class SshDataHelperTests
+{
+    [Fact]
+    public void WriteAndReadUint32_RoundTrips()
+    {
+        using var ms = new MemoryStream();
+        MyPersonalGit.Services.SshServer.SshDataHelper.WriteUint32(ms, 0x01020304);
+
+        var bytes = ms.ToArray();
+        Assert.Equal(4, bytes.Length);
+
+        var result = MyPersonalGit.Services.SshServer.SshDataHelper.ReadUint32(bytes, 0);
+        Assert.Equal(0x01020304u, result);
+    }
+
+    [Fact]
+    public void WriteUint32Be_CorrectByteOrder()
+    {
+        var buf = new byte[4];
+        MyPersonalGit.Services.SshServer.SshDataHelper.WriteUint32Be(buf, 0, 0xDEADBEEF);
+
+        Assert.Equal(0xDE, buf[0]);
+        Assert.Equal(0xAD, buf[1]);
+        Assert.Equal(0xBE, buf[2]);
+        Assert.Equal(0xEF, buf[3]);
+    }
+
+    [Fact]
+    public void WriteString_WritesLengthPrefixedUtf8()
+    {
+        using var ms = new MemoryStream();
+        MyPersonalGit.Services.SshServer.SshDataHelper.WriteString(ms, "hello");
+
+        var bytes = ms.ToArray();
+        // 4 bytes length + 5 bytes "hello"
+        Assert.Equal(9, bytes.Length);
+        var len = MyPersonalGit.Services.SshServer.SshDataHelper.ReadUint32(bytes, 0);
+        Assert.Equal(5u, len);
+    }
+
+    [Fact]
+    public void WriteBytes_WritesLengthPrefixedBlob()
+    {
+        using var ms = new MemoryStream();
+        var data = new byte[] { 0x01, 0x02, 0x03 };
+        MyPersonalGit.Services.SshServer.SshDataHelper.WriteBytes(ms, data);
+
+        var bytes = ms.ToArray();
+        Assert.Equal(7, bytes.Length); // 4 + 3
+        var len = MyPersonalGit.Services.SshServer.SshDataHelper.ReadUint32(bytes, 0);
+        Assert.Equal(3u, len);
+    }
+
+    [Fact]
+    public void WriteMpint_PositiveWithHighBit_AddsPadding()
+    {
+        using var ms = new MemoryStream();
+        var value = new byte[] { 0x80, 0x01 }; // high bit set
+        MyPersonalGit.Services.SshServer.SshDataHelper.WriteMpint(ms, value);
+
+        var bytes = ms.ToArray();
+        var len = MyPersonalGit.Services.SshServer.SshDataHelper.ReadUint32(bytes, 0);
+        Assert.Equal(3u, len); // 0x00 + 0x80 + 0x01
+        Assert.Equal(0x00, bytes[4]); // padding byte
+    }
+
+    [Fact]
+    public void WriteMpint_PositiveWithoutHighBit_NoPadding()
+    {
+        using var ms = new MemoryStream();
+        var value = new byte[] { 0x7F, 0x01 };
+        MyPersonalGit.Services.SshServer.SshDataHelper.WriteMpint(ms, value);
+
+        var bytes = ms.ToArray();
+        var len = MyPersonalGit.Services.SshServer.SshDataHelper.ReadUint32(bytes, 0);
+        Assert.Equal(2u, len);
+    }
+
+    [Fact]
+    public void WriteMpint_LeadingZeros_Stripped()
+    {
+        using var ms = new MemoryStream();
+        var value = new byte[] { 0x00, 0x00, 0x42 };
+        MyPersonalGit.Services.SshServer.SshDataHelper.WriteMpint(ms, value);
+
+        var bytes = ms.ToArray();
+        var len = MyPersonalGit.Services.SshServer.SshDataHelper.ReadUint32(bytes, 0);
+        Assert.Equal(1u, len);
+        Assert.Equal(0x42, bytes[4]);
+    }
+}
+
+public class SshDataReaderTests
+{
+    [Fact]
+    public void ReadString_ParsesCorrectly()
+    {
+        using var ms = new MemoryStream();
+        MyPersonalGit.Services.SshServer.SshDataHelper.WriteString(ms, "ssh-rsa");
+        var data = ms.ToArray();
+
+        var reader = new MyPersonalGit.Services.SshServer.SshDataReader(data, 0);
+        Assert.Equal("ssh-rsa", reader.ReadString());
+    }
+
+    [Fact]
+    public void ReadBinary_ParsesCorrectly()
+    {
+        using var ms = new MemoryStream();
+        var blob = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
+        MyPersonalGit.Services.SshServer.SshDataHelper.WriteBytes(ms, blob);
+        var data = ms.ToArray();
+
+        var reader = new MyPersonalGit.Services.SshServer.SshDataReader(data, 0);
+        var result = reader.ReadBinary();
+        Assert.Equal(blob, result);
+    }
+
+    [Fact]
+    public void ReadBool_ParsesCorrectly()
+    {
+        var data = new byte[] { 0x01, 0x00 };
+        var reader = new MyPersonalGit.Services.SshServer.SshDataReader(data, 0);
+
+        Assert.True(reader.ReadBool());
+        Assert.False(reader.ReadBool());
+    }
+
+    [Fact]
+    public void ReadMultipleFields_SequentialParsing()
+    {
+        using var ms = new MemoryStream();
+        MyPersonalGit.Services.SshServer.SshDataHelper.WriteString(ms, "ecdsa-sha2-nistp256");
+        MyPersonalGit.Services.SshServer.SshDataHelper.WriteString(ms, "nistp256");
+        MyPersonalGit.Services.SshServer.SshDataHelper.WriteBytes(ms, new byte[] { 0x04, 0x01, 0x02 });
+        var data = ms.ToArray();
+
+        var reader = new MyPersonalGit.Services.SshServer.SshDataReader(data, 0);
+        Assert.Equal("ecdsa-sha2-nistp256", reader.ReadString());
+        Assert.Equal("nistp256", reader.ReadString());
+        var blob = reader.ReadBinary();
+        Assert.Equal(3, blob.Length);
+        Assert.Equal(0x04, blob[0]);
+    }
+}
+
+// ─── AesCtrCipher Tests ─────────────────────────────────────────────────
+
+public class AesCtrCipherTests
+{
+    [Fact]
+    public void EncryptDecrypt_RoundTrips()
+    {
+        var key = new byte[16]; // AES-128
+        var iv = new byte[16];
+        System.Security.Cryptography.RandomNumberGenerator.Fill(key);
+        System.Security.Cryptography.RandomNumberGenerator.Fill(iv);
+
+        var plaintext = System.Text.Encoding.UTF8.GetBytes("Hello, SSH world! This is a test of AES-CTR mode encryption.");
+        var ciphertext = (byte[])plaintext.Clone();
+
+        using var encryptor = new MyPersonalGit.Services.SshServer.AesCtrCipher(key, (byte[])iv.Clone());
+        encryptor.Process(ciphertext, 0, ciphertext.Length);
+
+        // Ciphertext should differ from plaintext
+        Assert.NotEqual(plaintext, ciphertext);
+
+        // Decrypt with same key/IV
+        using var decryptor = new MyPersonalGit.Services.SshServer.AesCtrCipher(key, (byte[])iv.Clone());
+        decryptor.Process(ciphertext, 0, ciphertext.Length);
+
+        Assert.Equal(plaintext, ciphertext);
+    }
+
+    [Fact]
+    public void Process_DifferentKeys_ProduceDifferentCiphertext()
+    {
+        var key1 = new byte[16];
+        var key2 = new byte[16];
+        var iv = new byte[16];
+        key1[0] = 0x01;
+        key2[0] = 0x02;
+
+        var plaintext = System.Text.Encoding.UTF8.GetBytes("test data");
+        var ct1 = (byte[])plaintext.Clone();
+        var ct2 = (byte[])plaintext.Clone();
+
+        using var c1 = new MyPersonalGit.Services.SshServer.AesCtrCipher(key1, (byte[])iv.Clone());
+        c1.Process(ct1, 0, ct1.Length);
+
+        using var c2 = new MyPersonalGit.Services.SshServer.AesCtrCipher(key2, (byte[])iv.Clone());
+        c2.Process(ct2, 0, ct2.Length);
+
+        Assert.NotEqual(ct1, ct2);
+    }
+
+    [Fact]
+    public void Process_LargerThanOneBlock_Works()
+    {
+        var key = new byte[32]; // AES-256
+        var iv = new byte[16];
+        System.Security.Cryptography.RandomNumberGenerator.Fill(key);
+
+        // 100 bytes = 6+ AES blocks, tests counter increment
+        var plaintext = new byte[100];
+        System.Security.Cryptography.RandomNumberGenerator.Fill(plaintext);
+        var ciphertext = (byte[])plaintext.Clone();
+
+        using var enc = new MyPersonalGit.Services.SshServer.AesCtrCipher(key, (byte[])iv.Clone());
+        enc.Process(ciphertext, 0, ciphertext.Length);
+
+        using var dec = new MyPersonalGit.Services.SshServer.AesCtrCipher(key, (byte[])iv.Clone());
+        dec.Process(ciphertext, 0, ciphertext.Length);
+
+        Assert.Equal(plaintext, ciphertext);
+    }
+
+    [Fact]
+    public void Process_PartialBlockSizes_Work()
+    {
+        var key = new byte[16];
+        var iv = new byte[16];
+        System.Security.Cryptography.RandomNumberGenerator.Fill(key);
+
+        var plaintext = new byte[7]; // less than one block
+        System.Security.Cryptography.RandomNumberGenerator.Fill(plaintext);
+        var ciphertext = (byte[])plaintext.Clone();
+
+        using var enc = new MyPersonalGit.Services.SshServer.AesCtrCipher(key, (byte[])iv.Clone());
+        enc.Process(ciphertext, 0, ciphertext.Length);
+
+        using var dec = new MyPersonalGit.Services.SshServer.AesCtrCipher(key, (byte[])iv.Clone());
+        dec.Process(ciphertext, 0, ciphertext.Length);
+
+        Assert.Equal(plaintext, ciphertext);
+    }
+}
+
+// ─── SshSession Git Command Parser Tests ────────────────────────────────
+
+public class SshGitCommandParserTests
+{
+    // Use reflection to test the private ParseGitCommand method
+    private static (string? operation, string? repoPath) ParseGitCommand(string command)
+    {
+        var method = typeof(MyPersonalGit.Services.SshServer.SshSession)
+            .GetMethod("ParseGitCommand", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        var result = method!.Invoke(null, new object[] { command });
+        var tuple = ((string? operation, string? repoPath))result!;
+        return tuple;
+    }
+
+    [Fact]
+    public void ParseGitCommand_UploadPack_WithQuotes()
+    {
+        var (op, path) = ParseGitCommand("git-upload-pack 'myrepo.git'");
+        Assert.Equal("git-upload-pack", op);
+        Assert.Equal("myrepo.git", path);
+    }
+
+    [Fact]
+    public void ParseGitCommand_ReceivePack_WithQuotes()
+    {
+        var (op, path) = ParseGitCommand("git-receive-pack 'myrepo.git'");
+        Assert.Equal("git-receive-pack", op);
+        Assert.Equal("myrepo.git", path);
+    }
+
+    [Fact]
+    public void ParseGitCommand_LeadingSlash_Stripped()
+    {
+        var (op, path) = ParseGitCommand("git-upload-pack '/myrepo.git'");
+        Assert.Equal("git-upload-pack", op);
+        Assert.Equal("myrepo.git", path);
+    }
+
+    [Fact]
+    public void ParseGitCommand_SpaceForm_Works()
+    {
+        var (op, path) = ParseGitCommand("git upload-pack 'repo.git'");
+        Assert.Equal("git-upload-pack", op);
+        Assert.Equal("repo.git", path);
+    }
+
+    [Fact]
+    public void ParseGitCommand_InvalidCommand_ReturnsNull()
+    {
+        var (op, path) = ParseGitCommand("ls -la");
+        Assert.Null(op);
+        Assert.Null(path);
+    }
+
+    [Fact]
+    public void ParseGitCommand_EmptyPath_ReturnsNull()
+    {
+        var (op, path) = ParseGitCommand("git-upload-pack ''");
+        Assert.Null(op);
+        Assert.Null(path);
+    }
+
+    [Fact]
+    public void ParseGitCommand_DoubleQuotes_Work()
+    {
+        var (op, path) = ParseGitCommand("git-receive-pack \"myrepo.git\"");
+        Assert.Equal("git-receive-pack", op);
+        Assert.Equal("myrepo.git", path);
+    }
+}
+
+// ─── SystemSettings Model Tests ─────────────────────────────────────────
+
+public class SystemSettingsModelTests
+{
+    [Fact]
+    public void Defaults_SshServerPort_Is2222()
+    {
+        var settings = new SystemSettings();
+        Assert.Equal(2222, settings.SshServerPort);
+    }
+
+    [Fact]
+    public void Defaults_LdapPort_Is389()
+    {
+        var settings = new SystemSettings();
+        Assert.Equal(389, settings.LdapPort);
+    }
+
+    [Fact]
+    public void Defaults_LdapUserFilter_IsAdFormat()
+    {
+        var settings = new SystemSettings();
+        Assert.Equal("(sAMAccountName={0})", settings.LdapUserFilter);
+    }
+
+    [Fact]
+    public void Defaults_SshAndLdap_AreDisabled()
+    {
+        var settings = new SystemSettings();
+        Assert.False(settings.EnableBuiltInSshServer);
+        Assert.False(settings.LdapEnabled);
+    }
+
+    [Fact]
+    public void Defaults_LdapAttributes_AreAdDefaults()
+    {
+        var settings = new SystemSettings();
+        Assert.Equal("sAMAccountName", settings.LdapUsernameAttribute);
+        Assert.Equal("mail", settings.LdapEmailAttribute);
+        Assert.Equal("displayName", settings.LdapDisplayNameAttribute);
+    }
+}
+
+// ─── DatabaseConfig Model Tests ─────────────────────────────────────────
+
+public class DatabaseConfigModelTests
+{
+    [Fact]
+    public void Defaults_Provider_IsSqlite()
+    {
+        var config = new DatabaseConfig();
+        Assert.Equal("sqlite", config.Provider);
+    }
+
+    [Fact]
+    public void Defaults_ConnectionString_IsSqliteFile()
+    {
+        var config = new DatabaseConfig();
+        Assert.StartsWith("Data Source=", config.ConnectionString);
+    }
+}

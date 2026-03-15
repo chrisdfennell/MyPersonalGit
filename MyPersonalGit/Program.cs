@@ -53,7 +53,7 @@ builder.Services.AddRateLimiter(options =>
 });
 
 // Core infrastructure — supports SQLite (default) and PostgreSQL
-// Priority: database.json > environment variables > appsettings.json
+// Priority: environment variables > database.json > appsettings.json
 var dbConfigService = new DatabaseConfigService(builder.Configuration);
 var dbConfig = dbConfigService.GetCurrentConfig();
 var dbProvider = (builder.Configuration["Database:Provider"]
