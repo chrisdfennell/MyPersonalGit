@@ -31,7 +31,6 @@ jobs:
           NEW_TAG="v${MAJOR}.${MINOR}.$((PATCH + 1))"
           echo "New tag: $NEW_TAG"
           echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT 2>/dev/null || true
-          echo "$NEW_TAG" > /tmp/new_tag
           git config user.name "ci-bot"
           git config user.email "ci@localhost"
           git tag -a "$NEW_TAG" -m "Release $NEW_TAG" 2>/dev/null || true
@@ -77,10 +76,13 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: "true"
-          tags: |
-            fennch/mypersonalgit:latest
-            fennch/mypersonalgit:${{ needs.release.outputs.new_tag }}
+      - name: Determine tag and build
+        run: |
+          git fetch --tags 2>/dev/null || true
+          NEW_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+' | head -1)
+          if [ -z "$NEW_TAG" ]; then NEW_TAG="latest"; fi
+          echo "Building with tag: $NEW_TAG"
+          docker build -t fennch/mypersonalgit:latest -t "fennch/mypersonalgit:${NEW_TAG}" .
+          docker push fennch/mypersonalgit:latest
+          docker push "fennch/mypersonalgit:${NEW_TAG}"
+          echo "Pushed fennch/mypersonalgit:latest and fennch/mypersonalgit:${NEW_TAG}"
