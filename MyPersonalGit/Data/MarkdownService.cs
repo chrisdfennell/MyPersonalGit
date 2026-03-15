@@ -44,7 +44,29 @@ public class MarkdownService : IMarkdownService
             @"(?<!<a[^>]*>)\s*<img\s+([^>]*?)src=""([^""]+)""([^>]*?)/?>",
             @"<a href=""$2"" target=""_blank"" rel=""noopener""><img src=""$2"" $1$3 /></a>");
 
+        // Fix heading IDs to match GitHub's algorithm
+        html = Regex.Replace(html, @"(<h[1-6])\s+id=""([^""]+)""", m =>
+        {
+            var tag = m.Groups[1].Value;
+            var raw = System.Net.WebUtility.HtmlDecode(m.Groups[2].Value);
+            var id = GitHubSlugify(raw);
+            return $"{tag} id=\"{id}\"";
+        });
+
         return new MarkupString(html);
+    }
+
+    private static string GitHubSlugify(string heading)
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (var c in heading.ToLowerInvariant())
+        {
+            if (char.IsLetterOrDigit(c) || c == '-')
+                sb.Append(c);
+            else if (c == ' ')
+                sb.Append('-');
+        }
+        return sb.ToString();
     }
 
     public string RenderToHtml(string markdown)
