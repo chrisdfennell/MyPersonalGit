@@ -1,6 +1,6 @@
 # MyPersonalGit
 
-[![.NET 9](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![Blazor Server](https://img.shields.io/badge/Blazor-Server-512BD4?logo=blazor&logoColor=white)](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor)
 [![SQLite](https://img.shields.io/badge/SQLite-Default-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Optional-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
@@ -121,9 +121,9 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 
 | Component | Technology |
 |-----------|-----------|
-| Backend | ASP.NET Core 9.0 |
+| Backend | ASP.NET Core 10.0 |
 | Frontend | Blazor Server (interactive server-side rendering) |
-| Database | SQLite (default) or PostgreSQL via Entity Framework Core 9 |
+| Database | SQLite (default) or PostgreSQL via Entity Framework Core 10 |
 | Git Engine | LibGit2Sharp |
 | Auth | BCrypt password hashing, session-based auth, PAT tokens, OAuth2 (8 providers), TOTP 2FA, LDAP/AD |
 | SSH Server | Built-in SSH2 protocol implementation (ECDH, AES-CTR, HMAC-SHA2) |
@@ -136,7 +136,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 ### Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) (recommended)
-- Or [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) + Git for local development
+- Or [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) + Git for local development
 
 ### Docker (Recommended)
 
