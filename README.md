@@ -1,6 +1,6 @@
 # MyPersonalGit
 
-[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/) [![Blazor Server](https://img.shields.io/badge/Blazor-Server-512BD4?logo=blazor&logoColor=white)](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor) [![SQLite](https://img.shields.io/badge/SQLite-Default-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Optional-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/) [![Docker](https://img.shields.io/badge/Docker-Hub-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/fennch/mypersonalgit) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![GitHub last commit](https://img.shields.io/github/last-commit/ChrisDFennell/MyPersonalGit)](https://github.com/ChrisDFennell/MyPersonalGit)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/) [![Blazor Server](https://img.shields.io/badge/Blazor-Server-512BD4?logo=blazor&logoColor=white)](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor) [![SQLite](https://img.shields.io/badge/SQLite-Default-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Optional-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/) [![Docker](https://img.shields.io/badge/Docker-Hub-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/fennch/mypersonalgit) [![CI/CD](https://img.shields.io/badge/CI%2FCD-Auto_Release-brightgreen?logo=githubactions&logoColor=white)](#ci-cd) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![GitHub last commit](https://img.shields.io/github/last-commit/ChrisDFennell/MyPersonalGit)](https://github.com/ChrisDFennell/MyPersonalGit)
 
 A self-hosted Git server with a GitHub-like web interface built with ASP.NET Core and Blazor Server. Browse repositories, manage issues, pull requests, wikis, projects, and more — all from your own machine or server.
 
@@ -32,6 +32,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
   - [OAuth / SSO Login](#13-oauth--sso-login)
   - [Import Repository](#14-import-repository)
   - [Forking & Upstream Sync](#15-forking--upstream-sync)
+  - [CI/CD Auto-Release](#16-cicd-auto-release)
 - [Database Configuration](#database-configuration)
   - [Using PostgreSQL](#using-postgresql)
   - [Switching from the Admin Dashboard](#switching-from-the-admin-dashboard)
@@ -79,7 +80,9 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Repository Topics** — Tag repositories with topics for discovery and filtering on the Explore page
 
 ### CI/CD & DevOps
-- **CI/CD Runner** — Define workflows in `.github/workflows/*.yml` and run them in Docker containers
+- **CI/CD Runner** — Define workflows in `.github/workflows/*.yml` and run them in Docker containers. Auto-triggers on push to matching branches
+- **GitHub Actions Compatibility** — Same workflow YAML works on both MyPersonalGit and GitHub Actions. Translates `uses:` actions (`actions/checkout`, `docker/login-action`, `docker/build-push-action`) into equivalent shell commands
+- **Auto-Release Pipeline** — Built-in workflow auto-tags versions, generates changelogs, and pushes Docker images to Docker Hub on every push to main
 - **Secrets Management** — Encrypted repository secrets (AES-256) injected as environment variables into CI/CD workflow runs
 - **Webhooks** — Trigger external services on repository events
 - **Prometheus Metrics** — Built-in `/metrics` endpoint for monitoring
@@ -394,6 +397,31 @@ Fork a repository and keep it in sync:
 1. Click the **Fork** button on any repository page
 2. A fork is created under your username with a link back to the original
 3. Click **Sync fork** next to the "forked from" badge to pull latest changes from upstream
+
+### 16. CI/CD Auto-Release
+
+MyPersonalGit includes a built-in CI/CD pipeline that auto-tags, releases, and pushes Docker images on every push to main. The same workflow YAML works on both MyPersonalGit and GitHub Actions.
+
+**How it works:**
+1. Push to `main` triggers `.github/workflows/release.yml`
+2. The **release** job bumps the patch version (`v1.15.1` -> `v1.15.2`), creates a git tag, and generates a changelog
+3. The **docker** job logs into Docker Hub, builds the image, and pushes it as both `:latest` and `:vX.Y.Z`
+
+**Setup:**
+1. Add a `DOCKERHUB_TOKEN` secret in your repo's **Settings > Secrets**
+2. Push to main — the workflow triggers automatically
+
+**GitHub Actions compatibility:**
+The workflow uses standard GitHub Actions syntax (`uses: actions/checkout@v4`, `uses: docker/login-action@v3`, etc.) which MyPersonalGit translates into equivalent shell commands at runtime:
+
+| GitHub Action | MyPersonalGit Translation |
+|---|---|
+| `actions/checkout@v4` | Repo already cloned to `/workspace` |
+| `docker/login-action@v3` | `docker login` with stdin password |
+| `docker/build-push-action@v6` | `docker build && docker push` |
+| `docker/setup-buildx-action@v3` | No-op (uses default builder) |
+| `softprops/action-gh-release@v2` | Log message (GitHub handles natively) |
+| `${{ secrets.X }}` | `$X` environment variable |
 
 ## Database Configuration
 
