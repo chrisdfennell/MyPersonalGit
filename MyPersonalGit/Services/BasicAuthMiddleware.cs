@@ -27,7 +27,7 @@ public sealed class BasicAuthMiddleware
 
     public BasicAuthMiddleware(RequestDelegate next) => _next = next;
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, ICollaboratorService collaboratorService, IAuthService authService)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, ICollaboratorService collaboratorService, IAuthService authService, ILdapAuthService ldapAuthService)
     {
         if (!context.Request.Path.StartsWithSegments("/git"))
         {
@@ -105,6 +105,15 @@ public sealed class BasicAuthMiddleware
             if (dbUser != null && dbUser.IsActive && BCrypt.Net.BCrypt.Verify(pass, dbUser.PasswordHash))
             {
                 authenticated = true;
+            }
+            else
+            {
+                // Fall back to LDAP/AD authentication
+                var ldapUser = await ldapAuthService.AuthenticateAsync(user, pass);
+                if (ldapUser != null)
+                {
+                    authenticated = true;
+                }
             }
         }
 

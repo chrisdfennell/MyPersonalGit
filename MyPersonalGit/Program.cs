@@ -2,6 +2,7 @@ using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using MyPersonalGit.Models;
 using MyPersonalGit.Services;
+using MyPersonalGit.Services.SshServer;
 using MyPersonalGit.Components;
 using MyPersonalGit.Data;
 
@@ -84,6 +85,8 @@ builder.Services.AddSingleton<IPackageService, PackageService>();
 builder.Services.AddSingleton<ISecretsService, SecretsService>();
 builder.Services.AddSingleton<ISshAuthService, SshAuthService>();
 builder.Services.AddHostedService<AuthorizedKeysSyncService>();
+builder.Services.AddHostedService<BuiltInSshServer>();
+builder.Services.AddSingleton<ILdapAuthService, LdapAuthService>();
 builder.Services.AddSingleton<IArtifactService, ArtifactService>();
 builder.Services.AddSingleton<IMarkdownService, MarkdownService>();
 builder.Services.AddSingleton<IOrganizationService, OrganizationService>();
