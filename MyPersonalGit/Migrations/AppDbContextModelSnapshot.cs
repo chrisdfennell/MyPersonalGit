@@ -1956,6 +1956,22 @@ namespace MyPersonalGit.Migrations
                     b.Property<bool>("EnableBuiltInSshServer")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("FooterContact")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FooterDocs")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FooterPrivacy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FooterTerms")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("EnablePushNotifications")
                         .HasColumnType("INTEGER");
 
@@ -2072,6 +2088,10 @@ namespace MyPersonalGit.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("SmtpUsername")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SiteName")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

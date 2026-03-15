@@ -123,6 +123,42 @@ namespace MyPersonalGit.Migrations
                 type: "INTEGER",
                 nullable: false,
                 defaultValue: true);
+
+            // Footer pages and site branding
+            migrationBuilder.AddColumn<string>(
+                name: "SiteName",
+                table: "SystemSettings",
+                type: "TEXT",
+                nullable: false,
+                defaultValue: "PersonalGit");
+
+            migrationBuilder.AddColumn<string>(
+                name: "FooterTerms",
+                table: "SystemSettings",
+                type: "TEXT",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "FooterPrivacy",
+                table: "SystemSettings",
+                type: "TEXT",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "FooterDocs",
+                table: "SystemSettings",
+                type: "TEXT",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "FooterContact",
+                table: "SystemSettings",
+                type: "TEXT",
+                nullable: false,
+                defaultValue: "");
         }
 
         /// <inheritdoc />
