@@ -11,6 +11,40 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 
 ![MyPersonalGit Screenshot](assets/images/screenshot.png)
 
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Quick Start](#quick-start)
+  - [Docker (Recommended)](#docker-recommended)
+  - [Run Locally](#run-locally)
+  - [Environment Variables](#environment-variables)
+- [Usage](#usage)
+  - [Sign In](#1-sign-in)
+  - [Create a Repository](#2-create-a-repository)
+  - [Clone and Push](#3-clone-and-push)
+  - [Clone from an IDE](#4-clone-from-an-ide)
+  - [Web Editor](#5-use-the-web-editor)
+  - [Container Registry](#6-container-registry)
+  - [Package Registry](#7-package-registry)
+  - [Pages (Static Sites)](#8-pages-static-site-hosting)
+  - [Push Notifications](#9-push-notifications)
+  - [SSH Key Authentication](#10-ssh-key-authentication)
+  - [LDAP / Active Directory](#11-ldap--active-directory-authentication)
+  - [Repository Secrets](#12-repository-secrets)
+  - [OAuth / SSO Login](#13-oauth--sso-login)
+  - [Import Repository](#14-import-repository)
+  - [Forking & Upstream Sync](#15-forking--upstream-sync)
+- [Deploy to a NAS](#deploy-to-a-nas)
+- [Configuration](#configuration)
+- [Project Structure](#project-structure)
+- [Running Tests](#running-tests)
+- [License](#license)
+
+---
+
 ## Features
 
 ### Code & Repositories
