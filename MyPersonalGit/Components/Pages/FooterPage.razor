@@ -26,12 +26,30 @@
 @code {
     private MarkupString content;
     private string pageTitle = "";
+    private string lastPath = "";
 
     protected override async Task OnInitializedAsync()
     {
-        var settings = await AdminService.GetSystemSettingsAsync();
+        Navigation.LocationChanged += async (_, _) => await LoadContent();
+        await LoadContent();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var currentPath = new Uri(Navigation.Uri).AbsolutePath;
+        if (currentPath != lastPath)
+            await LoadContent();
+    }
+
+    private async Task LoadContent()
+    {
         var uri = new Uri(Navigation.Uri);
         var path = uri.AbsolutePath.TrimStart('/').ToLowerInvariant();
+
+        if (path == lastPath) return;
+        lastPath = path;
+
+        var settings = await AdminService.GetSystemSettingsAsync();
 
         var (title, markdown) = path switch
         {
@@ -45,5 +63,7 @@
         pageTitle = title;
         content = new MarkupString(MarkdownService.RenderToHtml(
             string.IsNullOrWhiteSpace(markdown) ? $"## {title}\n\nNo content configured yet. Admins can edit this in Admin > Settings." : markdown));
+
+        await InvokeAsync(StateHasChanged);
     }
 }
