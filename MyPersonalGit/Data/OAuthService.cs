@@ -230,7 +230,7 @@ public class OAuthService : IOAuthService
         var body = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("OAuth token exchange failed for {Provider}: {Body}", providerName, body);
+            _logger.LogWarning("OAuth token exchange failed for {Provider}: HTTP {StatusCode}", providerName, (int)response.StatusCode);
             return null;
         }
 
@@ -241,7 +241,7 @@ public class OAuthService : IOAuthService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to parse token response from {Provider}: {Body}", providerName, body);
+            _logger.LogWarning(ex, "Failed to parse token response from {Provider}", providerName);
             return null;
         }
     }

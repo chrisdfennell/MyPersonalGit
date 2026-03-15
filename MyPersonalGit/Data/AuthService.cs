@@ -192,7 +192,9 @@ public class AuthService : IAuthService
         {
             using var sha256 = SHA256.Create();
             var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(hashedBytes) == passwordHash;
+            var computed = Encoding.UTF8.GetBytes(Convert.ToBase64String(hashedBytes));
+            var expected = Encoding.UTF8.GetBytes(passwordHash);
+            return CryptographicOperations.FixedTimeEquals(computed, expected);
         }
 
         return BCrypt.Net.BCrypt.Verify(password, passwordHash);
