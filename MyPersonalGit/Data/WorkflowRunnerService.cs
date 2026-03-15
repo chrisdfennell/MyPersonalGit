@@ -198,12 +198,14 @@ public class WorkflowRunnerService : BackgroundService
             catch { }
 
             // Create container
+            // Note: We use volumes_from or named volumes instead of bind mounts because
+            // when running inside Docker, local paths like /repos are container-internal
+            // and not accessible as host paths for bind mounts.
             var binds = new List<string>();
-            if (repoMount != null) binds.Add($"{repoMount}:/repo:ro");
-            if (artifactHostDir != null) binds.Add($"{artifactHostDir}:/artifacts");
             // Mount Docker socket so workflows can build/push images
             if (File.Exists("/var/run/docker.sock"))
                 binds.Add("/var/run/docker.sock:/var/run/docker.sock");
+            if (artifactHostDir != null) binds.Add($"{artifactHostDir}:/artifacts");
 
             var createParams = new CreateContainerParameters
             {
@@ -237,20 +239,61 @@ public class WorkflowRunnerService : BackgroundService
                 "(apk add --no-cache docker-cli > /dev/null 2>&1) || true"
             }, ct);
 
-            // Clone bare repo into /workspace inside container
+            // Copy repo into the workflow container using docker cp
+            // (bind mounts don't work for container-internal paths in Docker-in-Docker)
             if (repoMount != null)
             {
-                // The bare repo is mounted read-only at /repo. We need to clone it into /workspace.
-                // First mark all directories as safe, then clone.
-                var cloneResult = await ExecInContainer(containerId, new[] { "sh", "-c",
-                    "git config --global --add safe.directory '*' 2>/dev/null; " +
-                    "git config --global init.defaultBranch main 2>/dev/null; " +
-                    "rm -rf /workspace/* /workspace/.* 2>/dev/null; " +
-                    "git clone --branch main /repo /workspace 2>&1 || " +
-                    "git clone /repo /workspace 2>&1 || " +
-                    "echo 'CLONE_FAILED'"
-                }, ct);
-                _logger.LogInformation("Repo clone result: exit={ExitCode}, output={Output}", cloneResult.ExitCode, cloneResult.Output?.Trim());
+                try
+                {
+                    // Create a temp tar of the repo and stream it into the container
+                    _logger.LogInformation("Copying repo from {RepoPath} into workflow container", repoMount);
+
+                    // Use git clone locally first to create a working copy, then tar it
+                    var tempClone = Path.Combine(Path.GetTempPath(), $"wf-{run.Id}-{Guid.NewGuid():N}");
+                    try
+                    {
+                        var cloneProc = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = "git",
+                            Arguments = $"clone \"{repoMount}\" \"{tempClone}\"",
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        });
+                        if (cloneProc != null)
+                        {
+                            await cloneProc.WaitForExitAsync(ct);
+                            _logger.LogInformation("Local clone exit code: {ExitCode}", cloneProc.ExitCode);
+                        }
+
+                        if (Directory.Exists(tempClone))
+                        {
+                            // Tar the contents and pipe into the container
+                            var tarParams = new Docker.DotNet.Models.ContainerPathStatParameters { Path = "/workspace" };
+                            using var tarStream = new MemoryStream();
+
+                            // Create a tar archive
+                            await CreateTarFromDirectory(tempClone, tarStream);
+                            tarStream.Position = 0;
+
+                            await _docker!.Containers.ExtractArchiveToContainerAsync(
+                                containerId,
+                                new ContainerPathStatParameters { Path = "/workspace", AllowOverwriteDirWithFile = true },
+                                tarStream, ct);
+
+                            _logger.LogInformation("Repo copied to workflow container successfully");
+                        }
+                    }
+                    finally
+                    {
+                        try { if (Directory.Exists(tempClone)) Directory.Delete(tempClone, true); } catch { }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to copy repo into workflow container");
+                }
             }
 
             // Execute each step
@@ -374,6 +417,60 @@ public class WorkflowRunnerService : BackgroundService
             "dotnet-6" => "mcr.microsoft.com/dotnet/sdk:6.0",
             _ => "ubuntu:22.04"
         };
+    }
+
+    private static async Task CreateTarFromDirectory(string sourceDir, Stream outputStream)
+    {
+        // Simple tar archive creation (POSIX format)
+        var files = Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories);
+        foreach (var file in files)
+        {
+            var relativePath = Path.GetRelativePath(sourceDir, file).Replace('\\', '/');
+            // Skip .git directory for cleaner workspace
+            if (relativePath.StartsWith(".git/") || relativePath == ".git") continue;
+
+            var fileInfo = new FileInfo(file);
+            var content = await File.ReadAllBytesAsync(file);
+
+            // Write tar header (512 bytes)
+            var header = new byte[512];
+            var nameBytes = System.Text.Encoding.ASCII.GetBytes(relativePath);
+            Array.Copy(nameBytes, header, Math.Min(nameBytes.Length, 100));
+
+            // File mode (octal, ASCII)
+            System.Text.Encoding.ASCII.GetBytes("0100644\0").CopyTo(header, 100);
+            // Owner/group ID
+            System.Text.Encoding.ASCII.GetBytes("0000000\0").CopyTo(header, 108);
+            System.Text.Encoding.ASCII.GetBytes("0000000\0").CopyTo(header, 116);
+            // File size (octal, ASCII)
+            System.Text.Encoding.ASCII.GetBytes(Convert.ToString(content.Length, 8).PadLeft(11, '0') + "\0").CopyTo(header, 124);
+            // Modification time
+            var mtime = (long)(fileInfo.LastWriteTimeUtc - new DateTime(1970, 1, 1)).TotalSeconds;
+            System.Text.Encoding.ASCII.GetBytes(Convert.ToString(mtime, 8).PadLeft(11, '0') + "\0").CopyTo(header, 136);
+            // Type flag: regular file
+            header[156] = (byte)'0';
+            // Magic
+            System.Text.Encoding.ASCII.GetBytes("ustar\0").CopyTo(header, 257);
+            System.Text.Encoding.ASCII.GetBytes("00").CopyTo(header, 263);
+
+            // Compute checksum
+            // Fill checksum field with spaces first
+            for (int i = 148; i < 156; i++) header[i] = (byte)' ';
+            var checksum = 0;
+            for (int i = 0; i < 512; i++) checksum += header[i];
+            System.Text.Encoding.ASCII.GetBytes(Convert.ToString(checksum, 8).PadLeft(6, '0') + "\0 ").CopyTo(header, 148);
+
+            await outputStream.WriteAsync(header);
+            await outputStream.WriteAsync(content);
+
+            // Pad to 512-byte boundary
+            var padding = 512 - (content.Length % 512);
+            if (padding < 512)
+                await outputStream.WriteAsync(new byte[padding]);
+        }
+
+        // Write two empty blocks to signal end of archive
+        await outputStream.WriteAsync(new byte[1024]);
     }
 
     private static string? GetRepoPath(string repoName)
