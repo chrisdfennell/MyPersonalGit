@@ -6,6 +6,7 @@
 @inject IEmailService EmailService
 @inject ISecretsService SecretsService
 @inject IOAuthService OAuthService
+@inject ILdapAuthService LdapAuthService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
@@ -373,6 +374,125 @@ else
                             <div class="mb-3">
                                 <label class="form-label">Gotify App Token</label>
                                 <InputText type="password" class="form-control" @bind-Value="Settings.GotifyAppToken" />
+                            </div>
+
+                            <h6 class="mt-4 mb-3">Built-in SSH Server</h6>
+                            <p class="text-muted small">Run a native SSH server for Git operations without requiring system OpenSSH. Users can clone/push via <code>git clone ssh://user@host:port/repo.git</code></p>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableBuiltInSshServer" id="enableSsh" />
+                                    <label class="form-check-label" for="enableSsh">
+                                        Enable Built-in SSH Server
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">SSH Port</label>
+                                <InputNumber class="form-control" @bind-Value="Settings.SshServerPort" />
+                                <small class="form-text text-muted">Default: 2222. Use 22 if not running system SSH. Requires restart.</small>
+                            </div>
+
+                            <h6 class="mt-4 mb-3">LDAP / Active Directory Authentication</h6>
+                            <p class="text-muted small">Enable LDAP/AD authentication to let users sign in with their domain credentials. Users are auto-provisioned on first login.</p>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapEnabled" id="ldapEnabled" />
+                                    <label class="form-check-label" for="ldapEnabled">
+                                        Enable LDAP Authentication
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label">LDAP Server</label>
+                                    <InputText class="form-control" @bind-Value="Settings.LdapServer" placeholder="ldap.example.com or dc01.corp.local" />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Port</label>
+                                    <InputNumber class="form-control" @bind-Value="Settings.LdapPort" />
+                                    <small class="form-text text-muted">389 (LDAP) or 636 (LDAPS)</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check form-check-inline">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapUseSsl" id="ldapSsl" />
+                                    <label class="form-check-label" for="ldapSsl">
+                                        Use SSL (LDAPS)
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapStartTls" id="ldapStartTls" />
+                                    <label class="form-check-label" for="ldapStartTls">
+                                        Use StartTLS
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Bind DN <span class="text-muted small">(service account)</span></label>
+                                <InputText class="form-control" @bind-Value="Settings.LdapBindDn" placeholder="CN=svc-git,OU=Service Accounts,DC=corp,DC=local" />
+                                <small class="form-text text-muted">Leave empty for anonymous bind (if your LDAP allows it)</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Bind Password</label>
+                                <InputText type="password" class="form-control" @bind-Value="Settings.LdapBindPassword" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Search Base DN</label>
+                                <InputText class="form-control" @bind-Value="Settings.LdapSearchBase" placeholder="OU=Users,DC=corp,DC=local" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">User Search Filter</label>
+                                <InputText class="form-control" @bind-Value="Settings.LdapUserFilter" placeholder="(sAMAccountName={0})" />
+                                <small class="form-text text-muted">
+                                    <code>{0}</code> is replaced with the username. Examples:
+                                    <br/>Active Directory: <code>(sAMAccountName={0})</code>
+                                    <br/>OpenLDAP: <code>(uid={0})</code>
+                                    <br/>Email login: <code>(mail={0})</code>
+                                </small>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Username Attribute</label>
+                                    <InputText class="form-control" @bind-Value="Settings.LdapUsernameAttribute" placeholder="sAMAccountName" />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Email Attribute</label>
+                                    <InputText class="form-control" @bind-Value="Settings.LdapEmailAttribute" placeholder="mail" />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Display Name Attribute</label>
+                                    <InputText class="form-control" @bind-Value="Settings.LdapDisplayNameAttribute" placeholder="displayName" />
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Admin Group DN <span class="text-muted small">(optional)</span></label>
+                                <InputText class="form-control" @bind-Value="Settings.LdapAdminGroupDn" placeholder="CN=GitAdmins,OU=Groups,DC=corp,DC=local" />
+                                <small class="form-text text-muted">Members of this group are auto-promoted to admin. Leave empty to skip.</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <button type="button" class="btn btn-outline-secondary" @onclick="TestLdapConnection" disabled="@TestingLdap">
+                                    @if (TestingLdap)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                    }
+                                    <i class="bi bi-plug"></i> Test LDAP Connection
+                                </button>
+                                @if (!string.IsNullOrEmpty(LdapTestMessage))
+                                {
+                                    <div class="alert @(LdapTestSuccess ? "alert-success" : "alert-danger") mt-2 py-2">@LdapTestMessage</div>
+                                }
                             </div>
 
                             @if (!string.IsNullOrEmpty(SettingsMessage))
@@ -819,6 +939,11 @@ else
     private bool TestEmailSuccess;
     private bool SendingTestEmail;
 
+    // LDAP test
+    private bool TestingLdap;
+    private string? LdapTestMessage;
+    private bool LdapTestSuccess;
+
     // Global secrets
     private List<GlobalSecret> globalSecrets = new();
     private bool showAddGlobalSecret;
@@ -879,6 +1004,31 @@ else
         finally
         {
             SendingTestEmail = false;
+        }
+    }
+
+    private async Task TestLdapConnection()
+    {
+        TestingLdap = true;
+        LdapTestMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            // Save current settings first so the LDAP service picks them up
+            await AdminService.SaveSystemSettingsAsync(Settings);
+            var (success, message) = await LdapAuthService.TestConnectionAsync();
+            LdapTestSuccess = success;
+            LdapTestMessage = message;
+        }
+        catch (Exception ex)
+        {
+            LdapTestSuccess = false;
+            LdapTestMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            TestingLdap = false;
         }
     }
 

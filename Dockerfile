@@ -35,7 +35,7 @@ RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 #   docker run -e Git__Users__fennell=secret -e Git__RequireAuth=true ...
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 ENV ConnectionStrings__Default="Data Source=/data/mypersonalgit.db"
-EXPOSE 8080
+EXPOSE 8080 2222
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
     CMD curl -f http://localhost:8080/ || exit 1

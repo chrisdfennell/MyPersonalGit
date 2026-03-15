@@ -29,6 +29,25 @@ public class SystemSettings
     public string NtfyAccessToken { get; set; } = string.Empty;
     public string GotifyUrl { get; set; } = string.Empty;
     public string GotifyAppToken { get; set; } = string.Empty;
+
+    // Built-in SSH Server
+    public bool EnableBuiltInSshServer { get; set; }
+    public int SshServerPort { get; set; } = 2222;
+
+    // LDAP / Active Directory Authentication
+    public bool LdapEnabled { get; set; }
+    public string LdapServer { get; set; } = string.Empty;
+    public int LdapPort { get; set; } = 389;
+    public bool LdapUseSsl { get; set; }
+    public bool LdapStartTls { get; set; }
+    public string LdapBindDn { get; set; } = string.Empty;
+    public string LdapBindPassword { get; set; } = string.Empty;
+    public string LdapSearchBase { get; set; } = string.Empty;
+    public string LdapUserFilter { get; set; } = "(sAMAccountName={0})";
+    public string LdapUsernameAttribute { get; set; } = "sAMAccountName";
+    public string LdapEmailAttribute { get; set; } = "mail";
+    public string LdapDisplayNameAttribute { get; set; } = "displayName";
+    public string LdapAdminGroupDn { get; set; } = string.Empty;
 }
 
 public class SystemStatistics

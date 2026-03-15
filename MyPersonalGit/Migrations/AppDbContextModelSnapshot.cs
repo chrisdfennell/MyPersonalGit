@@ -1953,6 +1953,9 @@ namespace MyPersonalGit.Migrations
                     b.Property<bool>("EnableProjects")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("EnableBuiltInSshServer")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("EnablePushNotifications")
                         .HasColumnType("INTEGER");
 
@@ -1966,6 +1969,54 @@ namespace MyPersonalGit.Migrations
                     b.Property<string>("GotifyUrl")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("LdapAdminGroupDn")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LdapBindDn")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LdapBindPassword")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LdapDisplayNameAttribute")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LdapEmailAttribute")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("LdapEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LdapPort")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LdapSearchBase")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LdapServer")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("LdapStartTls")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LdapUserFilter")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LdapUsernameAttribute")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("LdapUseSsl")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("MaxRepositoriesPerUser")
                         .HasColumnType("INTEGER");
@@ -2020,6 +2071,9 @@ namespace MyPersonalGit.Migrations
                     b.Property<string>("SmtpUsername")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("SshServerPort")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

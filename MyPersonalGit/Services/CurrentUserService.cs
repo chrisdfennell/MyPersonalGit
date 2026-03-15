@@ -11,14 +11,16 @@ public class CurrentUserService
 {
     private readonly IAuthService _authService;
     private readonly ITwoFactorService _twoFactorService;
+    private readonly ILdapAuthService _ldapAuthService;
     private User? _currentUser;
     private string? _sessionId;
     private bool _initialized;
 
-    public CurrentUserService(IAuthService authService, ITwoFactorService twoFactorService)
+    public CurrentUserService(IAuthService authService, ITwoFactorService twoFactorService, ILdapAuthService ldapAuthService)
     {
         _authService = authService;
         _twoFactorService = twoFactorService;
+        _ldapAuthService = ldapAuthService;
     }
 
     public User? CurrentUser => _currentUser;
@@ -60,7 +62,20 @@ public class CurrentUserService
     /// </summary>
     public async Task<(User? user, bool requires2FA)> ValidatePasswordAsync(string usernameOrEmail, string password)
     {
+        // Try local auth first
         var user = await _authService.ValidatePasswordAsync(usernameOrEmail, password);
+
+        // Fall back to LDAP/AD if local auth fails
+        if (user == null)
+        {
+            user = await _ldapAuthService.AuthenticateAsync(usernameOrEmail, password);
+            if (user != null)
+            {
+                // LDAP users skip 2FA (authenticated externally)
+                return (user, false);
+            }
+        }
+
         if (user == null)
             return (null, false);
 
