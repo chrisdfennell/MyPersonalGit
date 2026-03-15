@@ -23,7 +23,13 @@
       "Bash(cmd //c \"rmdir /s /q f:\\\\Programming\\\\C#\\\\MyPersonalGit\\\\tools\")",
       "Bash(docker version:*)",
       "Bash(dotnet package:*)",
-      "Bash(dotnet nuget:*)"
+      "Bash(dotnet nuget:*)",
+      "Bash(docker images:*)",
+      "Read(//h/ad-tools/**)",
+      "Bash(tasklist)",
+      "Bash(cmd //c \"del /F /Q F:\\\\Programming\\\\C#\\\\MyPersonalGit\\\\MyPersonalGit\\\\bin\\\\Debug\\\\net10.0\\\\MyPersonalGit.exe\")",
+      "Bash(docker search:*)",
+      "Bash(curl -s \"https://hub.docker.com/v2/repositories/fennch/mypersonalgit/tags/?page_size=20&ordering=last_updated\")"
     ],
     "additionalDirectories": [
       "\\tmp"
