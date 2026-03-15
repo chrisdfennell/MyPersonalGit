@@ -9,12 +9,14 @@ public class WorkflowDefinition
     public string Name { get; set; } = "";
     public string FileName { get; set; } = "";
     public object? On { get; set; }
+    public Dictionary<string, string>? Env { get; set; }
     public Dictionary<string, JobDefinition> Jobs { get; set; } = new();
 }
 
 public class JobDefinition
 {
     public string RunsOn { get; set; } = "ubuntu-latest";
+    public Dictionary<string, string>? Env { get; set; }
     public List<StepDefinition> Steps { get; set; } = new();
 }
 
@@ -89,6 +91,10 @@ public class WorkflowYamlParser
                 On = raw.ContainsKey("on") ? raw["on"] : null
             };
 
+            // Workflow-level env
+            if (raw.ContainsKey("env") && raw["env"] is Dictionary<object, object> wfEnvDict)
+                def.Env = wfEnvDict.ToDictionary(k => k.Key.ToString()!, v => v.Value?.ToString() ?? "");
+
             if (!raw.ContainsKey("jobs")) return def;
 
             var jobsRaw = raw["jobs"];
@@ -102,6 +108,10 @@ public class WorkflowYamlParser
 
                 if (jobObj.ContainsKey("runs-on"))
                     jobDef.RunsOn = jobObj["runs-on"]?.ToString() ?? "ubuntu-latest";
+
+                // Job-level env
+                if (jobObj.ContainsKey("env") && jobObj["env"] is Dictionary<object, object> jobEnvDict)
+                    jobDef.Env = jobEnvDict.ToDictionary(k => k.Key.ToString()!, v => v.Value?.ToString() ?? "");
 
                 if (jobObj.ContainsKey("steps") && jobObj["steps"] is List<object> stepsList)
                 {

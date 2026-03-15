@@ -419,6 +419,34 @@ else
                                 <InputText type="password" class="form-control" @bind-Value="Settings.GotifyAppToken" />
                             </div>
 
+                            <h6 class="mt-4 mb-3">Site Branding & Footer Pages</h6>
+                            <p class="text-muted small">Customize the site name and footer page content. Uses Markdown.</p>
+
+                            <div class="mb-3">
+                                <label class="form-label">Site Name</label>
+                                <InputText class="form-control" @bind-Value="Settings.SiteName" placeholder="PersonalGit" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Terms of Service <a href="/terms" target="_blank" class="small">(preview)</a></label>
+                                <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterTerms" rows="4" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Privacy Policy <a href="/privacy" target="_blank" class="small">(preview)</a></label>
+                                <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterPrivacy" rows="4" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Documentation <a href="/docs" target="_blank" class="small">(preview)</a></label>
+                                <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterDocs" rows="4" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Contact <a href="/contact" target="_blank" class="small">(preview)</a></label>
+                                <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterContact" rows="4" />
+                            </div>
+
                             <h6 class="mt-4 mb-3">Built-in SSH Server</h6>
                             <p class="text-muted small">Run a native SSH server for Git operations without requiring system OpenSSH. Users can clone/push via <code>git clone ssh://user@host:port/repo.git</code></p>
 

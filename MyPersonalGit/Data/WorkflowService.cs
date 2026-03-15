@@ -160,12 +160,52 @@ public class WorkflowService : IWorkflowService
                 _logger.LogInformation("Auto-triggering workflow '{WorkflowName}' on push to {Branch} in {RepoName}",
                     workflow.Name, branch, repoName);
 
+                // Concurrency: cancel queued runs of the same workflow
+                await CancelPreviousRunsAsync(repoName, workflow.Name);
+
                 await CreateWorkflowRunWithJobsAsync(repoName, workflow, branch, sha, commitMessage, pushedBy);
             }
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to trigger push workflows for {RepoName}", repoName);
+        }
+    }
+
+    private async Task CancelPreviousRunsAsync(string repoName, string workflowName)
+    {
+        try
+        {
+            using var db = _dbFactory.CreateDbContext();
+            var pendingRuns = await db.WorkflowRuns
+                .Include(r => r.Jobs).ThenInclude(j => j.Steps)
+                .Where(r => r.RepoName == repoName && r.WorkflowName == workflowName &&
+                    (r.Status == WorkflowStatus.Queued))
+                .ToListAsync();
+
+            foreach (var run in pendingRuns)
+            {
+                run.Status = WorkflowStatus.Cancelled;
+                run.CompletedAt = DateTime.UtcNow;
+                foreach (var job in run.Jobs)
+                {
+                    job.Status = WorkflowStatus.Cancelled;
+                    job.CompletedAt = DateTime.UtcNow;
+                    foreach (var step in job.Steps)
+                    {
+                        step.Status = WorkflowStatus.Cancelled;
+                        step.CompletedAt = DateTime.UtcNow;
+                    }
+                }
+                _logger.LogInformation("Cancelled superseded workflow run {RunId} for {WorkflowName}", run.Id, workflowName);
+            }
+
+            if (pendingRuns.Any())
+                await db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to cancel previous runs for {WorkflowName}", workflowName);
         }
     }
 
