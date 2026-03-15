@@ -268,70 +268,59 @@ public sealed class GitHttpBackendMiddleware
             (service == "git-receive-pack" || pathInfo.EndsWith("/git-receive-pack")) &&
             context.Request.Method == "POST")
         {
-            try
+            var segments = pathInfo.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (segments.Length >= 1)
             {
-                var segments = pathInfo.Split('/', StringSplitOptions.RemoveEmptyEntries);
-                if (segments.Length >= 1)
-                {
-                    var repoDir = Path.Combine(projectRoot, segments[0]);
-                    if (Repository.IsValid(repoDir))
-                    {
-                        var repoName = segments[0].EndsWith(".git", StringComparison.OrdinalIgnoreCase)
-                            ? segments[0][..^4] : segments[0];
-                        var remoteUser = context.User?.Identity?.Name ?? "system";
+                var repoDir = Path.Combine(projectRoot, segments[0]);
+                var repoName = segments[0].EndsWith(".git", StringComparison.OrdinalIgnoreCase)
+                    ? segments[0][..^4] : segments[0];
+                var remoteUser = context.User?.Identity?.Name ?? "system";
+                var branch = "main";
+                var sha = "HEAD";
+                var commitMsg = "Push";
 
-                        using var repo = new Repository(repoDir);
-                        var defaultBranch = repo.Branches["main"] ?? repo.Branches["master"] ?? repo.Head;
-                        if (defaultBranch?.Tip != null)
+                // Open repo once for both issue auto-close and workflow trigger
+                if (Repository.IsValid(repoDir))
+                {
+                    try
+                    {
+                        using (var repo = new Repository(repoDir))
                         {
-                            // Scan the most recent commits on the default branch for issue references
-                            var filter = new CommitFilter
+                            var defaultBranch = repo.Branches["main"] ?? repo.Branches["master"] ?? repo.Head;
+                            if (defaultBranch?.Tip != null)
                             {
-                                IncludeReachableFrom = defaultBranch.Tip,
-                                SortBy = CommitSortStrategies.Time
-                            };
-                            foreach (var commit in repo.Commits.QueryBy(filter).Take(20))
-                            {
-                                await issueAutoCloseService.ProcessCommitMessage(repoName, commit.Message, commit.Sha, remoteUser);
+                                branch = defaultBranch.FriendlyName;
+                                sha = defaultBranch.Tip.Sha;
+                                commitMsg = defaultBranch.Tip.MessageShort;
+
+                                var filter = new CommitFilter
+                                {
+                                    IncludeReachableFrom = defaultBranch.Tip,
+                                    SortBy = CommitSortStrategies.Time
+                                };
+                                foreach (var commit in repo.Commits.QueryBy(filter).Take(20))
+                                {
+                                    await issueAutoCloseService.ProcessCommitMessage(repoName, commit.Message, commit.Sha, remoteUser);
+                                }
                             }
                         }
                     }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to process issue auto-close after push.");
-            }
-
-            // Trigger workflows that listen for push events
-            _logger.LogInformation("Scanning for push-triggered workflows...");
-            try
-            {
-                var segments2 = pathInfo.Split('/', StringSplitOptions.RemoveEmptyEntries);
-                if (segments2.Length >= 1)
-                {
-                    var repoDir = Path.Combine(projectRoot, segments2[0]);
-                    _logger.LogInformation("Checking repo at {RepoDir}, valid={IsValid}", repoDir, Repository.IsValid(repoDir));
-                    if (Repository.IsValid(repoDir))
+                    catch (Exception ex)
                     {
-                        var repoName = segments2[0].EndsWith(".git", StringComparison.OrdinalIgnoreCase)
-                            ? segments2[0][..^4] : segments2[0];
-                        var remoteUser = context.User?.Identity?.Name ?? "system";
+                        _logger.LogWarning(ex, "Failed to process issue auto-close after push.");
+                    }
 
-                        using var repo2 = new Repository(repoDir);
-                        var head = repo2.Head;
-                        var branch = head?.FriendlyName ?? "main";
-                        var sha = head?.Tip?.Sha ?? "HEAD";
-                        var message = head?.Tip?.MessageShort ?? "Push";
-
-                        _logger.LogInformation("Triggering workflows for {RepoName} branch={Branch}", repoName, branch);
-                        await workflowService.TriggerPushWorkflowsAsync(repoName, repoDir, branch, sha, message, remoteUser);
+                    // Trigger workflows that listen for push events
+                    try
+                    {
+                        _logger.LogInformation("Triggering push workflows for {RepoName} branch={Branch}", repoName, branch);
+                        await workflowService.TriggerPushWorkflowsAsync(repoName, repoDir, branch, sha, commitMsg, remoteUser);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to trigger push workflows.");
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to trigger push workflows.");
             }
         }
     }
