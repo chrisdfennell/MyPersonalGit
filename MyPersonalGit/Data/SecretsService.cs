@@ -241,9 +241,11 @@ public class SecretsService : ISecretsService
             catch { }
         }
 
-        // Repo secrets override global
+        // Repo secrets override global — check both with and without .git suffix
+        var repoNameAlt = repoName.EndsWith(".git", StringComparison.OrdinalIgnoreCase)
+            ? repoName[..^4] : repoName + ".git";
         var repoSecrets = await db.RepositorySecrets
-            .Where(s => s.RepoName == repoName)
+            .Where(s => s.RepoName == repoName || s.RepoName == repoNameAlt)
             .ToListAsync();
         foreach (var secret in repoSecrets)
         {
