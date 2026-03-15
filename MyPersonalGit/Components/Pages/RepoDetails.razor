@@ -2821,7 +2821,7 @@ else
             repoIsArchived = meta.IsArchived;
             repoIsTemplate = meta.IsTemplate;
             repoDescription = meta.Description ?? "";
-            repoOwner = meta.Owner;
+            repoOwner = !string.IsNullOrEmpty(meta.Owner) ? meta.Owner : "anonymous";
             repoForkedFrom = meta.ForkedFrom ?? "";
             repoForkCount = meta.Forks;
             settingsIsPrivate = meta.IsPrivate;
@@ -2850,7 +2850,7 @@ else
             repoIsTemplate = false;
             repoTemplateFromName = "";
             repoDescription = "";
-            repoOwner = "";
+            repoOwner = "anonymous";
             repoForkedFrom = "";
             repoForkCount = 0;
             settingsIsPrivate = false;
