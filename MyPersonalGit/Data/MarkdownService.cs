@@ -19,7 +19,6 @@ public class MarkdownService : IMarkdownService
 {
     private static readonly MarkdownPipeline _pipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
-        .UseAutoIdentifiers(Markdig.Extensions.AutoIdentifiers.AutoIdentifierOptions.GitHub)
         .Build();
 
     public MarkupString RenderMarkdown(string markdown, string? repoName = null, string? currentBranch = null, string? currentPath = null, bool isFile = false)
@@ -44,13 +43,14 @@ public class MarkdownService : IMarkdownService
             @"(?<!<a[^>]*>)\s*<img\s+([^>]*?)src=""([^""]+)""([^>]*?)/?>",
             @"<a href=""$2"" target=""_blank"" rel=""noopener""><img src=""$2"" $1$3 /></a>");
 
-        // Fix heading IDs to match GitHub's algorithm
-        html = Regex.Replace(html, @"(<h[1-6])\s+id=""([^""]+)""", m =>
+        // Add GitHub-style IDs to all headings based on their text content
+        html = Regex.Replace(html, @"<(h[1-6])(?:\s+id=""[^""]*"")?>(.*?)</\1>", m =>
         {
             var tag = m.Groups[1].Value;
-            var raw = System.Net.WebUtility.HtmlDecode(m.Groups[2].Value);
-            var id = GitHubSlugify(raw);
-            return $"{tag} id=\"{id}\"";
+            var innerHtml = m.Groups[2].Value;
+            var plainText = Regex.Replace(innerHtml, @"<[^>]+>", "").Trim();
+            var id = GitHubSlugify(System.Net.WebUtility.HtmlDecode(plainText));
+            return $"<{tag} id=\"{id}\">{innerHtml}</{tag}>";
         });
 
         return new MarkupString(html);
