@@ -39,6 +39,9 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
   - [Import Repository](#14-import-repository)
   - [Forking & Upstream Sync](#15-forking--upstream-sync)
 - [Database Configuration](#database-configuration)
+  - [Using PostgreSQL](#using-postgresql)
+  - [Switching from the Admin Dashboard](#switching-from-the-admin-dashboard)
+  - [Choosing a Database](#choosing-a-database)
 - [Deploy to a NAS](#deploy-to-a-nas)
 - [Configuration](#configuration)
 - [Project Structure](#project-structure)
@@ -107,7 +110,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Linked Accounts** — Users can link multiple OAuth providers to their account from Settings
 
 ### Administration
-- **Admin Dashboard** — System settings, user management, audit logs, and statistics
+- **Admin Dashboard** — System settings (including database provider, SSH server, LDAP/AD), user management, audit logs, and statistics
 - **User Profiles** — Contribution heatmap, activity feed, and stats per user
 - **Personal Access Tokens** — Token-based API authentication with configurable scopes
 - **Backup & Restore** — Export and import server data
@@ -447,6 +450,18 @@ docker run -d --name mypersonalgit -p 8080:8080 \
 
 EF Core migrations run automatically on startup for both providers. No manual schema setup required.
 
+### Switching from the Admin Dashboard
+
+You can also switch database providers directly from the web UI:
+
+1. Go to **Admin > Settings** — the **Database** card is at the top
+2. Select **PostgreSQL** from the provider dropdown
+3. Enter your PostgreSQL connection string (e.g., `Host=localhost;Database=mypersonalgit;Username=mypg;Password=secret`)
+4. Click **Save Database Settings**
+5. Restart the application for the change to take effect
+
+The config is saved to `~/.mypersonalgit/database.json` (outside the database itself, so it can be read before connecting).
+
 ### Choosing a Database
 
 | | SQLite | PostgreSQL |
@@ -477,6 +492,7 @@ The Docker socket mount is optional — only needed if you want CI/CD workflow e
 
 All settings can be configured in `appsettings.json`, via environment variables, or through the Admin dashboard at `/admin`:
 
+- Database provider (SQLite or PostgreSQL)
 - Project root directory
 - Authentication requirements
 - User registration settings
