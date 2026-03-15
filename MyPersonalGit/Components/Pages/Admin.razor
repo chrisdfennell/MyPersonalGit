@@ -7,6 +7,7 @@
 @inject ISecretsService SecretsService
 @inject IOAuthService OAuthService
 @inject ILdapAuthService LdapAuthService
+@inject IDatabaseConfigService DatabaseConfigService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
@@ -189,6 +190,48 @@ else
                         <h5 class="mb-0">System Settings</h5>
                     </div>
                     <div class="card-body">
+                        <h6 class="mb-3">Database</h6>
+                        <div class="card mb-4 @(DbConfig.Provider != "sqlite" ? "border-primary" : "")">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-database me-2" style="font-size: 1.2rem;"></i>
+                                    <strong>Active Provider:</strong>
+                                    <span class="badge @(DbConfig.Provider != "sqlite" ? "bg-primary" : "bg-secondary") ms-2">@DbConfig.Provider.ToUpperInvariant()</span>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Database Provider</label>
+                                    <select class="form-select" @bind="DbConfig.Provider">
+                                        <option value="sqlite">SQLite (default — zero config)</option>
+                                        <option value="postgresql">PostgreSQL (for larger deployments)</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Connection String</label>
+                                    <input type="text" class="form-control font-monospace" @bind="DbConfig.ConnectionString" />
+                                    <small class="form-text text-muted">
+                                        @if (DbConfig.Provider == "postgresql")
+                                        {
+                                            <span>Example: <code>Host=localhost;Database=mypersonalgit;Username=mypg;Password=secret</code></span>
+                                        }
+                                        else
+                                        {
+                                            <span>Example: <code>Data Source=/data/mypersonalgit.db</code></span>
+                                        }
+                                    </small>
+                                </div>
+                                @if (!string.IsNullOrEmpty(DbConfigMessage))
+                                {
+                                    <div class="alert @(DbConfigSuccess ? "alert-success" : "alert-danger") py-2">@DbConfigMessage</div>
+                                }
+                                <button type="button" class="btn btn-outline-primary" @onclick="SaveDatabaseConfig">
+                                    <i class="bi bi-save me-1"></i> Save Database Settings
+                                </button>
+                                <small class="text-muted ms-2">
+                                    <i class="bi bi-exclamation-triangle text-warning"></i> Requires application restart to take effect
+                                </small>
+                            </div>
+                        </div>
+
                         <EditForm Model="Settings" OnValidSubmit="SaveSettings">
                             <div class="mb-3">
                                 <label class="form-label">Project Root Directory</label>
@@ -944,6 +987,11 @@ else
     private string? LdapTestMessage;
     private bool LdapTestSuccess;
 
+    // Database config
+    private DatabaseConfig DbConfig = new();
+    private string? DbConfigMessage;
+    private bool DbConfigSuccess;
+
     // Global secrets
     private List<GlobalSecret> globalSecrets = new();
     private bool showAddGlobalSecret;
@@ -964,6 +1012,7 @@ else
     private async Task LoadData()
     {
         if (!UserService.IsAdmin) return;
+        DbConfig = DatabaseConfigService.GetCurrentConfig();
         Settings = await AdminService.GetSystemSettingsAsync();
         Statistics = await AdminService.GetSystemStatisticsAsync();
         AuditLogs = await AdminService.GetAuditLogsAsync();
@@ -1004,6 +1053,23 @@ else
         finally
         {
             SendingTestEmail = false;
+        }
+    }
+
+    private async Task SaveDatabaseConfig()
+    {
+        try
+        {
+            DatabaseConfigService.SaveConfig(DbConfig);
+            await AdminService.AddAuditLogAsync(UserService.Username, "UPDATE_DATABASE_CONFIG",
+                $"Database provider set to: {DbConfig.Provider}");
+            DbConfigSuccess = true;
+            DbConfigMessage = "Database settings saved. Restart the application for changes to take effect.";
+        }
+        catch (Exception ex)
+        {
+            DbConfigSuccess = false;
+            DbConfigMessage = $"Failed to save: {ex.Message}";
         }
     }
 

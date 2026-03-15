@@ -53,13 +53,20 @@ builder.Services.AddRateLimiter(options =>
 });
 
 // Core infrastructure — supports SQLite (default) and PostgreSQL
-var dbProvider = builder.Configuration["Database:Provider"]?.ToLowerInvariant() ?? "sqlite";
+// Priority: database.json > environment variables > appsettings.json
+var dbConfigService = new DatabaseConfigService(builder.Configuration);
+var dbConfig = dbConfigService.GetCurrentConfig();
+var dbProvider = (builder.Configuration["Database:Provider"]
+    ?? dbConfig.Provider
+    ?? "sqlite").ToLowerInvariant();
 var connectionString = builder.Configuration.GetConnectionString("Default")
+    ?? dbConfig.ConnectionString
     ?? "Data Source=mypersonalgit.db";
 
+builder.Services.AddSingleton<IDatabaseConfigService>(dbConfigService);
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
 {
-    if (dbProvider == "postgresql" || dbProvider == "postgres" || dbProvider == "npgsql")
+    if (dbProvider is "postgresql" or "postgres" or "npgsql")
         options.UseNpgsql(connectionString);
     else
         options.UseSqlite(connectionString);
