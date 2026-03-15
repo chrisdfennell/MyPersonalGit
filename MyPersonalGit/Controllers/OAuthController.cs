@@ -34,7 +34,7 @@ public class OAuthController : Controller
         {
             HttpOnly = true,
             Secure = Request.IsHttps,
-            SameSite = SameSiteMode.Lax,
+            SameSite = SameSiteMode.Strict,
             MaxAge = TimeSpan.FromMinutes(10)
         });
 

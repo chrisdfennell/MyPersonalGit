@@ -94,6 +94,8 @@ public partial class IssueAutoCloseService : IIssueAutoCloseService
         }
 
         // Find all non-closing #NNN references
+        // Cache closing regex matches to avoid recomputing in inner loop
+        var closingRegexMatches = ClosingPatternRegex().Matches(commitMessage);
         foreach (Match match in IssueRefPatternRegex().Matches(commitMessage))
         {
             var number = int.Parse(match.Groups["number"].Value);
@@ -104,7 +106,7 @@ public partial class IssueAutoCloseService : IIssueAutoCloseService
 
             // Check if this match position overlaps with a closing pattern match
             var isPartOfClosing = false;
-            foreach (Match closingMatch in ClosingPatternRegex().Matches(commitMessage))
+            foreach (Match closingMatch in closingRegexMatches)
             {
                 if (match.Index >= closingMatch.Index && match.Index < closingMatch.Index + closingMatch.Length)
                 {

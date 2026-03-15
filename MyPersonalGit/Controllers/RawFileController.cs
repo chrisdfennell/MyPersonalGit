@@ -23,7 +23,7 @@ public class RawFileController : ControllerBase
     [ResponseCache(Duration = 300)]
     public async Task<IActionResult> GetRawFile(string repoName, string path, [FromQuery] string? branch = null)
     {
-        if (string.IsNullOrEmpty(path))
+        if (string.IsNullOrEmpty(path) || path.Contains(".."))
             return NotFound();
 
         // Resolve project root

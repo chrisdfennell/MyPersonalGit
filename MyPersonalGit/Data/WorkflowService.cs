@@ -227,7 +227,7 @@ public class WorkflowService : IWorkflowService
         if (webhook == null) return false;
 
         // Re-create delivery by firing it again with the same payload
-        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
         var signature = ComputeSignature(delivery.Payload, webhook.Secret);
 
         var request = new HttpRequestMessage(HttpMethod.Post, webhook.Url);

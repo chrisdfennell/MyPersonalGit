@@ -68,8 +68,9 @@ public class BlameService : IBlameService
                 var lines = new List<string>();
                 for (int i = 0; i < hunk.LineCount; i++)
                 {
-                    var globalLine = hunk.FinalStartLineNumber + i;
-                    lines.Add(globalLine < allLines.Length ? allLines[globalLine] : "");
+                    var globalLine = hunk.FinalStartLineNumber + i; // 1-based
+                    var idx = globalLine - 1; // convert to 0-based array index
+                    lines.Add(idx >= 0 && idx < allLines.Length ? allLines[idx] : "");
                 }
 
                 hunks.Add(new BlameHunkInfo
