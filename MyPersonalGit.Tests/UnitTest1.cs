@@ -257,10 +257,13 @@ public class AuthServiceTests
     }
 }
 
-public class PullRequestServiceTests
+public class PullRequestServiceTests : IDisposable
 {
     private readonly PullRequestService _service;
     private readonly INotificationService _notifications;
+    private readonly string _repoDir;
+
+    private readonly string _defaultBranch;
 
     public PullRequestServiceTests()
     {
@@ -271,12 +274,53 @@ public class PullRequestServiceTests
         var factory = new TestDbContextFactory(options);
         _notifications = Substitute.For<INotificationService>();
         var activityService = Substitute.For<IActivityService>();
-        var adminService = Substitute.For<IAdminService>();
-        var config = Substitute.For<IConfiguration>();
         var branchProtection = Substitute.For<IBranchProtectionService>();
         var codeOwners = Substitute.For<ICodeOwnersService>();
         var issueAutoClose = Substitute.For<IIssueAutoCloseService>();
+
+        // Set up a real non-bare git repo so merge tests can work
+        // PullRequestService uses LibGit2Sharp which needs actual git objects
+        _repoDir = Path.Combine(Path.GetTempPath(), "mypg_test_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(_repoDir);
+        var repoPath = Path.Combine(_repoDir, "repo.git");
+
+        // Init a non-bare repo (LibGit2Sharp merge needs a working directory)
+        LibGit2Sharp.Repository.Init(repoPath);
+        using (var repo = new LibGit2Sharp.Repository(repoPath))
+        {
+            var sig = new LibGit2Sharp.Signature("test", "test@test.com", DateTimeOffset.Now);
+
+            // Initial commit on main
+            File.WriteAllText(Path.Combine(repoPath, "README.md"), "# Test");
+            LibGit2Sharp.Commands.Stage(repo, "README.md");
+            repo.Commit("Initial commit", sig, sig, new LibGit2Sharp.CommitOptions());
+
+            // Create feature branch with a new commit
+            var mainTip = repo.Head.Tip;
+            var featureBranch = repo.Branches.Add("feature", mainTip);
+            LibGit2Sharp.Commands.Checkout(repo, featureBranch);
+            File.WriteAllText(Path.Combine(repoPath, "feature.txt"), "new feature");
+            LibGit2Sharp.Commands.Stage(repo, "feature.txt");
+            repo.Commit("Add feature", sig, sig, new LibGit2Sharp.CommitOptions());
+
+            // Switch back to default branch (may be "main" or "master" depending on git config)
+            var mainBranch = repo.Branches["main"] ?? repo.Branches["master"];
+            _defaultBranch = mainBranch!.FriendlyName;
+            LibGit2Sharp.Commands.Checkout(repo, mainBranch);
+        }
+
+        var adminService = Substitute.For<IAdminService>();
+        adminService.GetSystemSettingsAsync().Returns(new SystemSettings { ProjectRoot = _repoDir });
+
+        var config = Substitute.For<IConfiguration>();
+        config["Git:ProjectRoot"].Returns(_repoDir);
+
         _service = new PullRequestService(factory, NullLogger<PullRequestService>.Instance, _notifications, activityService, adminService, branchProtection, codeOwners, issueAutoClose, config);
+    }
+
+    public void Dispose()
+    {
+        try { Directory.Delete(_repoDir, true); } catch { }
     }
 
     [Fact]
@@ -358,12 +402,12 @@ public class PullRequestServiceTests
     [Fact]
     public async Task MergePullRequestAsync_SetsMergedState()
     {
-        await _service.CreatePullRequestAsync("repo", "PR", null, "alice", "feature", "main");
+        await _service.CreatePullRequestAsync("repo.git", "PR", null, "alice", "feature", _defaultBranch);
 
-        var result = await _service.MergePullRequestAsync("repo", 1, "bob");
+        var result = await _service.MergePullRequestAsync("repo.git", 1, "bob");
         Assert.True(result.Success);
 
-        var pr = await _service.GetPullRequestAsync("repo", 1);
+        var pr = await _service.GetPullRequestAsync("repo.git", 1);
         Assert.Equal(PullRequestState.Merged, pr!.State);
         Assert.NotNull(pr.MergedAt);
         Assert.Equal("bob", pr.MergedBy);
@@ -379,15 +423,15 @@ public class PullRequestServiceTests
     [Fact]
     public async Task MergePullRequestAsync_TriggersNotification()
     {
-        await _service.CreatePullRequestAsync("repo", "PR", null, "alice", "feature", "main");
-        await _service.MergePullRequestAsync("repo", 1, "bob");
+        await _service.CreatePullRequestAsync("repo.git", "PR", null, "alice", "feature", _defaultBranch);
+        await _service.MergePullRequestAsync("repo.git", 1, "bob");
 
         await _notifications.Received(1).CreateNotificationAsync(
             Arg.Any<string>(),
             Arg.Is(NotificationType.PullRequestMerged),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Is("repo"),
+            Arg.Is("repo.git"),
             Arg.Any<string?>()
         );
     }
