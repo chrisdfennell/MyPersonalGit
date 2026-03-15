@@ -240,7 +240,11 @@ public class WorkflowRunnerService : BackgroundService
             // Clone bare repo into /workspace inside container
             if (repoMount != null)
             {
-                await ExecInContainer(containerId, new[] { "sh", "-c", "git clone /repo /workspace 2>&1 || true" }, ct);
+                await ExecInContainer(containerId, new[] { "sh", "-c",
+                    "git config --global --add safe.directory '*' && " +
+                    "git clone /repo /workspace 2>&1 || " +
+                    "echo 'Clone failed, trying cp fallback' && cp -r /repo/* /workspace/ 2>/dev/null || true"
+                }, ct);
             }
 
             // Execute each step
