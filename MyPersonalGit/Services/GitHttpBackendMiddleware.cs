@@ -260,7 +260,10 @@ public sealed class GitHttpBackendMiddleware
 
         try { await process.WaitForExitAsync(context.RequestAborted); } catch { }
 
-        // After a successful push, scan new commits for issue auto-close keywords
+        // After a successful push, scan new commits for issue auto-close keywords and trigger workflows
+        _logger.LogInformation("Git operation completed: method={Method} path={Path} service={Service} exitCode={ExitCode}",
+            context.Request.Method, pathInfo, service, process.ExitCode);
+
         if (process.ExitCode == 0 &&
             (service == "git-receive-pack" || pathInfo.EndsWith("/git-receive-pack")) &&
             context.Request.Method == "POST")
@@ -301,24 +304,27 @@ public sealed class GitHttpBackendMiddleware
             }
 
             // Trigger workflows that listen for push events
+            _logger.LogInformation("Scanning for push-triggered workflows...");
             try
             {
-                var segments = pathInfo.Split('/', StringSplitOptions.RemoveEmptyEntries);
-                if (segments.Length >= 1)
+                var segments2 = pathInfo.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                if (segments2.Length >= 1)
                 {
-                    var repoDir = Path.Combine(projectRoot, segments[0]);
+                    var repoDir = Path.Combine(projectRoot, segments2[0]);
+                    _logger.LogInformation("Checking repo at {RepoDir}, valid={IsValid}", repoDir, Repository.IsValid(repoDir));
                     if (Repository.IsValid(repoDir))
                     {
-                        var repoName = segments[0].EndsWith(".git", StringComparison.OrdinalIgnoreCase)
-                            ? segments[0][..^4] : segments[0];
+                        var repoName = segments2[0].EndsWith(".git", StringComparison.OrdinalIgnoreCase)
+                            ? segments2[0][..^4] : segments2[0];
                         var remoteUser = context.User?.Identity?.Name ?? "system";
 
-                        using var repo = new Repository(repoDir);
-                        var head = repo.Head;
+                        using var repo2 = new Repository(repoDir);
+                        var head = repo2.Head;
                         var branch = head?.FriendlyName ?? "main";
                         var sha = head?.Tip?.Sha ?? "HEAD";
                         var message = head?.Tip?.MessageShort ?? "Push";
 
+                        _logger.LogInformation("Triggering workflows for {RepoName} branch={Branch}", repoName, branch);
                         await workflowService.TriggerPushWorkflowsAsync(repoName, repoDir, branch, sha, message, remoteUser);
                     }
                 }
