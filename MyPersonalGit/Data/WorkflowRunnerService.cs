@@ -201,6 +201,9 @@ public class WorkflowRunnerService : BackgroundService
             var binds = new List<string>();
             if (repoMount != null) binds.Add($"{repoMount}:/repo:ro");
             if (artifactHostDir != null) binds.Add($"{artifactHostDir}:/artifacts");
+            // Mount Docker socket so workflows can build/push images
+            if (File.Exists("/var/run/docker.sock"))
+                binds.Add("/var/run/docker.sock:/var/run/docker.sock");
 
             var createParams = new CreateContainerParameters
             {
@@ -330,6 +333,10 @@ public class WorkflowRunnerService : BackgroundService
 
     private static string MapImage(string runsOn)
     {
+        // If it looks like a full image name (contains / or :), use it directly
+        if (runsOn.Contains('/') || (runsOn.Contains(':') && !runsOn.StartsWith("ubuntu") && !runsOn.StartsWith("node") && !runsOn.StartsWith("python") && !runsOn.StartsWith("dotnet")))
+            return runsOn;
+
         return runsOn.ToLowerInvariant() switch
         {
             "ubuntu-latest" or "ubuntu-22.04" => "ubuntu:22.04",
