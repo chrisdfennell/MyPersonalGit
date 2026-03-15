@@ -224,6 +224,19 @@ public class WorkflowRunnerService : BackgroundService
 
             await _docker.Containers.StartContainerAsync(containerId, null, ct);
 
+            // Install essential tools if not present (ubuntu/debian images are bare)
+            await ExecInContainer(containerId, new[] { "sh", "-c",
+                "which git > /dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq git curl ca-certificates > /dev/null 2>&1) || " +
+                "(apk add --no-cache git curl ca-certificates > /dev/null 2>&1) || true"
+            }, ct);
+
+            // Install Docker CLI if not present and socket is available
+            await ExecInContainer(containerId, new[] { "sh", "-c",
+                "which docker > /dev/null 2>&1 || " +
+                "(curl -fsSL https://get.docker.com | sh > /dev/null 2>&1) || " +
+                "(apk add --no-cache docker-cli > /dev/null 2>&1) || true"
+            }, ct);
+
             // Clone bare repo into /workspace inside container
             if (repoMount != null)
             {
