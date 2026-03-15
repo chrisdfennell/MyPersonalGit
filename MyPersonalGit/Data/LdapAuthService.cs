@@ -56,57 +56,52 @@ public class LdapAuthService : ILdapAuthService
 
         try
         {
-            // Step 1: Connect and bind with service account
-            var conn = CreateConnection(settings);
-
-            if (!string.IsNullOrWhiteSpace(settings.LdapBindDn))
+            // Step 1: Connect and bind with service account to search for the user
+            string userDn;
+            SearchResultEntry entry;
+            using (var conn = CreateConnection(settings))
             {
-                conn.Bind(new NetworkCredential(settings.LdapBindDn, settings.LdapBindPassword));
+                if (!string.IsNullOrWhiteSpace(settings.LdapBindDn))
+                    conn.Bind(new NetworkCredential(settings.LdapBindDn, settings.LdapBindPassword));
+                else
+                    conn.Bind(); // anonymous bind
+
+                // Step 2: Search for the user
+                var filter = string.Format(settings.LdapUserFilter, EscapeLdapFilter(username));
+                var searchRequest = new SearchRequest(
+                    settings.LdapSearchBase,
+                    filter,
+                    SearchScope.Subtree,
+                    settings.LdapUsernameAttribute,
+                    settings.LdapEmailAttribute,
+                    settings.LdapDisplayNameAttribute,
+                    "memberOf" // for group membership checks
+                );
+
+                var searchResponse = (SearchResponse)conn.SendRequest(searchRequest);
+                if (searchResponse.Entries.Count == 0)
+                {
+                    _logger.LogDebug("LDAP user not found: {Username}", username);
+                    return null;
+                }
+
+                entry = searchResponse.Entries[0];
+                userDn = entry.DistinguishedName;
             }
-            else
-            {
-                conn.Bind(); // anonymous bind
-            }
-
-            // Step 2: Search for the user
-            var filter = string.Format(settings.LdapUserFilter, EscapeLdapFilter(username));
-            var searchRequest = new SearchRequest(
-                settings.LdapSearchBase,
-                filter,
-                SearchScope.Subtree,
-                settings.LdapUsernameAttribute,
-                settings.LdapEmailAttribute,
-                settings.LdapDisplayNameAttribute,
-                "memberOf" // for group membership checks
-            );
-
-            var searchResponse = (SearchResponse)conn.SendRequest(searchRequest);
-            if (searchResponse.Entries.Count == 0)
-            {
-                _logger.LogDebug("LDAP user not found: {Username}", username);
-                conn.Dispose();
-                return null;
-            }
-
-            var entry = searchResponse.Entries[0];
-            var userDn = entry.DistinguishedName;
-
-            conn.Dispose();
 
             // Step 3: Bind as the user to verify password
-            var userConn = CreateConnection(settings);
-            try
+            using (var userConn = CreateConnection(settings))
             {
-                userConn.Bind(new NetworkCredential(userDn, password));
+                try
+                {
+                    userConn.Bind(new NetworkCredential(userDn, password));
+                }
+                catch (LdapException ex)
+                {
+                    _logger.LogDebug("LDAP bind failed for {UserDn}: {Error}", userDn, ex.Message);
+                    return null;
+                }
             }
-            catch (LdapException ex)
-            {
-                _logger.LogDebug("LDAP bind failed for {UserDn}: {Error}", userDn, ex.Message);
-                userConn.Dispose();
-                return null;
-            }
-
-            userConn.Dispose();
 
             // Step 4: Extract attributes
             var ldapUsername = GetAttribute(entry, settings.LdapUsernameAttribute) ?? username;
@@ -145,16 +140,12 @@ public class LdapAuthService : ILdapAuthService
 
         try
         {
-            var conn = CreateConnection(settings);
+            using var conn = CreateConnection(settings);
 
             if (!string.IsNullOrWhiteSpace(settings.LdapBindDn))
-            {
                 conn.Bind(new NetworkCredential(settings.LdapBindDn, settings.LdapBindPassword));
-            }
             else
-            {
                 conn.Bind();
-            }
 
             // Try a simple search to validate the search base
             var searchRequest = new SearchRequest(
@@ -163,7 +154,6 @@ public class LdapAuthService : ILdapAuthService
                 SearchScope.Base);
 
             var response = (SearchResponse)conn.SendRequest(searchRequest);
-            conn.Dispose();
 
             return (true, $"Connection successful. Search base '{settings.LdapSearchBase}' is accessible.");
         }
