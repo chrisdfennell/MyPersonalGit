@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,8 +11,9 @@ namespace MyPersonalGit.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // EmailNotificationsEnabled, SmtpFromAddress, SmtpFromName already added
-            // by AddEmailNotifications migration — removed duplicates here.
+            // NOTE: EmailNotificationsEnabled, SmtpFromAddress, SmtpFromName already added
+            // by AddEmailNotifications migration. DeployKeys already added by AddDeployKeys
+            // migration. Only unique additions remain here.
 
             migrationBuilder.AddColumn<int>(
                 name: "DiscussionCommentId",
@@ -20,33 +21,7 @@ namespace MyPersonalGit.Migrations
                 type: "INTEGER",
                 nullable: true);
 
-            migrationBuilder.CreateTable(
-                name: "DeployKeys",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    RepositoryId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Title = table.Column<string>(type: "TEXT", nullable: false),
-                    KeyFingerprint = table.Column<string>(type: "TEXT", nullable: false),
-                    PublicKey = table.Column<string>(type: "TEXT", nullable: false),
-                    ReadOnly = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    LastUsedAt = table.Column<DateTime>(type: "TEXT", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DeployKeys", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_DeployKeys_Repositories_RepositoryId",
-                        column: x => x.RepositoryId,
-                        principalTable: "Repositories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
             // Remap CollaboratorPermission enum values: old Write(1)->new Write(2), old Admin(2)->new Admin(4)
-            // Must remap Admin first to avoid collision (Admin=2 would become Write=2)
             migrationBuilder.Sql("UPDATE RepositoryCollaborators SET Permission = 4 WHERE Permission = 2"); // Admin 2->4
             migrationBuilder.Sql("UPDATE RepositoryCollaborators SET Permission = 2 WHERE Permission = 1"); // Write 1->2
 
@@ -119,12 +94,6 @@ namespace MyPersonalGit.Migrations
                 column: "DiscussionCommentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DeployKeys_RepositoryId_KeyFingerprint",
-                table: "DeployKeys",
-                columns: new[] { "RepositoryId", "KeyFingerprint" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_ExternalLogins_Provider_ProviderUserId",
                 table: "ExternalLogins",
                 columns: new[] { "Provider", "ProviderUserId" },
@@ -166,41 +135,15 @@ namespace MyPersonalGit.Migrations
                 name: "FK_DiscussionComments_DiscussionComments_DiscussionCommentId",
                 table: "DiscussionComments");
 
-            migrationBuilder.DropTable(
-                name: "DeployKeys");
-
-            migrationBuilder.DropTable(
-                name: "ExternalLogins");
-
-            migrationBuilder.DropTable(
-                name: "MigrationTasks");
-
-            migrationBuilder.DropTable(
-                name: "OAuthProviderConfigs");
+            migrationBuilder.DropTable(name: "ExternalLogins");
+            migrationBuilder.DropTable(name: "MigrationTasks");
+            migrationBuilder.DropTable(name: "OAuthProviderConfigs");
 
             migrationBuilder.DropIndex(
                 name: "IX_DiscussionComments_DiscussionCommentId",
                 table: "DiscussionComments");
 
-            migrationBuilder.DropColumn(
-                name: "EmailNotificationsEnabled",
-                table: "UserProfiles");
-
-            migrationBuilder.DropColumn(
-                name: "EmailNotificationsEnabled",
-                table: "SystemSettings");
-
-            migrationBuilder.DropColumn(
-                name: "SmtpFromAddress",
-                table: "SystemSettings");
-
-            migrationBuilder.DropColumn(
-                name: "SmtpFromName",
-                table: "SystemSettings");
-
-            migrationBuilder.DropColumn(
-                name: "DiscussionCommentId",
-                table: "DiscussionComments");
+            migrationBuilder.DropColumn(name: "DiscussionCommentId", table: "DiscussionComments");
         }
     }
 }
