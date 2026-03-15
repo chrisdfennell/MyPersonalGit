@@ -2000,6 +2000,9 @@ namespace MyPersonalGit.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("LdapSkipCertificateValidation")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("LdapServer")
                         .IsRequired()
                         .HasColumnType("TEXT");
