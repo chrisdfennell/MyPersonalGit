@@ -102,6 +102,59 @@ public class WorkflowRunnerService : BackgroundService
         if (runSuccess)
         {
             await TryAutoMerge(run.RepoName, ct);
+            await TryCreateTagFromWorkflow(run, ct);
+        }
+    }
+
+    private async Task TryCreateTagFromWorkflow(WorkflowRun run, CancellationToken ct)
+    {
+        try
+        {
+            // Look for "New tag: vX.Y.Z" in step outputs
+            string? newTag = null;
+            foreach (var job in run.Jobs)
+            {
+                foreach (var step in job.Steps)
+                {
+                    if (string.IsNullOrEmpty(step.Output)) continue;
+                    var match = System.Text.RegularExpressions.Regex.Match(
+                        step.Output, @"New tag:\s*(v[\d.]+)");
+                    if (match.Success)
+                    {
+                        newTag = match.Groups[1].Value;
+                        break;
+                    }
+                }
+                if (newTag != null) break;
+            }
+
+            if (string.IsNullOrEmpty(newTag)) return;
+
+            var repoPath = GetRepoPath(run.RepoName);
+            if (repoPath == null) return;
+
+            using var repo = new LibGit2Sharp.Repository(repoPath);
+
+            // Don't create if tag already exists
+            if (repo.Tags[newTag] != null)
+            {
+                _logger.LogDebug("Tag {Tag} already exists in {RepoName}", newTag, run.RepoName);
+                return;
+            }
+
+            var commitObj = repo.Lookup(new LibGit2Sharp.ObjectId(run.CommitSha));
+            var commit = (commitObj as LibGit2Sharp.Commit) ?? repo.Head?.Tip;
+
+            if (commit == null) return;
+
+            var tagger = new LibGit2Sharp.Signature("MyPersonalGit CI", "ci@localhost", DateTimeOffset.UtcNow);
+            repo.Tags.Add(newTag, commit, tagger, $"Release {newTag}");
+
+            _logger.LogInformation("Created tag {Tag} in {RepoName}", newTag, run.RepoName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to create tag from workflow run {RunId}", run.Id);
         }
     }
 
