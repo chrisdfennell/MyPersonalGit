@@ -240,11 +240,17 @@ public class WorkflowRunnerService : BackgroundService
             // Clone bare repo into /workspace inside container
             if (repoMount != null)
             {
-                await ExecInContainer(containerId, new[] { "sh", "-c",
-                    "git config --global --add safe.directory '*' && " +
+                // The bare repo is mounted read-only at /repo. We need to clone it into /workspace.
+                // First mark all directories as safe, then clone.
+                var cloneResult = await ExecInContainer(containerId, new[] { "sh", "-c",
+                    "git config --global --add safe.directory '*' 2>/dev/null; " +
+                    "git config --global init.defaultBranch main 2>/dev/null; " +
+                    "rm -rf /workspace/* /workspace/.* 2>/dev/null; " +
+                    "git clone --branch main /repo /workspace 2>&1 || " +
                     "git clone /repo /workspace 2>&1 || " +
-                    "echo 'Clone failed, trying cp fallback' && cp -r /repo/* /workspace/ 2>/dev/null || true"
+                    "echo 'CLONE_FAILED'"
                 }, ct);
+                _logger.LogInformation("Repo clone result: exit={ExitCode}, output={Output}", cloneResult.ExitCode, cloneResult.Output?.Trim());
             }
 
             // Execute each step

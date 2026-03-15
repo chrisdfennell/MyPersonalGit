@@ -89,10 +89,18 @@
                     </div>
                     <div class="text-end text-muted small">
                         <div>Triggered by <strong>@selectedRun.TriggeredBy</strong></div>
-                        <div>@FormatDate(selectedRun.CreatedAt)</div>
+                        <div>Started: @selectedRun.CreatedAt.ToString("MMM dd, yyyy HH:mm:ss") UTC</div>
+                        @if (selectedRun.CompletedAt.HasValue)
+                        {
+                            <div>Finished: @selectedRun.CompletedAt.Value.ToString("HH:mm:ss") UTC</div>
+                        }
                         @if (selectedRun.CompletedAt.HasValue && selectedRun.StartedAt.HasValue)
                         {
-                            <div>Duration: @((selectedRun.CompletedAt.Value - selectedRun.StartedAt.Value).TotalSeconds.ToString("F1"))s</div>
+                            <div><strong>Total: @FormatDuration(selectedRun.CompletedAt.Value - selectedRun.StartedAt.Value)</strong></div>
+                        }
+                        else if (selectedRun.StartedAt.HasValue)
+                        {
+                            <div><i class="bi bi-hourglass-split me-1"></i>Running: @FormatDuration(DateTime.UtcNow - selectedRun.StartedAt.Value)</div>
                         }
                     </div>
                 </div>
@@ -107,6 +115,10 @@
                             <strong>@job.Name</strong>
                             <span class="badge @GetStatusBadgeClass(job.Status) ms-2">@job.Status</span>
                             <span class="text-muted small ms-2">(@job.RunsOn)</span>
+                            @if (job.StartedAt.HasValue && job.CompletedAt.HasValue)
+                            {
+                                <span class="text-muted small ms-2">@FormatDuration(job.CompletedAt.Value - job.StartedAt.Value)</span>
+                            }
                         </div>
                         <i class="bi @(expandedJobs.Contains(job.Id) ? "bi-chevron-up" : "bi-chevron-down")"></i>
                     </div>
@@ -251,7 +263,7 @@
                                 {
                                     <div class="text-end">
                                         <small class="text-muted">
-                                            @((run.CompletedAt.Value - run.StartedAt.Value).TotalSeconds.ToString("F1"))s
+                                            @FormatDuration(run.CompletedAt.Value - run.StartedAt.Value)
                                         </small>
                                     </div>
                                 }
@@ -858,5 +870,14 @@
         if (timeAgo.TotalHours < 24) return $"{(int)timeAgo.TotalHours} hours ago";
         if (timeAgo.TotalDays < 7) return $"{(int)timeAgo.TotalDays} days ago";
         return date.ToString("MMM dd, yyyy");
+    }
+
+    private static string FormatDuration(TimeSpan duration)
+    {
+        if (duration.TotalSeconds < 60)
+            return $"{duration.TotalSeconds:F1}s";
+        if (duration.TotalMinutes < 60)
+            return $"{(int)duration.TotalMinutes}m {duration.Seconds}s";
+        return $"{(int)duration.TotalHours}h {duration.Minutes}m {duration.Seconds}s";
     }
 }
