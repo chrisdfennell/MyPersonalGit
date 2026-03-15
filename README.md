@@ -400,19 +400,21 @@ Fork a repository and keep it in sync:
 
 ### 16. CI/CD Auto-Release
 
-MyPersonalGit includes a built-in CI/CD pipeline that auto-tags, releases, and pushes Docker images on every push to main. The same workflow YAML works on both MyPersonalGit and GitHub Actions.
+MyPersonalGit includes a built-in CI/CD pipeline that auto-tags, releases, and pushes Docker images on every push to main. Workflows auto-trigger on push — no external CI service needed.
 
 **How it works:**
-1. Push to `main` triggers `.github/workflows/release.yml`
-2. The **release** job bumps the patch version (`v1.15.1` -> `v1.15.2`), creates a git tag, and generates a changelog
-3. The **docker** job logs into Docker Hub, builds the image, and pushes it as both `:latest` and `:vX.Y.Z`
+1. Push to `main` auto-triggers `.github/workflows/release.yml`
+2. Bumps the patch version (`v1.15.1` -> `v1.15.2`), creates a git tag
+3. Logs into Docker Hub, builds the image, and pushes it as both `:latest` and `:vX.Y.Z`
 
 **Setup:**
-1. Add a `DOCKERHUB_TOKEN` secret in your repo's **Settings > Secrets**
-2. Push to main — the workflow triggers automatically
+1. Go to your repo's **Settings > Secrets** in MyPersonalGit
+2. Add a secret named `DOCKERHUB_TOKEN` with your Docker Hub access token
+3. Make sure the MyPersonalGit container has the Docker socket mounted (`-v /var/run/docker.sock:/var/run/docker.sock`)
+4. Push to main — the workflow triggers automatically
 
 **GitHub Actions compatibility:**
-The workflow uses standard GitHub Actions syntax (`uses: actions/checkout@v4`, `uses: docker/login-action@v3`, etc.) which MyPersonalGit translates into equivalent shell commands at runtime:
+The same workflow YAML also works on GitHub Actions — no changes needed. MyPersonalGit translates `uses:` actions into equivalent shell commands at runtime:
 
 | GitHub Action | MyPersonalGit Translation |
 |---|---|
