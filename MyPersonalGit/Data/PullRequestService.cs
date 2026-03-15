@@ -36,6 +36,7 @@ public class PullRequestService : IPullRequestService
     private readonly IBranchProtectionService _branchProtectionService;
     private readonly ICodeOwnersService _codeOwnersService;
     private readonly IIssueAutoCloseService _issueAutoCloseService;
+    private readonly IWorkflowService _workflowService;
     private readonly IConfiguration _config;
 
     public PullRequestService(
@@ -47,6 +48,7 @@ public class PullRequestService : IPullRequestService
         IBranchProtectionService branchProtectionService,
         ICodeOwnersService codeOwnersService,
         IIssueAutoCloseService issueAutoCloseService,
+        IWorkflowService workflowService,
         IConfiguration config)
     {
         _dbFactory = dbFactory;
@@ -57,6 +59,7 @@ public class PullRequestService : IPullRequestService
         _branchProtectionService = branchProtectionService;
         _codeOwnersService = codeOwnersService;
         _issueAutoCloseService = issueAutoCloseService;
+        _workflowService = workflowService;
         _config = config;
     }
 
@@ -161,6 +164,27 @@ public class PullRequestService : IPullRequestService
             repoName,
             $"/repo/{repoName}/pulls/{pr.Number}"
         );
+
+        // Trigger pull_request workflows
+        if (!isDraft)
+        {
+            try
+            {
+                var wfRepoPath = await GetRepoPath(repoName);
+                if (wfRepoPath != null)
+                {
+                    using var wfRepo = new GitRepository(wfRepoPath);
+                    var tip = wfRepo.Branches[sourceBranch]?.Tip;
+                    var sha = tip?.Sha ?? "HEAD";
+                    await _workflowService.TriggerPullRequestWorkflowsAsync(
+                        repoName, wfRepoPath, sourceBranch, targetBranch, sha, title, author);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to trigger PR workflows for {RepoName}", repoName);
+            }
+        }
 
         return pr;
     }

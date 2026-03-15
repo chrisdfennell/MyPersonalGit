@@ -102,6 +102,14 @@
                         {
                             <div><i class="bi bi-hourglass-split me-1"></i>Running: @FormatDuration(DateTime.UtcNow - selectedRun.StartedAt.Value)</div>
                         }
+                        @if (selectedRun.Status == WorkflowStatus.Queued || selectedRun.Status == WorkflowStatus.InProgress)
+                        {
+                            <div class="mt-2">
+                                <button class="btn btn-outline-danger btn-sm" @onclick="CancelRun">
+                                    <i class="bi bi-x-circle me-1"></i>Cancel
+                                </button>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -552,6 +560,7 @@
     private List<Webhook> Webhooks { get; set; } = new();
     private List<WorkflowDefinition> detectedWorkflows = new();
     private WorkflowRun? selectedRun;
+    private List<WorkflowArtifact> runArtifacts = new();
     private string ActiveTab { get; set; } = "runs";
     private bool showRunDropdown;
     private HashSet<int> expandedJobs = new();
@@ -562,8 +571,6 @@
     private string NewWorkflowBranch { get; set; } = "main";
     private string NewWorkflowCommitSha { get; set; } = "";
     private string NewWorkflowCommitMessage { get; set; } = "";
-
-    private List<WorkflowArtifact> runArtifacts = new();
 
     private bool ShowWebhookModal { get; set; }
     private string NewWebhookUrl { get; set; } = "";
@@ -879,5 +886,12 @@
         if (duration.TotalMinutes < 60)
             return $"{(int)duration.TotalMinutes}m {duration.Seconds}s";
         return $"{(int)duration.TotalHours}h {duration.Minutes}m {duration.Seconds}s";
+    }
+
+    private async Task CancelRun()
+    {
+        if (selectedRun == null) return;
+        await WorkflowService.CancelWorkflowRunAsync(RepoName, selectedRun.Id);
+        await LoadData();
     }
 }
