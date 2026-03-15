@@ -145,8 +145,13 @@ public class WorkflowService : IWorkflowService
             var parser = new WorkflowYamlParser();
             var workflows = parser.ParseFromRepo(repoPath);
 
+            _logger.LogInformation("Found {Count} workflow(s) in {RepoName}", workflows.Count, repoName);
+
             foreach (var workflow in workflows)
             {
+                _logger.LogInformation("Workflow '{Name}': On type={OnType}, value={OnValue}",
+                    workflow.Name, workflow.On?.GetType().Name ?? "null", workflow.On?.ToString() ?? "null");
+
                 if (!ShouldTriggerOnPush(workflow, branch)) continue;
 
                 _logger.LogInformation("Auto-triggering workflow '{WorkflowName}' on push to {Branch} in {RepoName}",
