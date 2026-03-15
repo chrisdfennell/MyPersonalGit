@@ -11,7 +11,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Repository Import/Migration** — Import repositories from GitHub, GitLab, Bitbucket, or any Git URL with optional issue and PR import. Background processing with progress tracking
 - **Repository Archiving** — Mark repositories as read-only with visual badges; pushes are blocked for archived repos
 - **Git Smart HTTP** — Clone, fetch, and push over HTTP with Basic Auth
-- **Built-in SSH Server** — Native SSH server for Git operations — no external OpenSSH required. Supports ECDH key exchange, AES-CTR encryption, and public key authentication (RSA + ECDSA)
+- **Built-in SSH Server** — Native SSH server for Git operations — no external OpenSSH required. Supports ECDH key exchange, AES-CTR encryption, and public key authentication (RSA, ECDSA, Ed25519)
 - **SSH Key Authentication** — Add SSH public keys to your account and authenticate Git operations via SSH with auto-managed `authorized_keys` (or the built-in SSH server)
 - **Forks & Upstream Sync** — Fork repositories, sync forks with upstream with one click, and see fork relationships in the UI
 - **Git LFS** — Large File Storage support for tracking binary files
@@ -75,9 +75,9 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 
 | Component | Technology |
 |-----------|-----------|
-| Backend | ASP.NET Core 8.0 |
+| Backend | ASP.NET Core 9.0 |
 | Frontend | Blazor Server (interactive server-side rendering) |
-| Database | SQLite via Entity Framework Core 8 |
+| Database | SQLite via Entity Framework Core 9 |
 | Git Engine | LibGit2Sharp |
 | Auth | BCrypt password hashing, session-based auth, PAT tokens, OAuth2 (8 providers), TOTP 2FA, LDAP/AD |
 | SSH Server | Built-in SSH2 protocol implementation (ECDH, AES-CTR, HMAC-SHA2) |
@@ -90,7 +90,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 ### Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) (recommended)
-- Or [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) + Git for local development
+- Or [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) + Git for local development
 
 ### Docker (Recommended)
 
@@ -253,15 +253,13 @@ No external SSH daemon required — MyPersonalGit runs its own SSH server:
 1. Go to **Admin > Settings** and enable **Built-in SSH Server**
 2. Set the SSH port (default: 2222) — use 22 if you're not running system SSH
 3. Save settings and restart the server (port changes require restart)
-4. Go to **Settings > SSH Keys** and add your public key (`~/.ssh/id_rsa.pub` or `~/.ssh/id_ecdsa.pub`)
+4. Go to **Settings > SSH Keys** and add your public key (`~/.ssh/id_ed25519.pub`, `~/.ssh/id_rsa.pub`, or `~/.ssh/id_ecdsa.pub`)
 5. Clone via SSH:
    ```bash
    git clone ssh://youruser@yourserver:2222/MyRepo.git
    ```
 
-The built-in SSH server supports ECDH-SHA2-NISTP256 key exchange, AES-128/256-CTR encryption, HMAC-SHA2-256, and public key authentication with RSA and ECDSA keys.
-
-> **Note:** Ed25519 keys are not yet supported by the built-in SSH server (requires .NET 9+). Use RSA or ECDSA keys, or use Option B with system OpenSSH which supports all key types.
+The built-in SSH server supports ECDH-SHA2-NISTP256 key exchange, AES-128/256-CTR encryption, HMAC-SHA2-256, and public key authentication with Ed25519, RSA, and ECDSA keys.
 
 #### Option B: System OpenSSH
 

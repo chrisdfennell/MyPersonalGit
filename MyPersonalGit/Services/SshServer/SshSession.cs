@@ -16,7 +16,7 @@ namespace MyPersonalGit.Services.SshServer;
 ///   Host key: ecdsa-sha2-nistp256
 ///   Cipher:   aes128-ctr, aes256-ctr
 ///   MAC:      hmac-sha2-256
-///   Auth:     publickey (RSA, ECDSA; Ed25519 not supported in .NET 8)
+///   Auth:     publickey (RSA, ECDSA, Ed25519)
 /// </summary>
 public sealed class SshSession : IDisposable
 {
@@ -531,6 +531,10 @@ public sealed class SshSession : IDisposable
             {
                 return VerifyEcdsaSignature(pubKeyBlob, sigData, data);
             }
+            else if (algName == "ssh-ed25519")
+            {
+                return VerifyEd25519Signature(pubKeyBlob, sigData, data);
+            }
             else if (algName == "ssh-rsa" || algName == "rsa-sha2-256" || algName == "rsa-sha2-512")
             {
                 var hashAlg = sigAlg switch
@@ -603,6 +607,21 @@ public sealed class SshSession : IDisposable
         var derSig = EncodeDerSignature(r, s);
 
         return ecdsa.VerifyData(data, derSig, hashAlg, DSASignatureFormat.Rfc3279DerSequence);
+    }
+
+    private static bool VerifyEd25519Signature(byte[] pubKeyBlob, byte[] signature, byte[] data)
+    {
+        // SSH Ed25519 public key blob: string "ssh-ed25519" + string <32-byte public key>
+        var reader = new SshDataReader(pubKeyBlob, 0);
+        var keyType = reader.ReadString(); // "ssh-ed25519"
+        var rawPubKey = reader.ReadBinary(); // 32 bytes
+
+        // Ed25519 signature is 64 bytes
+        var pubKeyParams = new Org.BouncyCastle.Crypto.Parameters.Ed25519PublicKeyParameters(rawPubKey, 0);
+        var verifier = new Org.BouncyCastle.Crypto.Signers.Ed25519Signer();
+        verifier.Init(false, pubKeyParams);
+        verifier.BlockUpdate(data, 0, data.Length);
+        return verifier.VerifySignature(signature);
     }
 
     private static byte[] EncodeDerSignature(byte[] r, byte[] s)
