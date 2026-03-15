@@ -10,6 +10,7 @@ public interface IWorkflowService
     Task<WorkflowRun> CreateWorkflowRunAsync(string repoName, string workflowName, string branch, string commitSha, string commitMessage, string triggeredBy);
     Task<bool> UpdateWorkflowRunAsync(string repoName, int runId, Action<WorkflowRun> updateAction);
     Task<WorkflowRun> CreateWorkflowRunWithJobsAsync(string repoName, WorkflowDefinition definition, string branch, string sha, string message, string user);
+    Task TriggerPushWorkflowsAsync(string repoName, string repoPath, string branch, string sha, string commitMessage, string pushedBy);
     Task<List<Webhook>> GetWebhooksAsync(string repoName);
     Task<Webhook> CreateWebhookAsync(string repoName, string url, string secret, List<string> events);
     Task<bool> DeleteWebhookAsync(string repoName, int webhookId);
@@ -135,6 +136,72 @@ public class WorkflowService : IWorkflowService
 
         _logger.LogInformation("Workflow run {RunId} created with {JobCount} jobs for {RepoName}", run.Id, run.Jobs.Count, repoName);
         return run;
+    }
+
+    public async Task TriggerPushWorkflowsAsync(string repoName, string repoPath, string branch, string sha, string commitMessage, string pushedBy)
+    {
+        try
+        {
+            var parser = new WorkflowYamlParser();
+            var workflows = parser.ParseFromRepo(repoPath);
+
+            foreach (var workflow in workflows)
+            {
+                if (!ShouldTriggerOnPush(workflow, branch)) continue;
+
+                _logger.LogInformation("Auto-triggering workflow '{WorkflowName}' on push to {Branch} in {RepoName}",
+                    workflow.Name, branch, repoName);
+
+                await CreateWorkflowRunWithJobsAsync(repoName, workflow, branch, sha, commitMessage, pushedBy);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to trigger push workflows for {RepoName}", repoName);
+        }
+    }
+
+    private static bool ShouldTriggerOnPush(WorkflowDefinition workflow, string branch)
+    {
+        if (workflow.On == null) return false;
+
+        // on: push
+        if (workflow.On is string onStr)
+            return onStr.Equals("push", StringComparison.OrdinalIgnoreCase);
+
+        // on: [push, pull_request]
+        if (workflow.On is List<object> onList)
+            return onList.Any(o => o?.ToString()?.Equals("push", StringComparison.OrdinalIgnoreCase) == true);
+
+        // on: { push: { branches: [main] } }
+        if (workflow.On is Dictionary<object, object> onDict)
+        {
+            var pushKey = onDict.Keys.FirstOrDefault(k =>
+                k.ToString()?.Equals("push", StringComparison.OrdinalIgnoreCase) == true);
+
+            if (pushKey == null) return false;
+
+            var pushValue = onDict[pushKey];
+
+            // on: { push: null } — trigger on all branches
+            if (pushValue == null) return true;
+
+            // on: { push: { branches: [main, develop] } }
+            if (pushValue is Dictionary<object, object> pushConfig)
+            {
+                var branchesKey = pushConfig.Keys.FirstOrDefault(k =>
+                    k.ToString()?.Equals("branches", StringComparison.OrdinalIgnoreCase) == true);
+
+                if (branchesKey == null) return true; // no branch filter = all branches
+
+                if (pushConfig[branchesKey] is List<object> branches)
+                    return branches.Any(b => b?.ToString()?.Equals(branch, StringComparison.OrdinalIgnoreCase) == true);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     public async Task<List<Webhook>> GetWebhooksAsync(string repoName)
