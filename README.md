@@ -80,9 +80,13 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Repository Topics** — Tag repositories with topics for discovery and filtering on the Explore page
 
 ### CI/CD & DevOps
-- **CI/CD Runner** — Define workflows in `.github/workflows/*.yml` and run them in Docker containers. Auto-triggers on push to matching branches
+- **CI/CD Runner** — Define workflows in `.github/workflows/*.yml` and run them in Docker containers. Auto-triggers on push and pull request events
 - **GitHub Actions Compatibility** — Same workflow YAML works on both MyPersonalGit and GitHub Actions. Translates `uses:` actions (`actions/checkout`, `docker/login-action`, `docker/build-push-action`) into equivalent shell commands
 - **Auto-Release Pipeline** — Built-in workflow auto-tags versions, generates changelogs, and pushes Docker images to Docker Hub on every push to main
+- **Commit Status Checks** — Workflows automatically set pending/success/failure status on commits, visible on pull requests
+- **Workflow Cancellation** — Cancel running or queued workflows from the Actions UI
+- **Status Badges** — Embeddable SVG badges for workflow and commit status (`/api/badge/{repo}/workflow`)
+- **Artifact Downloads** — Download build artifacts directly from the Actions UI
 - **Secrets Management** — Encrypted repository secrets (AES-256) injected as environment variables into CI/CD workflow runs
 - **Webhooks** — Trigger external services on repository events
 - **Prometheus Metrics** — Built-in `/metrics` endpoint for monitoring
@@ -424,6 +428,23 @@ The same workflow YAML also works on GitHub Actions — no changes needed. MyPer
 | `docker/setup-buildx-action@v3` | No-op (uses default builder) |
 | `softprops/action-gh-release@v2` | Log message (GitHub handles natively) |
 | `${{ secrets.X }}` | `$X` environment variable |
+
+**Pull request workflows:**
+Workflows with `on: pull_request` auto-trigger when a non-draft PR is created, running checks against the source branch.
+
+**Commit status checks:**
+Workflows automatically set commit statuses (pending/success/failure) so you can see build results on PRs and enforce required checks via branch protection.
+
+**Workflow cancellation:**
+Click the **Cancel** button on any running or queued workflow in the Actions UI to stop it immediately.
+
+**Status badges:**
+Embed build status badges in your README or anywhere:
+```markdown
+![Build](http://your-server/api/badge/YourRepo/workflow)
+![Status](http://your-server/api/badge/YourRepo/status)
+```
+Filter by workflow name: `/api/badge/YourRepo/workflow?workflow=Release%20%26%20Docker%20Push`
 
 ## Database Configuration
 
