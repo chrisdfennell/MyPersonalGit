@@ -2,7 +2,8 @@
 
 [![.NET 9](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![Blazor Server](https://img.shields.io/badge/Blazor-Server-512BD4?logo=blazor&logoColor=white)](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor)
-[![SQLite](https://img.shields.io/badge/SQLite-EF_Core_9-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![SQLite](https://img.shields.io/badge/SQLite-Default-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Optional-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Hub-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/fennch/mypersonalgit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub last commit](https://img.shields.io/github/last-commit/ChrisDFennell/MyPersonalGit)](https://github.com/ChrisDFennell/MyPersonalGit)
@@ -37,6 +38,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
   - [OAuth / SSO Login](#13-oauth--sso-login)
   - [Import Repository](#14-import-repository)
   - [Forking & Upstream Sync](#15-forking--upstream-sync)
+- [Database Configuration](#database-configuration)
 - [Deploy to a NAS](#deploy-to-a-nas)
 - [Configuration](#configuration)
 - [Project Structure](#project-structure)
@@ -118,7 +120,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 |-----------|-----------|
 | Backend | ASP.NET Core 9.0 |
 | Frontend | Blazor Server (interactive server-side rendering) |
-| Database | SQLite via Entity Framework Core 9 |
+| Database | SQLite (default) or PostgreSQL via Entity Framework Core 9 |
 | Git Engine | LibGit2Sharp |
 | Auth | BCrypt password hashing, session-based auth, PAT tokens, OAuth2 (8 providers), TOTP 2FA, LDAP/AD |
 | SSH Server | Built-in SSH2 protocol implementation (ECDH, AES-CTR, HMAC-SHA2) |
@@ -175,7 +177,8 @@ The app starts at **http://localhost:5146**.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `ConnectionStrings__Default` | SQLite connection string | `Data Source=/data/mypersonalgit.db` |
+| `Database__Provider` | Database engine: `sqlite` or `postgresql` | `sqlite` |
+| `ConnectionStrings__Default` | Database connection string | `Data Source=/data/mypersonalgit.db` |
 | `Git__ProjectRoot` | Directory where Git repos are stored | `/repos` |
 | `Git__RequireAuth` | Require auth for Git HTTP operations | `true` |
 | `Git__Users__<username>` | Set password for Git HTTP Basic Auth user | — |
@@ -394,6 +397,65 @@ Fork a repository and keep it in sync:
 1. Click the **Fork** button on any repository page
 2. A fork is created under your username with a link back to the original
 3. Click **Sync fork** next to the "forked from" badge to pull latest changes from upstream
+
+## Database Configuration
+
+MyPersonalGit uses **SQLite** by default — zero configuration, single-file database, perfect for personal use and small teams.
+
+For larger deployments (many concurrent users, high availability, or if you already run PostgreSQL), you can switch to **PostgreSQL**:
+
+### Using PostgreSQL
+
+**Docker Compose** (recommended for PostgreSQL):
+```yaml
+services:
+  mypersonalgit:
+    image: fennch/mypersonalgit:latest
+    ports:
+      - "8080:8080"
+      - "2222:2222"
+    environment:
+      - Database__Provider=postgresql
+      - ConnectionStrings__Default=Host=db;Database=mypersonalgit;Username=mypg;Password=secret
+    depends_on:
+      - db
+    volumes:
+      - repos:/repos
+
+  db:
+    image: postgres:17
+    environment:
+      - POSTGRES_DB=mypersonalgit
+      - POSTGRES_USER=mypg
+      - POSTGRES_PASSWORD=secret
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  repos:
+  pgdata:
+```
+
+**Environment variables only** (if you already have a PostgreSQL server):
+```bash
+docker run -d --name mypersonalgit -p 8080:8080 \
+  -v mypersonalgit-repos:/repos \
+  -e Database__Provider=postgresql \
+  -e ConnectionStrings__Default="Host=your-pg-server;Database=mypersonalgit;Username=mypg;Password=secret" \
+  fennch/mypersonalgit:latest
+```
+
+EF Core migrations run automatically on startup for both providers. No manual schema setup required.
+
+### Choosing a Database
+
+| | SQLite | PostgreSQL |
+|---|---|---|
+| **Setup** | Zero config (default) | Requires a PostgreSQL server |
+| **Best for** | Personal use, small teams, NAS | Teams of 50+, high concurrency |
+| **Backup** | Copy the `.db` file | Standard `pg_dump` |
+| **Concurrency** | Single-writer (fine for most use) | Full multi-writer |
+| **Migration** | N/A | Switch provider + run the app (auto-migrates) |
 
 ## Deploy to a NAS
 

@@ -52,10 +52,18 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 
-// Core infrastructure
+// Core infrastructure — supports SQLite (default) and PostgreSQL
+var dbProvider = builder.Configuration["Database:Provider"]?.ToLowerInvariant() ?? "sqlite";
+var connectionString = builder.Configuration.GetConnectionString("Default")
+    ?? "Data Source=mypersonalgit.db";
+
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("Default")
-        ?? "Data Source=mypersonalgit.db"));
+{
+    if (dbProvider == "postgresql" || dbProvider == "postgres" || dbProvider == "npgsql")
+        options.UseNpgsql(connectionString);
+    else
+        options.UseSqlite(connectionString);
+});
 
 // Domain services (registered as interfaces for testability)
 builder.Services.AddSingleton<IEmailService, EmailService>();
