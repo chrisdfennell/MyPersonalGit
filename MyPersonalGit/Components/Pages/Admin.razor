@@ -474,6 +474,12 @@ else
                                         Use StartTLS
                                     </label>
                                 </div>
+                                <div class="form-check form-check-inline">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapSkipCertificateValidation" id="ldapSkipCert" />
+                                    <label class="form-check-label" for="ldapSkipCert">
+                                        Skip Certificate Validation
+                                    </label>
+                                </div>
                             </div>
 
                             <div class="mb-3">

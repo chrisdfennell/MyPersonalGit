@@ -48,6 +48,7 @@ public class SystemSettings
     public string LdapEmailAttribute { get; set; } = "mail";
     public string LdapDisplayNameAttribute { get; set; } = "displayName";
     public string LdapAdminGroupDn { get; set; } = string.Empty;
+    public bool LdapSkipCertificateValidation { get; set; } = true;
 }
 
 public class SystemStatistics

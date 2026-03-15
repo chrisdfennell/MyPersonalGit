@@ -62,7 +62,7 @@ public class LdapAuthService : ILdapAuthService
             using (var conn = CreateConnection(settings))
             {
                 if (!string.IsNullOrWhiteSpace(settings.LdapBindDn))
-                    conn.Bind(new NetworkCredential(settings.LdapBindDn, settings.LdapBindPassword));
+                    conn.Bind(ParseCredential(settings.LdapBindDn, settings.LdapBindPassword));
                 else
                     conn.Bind(); // anonymous bind
 
@@ -90,11 +90,14 @@ public class LdapAuthService : ILdapAuthService
             }
 
             // Step 3: Bind as the user to verify password
+            // Extract domain from search base for NTLM (e.g., DC=fennellfamily,DC=org -> fennellfamily)
+            var domain = ExtractDomainFromDn(settings.LdapSearchBase);
+            var ldapUsername = GetAttribute(entry, settings.LdapUsernameAttribute) ?? username;
             using (var userConn = CreateConnection(settings))
             {
                 try
                 {
-                    userConn.Bind(new NetworkCredential(userDn, password));
+                    userConn.Bind(new NetworkCredential(ldapUsername, password, domain));
                 }
                 catch (LdapException ex)
                 {
@@ -104,7 +107,6 @@ public class LdapAuthService : ILdapAuthService
             }
 
             // Step 4: Extract attributes
-            var ldapUsername = GetAttribute(entry, settings.LdapUsernameAttribute) ?? username;
             var email = GetAttribute(entry, settings.LdapEmailAttribute) ?? $"{ldapUsername}@ldap.local";
             var displayName = GetAttribute(entry, settings.LdapDisplayNameAttribute);
 
@@ -143,7 +145,7 @@ public class LdapAuthService : ILdapAuthService
             using var conn = CreateConnection(settings);
 
             if (!string.IsNullOrWhiteSpace(settings.LdapBindDn))
-                conn.Bind(new NetworkCredential(settings.LdapBindDn, settings.LdapBindPassword));
+                conn.Bind(ParseCredential(settings.LdapBindDn, settings.LdapBindPassword));
             else
                 conn.Bind();
 
@@ -172,12 +174,20 @@ public class LdapAuthService : ILdapAuthService
         var server = new LdapDirectoryIdentifier(settings.LdapServer, settings.LdapPort);
         var conn = new LdapConnection(server)
         {
-            AuthType = AuthType.Basic,
+            // Use Negotiate (NTLM/Kerberos) for Active Directory, Basic for OpenLDAP
+            AuthType = settings.LdapPort == 636 || settings.LdapUseSsl
+                ? AuthType.Negotiate
+                : AuthType.Negotiate,
             AutoBind = false
         };
 
         conn.SessionOptions.ProtocolVersion = 3;
         conn.SessionOptions.ReferralChasing = ReferralChasingOptions.None;
+
+        if (settings.LdapSkipCertificateValidation)
+        {
+            conn.SessionOptions.VerifyServerCertificate = (connection, certificate) => true;
+        }
 
         if (settings.LdapUseSsl)
         {
@@ -257,6 +267,43 @@ public class LdapAuthService : ILdapAuthService
             if (val != null) result.Add(val);
         }
         return result;
+    }
+
+    /// <summary>
+    /// Parse bind DN into a NetworkCredential. Supports formats:
+    ///   DOMAIN\username, username@domain, or full DN (CN=...,DC=...)
+    /// </summary>
+    private static NetworkCredential ParseCredential(string bindDn, string password)
+    {
+        if (bindDn.Contains('\\'))
+        {
+            // DOMAIN\username format
+            var parts = bindDn.Split('\\', 2);
+            return new NetworkCredential(parts[1], password, parts[0]);
+        }
+        if (bindDn.Contains('@'))
+        {
+            // user@domain format — extract domain part for NTLM
+            var parts = bindDn.Split('@', 2);
+            var domain = parts[1].Split('.')[0]; // fennellfamily.org -> fennellfamily
+            return new NetworkCredential(parts[0], password, domain);
+        }
+        // Full DN format — pass as-is
+        return new NetworkCredential(bindDn, password);
+    }
+
+    /// <summary>
+    /// Extract the first domain component from a DN (e.g., DC=fennellfamily,DC=org -> fennellfamily)
+    /// </summary>
+    private static string ExtractDomainFromDn(string dn)
+    {
+        foreach (var part in dn.Split(','))
+        {
+            var trimmed = part.Trim();
+            if (trimmed.StartsWith("DC=", StringComparison.OrdinalIgnoreCase))
+                return trimmed[3..];
+        }
+        return "";
     }
 
     private static string EscapeLdapFilter(string input)
