@@ -1,0 +1,49 @@
+@page "/terms"
+@page "/privacy"
+@page "/docs"
+@page "/contact"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@inject IAdminService AdminService
+@inject IMarkdownService MarkdownService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>@pageTitle - MyPersonalGit</PageTitle>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body p-4 markdown-body">
+                    @content
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private MarkupString content;
+    private string pageTitle = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var settings = await AdminService.GetSystemSettingsAsync();
+        var uri = new Uri(Navigation.Uri);
+        var path = uri.AbsolutePath.TrimStart('/').ToLowerInvariant();
+
+        var (title, markdown) = path switch
+        {
+            "terms" => ("Terms of Service", settings.FooterTerms),
+            "privacy" => ("Privacy Policy", settings.FooterPrivacy),
+            "docs" => ("Documentation", settings.FooterDocs),
+            "contact" => ("Contact", settings.FooterContact),
+            _ => ("Page", "Page not found.")
+        };
+
+        pageTitle = title;
+        content = new MarkupString(MarkdownService.RenderToHtml(
+            string.IsNullOrWhiteSpace(markdown) ? $"## {title}\n\nNo content configured yet. Admins can edit this in Admin > Settings." : markdown));
+    }
+}

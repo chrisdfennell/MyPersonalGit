@@ -49,6 +49,13 @@ public class SystemSettings
     public string LdapDisplayNameAttribute { get; set; } = "displayName";
     public string LdapAdminGroupDn { get; set; } = string.Empty;
     public bool LdapSkipCertificateValidation { get; set; } = true;
+
+    // Footer Pages (customizable content)
+    public string SiteName { get; set; } = "PersonalGit";
+    public string FooterTerms { get; set; } = "## Terms of Service\n\nBy using this MyPersonalGit instance, you agree to use it responsibly.\n\n- Do not upload malicious code or content that violates applicable laws.\n- Administrators reserve the right to remove content or disable accounts.\n- This is a self-hosted service — your data stays on this server.\n\nFor questions, contact your instance administrator.";
+    public string FooterPrivacy { get; set; } = "## Privacy Policy\n\nThis MyPersonalGit instance is self-hosted. Your data is stored locally on this server and is not shared with any third parties.\n\n**What we store:**\n- Account information (username, email, password hash)\n- Repository data and git history\n- Issues, pull requests, and comments\n- Session data for authentication\n\n**What we don't do:**\n- We don't sell or share your data\n- We don't use analytics or tracking services\n- We don't send data to external servers (except features you explicitly enable like SMTP, push notifications, or Docker Hub)";
+    public string FooterDocs { get; set; } = "## Documentation\n\nVisit the [GitHub repository](https://github.com/ChrisDFennell/MyPersonalGit) for full documentation, setup guides, and the README.\n\n### Quick Links\n\n- **Clone a repo:** `git clone http://your-server/git/RepoName.git`\n- **SSH access:** Enable in Admin > Settings > Built-in SSH Server\n- **API tokens:** Generate in Settings > Access Tokens\n- **CI/CD:** Add `.github/workflows/*.yml` to your repo\n- **Docker Registry:** `docker push your-server/image:tag`\n- **Package Registry:** NuGet, npm, and generic packages supported";
+    public string FooterContact { get; set; } = "## Contact\n\nThis is a self-hosted MyPersonalGit instance.\n\nFor issues with this instance, contact the server administrator.\n\nFor bugs or feature requests with MyPersonalGit itself, visit:\n- **GitHub:** [github.com/ChrisDFennell/MyPersonalGit](https://github.com/ChrisDFennell/MyPersonalGit)\n- **Issues:** [Report a bug](https://github.com/ChrisDFennell/MyPersonalGit/issues)";
 }
 
 public class SystemStatistics

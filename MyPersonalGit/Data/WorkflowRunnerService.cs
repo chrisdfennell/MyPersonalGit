@@ -270,8 +270,28 @@ public class WorkflowRunnerService : BackgroundService
             // Resolve repo path
             var repoMount = GetRepoPath(run.RepoName);
 
-            // Load repository secrets and inject as environment variables
+            // Load workflow/job-level env vars from YAML definition
             var envVars = new List<string>();
+            try
+            {
+                var parser = new WorkflowYamlParser();
+                var definitions = parser.ParseFromRepo(repoMount ?? "");
+                var wfDef = definitions.FirstOrDefault(d => d.Name == run.WorkflowName);
+                if (wfDef != null)
+                {
+                    // Workflow-level env
+                    if (wfDef.Env != null)
+                        foreach (var (k, v) in wfDef.Env)
+                            envVars.Add($"{k}={v}");
+                    // Job-level env
+                    if (wfDef.Jobs.TryGetValue(job.Name, out var jobDef) && jobDef.Env != null)
+                        foreach (var (k, v) in jobDef.Env)
+                            envVars.Add($"{k}={v}");
+                }
+            }
+            catch { }
+
+            // Load repository secrets (override env vars)
             try
             {
                 using var secretsScope = _scopeFactory.CreateScope();

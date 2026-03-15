@@ -85,6 +85,8 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Auto-Release Pipeline** — Built-in workflow auto-tags versions, generates changelogs, and pushes Docker images to Docker Hub on every push to main
 - **Commit Status Checks** — Workflows automatically set pending/success/failure status on commits, visible on pull requests
 - **Workflow Cancellation** — Cancel running or queued workflows from the Actions UI
+- **Concurrency Controls** — New pushes automatically cancel queued runs of the same workflow
+- **Workflow Environment Variables** — Set `env:` at workflow, job, or step level in YAML
 - **Status Badges** — Embeddable SVG badges for workflow and commit status (`/api/badge/{repo}/workflow`)
 - **Artifact Downloads** — Download build artifacts directly from the Actions UI
 - **Secrets Management** — Encrypted repository secrets (AES-256) injected as environment variables into CI/CD workflow runs
@@ -111,7 +113,8 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Linked Accounts** — Users can link multiple OAuth providers to their account from Settings
 
 ### Administration
-- **Admin Dashboard** — System settings (including database provider, SSH server, LDAP/AD), user management, audit logs, and statistics
+- **Admin Dashboard** — System settings (including database provider, SSH server, LDAP/AD, footer pages), user management, audit logs, and statistics
+- **Customizable Footer Pages** — Terms of Service, Privacy Policy, Documentation, and Contact pages with Markdown content editable from Admin > Settings
 - **User Profiles** — Contribution heatmap, activity feed, and stats per user
 - **Personal Access Tokens** — Token-based API authentication with configurable scopes
 - **Backup & Restore** — Export and import server data
