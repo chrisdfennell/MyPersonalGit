@@ -82,6 +82,19 @@ public class WorkflowRunnerService : BackgroundService
         run.StartedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
 
+        // Set pending commit status
+        var pendingContext = $"ci/{run.WorkflowName.ToLowerInvariant().Replace(' ', '-')}";
+        db.CommitStatuses.Add(new CommitStatus
+        {
+            RepoName = run.RepoName,
+            Sha = run.CommitSha,
+            State = CommitStatusState.Pending,
+            Context = pendingContext,
+            Description = "Workflow running...",
+            Creator = "ci"
+        });
+        try { await db.SaveChangesAsync(ct); } catch { }
+
         var runSuccess = true;
 
         foreach (var job in run.Jobs)
@@ -97,6 +110,9 @@ public class WorkflowRunnerService : BackgroundService
         await db.SaveChangesAsync(ct);
 
         _logger.LogInformation("Workflow run {RunId} completed with status {Status}", run.Id, run.Status);
+
+        // Set commit status based on workflow result
+        await SetCommitStatus(db, run, runSuccess);
 
         // Auto-merge: if the run succeeded, check for PRs with auto-merge enabled
         if (runSuccess)
@@ -155,6 +171,41 @@ public class WorkflowRunnerService : BackgroundService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to create tag from workflow run {RunId}", run.Id);
+        }
+    }
+
+    private async Task SetCommitStatus(AppDbContext db, WorkflowRun run, bool success)
+    {
+        try
+        {
+            var context = $"ci/{run.WorkflowName.ToLowerInvariant().Replace(' ', '-')}";
+            var existing = await db.CommitStatuses
+                .FirstOrDefaultAsync(s => s.RepoName == run.RepoName && s.Sha == run.CommitSha && s.Context == context);
+
+            if (existing != null)
+            {
+                existing.State = success ? CommitStatusState.Success : CommitStatusState.Failure;
+                existing.Description = success ? "Workflow passed" : "Workflow failed";
+                existing.UpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                db.CommitStatuses.Add(new CommitStatus
+                {
+                    RepoName = run.RepoName,
+                    Sha = run.CommitSha,
+                    State = success ? CommitStatusState.Success : CommitStatusState.Failure,
+                    Context = context,
+                    Description = success ? "Workflow passed" : "Workflow failed",
+                    Creator = "ci"
+                });
+            }
+
+            await db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to set commit status for run {RunId}", run.Id);
         }
     }
 

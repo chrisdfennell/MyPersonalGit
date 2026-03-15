@@ -11,6 +11,8 @@ public interface IWorkflowService
     Task<bool> UpdateWorkflowRunAsync(string repoName, int runId, Action<WorkflowRun> updateAction);
     Task<WorkflowRun> CreateWorkflowRunWithJobsAsync(string repoName, WorkflowDefinition definition, string branch, string sha, string message, string user);
     Task TriggerPushWorkflowsAsync(string repoName, string repoPath, string branch, string sha, string commitMessage, string pushedBy);
+    Task TriggerPullRequestWorkflowsAsync(string repoName, string repoPath, string sourceBranch, string targetBranch, string sha, string title, string author);
+    Task CancelWorkflowRunAsync(string repoName, int runId);
     Task<List<Webhook>> GetWebhooksAsync(string repoName);
     Task<Webhook> CreateWebhookAsync(string repoName, string url, string secret, List<string> events);
     Task<bool> DeleteWebhookAsync(string repoName, int webhookId);
@@ -167,40 +169,94 @@ public class WorkflowService : IWorkflowService
         }
     }
 
+    public async Task TriggerPullRequestWorkflowsAsync(string repoName, string repoPath, string sourceBranch, string targetBranch, string sha, string title, string author)
+    {
+        try
+        {
+            var parser = new WorkflowYamlParser();
+            var workflows = parser.ParseFromRepo(repoPath);
+
+            foreach (var workflow in workflows)
+            {
+                if (!ShouldTriggerOnEvent(workflow, "pull_request", targetBranch)) continue;
+
+                _logger.LogInformation("Auto-triggering workflow '{WorkflowName}' on pull_request to {Branch} in {RepoName}",
+                    workflow.Name, targetBranch, repoName);
+
+                await CreateWorkflowRunWithJobsAsync(repoName, workflow, sourceBranch, sha, title, author);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to trigger pull_request workflows for {RepoName}", repoName);
+        }
+    }
+
+    public async Task CancelWorkflowRunAsync(string repoName, int runId)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var run = await db.WorkflowRuns
+            .Include(r => r.Jobs).ThenInclude(j => j.Steps)
+            .FirstOrDefaultAsync(r => r.Id == runId && r.RepoName == repoName);
+
+        if (run == null) return;
+        if (run.Status != WorkflowStatus.Queued && run.Status != WorkflowStatus.InProgress) return;
+
+        run.Status = WorkflowStatus.Cancelled;
+        run.CompletedAt = DateTime.UtcNow;
+
+        foreach (var job in run.Jobs.Where(j => j.Status == WorkflowStatus.Queued || j.Status == WorkflowStatus.InProgress))
+        {
+            job.Status = WorkflowStatus.Cancelled;
+            job.CompletedAt = DateTime.UtcNow;
+            foreach (var step in job.Steps.Where(s => s.Status == WorkflowStatus.Queued || s.Status == WorkflowStatus.InProgress))
+            {
+                step.Status = WorkflowStatus.Cancelled;
+                step.CompletedAt = DateTime.UtcNow;
+            }
+        }
+
+        await db.SaveChangesAsync();
+        _logger.LogInformation("Cancelled workflow run {RunId} for {RepoName}", runId, repoName);
+    }
+
     private static bool ShouldTriggerOnPush(WorkflowDefinition workflow, string branch)
+        => ShouldTriggerOnEvent(workflow, "push", branch);
+
+    private static bool ShouldTriggerOnEvent(WorkflowDefinition workflow, string eventName, string branch)
     {
         if (workflow.On == null) return false;
 
-        // on: push
+        // on: push (or on: pull_request)
         if (workflow.On is string onStr)
-            return onStr.Equals("push", StringComparison.OrdinalIgnoreCase);
+            return onStr.Equals(eventName, StringComparison.OrdinalIgnoreCase);
 
         // on: [push, pull_request]
         if (workflow.On is List<object> onList)
-            return onList.Any(o => o?.ToString()?.Equals("push", StringComparison.OrdinalIgnoreCase) == true);
+            return onList.Any(o => o?.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true);
 
         // on: { push: { branches: [main] } }
         if (workflow.On is Dictionary<object, object> onDict)
         {
-            var pushKey = onDict.Keys.FirstOrDefault(k =>
-                k.ToString()?.Equals("push", StringComparison.OrdinalIgnoreCase) == true);
+            var eventKey = onDict.Keys.FirstOrDefault(k =>
+                k.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true);
 
-            if (pushKey == null) return false;
+            if (eventKey == null) return false;
 
-            var pushValue = onDict[pushKey];
+            var eventValue = onDict[eventKey];
 
             // on: { push: null } — trigger on all branches
-            if (pushValue == null) return true;
+            if (eventValue == null) return true;
 
             // on: { push: { branches: [main, develop] } }
-            if (pushValue is Dictionary<object, object> pushConfig)
+            if (eventValue is Dictionary<object, object> eventConfig)
             {
-                var branchesKey = pushConfig.Keys.FirstOrDefault(k =>
+                var branchesKey = eventConfig.Keys.FirstOrDefault(k =>
                     k.ToString()?.Equals("branches", StringComparison.OrdinalIgnoreCase) == true);
 
-                if (branchesKey == null) return true; // no branch filter = all branches
+                if (branchesKey == null) return true;
 
-                if (pushConfig[branchesKey] is List<object> branches)
+                if (eventConfig[branchesKey] is List<object> branches)
                     return branches.Any(b => b?.ToString()?.Equals(branch, StringComparison.OrdinalIgnoreCase) == true);
             }
 
