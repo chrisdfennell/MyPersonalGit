@@ -74,7 +74,12 @@ public class MarkdownService : IMarkdownService
                 if (queryIdx >= 0) { query = url[queryIdx..]; url = url[..queryIdx]; }
 
                 if (string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(fragment))
-                    continue; // pure anchor link like #heading
+                {
+                    // Rewrite pure anchor links to include the repo page path
+                    if (!string.IsNullOrEmpty(repoName))
+                        link.Url = $"/repo/{repoName}{fragment}";
+                    continue;
+                }
 
                 var resolvedPath = ResolveRelativePath(currentDir, url);
 

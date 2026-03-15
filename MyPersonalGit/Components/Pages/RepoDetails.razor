@@ -3116,6 +3116,8 @@ else
             try { await JS.InvokeVoidAsync("editorHelper.enableTabKey", "codeEditor"); } catch { }
             try { await JS.InvokeVoidAsync("editorHelper.autoresize", "codeEditor"); } catch { }
         }
+        // Scroll to anchor fragment if present in the URL (for TOC links)
+        try { await JS.InvokeVoidAsync("eval", "if(location.hash){document.querySelector(location.hash)?.scrollIntoView({behavior:'smooth'})}"); } catch { }
     }
 
     private string GetPageTitle()
@@ -3275,6 +3277,7 @@ else
 
     private static readonly MarkdownPipeline _markdownPipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
+        .UseAutoIdentifiers(Markdig.Extensions.AutoIdentifiers.AutoIdentifierOptions.GitHub)
         .Build();
 
     private MarkupString ConvertMarkdownToHtml(string markdown)
@@ -3321,7 +3324,13 @@ else
                 if (queryIdx >= 0) { query = url[queryIdx..]; url = url[..queryIdx]; }
 
                 if (string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(fragment))
-                    continue; // pure anchor link like #heading
+                {
+                    // Rewrite pure anchor links to include the full page path
+                    // so Blazor's router doesn't navigate away from the current page
+                    var basePath = string.IsNullOrEmpty(Path) ? "" : $"/{Path}";
+                    link.Url = $"/repo/{RepoName}{basePath}{fragment}";
+                    continue;
+                }
 
                 var resolvedPath = ResolveRelativePath(currentDir, url);
 
