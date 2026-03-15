@@ -32,7 +32,7 @@ public sealed class GitHttpBackendMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, IIssueAutoCloseService issueAutoCloseService)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, IIssueAutoCloseService issueAutoCloseService, IWorkflowService workflowService)
     {
         // Only handle /git/* paths; let everything else pass through.
         if (!context.Request.Path.StartsWithSegments("/git", out var remaining))
@@ -298,6 +298,34 @@ public sealed class GitHttpBackendMiddleware
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to process issue auto-close after push.");
+            }
+
+            // Trigger workflows that listen for push events
+            try
+            {
+                var segments = pathInfo.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                if (segments.Length >= 1)
+                {
+                    var repoDir = Path.Combine(projectRoot, segments[0]);
+                    if (Repository.IsValid(repoDir))
+                    {
+                        var repoName = segments[0].EndsWith(".git", StringComparison.OrdinalIgnoreCase)
+                            ? segments[0][..^4] : segments[0];
+                        var remoteUser = context.User?.Identity?.Name ?? "system";
+
+                        using var repo = new Repository(repoDir);
+                        var head = repo.Head;
+                        var branch = head?.FriendlyName ?? "main";
+                        var sha = head?.Tip?.Sha ?? "HEAD";
+                        var message = head?.Tip?.MessageShort ?? "Push";
+
+                        await workflowService.TriggerPushWorkflowsAsync(repoName, repoDir, branch, sha, message, remoteUser);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to trigger push workflows.");
             }
         }
     }

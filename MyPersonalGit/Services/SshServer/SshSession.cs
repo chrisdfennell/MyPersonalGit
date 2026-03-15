@@ -57,6 +57,7 @@ public sealed class SshSession : IDisposable
     private readonly ICollaboratorService _collaboratorService;
     private readonly IDeployKeyService _deployKeyService;
     private readonly IIssueAutoCloseService _issueAutoCloseService;
+    private readonly IWorkflowService _workflowService;
     private readonly ILogger _logger;
 
     // Protocol state
@@ -85,7 +86,7 @@ public sealed class SshSession : IDisposable
         TcpClient client, ECDsa hostKey, byte[] hostKeyBlob, string projectRoot,
         ISshAuthService sshAuth, IRepositoryService repoService,
         ICollaboratorService collaboratorService, IDeployKeyService deployKeyService,
-        IIssueAutoCloseService issueAutoCloseService, ILogger logger)
+        IIssueAutoCloseService issueAutoCloseService, IWorkflowService workflowService, ILogger logger)
     {
         _client = client;
         _stream = client.GetStream();
@@ -97,6 +98,7 @@ public sealed class SshSession : IDisposable
         _collaboratorService = collaboratorService;
         _deployKeyService = deployKeyService;
         _issueAutoCloseService = issueAutoCloseService;
+        _workflowService = workflowService;
         _logger = logger;
 
         _client.ReceiveTimeout = 30000;
@@ -979,10 +981,18 @@ public sealed class SshSession : IDisposable
             SortBy = CommitSortStrategies.Time
         };
 
+        var branch = defaultBranch.FriendlyName;
+        var sha = defaultBranch.Tip.Sha;
+        var message = defaultBranch.Tip.MessageShort;
+        var user = _authenticatedUser ?? "system";
+
         foreach (var commit in repo.Commits.QueryBy(filter).Take(20))
         {
-            await _issueAutoCloseService.ProcessCommitMessage(repoName, commit.Message, commit.Sha, _authenticatedUser ?? "system");
+            await _issueAutoCloseService.ProcessCommitMessage(repoName, commit.Message, commit.Sha, user);
         }
+
+        // Trigger workflows that listen for push events
+        await _workflowService.TriggerPushWorkflowsAsync(repoName, repoDir, branch, sha, message, user);
     }
 
     private async Task<bool> CheckAccess(string username, string repoName, string operation)
