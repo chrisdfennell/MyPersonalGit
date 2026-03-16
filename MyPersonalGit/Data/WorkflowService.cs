@@ -117,6 +117,7 @@ public class WorkflowService : IWorkflowService
             {
                 Name = jobName,
                 RunsOn = jobDef.RunsOn,
+                Needs = jobDef.Needs.Count > 0 ? string.Join(";", jobDef.Needs) : null,
                 Status = WorkflowStatus.Queued
             };
 
@@ -127,6 +128,7 @@ public class WorkflowService : IWorkflowService
                 {
                     Name = stepDef.Name ?? stepDef.Run ?? stepDef.Uses ?? "Step",
                     Command = command,
+                    Condition = stepDef.If,
                     Status = WorkflowStatus.Queued
                 });
             }

@@ -2634,6 +2634,9 @@ namespace MyPersonalGit.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Needs")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("RunsOn")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -2743,6 +2746,9 @@ namespace MyPersonalGit.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Command")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Condition")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("CompletedAt")

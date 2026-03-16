@@ -16,13 +16,16 @@ public class WorkflowDefinition
 public class JobDefinition
 {
     public string RunsOn { get; set; } = "ubuntu-latest";
+    public List<string> Needs { get; set; } = new();
     public Dictionary<string, string>? Env { get; set; }
     public List<StepDefinition> Steps { get; set; } = new();
 }
 
 public class StepDefinition
 {
+    public string? Id { get; set; }
     public string? Name { get; set; }
+    public string? If { get; set; }
     public string? Run { get; set; }
     public string? Uses { get; set; }
     public Dictionary<string, string>? With { get; set; }
@@ -109,6 +112,18 @@ public class WorkflowYamlParser
                 if (jobObj.ContainsKey("runs-on"))
                     jobDef.RunsOn = jobObj["runs-on"]?.ToString() ?? "ubuntu-latest";
 
+                // needs: (string or list)
+                if (jobObj.ContainsKey("needs"))
+                {
+                    var needsVal = jobObj["needs"];
+                    if (needsVal is string needsStr)
+                        jobDef.Needs.Add(needsStr);
+                    else if (needsVal is List<object> needsList)
+                        jobDef.Needs.AddRange(needsList
+                            .Select(n => n?.ToString() ?? "")
+                            .Where(n => !string.IsNullOrEmpty(n)));
+                }
+
                 // Job-level env
                 if (jobObj.ContainsKey("env") && jobObj["env"] is Dictionary<object, object> jobEnvDict)
                     jobDef.Env = jobEnvDict.ToDictionary(k => k.Key.ToString()!, v => v.Value?.ToString() ?? "");
@@ -121,8 +136,10 @@ public class WorkflowYamlParser
 
                         var step = new StepDefinition
                         {
+                            Id   = stepDict.ContainsKey("id")   ? stepDict["id"]?.ToString()   : null,
                             Name = stepDict.ContainsKey("name") ? stepDict["name"]?.ToString() : null,
-                            Run = stepDict.ContainsKey("run") ? stepDict["run"]?.ToString() : null,
+                            If   = stepDict.ContainsKey("if")   ? stepDict["if"]?.ToString()   : null,
+                            Run  = stepDict.ContainsKey("run")  ? stepDict["run"]?.ToString()  : null,
                             Uses = stepDict.ContainsKey("uses") ? stepDict["uses"]?.ToString() : null
                         };
 
