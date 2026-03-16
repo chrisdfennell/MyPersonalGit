@@ -825,8 +825,10 @@ public class WorkflowRunnerService : BackgroundService
     {
         try
         {
+            _logger.LogInformation("Checking for release metadata in container for run {RunId}", run.Id);
             var (exitCode, metaContent) = await ExecInContainer(containerId,
                 new[] { "sh", "-c", "cat /tmp/release_meta 2>/dev/null" }, null, ct);
+            _logger.LogInformation("Release meta check: exit={ExitCode}, content='{Content}'", exitCode, metaContent?.Trim());
             if (exitCode != 0 || string.IsNullOrWhiteSpace(metaContent)) return;
 
             var meta = new Dictionary<string, string>();
@@ -837,7 +839,11 @@ public class WorkflowRunnerService : BackgroundService
                     meta[line[..eqIdx].Trim()] = line[(eqIdx + 1)..].Trim();
             }
 
-            if (!meta.TryGetValue("TAG_NAME", out var tagName) || string.IsNullOrEmpty(tagName)) return;
+            if (!meta.TryGetValue("TAG_NAME", out var tagName) || string.IsNullOrEmpty(tagName))
+            {
+                _logger.LogWarning("No TAG_NAME found in release meta for run {RunId}. Keys: {Keys}", run.Id, string.Join(", ", meta.Keys));
+                return;
+            }
             var releaseName = meta.GetValueOrDefault("RELEASE_NAME", tagName);
             var isPrerelease = meta.GetValueOrDefault("PRERELEASE", "false").Equals("true", StringComparison.OrdinalIgnoreCase);
             var isDraft = meta.GetValueOrDefault("DRAFT", "false").Equals("true", StringComparison.OrdinalIgnoreCase);
@@ -859,6 +865,8 @@ public class WorkflowRunnerService : BackgroundService
                 return;
             }
 
+            _logger.LogInformation("Creating release: tag={Tag}, name={Name}, repo={Repo}, hasBody={HasBody}",
+                tagName, releaseName, run.RepoName, body != null);
             await releaseService.CreateReleaseAsync(run.RepoName, tagName, releaseName, body, "ci", isDraft, isPrerelease);
             _logger.LogInformation("Created release {Tag} for {RepoName}", tagName, run.RepoName);
         }
