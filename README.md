@@ -81,10 +81,11 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 
 ### CI/CD & DevOps
 - **CI/CD Runner** — Define workflows in `.github/workflows/*.yml` and run them in Docker containers. Auto-triggers on push and pull request events
-- **GitHub Actions Compatibility** — Same workflow YAML works on both MyPersonalGit and GitHub Actions. Translates `uses:` actions (`actions/checkout`, `actions/setup-dotnet`, `docker/login-action`, `docker/build-push-action`) into equivalent shell commands
+- **GitHub Actions Compatibility** — Same workflow YAML works on both MyPersonalGit and GitHub Actions. Translates `uses:` actions (`actions/checkout`, `actions/setup-dotnet`, `actions/setup-node`, `actions/setup-python`, `actions/setup-java`, `docker/login-action`, `docker/build-push-action`, `softprops/action-gh-release`) into equivalent shell commands
 - **Parallel Jobs with `needs:`** — Jobs declare dependencies via `needs:` and run in parallel when independent. Dependent jobs wait for their prerequisites and are automatically cancelled if a dependency fails
 - **Conditional Steps (`if:`)** — Steps support `if:` expressions: `always()`, `success()`, `failure()`, `cancelled()`, `true`, `false`. Cleanup steps with `if: failure()` or `if: always()` still run after earlier failures
-- **Step Outputs (`$GITHUB_OUTPUT`)** — Steps can write `key=value` pairs to `$GITHUB_OUTPUT` and subsequent steps receive them as environment variables, compatible with `${{ steps.X.outputs.Y }}` syntax
+- **Step Outputs (`$GITHUB_OUTPUT`)** — Steps can write `key=value` or `key<<DELIMITER` multiline pairs to `$GITHUB_OUTPUT` and subsequent steps receive them as environment variables, compatible with `${{ steps.X.outputs.Y }}` syntax
+- **`github` Context** — `GITHUB_SHA`, `GITHUB_REF`, `GITHUB_REF_NAME`, `GITHUB_ACTOR`, `GITHUB_REPOSITORY`, `GITHUB_EVENT_NAME`, `GITHUB_WORKSPACE`, `GITHUB_RUN_ID`, `GITHUB_JOB`, `GITHUB_WORKFLOW`, and `CI=true` automatically injected into every job
 - **Matrix Builds** — `strategy.matrix` expands jobs across multiple variable combinations (e.g., OS x version). Supports `fail-fast` and `${{ matrix.X }}` substitution in `runs-on`, step commands, and step names
 - **`workflow_dispatch` Inputs** — Manual triggers with typed input parameters (string, boolean, choice, number). UI shows an input form when triggering workflows with inputs. Values injected as `INPUT_*` env vars
 - **Job Timeouts (`timeout-minutes`)** — Set `timeout-minutes` on jobs to automatically fail them if they exceed the limit. Default: 360 minutes (matches GitHub Actions)
@@ -94,6 +95,10 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **`on.push.paths` Filter** — Only trigger workflows when specific files change. Supports glob patterns (`src/**`, `*.ts`) and `paths-ignore:` for exclusions
 - **Re-run Workflows** — Re-run failed, succeeded, or cancelled workflow runs with one click from the Actions UI. Creates a fresh run with the same configuration
 - **`working-directory`** — Set `defaults.run.working-directory` at workflow level or per-step `working-directory:` to control where commands execute
+- **`defaults.run.shell`** — Configure custom shell per workflow or per step (`bash`, `sh`, `python3`, etc.)
+- **`strategy.max-parallel`** — Limit concurrent matrix job execution
+- **`on.workflow_run`** — Chain workflows: trigger workflow B when workflow A completes. Filter by workflow name and `types: [completed]`
+- **Automatic Release Creation** — `softprops/action-gh-release` creates real Release entities with tag, title, changelog body, and pre-release/draft flags
 - **Auto-Release Pipeline** — Built-in workflow auto-tags versions, generates changelogs, and pushes Docker images to Docker Hub on every push to main
 - **Commit Status Checks** — Workflows automatically set pending/success/failure status on commits, visible on pull requests
 - **Workflow Cancellation** — Cancel running or queued workflows from the Actions UI
@@ -130,7 +135,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **User Profiles** — Contribution heatmap, activity feed, and stats per user
 - **Personal Access Tokens** — Token-based API authentication with configurable scopes
 - **Backup & Restore** — Export and import server data
-- **Security** — Security advisories, dependency scanning, and vulnerability tracking
+- **Security Scanning** — Real dependency vulnerability scanning powered by the [OSV.dev](https://osv.dev/) database. Automatically extracts dependencies from `.csproj` (NuGet), `package.json` (npm), and `requirements.txt` (PyPI), then checks each against known CVEs. Reports severity, fixed versions, and advisory links. Plus manual security advisories with draft/publish/close workflow
 - **Dark Mode** — Full dark/light mode support with a toggle in the header
 
 ## Tech Stack
@@ -439,12 +444,16 @@ The same workflow YAML also works on GitHub Actions — no changes needed. MyPer
 |---|---|
 | `actions/checkout@v4` | Repo already cloned to `/workspace` |
 | `actions/setup-dotnet@v4` | Installs .NET SDK via official install script |
+| `actions/setup-node@v4` | Installs Node.js via NodeSource |
+| `actions/setup-python@v5` | Installs Python via apt/apk |
+| `actions/setup-java@v4` | Installs OpenJDK via apt/apk |
 | `docker/login-action@v3` | `docker login` with stdin password |
 | `docker/build-push-action@v6` | `docker build && docker push` |
 | `docker/setup-buildx-action@v3` | No-op (uses default builder) |
-| `softprops/action-gh-release@v2` | Log message (GitHub handles natively) |
+| `softprops/action-gh-release@v2` | Creates a real Release entity in the database |
 | `${{ secrets.X }}` | `$X` environment variable |
 | `${{ steps.X.outputs.Y }}` | `$Y` environment variable |
+| `${{ github.sha }}` | `$GITHUB_SHA` environment variable |
 
 **Parallel jobs:**
 Jobs run in parallel by default. Use `needs:` to declare dependencies:

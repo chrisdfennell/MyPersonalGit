@@ -317,7 +317,7 @@ public class WorkflowService : IWorkflowService
             var pendingRuns = await db.WorkflowRuns
                 .Include(r => r.Jobs).ThenInclude(j => j.Steps)
                 .Where(r => r.RepoName == repoName && r.WorkflowName == workflowName &&
-                    (r.Status == WorkflowStatus.Queued))
+                    (r.Status == WorkflowStatus.Queued || r.Status == WorkflowStatus.InProgress))
                 .ToListAsync();
 
             foreach (var run in pendingRuns)
