@@ -11,6 +11,7 @@ public class WorkflowDefinition
     public object? On { get; set; }
     public Dictionary<string, string>? Env { get; set; }
     public string? DefaultWorkingDirectory { get; set; }
+    public string? DefaultShell { get; set; }
     public Dictionary<string, JobDefinition> Jobs { get; set; } = new();
     public List<WorkflowInput> Inputs { get; set; } = new();
 }
@@ -33,6 +34,7 @@ public class JobDefinition
     public int? TimeoutMinutes { get; set; }
     public Dictionary<string, List<string>>? Matrix { get; set; }
     public bool FailFast { get; set; } = true;
+    public int? MaxParallel { get; set; }
     public Dictionary<string, string>? Outputs { get; set; }
     public Dictionary<string, string>? Env { get; set; }
     public List<StepDefinition> Steps { get; set; } = new();
@@ -46,6 +48,7 @@ public class StepDefinition
     public bool ContinueOnError { get; set; }
     public int? TimeoutMinutes { get; set; }
     public string? WorkingDirectory { get; set; }
+    public string? Shell { get; set; }
     public string? Run { get; set; }
     public string? Uses { get; set; }
     public Dictionary<string, string>? With { get; set; }
@@ -126,6 +129,8 @@ public class WorkflowYamlParser
                 {
                     if (runObj.ContainsKey("working-directory"))
                         def.DefaultWorkingDirectory = runObj["working-directory"]?.ToString();
+                    if (runObj.ContainsKey("shell"))
+                        def.DefaultShell = runObj["shell"]?.ToString();
                 }
             }
 
@@ -173,6 +178,9 @@ public class WorkflowYamlParser
                     if (strategyObj.ContainsKey("fail-fast"))
                         jobDef.FailFast = strategyObj["fail-fast"]?.ToString()?.Equals("true", StringComparison.OrdinalIgnoreCase) ?? true;
 
+                    if (strategyObj.ContainsKey("max-parallel") && int.TryParse(strategyObj["max-parallel"]?.ToString(), out var maxP))
+                        jobDef.MaxParallel = maxP;
+
                     if (strategyObj.ContainsKey("matrix") && strategyObj["matrix"] is Dictionary<object, object> matrixObj)
                     {
                         jobDef.Matrix = new Dictionary<string, List<string>>();
@@ -205,7 +213,9 @@ public class WorkflowYamlParser
                             ContinueOnError = stepDict.ContainsKey("continue-on-error") &&
                                 stepDict["continue-on-error"]?.ToString()?.Equals("true", StringComparison.OrdinalIgnoreCase) == true,
                             WorkingDirectory = stepDict.ContainsKey("working-directory")
-                                ? stepDict["working-directory"]?.ToString() : null
+                                ? stepDict["working-directory"]?.ToString() : null,
+                            Shell = stepDict.ContainsKey("shell")
+                                ? stepDict["shell"]?.ToString() : null
                         };
 
                         if (stepDict.ContainsKey("timeout-minutes") && int.TryParse(stepDict["timeout-minutes"]?.ToString(), out var stepTimeout))
