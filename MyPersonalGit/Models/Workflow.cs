@@ -9,6 +9,7 @@ public class WorkflowRun
     public required string CommitSha { get; set; }
     public required string CommitMessage { get; set; }
     public required string TriggeredBy { get; set; }
+    public string? InputsJson { get; set; } // JSON dict of workflow_dispatch input values
     public WorkflowStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? StartedAt { get; set; }
@@ -32,6 +33,7 @@ public class WorkflowJob
     public required string Name { get; set; }
     public string RunsOn { get; set; } = "ubuntu-latest";
     public string? Needs { get; set; } // semicolon-separated job names
+    public int? TimeoutMinutes { get; set; }
     public WorkflowStatus Status { get; set; }
     public DateTime? StartedAt { get; set; }
     public DateTime? CompletedAt { get; set; }

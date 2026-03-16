@@ -9,7 +9,7 @@ public interface IWorkflowService
     Task<WorkflowRun?> GetWorkflowRunAsync(string repoName, int runId);
     Task<WorkflowRun> CreateWorkflowRunAsync(string repoName, string workflowName, string branch, string commitSha, string commitMessage, string triggeredBy);
     Task<bool> UpdateWorkflowRunAsync(string repoName, int runId, Action<WorkflowRun> updateAction);
-    Task<WorkflowRun> CreateWorkflowRunWithJobsAsync(string repoName, WorkflowDefinition definition, string branch, string sha, string message, string user);
+    Task<WorkflowRun> CreateWorkflowRunWithJobsAsync(string repoName, WorkflowDefinition definition, string branch, string sha, string message, string user, Dictionary<string, string>? inputs = null);
     Task TriggerPushWorkflowsAsync(string repoName, string repoPath, string branch, string sha, string commitMessage, string pushedBy);
     Task TriggerPullRequestWorkflowsAsync(string repoName, string repoPath, string sourceBranch, string targetBranch, string sha, string title, string author);
     Task CancelWorkflowRunAsync(string repoName, int runId);
@@ -95,7 +95,7 @@ public class WorkflowService : IWorkflowService
     }
 
     public async Task<WorkflowRun> CreateWorkflowRunWithJobsAsync(
-        string repoName, WorkflowDefinition definition, string branch, string sha, string message, string user)
+        string repoName, WorkflowDefinition definition, string branch, string sha, string message, string user, Dictionary<string, string>? inputs = null)
     {
         using var db = _dbFactory.CreateDbContext();
 
@@ -107,33 +107,56 @@ public class WorkflowService : IWorkflowService
             CommitSha = sha,
             CommitMessage = message,
             TriggeredBy = user,
+            InputsJson = inputs != null && inputs.Count > 0 ? System.Text.Json.JsonSerializer.Serialize(inputs) : null,
             Status = WorkflowStatus.Queued,
             CreatedAt = DateTime.UtcNow
         };
 
         foreach (var (jobName, jobDef) in definition.Jobs)
         {
-            var job = new WorkflowJob
-            {
-                Name = jobName,
-                RunsOn = jobDef.RunsOn,
-                Needs = jobDef.Needs.Count > 0 ? string.Join(";", jobDef.Needs) : null,
-                Status = WorkflowStatus.Queued
-            };
+            // Expand matrix combinations — if no matrix, just one combination (empty dict)
+            var combinations = jobDef.Matrix != null && jobDef.Matrix.Count > 0
+                ? ExpandMatrix(jobDef.Matrix)
+                : new List<Dictionary<string, string>> { new() };
 
-            foreach (var stepDef in jobDef.Steps)
+            foreach (var matrixValues in combinations)
             {
-                var command = stepDef.Run ?? TranslateUsesAction(stepDef);
-                job.Steps.Add(new WorkflowStep
+                var resolvedRunsOn = SubstituteMatrixVars(jobDef.RunsOn, matrixValues);
+                var suffix = matrixValues.Count > 0
+                    ? $" ({string.Join(", ", matrixValues.Values)})"
+                    : "";
+
+                var job = new WorkflowJob
                 {
-                    Name = stepDef.Name ?? stepDef.Run ?? stepDef.Uses ?? "Step",
-                    Command = command,
-                    Condition = stepDef.If,
+                    Name = jobName + suffix,
+                    RunsOn = resolvedRunsOn,
+                    Needs = jobDef.Needs.Count > 0 ? string.Join(";", jobDef.Needs) : null,
+                    TimeoutMinutes = jobDef.TimeoutMinutes,
                     Status = WorkflowStatus.Queued
-                });
-            }
+                };
 
-            run.Jobs.Add(job);
+                foreach (var stepDef in jobDef.Steps)
+                {
+                    var command = stepDef.Run ?? TranslateUsesAction(stepDef);
+                    // Substitute ${{ matrix.X }} in step commands
+                    if (command != null)
+                        command = SubstituteMatrixVars(command, matrixValues);
+
+                    var stepName = stepDef.Name ?? stepDef.Run ?? stepDef.Uses ?? "Step";
+                    if (stepName != null)
+                        stepName = SubstituteMatrixVars(stepName, matrixValues);
+
+                    job.Steps.Add(new WorkflowStep
+                    {
+                        Name = stepName ?? "Step",
+                        Command = command,
+                        Condition = stepDef.If,
+                        Status = WorkflowStatus.Queued
+                    });
+                }
+
+                run.Jobs.Add(job);
+            }
         }
 
         db.WorkflowRuns.Add(run);
@@ -141,6 +164,37 @@ public class WorkflowService : IWorkflowService
 
         _logger.LogInformation("Workflow run {RunId} created with {JobCount} jobs for {RepoName}", run.Id, run.Jobs.Count, repoName);
         return run;
+    }
+
+    /// <summary>
+    /// Expands a matrix into all combinations. E.g. {os: [a,b], ver: [1,2]} -> [{os:a,ver:1}, {os:a,ver:2}, {os:b,ver:1}, {os:b,ver:2}]
+    /// </summary>
+    private static List<Dictionary<string, string>> ExpandMatrix(Dictionary<string, List<string>> matrix)
+    {
+        var results = new List<Dictionary<string, string>> { new() };
+        foreach (var (key, values) in matrix)
+        {
+            var expanded = new List<Dictionary<string, string>>();
+            foreach (var existing in results)
+                foreach (var val in values)
+                {
+                    var combo = new Dictionary<string, string>(existing) { [key] = val };
+                    expanded.Add(combo);
+                }
+            results = expanded;
+        }
+        return results;
+    }
+
+    /// <summary>
+    /// Replaces ${{ matrix.X }} with the corresponding value from the matrix combination.
+    /// </summary>
+    private static string SubstituteMatrixVars(string value, Dictionary<string, string> matrixValues)
+    {
+        if (matrixValues.Count == 0 || string.IsNullOrEmpty(value)) return value;
+        return System.Text.RegularExpressions.Regex.Replace(
+            value, @"\$\{\{\s*matrix\.(\w+)\s*\}\}",
+            m => matrixValues.TryGetValue(m.Groups[1].Value, out var v) ? v : m.Value);
     }
 
     public async Task TriggerPushWorkflowsAsync(string repoName, string repoPath, string branch, string sha, string commitMessage, string pushedBy)
