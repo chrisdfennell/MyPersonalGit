@@ -672,7 +672,8 @@
         else
         {
             selectedRun = null;
-            StopAutoRefresh();
+            // Auto-refresh list view to pick up new runs
+            StartAutoRefresh();
         }
     }
 
@@ -692,9 +693,15 @@
                     }
                     await InvokeAsync(StateHasChanged);
                 }
+                else
+                {
+                    // Refresh runs list to pick up new/updated runs
+                    await LoadData();
+                    await InvokeAsync(StateHasChanged);
+                }
             }
             catch { }
-        }, null, 2000, 2000);
+        }, null, 3000, 5000);
     }
 
     private void StopAutoRefresh()
