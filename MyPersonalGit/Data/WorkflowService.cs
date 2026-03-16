@@ -630,7 +630,7 @@ public class WorkflowService : IWorkflowService
                    $"echo \"RELEASE_NAME={name}\" >> /tmp/release_meta && " +
                    $"echo \"PRERELEASE={prerelease}\" >> /tmp/release_meta && " +
                    $"echo \"DRAFT={draft}\" >> /tmp/release_meta && " +
-                   $"echo \"Release {tagName} created\"";
+                   $"echo '--- Release metadata written ---' && cat /tmp/release_meta";
         }
 
         // Unknown action — log and skip
