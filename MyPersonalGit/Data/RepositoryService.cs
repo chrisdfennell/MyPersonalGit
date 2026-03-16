@@ -23,6 +23,17 @@ public interface IRepositoryService
     Task<bool> DeleteRepositoryAsync(string name);
     Task<bool> ArchiveRepositoryAsync(string name);
     Task<bool> UnarchiveRepositoryAsync(string name);
+    Task<bool> WatchRepositoryAsync(string repoName, string username);
+    Task<bool> UnwatchRepositoryAsync(string repoName, string username);
+    Task<bool> IsWatchingAsync(string repoName, string username);
+    Task<List<ContributorInfo>> GetContributorsAsync(string repoPath, int maxCount = 20);
+}
+
+public class ContributorInfo
+{
+    public string Name { get; set; } = "";
+    public string Email { get; set; } = "";
+    public int Commits { get; set; }
 }
 
 public class RepositoryService : IRepositoryService
@@ -389,5 +400,67 @@ public class RepositoryService : IRepositoryService
             _logger.LogError(ex, "Failed to sync fork {ForkedRepo} with upstream", forkedRepoName);
             return (false, $"Sync failed: {ex.Message}");
         }
+    }
+
+    public async Task<bool> WatchRepositoryAsync(string repoName, string username)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        if (await db.Set<RepositoryWatch>().AnyAsync(w => w.RepoName == repoName && w.Username == username))
+            return false;
+
+        db.Set<RepositoryWatch>().Add(new RepositoryWatch { RepoName = repoName, Username = username });
+        var repo = await db.Repositories.FirstOrDefaultAsync(r => r.Name == repoName);
+        if (repo != null) repo.Watchers++;
+        await db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> UnwatchRepositoryAsync(string repoName, string username)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var watch = await db.Set<RepositoryWatch>().FirstOrDefaultAsync(w => w.RepoName == repoName && w.Username == username);
+        if (watch == null) return false;
+
+        db.Set<RepositoryWatch>().Remove(watch);
+        var repo = await db.Repositories.FirstOrDefaultAsync(r => r.Name == repoName);
+        if (repo != null && repo.Watchers > 0) repo.Watchers--;
+        await db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> IsWatchingAsync(string repoName, string username)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        return await db.Set<RepositoryWatch>().AnyAsync(w => w.RepoName == repoName && w.Username == username);
+    }
+
+    public Task<List<ContributorInfo>> GetContributorsAsync(string repoPath, int maxCount = 20)
+    {
+        var contributors = new List<ContributorInfo>();
+        try
+        {
+            if (!LibGit2Sharp.Repository.IsValid(repoPath)) return Task.FromResult(contributors);
+            using var repo = new LibGit2Sharp.Repository(repoPath);
+            var head = repo.Head;
+            if (head?.Tip == null) return Task.FromResult(contributors);
+
+            var authorCounts = new Dictionary<string, (string Name, string Email, int Count)>(StringComparer.OrdinalIgnoreCase);
+            foreach (var commit in repo.Commits.Take(5000))
+            {
+                var key = commit.Author.Email?.ToLowerInvariant() ?? commit.Author.Name;
+                if (authorCounts.TryGetValue(key, out var existing))
+                    authorCounts[key] = (existing.Name, existing.Email, existing.Count + 1);
+                else
+                    authorCounts[key] = (commit.Author.Name, commit.Author.Email ?? "", 1);
+            }
+
+            contributors = authorCounts.Values
+                .OrderByDescending(a => a.Count)
+                .Take(maxCount)
+                .Select(a => new ContributorInfo { Name = a.Name, Email = a.Email, Commits = a.Count })
+                .ToList();
+        }
+        catch { }
+        return Task.FromResult(contributors);
     }
 }

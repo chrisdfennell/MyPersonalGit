@@ -1539,6 +1539,12 @@ namespace MyPersonalGit.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Watchers")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("WebsiteUrl")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
@@ -1708,6 +1714,28 @@ namespace MyPersonalGit.Migrations
                         .IsUnique();
 
                     b.ToTable("RepositoryStars");
+                });
+
+            modelBuilder.Entity("MyPersonalGit.Models.RepositoryWatch", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RepoName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("WatchedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RepositoryWatches");
                 });
 
             modelBuilder.Entity("MyPersonalGit.Models.ReviewComment", b =>
