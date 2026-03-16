@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyPersonalGit - Self-Hosted Git Server</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="container nav-inner">
+            <a href="#" class="logo">MyPersonalGit</a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#quickstart">Quick Start</a>
+                <a href="#cicd">CI/CD</a>
+                <a href="https://github.com/chrisdfennell/MyPersonalGit" class="btn btn-sm">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>MyPersonalGit</h1>
+            <p class="hero-sub">A self-hosted Git server with a GitHub-like web interface.<br>
+            Repositories, issues, pull requests, CI/CD, packages, and more &mdash; all on your own hardware.</p>
+            <div class="hero-actions">
+                <a href="#quickstart" class="btn btn-primary">Get Started</a>
+                <a href="https://hub.docker.com/r/fennch/mypersonalgit" class="btn btn-outline">Docker Hub</a>
+            </div>
+            <div class="hero-install">
+                <code>docker pull fennch/mypersonalgit:latest</code>
+            </div>
+        </div>
+    </header>
+
+    <section class="badges">
+        <div class="container badge-row">
+            <img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white" alt=".NET 10">
+            <img src="https://img.shields.io/badge/Blazor-Server-512BD4?logo=blazor&logoColor=white" alt="Blazor">
+            <img src="https://img.shields.io/badge/Docker-Hub-2496ED?logo=docker&logoColor=white" alt="Docker">
+            <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT">
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2>Everything you need in a Git platform</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">&#128193;</div>
+                    <h3>Code & Repositories</h3>
+                    <p>Full code browser, file editor, commit history, branches, tags, compare view, language stats, and branch protection rules.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#129309;</div>
+                    <h3>Collaboration</h3>
+                    <p>Issues, pull requests with merge strategies, code reviews, discussions, wikis, kanban projects, milestones, and organizations.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#9881;</div>
+                    <h3>CI/CD Runner</h3>
+                    <p>GitHub Actions-compatible workflows in Docker containers. Matrix builds, parallel jobs, conditional steps, step outputs, and timeouts.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#128230;</div>
+                    <h3>Package Registries</h3>
+                    <p>Host Docker/OCI images, NuGet packages, npm packages, and generic binary artifacts with built-in registries.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#128274;</div>
+                    <h3>Authentication</h3>
+                    <p>OAuth2/SSO (8 providers), LDAP/Active Directory, TOTP 2FA, SSH keys, personal access tokens, and built-in SSH server.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#127760;</div>
+                    <h3>Pages & More</h3>
+                    <p>Static site hosting, push notifications, webhooks, repository import/forking, Git LFS, Prometheus metrics, and dark mode.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="cicd" class="cicd-section">
+        <div class="container">
+            <h2>GitHub Actions-compatible CI/CD</h2>
+            <p class="section-sub">Write your workflow once &mdash; it runs on both MyPersonalGit and GitHub Actions.</p>
+            <div class="cicd-grid">
+                <div class="cicd-feature">
+                    <strong>Parallel Jobs</strong>
+                    <span>Independent jobs run concurrently. Use <code>needs:</code> for dependencies.</span>
+                </div>
+                <div class="cicd-feature">
+                    <strong>Matrix Builds</strong>
+                    <span><code>strategy.matrix</code> fans out jobs across OS, version, and variable combos.</span>
+                </div>
+                <div class="cicd-feature">
+                    <strong>Conditional Steps</strong>
+                    <span><code>if: failure()</code>, <code>if: always()</code>, and more for flexible control flow.</span>
+                </div>
+                <div class="cicd-feature">
+                    <strong>Step Outputs</strong>
+                    <span>Pass data between steps with <code>$GITHUB_OUTPUT</code>.</span>
+                </div>
+                <div class="cicd-feature">
+                    <strong>Manual Triggers</strong>
+                    <span><code>workflow_dispatch</code> with typed inputs shown in the UI.</span>
+                </div>
+                <div class="cicd-feature">
+                    <strong>Job Timeouts</strong>
+                    <span><code>timeout-minutes</code> enforced per job with clear failure messages.</span>
+                </div>
+                <div class="cicd-feature">
+                    <strong>Secrets</strong>
+                    <span>AES-256 encrypted secrets injected as env vars at runtime.</span>
+                </div>
+                <div class="cicd-feature">
+                    <strong>Status Badges</strong>
+                    <span>Embeddable SVG badges for build and commit status.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="quickstart" class="quickstart">
+        <div class="container">
+            <h2>Quick Start</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <h3>Run with Docker</h3>
+                        <pre><code>docker run -d --name mypersonalgit \
+  -p 8080:8080 -p 2222:2222 \
+  -v mypersonalgit-repos:/repos \
+  -v mypersonalgit-data:/data \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  fennch/mypersonalgit:latest</code></pre>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <h3>Sign in</h3>
+                        <p>Open <strong>http://localhost:8080</strong> and log in with <code>admin</code> / <code>admin</code>. Change the password immediately.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <h3>Create &amp; push</h3>
+                        <pre><code>git clone http://localhost:8080/git/MyRepo.git
+cd MyRepo && echo "# Hello" > README.md
+git add . && git commit -m "first commit"
+git push origin main</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="tech-section">
+        <div class="container">
+            <h2>Built With</h2>
+            <div class="tech-grid">
+                <div class="tech-item">ASP.NET Core 10</div>
+                <div class="tech-item">Blazor Server</div>
+                <div class="tech-item">SQLite / PostgreSQL</div>
+                <div class="tech-item">LibGit2Sharp</div>
+                <div class="tech-item">Docker.DotNet</div>
+                <div class="tech-item">Entity Framework Core</div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container footer-inner">
+            <p>&copy; 2026 MyPersonalGit &mdash; MIT License</p>
+            <div class="footer-links">
+                <a href="https://github.com/chrisdfennell/MyPersonalGit">GitHub</a>
+                <a href="https://hub.docker.com/r/fennch/mypersonalgit">Docker Hub</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
