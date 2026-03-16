@@ -84,6 +84,14 @@ else
                 <div class="d-flex gap-2">
                     @if (UserService.IsLoggedIn)
                     {
+                        <button class="btn btn-light btn-sm border px-3" @onclick="ToggleWatch">
+                            <i class="bi @(repoIsWatched ? "bi-eye-fill" : "bi-eye") me-1"></i> @(repoIsWatched ? "Unwatch" : "Watch")
+                            @if (repoWatchCount > 0) { <span class="badge bg-secondary bg-opacity-10 text-body ms-1">@repoWatchCount</span> }
+                        </button>
+                        <button class="btn btn-light btn-sm border px-3" @onclick="ToggleStar">
+                            <i class="bi @(repoIsStarred ? "bi-star-fill text-warning" : "bi-star") me-1"></i> @(repoIsStarred ? "Starred" : "Star")
+                            @if (repoStarCount > 0) { <span class="badge bg-secondary bg-opacity-10 text-body ms-1">@repoStarCount</span> }
+                        </button>
                         <button class="btn btn-light btn-sm border px-3 @(repoIsForked ? "disabled" : "")" @onclick="ForkRepository" disabled="@repoIsForked">
                             <i class="bi bi-diagram-3 me-1"></i> @(repoIsForked ? "Forked" : "Fork")
                             @if (repoForkCount > 0) { <span class="badge bg-secondary bg-opacity-10 text-body ms-1">@repoForkCount</span> }
@@ -474,7 +482,7 @@ else
 
                 </div>
 
-                @if ((languageStats.Any() || releases.Any()) && string.IsNullOrEmpty(fileSearchTerm))
+                @if ((languageStats.Any() || releases.Any() || !string.IsNullOrEmpty(repoDescription) || settingsTopics.Any()) && string.IsNullOrEmpty(fileSearchTerm))
                 {
                     <div class="col-md-3">
                         <div class="border-bottom pb-3 mb-3">
@@ -483,6 +491,28 @@ else
                             {
                                 <p class="text-muted small">@repoDescription</p>
                             }
+                            @if (!string.IsNullOrEmpty(repoWebsiteUrl))
+                            {
+                                <div class="mb-2">
+                                    <a href="@repoWebsiteUrl" target="_blank" rel="noopener" class="small text-decoration-none">
+                                        <i class="bi bi-link-45deg me-1"></i>@repoWebsiteUrl
+                                    </a>
+                                </div>
+                            }
+                            @if (settingsTopics.Any())
+                            {
+                                <div class="d-flex flex-wrap gap-1 mt-2">
+                                    @foreach (var topic in settingsTopics)
+                                    {
+                                        <a href="/explore?topic=@topic" class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill text-decoration-none" style="font-size: 11px;">@topic</a>
+                                    }
+                                </div>
+                            }
+                            <div class="d-flex flex-wrap gap-3 mt-3 small text-muted">
+                                <span><i class="bi bi-star me-1"></i>@repoStarCount stars</span>
+                                <span><i class="bi bi-eye me-1"></i>@repoWatchCount watching</span>
+                                <span><i class="bi bi-diagram-3 me-1"></i>@repoForkCount forks</span>
+                            </div>
                         </div>
                         @if (releases.Any())
                         {
@@ -523,6 +553,25 @@ else
                                         + @(releases.Count - 1) more @(releases.Count - 1 == 1 ? "release" : "releases")
                                     </button>
                                 }
+                            </div>
+                        }
+                        @if (repoContributors.Any())
+                        {
+                            <div class="border-bottom pb-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold mb-0">Contributors</h6>
+                                    <span class="badge bg-secondary rounded-pill">@repoContributors.Count</span>
+                                </div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    @foreach (var c in repoContributors)
+                                    {
+                                        <a href="/user/@c.Name" title="@c.Name (@c.Commits commits)" class="text-decoration-none">
+                                            <div class="rounded-circle bg-secondary bg-opacity-25 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 13px; font-weight: 600;">
+                                                @c.Name.Substring(0, 1).ToUpperInvariant()
+                                            </div>
+                                        </a>
+                                    }
+                                </div>
                             </div>
                         }
                         @if (languageStats.Any())
@@ -849,6 +898,10 @@ else
                             <div class="mb-3">
                                 <label class="form-label small fw-bold">Description</label>
                                 <input type="text" class="form-control form-control-sm" @bind="settingsDescription" placeholder="Short description of your repository" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Website</label>
+                                <input type="url" class="form-control form-control-sm" @bind="settingsWebsiteUrl" placeholder="https://example.com" />
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-bold">Visibility</label>
@@ -2685,6 +2738,12 @@ else
     private string repoForkedFrom = "";
     private bool repoIsForked = false;
     private int repoForkCount = 0;
+    private bool repoIsStarred = false;
+    private int repoStarCount = 0;
+    private bool repoIsWatched = false;
+    private int repoWatchCount = 0;
+    private string repoWebsiteUrl = "";
+    private List<ContributorInfo> repoContributors = new();
     private bool isSyncingFork = false;
     private string forkSyncMessage = "";
     private bool forkSyncSuccess = false;
@@ -2693,6 +2752,7 @@ else
     private bool settingsIsPrivate = false;
     private bool settingsIsTemplate = false;
     private string settingsDescription = "";
+    private string settingsWebsiteUrl = "";
     private string settingsSaveMessage = "";
     private bool settingsHasPages = false;
     private string settingsPagesBranch = "gh-pages";
@@ -2824,6 +2884,10 @@ else
             repoOwner = !string.IsNullOrEmpty(meta.Owner) ? meta.Owner : "anonymous";
             repoForkedFrom = meta.ForkedFrom ?? "";
             repoForkCount = meta.Forks;
+            repoStarCount = meta.Stars;
+            repoWatchCount = meta.Watchers;
+            repoWebsiteUrl = meta.WebsiteUrl ?? "";
+            settingsWebsiteUrl = meta.WebsiteUrl ?? "";
             settingsIsPrivate = meta.IsPrivate;
             settingsIsTemplate = meta.IsTemplate;
             settingsDescription = meta.Description ?? "";
@@ -2858,9 +2922,16 @@ else
             settingsDescription = "";
         }
 
-        // Check if current user already forked this repo
+        // Check if current user already forked/starred/watched this repo
         if (UserService.IsLoggedIn)
+        {
             repoIsForked = await RepoService.IsForkedAsync(dirName, UserService.Username);
+            repoIsStarred = await RepoService.IsStarredAsync(dirName, UserService.Username);
+            repoIsWatched = await RepoService.IsWatchingAsync(dirName, UserService.Username);
+        }
+
+        // Load contributors from git history
+        try { repoContributors = await RepoService.GetContributorsAsync(RepoFullPath); } catch { }
 
         // Enforce private repo access: if private and user is not owner or collaborator, block
         if (repoIsPrivate)
@@ -2895,6 +2966,7 @@ else
         await RepoService.UpdateRepositoryAsync(dirName, repo =>
         {
             repo.Description = settingsDescription;
+            repo.WebsiteUrl = string.IsNullOrWhiteSpace(settingsWebsiteUrl) ? null : settingsWebsiteUrl;
             repo.IsPrivate = settingsIsPrivate;
             repo.IsTemplate = settingsIsTemplate;
             repo.Topics = new List<string>(settingsTopics);
@@ -2902,6 +2974,7 @@ else
         repoIsPrivate = settingsIsPrivate;
         repoIsTemplate = settingsIsTemplate;
         repoDescription = settingsDescription;
+        repoWebsiteUrl = settingsWebsiteUrl;
         settingsSaveMessage = "Settings saved!";
         StateHasChanged();
     }
@@ -3626,6 +3699,42 @@ else
     private void SwitchBranch(string name) { currentBranch = name; Path = null; activeTab = "code"; showBranchDropdown = false; LoadRepoData(); }
     private void EnterEditMode() { editingContent = fileContent; commitMessage = $"Update {System.IO.Path.GetFileName(Path)}"; editorMode = "edit"; activeTab = "edit"; }
     private void EnterAddFileMode() { editingContent = ""; newFileName = ""; commitMessage = "Add file"; editorMode = "edit"; activeTab = "add-file"; }
+
+    private async Task ToggleStar()
+    {
+        if (!UserService.IsLoggedIn) return;
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        if (repoIsStarred)
+        {
+            await RepoService.UnstarRepositoryAsync(dirName, UserService.Username);
+            repoIsStarred = false;
+            repoStarCount = Math.Max(0, repoStarCount - 1);
+        }
+        else
+        {
+            await RepoService.StarRepositoryAsync(dirName, UserService.Username);
+            repoIsStarred = true;
+            repoStarCount++;
+        }
+    }
+
+    private async Task ToggleWatch()
+    {
+        if (!UserService.IsLoggedIn) return;
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        if (repoIsWatched)
+        {
+            await RepoService.UnwatchRepositoryAsync(dirName, UserService.Username);
+            repoIsWatched = false;
+            repoWatchCount = Math.Max(0, repoWatchCount - 1);
+        }
+        else
+        {
+            await RepoService.WatchRepositoryAsync(dirName, UserService.Username);
+            repoIsWatched = true;
+            repoWatchCount++;
+        }
+    }
 
     private async Task ForkRepository()
     {

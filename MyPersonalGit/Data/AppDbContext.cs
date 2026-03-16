@@ -24,6 +24,7 @@ public class AppDbContext : DbContext
     // Repositories
     public DbSet<Repository> Repositories => Set<Repository>();
     public DbSet<RepositoryStar> RepositoryStars => Set<RepositoryStar>();
+    public DbSet<RepositoryWatch> RepositoryWatches => Set<RepositoryWatch>();
     public DbSet<RepositoryFork> RepositoryForks => Set<RepositoryFork>();
     public DbSet<RepositoryCollaborator> RepositoryCollaborators => Set<RepositoryCollaborator>();
 
