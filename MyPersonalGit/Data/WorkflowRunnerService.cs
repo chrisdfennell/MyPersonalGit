@@ -187,7 +187,30 @@ public class WorkflowRunnerService : BackgroundService
         var job = await db.WorkflowJobs.Include(j => j.Steps).FirstOrDefaultAsync(j => j.Id == jobId, ct);
         if (job == null) return false;
 
-        return await ExecuteJob(db, run, job, ct);
+        // Enforce timeout-minutes (default: 360 minutes like GitHub Actions)
+        var timeoutMinutes = job.TimeoutMinutes ?? 360;
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeoutCts.CancelAfter(TimeSpan.FromMinutes(timeoutMinutes));
+
+        try
+        {
+            return await ExecuteJob(db, run, job, timeoutCts.Token);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            // Timeout fired, not a global cancellation
+            _logger.LogWarning("Job {JobName} in run {RunId} timed out after {Timeout} minutes", job.Name, run.Id, timeoutMinutes);
+            job.Status = WorkflowStatus.Failure;
+            job.CompletedAt = DateTime.UtcNow;
+            foreach (var step in job.Steps.Where(s => s.Status == WorkflowStatus.Queued || s.Status == WorkflowStatus.InProgress))
+            {
+                step.Status = WorkflowStatus.Failure;
+                step.Output = (step.Output ?? "") + $"\n\nJob timed out after {timeoutMinutes} minutes";
+                step.CompletedAt = DateTime.UtcNow;
+            }
+            await db.SaveChangesAsync(ct);
+            return false;
+        }
     }
 
     private async Task<bool> ExecuteJob(AppDbContext db, WorkflowRun run, WorkflowJob job, CancellationToken ct)
@@ -240,6 +263,19 @@ public class WorkflowRunnerService : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to load secrets for {RepoName}", run.RepoName);
+            }
+
+            // Inject workflow_dispatch inputs as INPUT_* env vars
+            if (!string.IsNullOrEmpty(run.InputsJson))
+            {
+                try
+                {
+                    var inputs = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(run.InputsJson);
+                    if (inputs != null)
+                        foreach (var (k, v) in inputs)
+                            envVars.Add($"INPUT_{k.ToUpperInvariant()}={v}");
+                }
+                catch { }
             }
 
             string? artifactHostDir = null;

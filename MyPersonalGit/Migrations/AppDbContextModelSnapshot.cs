@@ -2647,6 +2647,9 @@ namespace MyPersonalGit.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("TimeoutMinutes")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("WorkflowRunId")
                         .HasColumnType("INTEGER");
 
@@ -2679,6 +2682,9 @@ namespace MyPersonalGit.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("InputsJson")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("RepoName")

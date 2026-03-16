@@ -38,14 +38,66 @@
                     </button>
                     @if (showRunDropdown)
                     {
-                        <div class="dropdown-menu show shadow p-3" style="min-width: 300px; display: block; position: absolute; right: 0; z-index: 1000;">
-                            <h6 class="fw-bold small mb-2">Select workflow</h6>
-                            @foreach (var wf in detectedWorkflows)
+                        <div class="dropdown-menu show shadow p-3" style="min-width: 350px; display: block; position: absolute; right: 0; z-index: 1000;">
+                            @if (selectedDispatchWorkflow == null)
                             {
-                                <button class="dropdown-item py-2" @onclick="() => TriggerWorkflow(wf)">
-                                    <i class="bi bi-file-earmark-code me-2"></i> @wf.Name
-                                    <span class="text-muted small d-block">@wf.FileName</span>
-                                </button>
+                                <h6 class="fw-bold small mb-2">Select workflow</h6>
+                                @foreach (var wf in detectedWorkflows)
+                                {
+                                    <button class="dropdown-item py-2" @onclick="() => SelectWorkflowForDispatch(wf)">
+                                        <i class="bi bi-file-earmark-code me-2"></i> @wf.Name
+                                        <span class="text-muted small d-block">@wf.FileName</span>
+                                    </button>
+                                }
+                            }
+                            else
+                            {
+                                <h6 class="fw-bold small mb-2">@selectedDispatchWorkflow.Name</h6>
+                                @if (selectedDispatchWorkflow.Inputs.Any())
+                                {
+                                    @foreach (var input in selectedDispatchWorkflow.Inputs)
+                                    {
+                                        <div class="mb-2">
+                                            <label class="form-label small mb-1">
+                                                @input.Name
+                                                @if (input.Required) { <span class="text-danger">*</span> }
+                                            </label>
+                                            @if (!string.IsNullOrEmpty(input.Description))
+                                            {
+                                                <div class="text-muted" style="font-size: 0.75rem;">@input.Description</div>
+                                            }
+                                            @if (input.Type == "boolean")
+                                            {
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input"
+                                                           checked="@(string.Equals(GetDispatchInputValue(input.Name), "true", StringComparison.OrdinalIgnoreCase))"
+                                                           @onchange="@(e => SetDispatchInputValue(input.Name, string.Equals(e.Value?.ToString(), "True") ? "true" : "false"))" />
+                                                </div>
+                                            }
+                                            else if (input.Type == "choice" && input.Options.Any())
+                                            {
+                                                <select class="form-select form-select-sm" value="@GetDispatchInputValue(input.Name)"
+                                                        @onchange="@(e => SetDispatchInputValue(input.Name, e.Value?.ToString() ?? string.Empty))">
+                                                    @foreach (var opt in input.Options)
+                                                    {
+                                                        <option value="@opt">@opt</option>
+                                                    }
+                                                </select>
+                                            }
+                                            else
+                                            {
+                                                <input type="text" class="form-control form-control-sm" value="@GetDispatchInputValue(input.Name)"
+                                                       @onchange="@(e => SetDispatchInputValue(input.Name, e.Value?.ToString() ?? string.Empty))" />
+                                            }
+                                        </div>
+                                    }
+                                }
+                                <div class="d-flex gap-2 mt-3">
+                                    <button class="btn btn-sm btn-secondary" @onclick="() => selectedDispatchWorkflow = null">Back</button>
+                                    <button class="btn btn-sm btn-primary" @onclick="() => TriggerWorkflowWithInputs()">
+                                        <i class="bi bi-play-fill me-1"></i>Run
+                                    </button>
+                                </div>
                             }
                         </div>
                     }
@@ -563,6 +615,8 @@
     private List<WorkflowArtifact> runArtifacts = new();
     private string ActiveTab { get; set; } = "runs";
     private bool showRunDropdown;
+    private WorkflowDefinition? selectedDispatchWorkflow;
+    private Dictionary<string, string> dispatchInputValues = new();
     private HashSet<int> expandedJobs = new();
     private System.Threading.Timer? _refreshTimer;
 
@@ -676,7 +730,43 @@
         return null;
     }
 
-    private async Task TriggerWorkflow(WorkflowDefinition workflow)
+    private void SelectWorkflowForDispatch(WorkflowDefinition wf)
+    {
+        if (!wf.Inputs.Any())
+        {
+            // No inputs — trigger immediately
+            _ = TriggerWorkflow(wf);
+            return;
+        }
+        selectedDispatchWorkflow = wf;
+        dispatchInputValues = new Dictionary<string, string>();
+        foreach (var input in wf.Inputs)
+        {
+            if (input.Default != null)
+                dispatchInputValues[input.Name] = input.Default;
+            else if (input.Type == "boolean")
+                dispatchInputValues[input.Name] = "false";
+            else if (input.Type == "choice" && input.Options.Any())
+                dispatchInputValues[input.Name] = input.Options[0];
+            else
+                dispatchInputValues[input.Name] = "";
+        }
+    }
+
+    private string GetDispatchInputValue(string name) =>
+        dispatchInputValues.TryGetValue(name, out var v) ? v : "";
+
+    private void SetDispatchInputValue(string name, string value) =>
+        dispatchInputValues[name] = value;
+
+    private async Task TriggerWorkflowWithInputs()
+    {
+        if (selectedDispatchWorkflow == null) return;
+        await TriggerWorkflow(selectedDispatchWorkflow, dispatchInputValues);
+        selectedDispatchWorkflow = null;
+    }
+
+    private async Task TriggerWorkflow(WorkflowDefinition workflow, Dictionary<string, string>? inputs = null)
     {
         if (!UserService.IsLoggedIn) return;
         showRunDropdown = false;
@@ -703,7 +793,7 @@
         }
 
         await WorkflowService.CreateWorkflowRunWithJobsAsync(
-            RepoName, workflow, branch, sha, message, UserService.Username);
+            RepoName, workflow, branch, sha, message, UserService.Username, inputs);
         await LoadData();
     }
 
