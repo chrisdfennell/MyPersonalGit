@@ -13,6 +13,7 @@ public interface IWorkflowService
     Task TriggerPushWorkflowsAsync(string repoName, string repoPath, string branch, string sha, string commitMessage, string pushedBy);
     Task TriggerPullRequestWorkflowsAsync(string repoName, string repoPath, string sourceBranch, string targetBranch, string sha, string title, string author);
     Task CancelWorkflowRunAsync(string repoName, int runId);
+    Task<WorkflowRun?> RerunWorkflowRunAsync(string repoName, int runId);
     Task<List<Webhook>> GetWebhooksAsync(string repoName);
     Task<Webhook> CreateWebhookAsync(string repoName, string url, string secret, List<string> events);
     Task<bool> DeleteWebhookAsync(string repoName, int webhookId);
@@ -131,14 +132,17 @@ public class WorkflowService : IWorkflowService
                     Name = jobName + suffix,
                     RunsOn = resolvedRunsOn,
                     Needs = jobDef.Needs.Count > 0 ? string.Join(";", jobDef.Needs) : null,
+                    Condition = jobDef.If,
                     TimeoutMinutes = jobDef.TimeoutMinutes,
                     Status = WorkflowStatus.Queued
                 };
 
+                // Resolve the effective working directory for steps
+                var defaultWorkDir = definition.DefaultWorkingDirectory;
+
                 foreach (var stepDef in jobDef.Steps)
                 {
                     var command = stepDef.Run ?? TranslateUsesAction(stepDef);
-                    // Substitute ${{ matrix.X }} in step commands
                     if (command != null)
                         command = SubstituteMatrixVars(command, matrixValues);
 
@@ -146,11 +150,20 @@ public class WorkflowService : IWorkflowService
                     if (stepName != null)
                         stepName = SubstituteMatrixVars(stepName, matrixValues);
 
+                    // Apply working-directory (step-level overrides default)
+                    var workDir = stepDef.WorkingDirectory ?? defaultWorkDir;
+                    if (command != null && !string.IsNullOrEmpty(workDir))
+                    {
+                        // Prefix command with cd to the working directory relative to /workspace
+                        command = $"cd /workspace/{workDir} && {command}";
+                    }
+
                     job.Steps.Add(new WorkflowStep
                     {
                         Name = stepName ?? "Step",
                         Command = command,
                         Condition = stepDef.If,
+                        ContinueOnError = stepDef.ContinueOnError,
                         Status = WorkflowStatus.Queued
                     });
                 }
@@ -206,6 +219,9 @@ public class WorkflowService : IWorkflowService
 
             _logger.LogInformation("Found {Count} workflow(s) in {RepoName}", workflows.Count, repoName);
 
+            // Get changed files for path filtering
+            var changedFiles = GetChangedFiles(repoPath, sha);
+
             foreach (var workflow in workflows)
             {
                 _logger.LogInformation("Workflow '{Name}': On type={OnType}, value={OnValue}",
@@ -213,10 +229,17 @@ public class WorkflowService : IWorkflowService
 
                 if (!ShouldTriggerOnPush(workflow, branch)) continue;
 
+                // Check path filters
+                var (paths, pathsIgnore) = WorkflowYamlParser.GetPathFilters(workflow, "push");
+                if (!MatchesPathFilter(changedFiles, paths, pathsIgnore))
+                {
+                    _logger.LogInformation("Skipping workflow '{Name}' — no changed files match path filter", workflow.Name);
+                    continue;
+                }
+
                 _logger.LogInformation("Auto-triggering workflow '{WorkflowName}' on push to {Branch} in {RepoName}",
                     workflow.Name, branch, repoName);
 
-                // Concurrency: cancel queued runs of the same workflow
                 await CancelPreviousRunsAsync(repoName, workflow.Name);
 
                 await CreateWorkflowRunWithJobsAsync(repoName, workflow, branch, sha, commitMessage, pushedBy);
@@ -226,6 +249,64 @@ public class WorkflowService : IWorkflowService
         {
             _logger.LogWarning(ex, "Failed to trigger push workflows for {RepoName}", repoName);
         }
+    }
+
+    /// <summary>Gets list of changed files in the given commit by diffing against its parent.</summary>
+    private static List<string> GetChangedFiles(string repoPath, string sha)
+    {
+        var files = new List<string>();
+        try
+        {
+            if (!LibGit2Sharp.Repository.IsValid(repoPath)) return files;
+            using var repo = new LibGit2Sharp.Repository(repoPath);
+            var commitObj = repo.Lookup(new LibGit2Sharp.ObjectId(sha));
+            if (commitObj is not LibGit2Sharp.Commit commit) return files;
+
+            var parent = commit.Parents.FirstOrDefault();
+            var diff = parent != null
+                ? repo.Diff.Compare<LibGit2Sharp.TreeChanges>(parent.Tree, commit.Tree)
+                : repo.Diff.Compare<LibGit2Sharp.TreeChanges>(null, commit.Tree);
+
+            foreach (var change in diff)
+                files.Add(change.Path);
+        }
+        catch { }
+        return files;
+    }
+
+    /// <summary>
+    /// Returns true if changed files match the path filter.
+    /// If no paths/paths-ignore are configured, always returns true.
+    /// </summary>
+    private static bool MatchesPathFilter(List<string> changedFiles, List<string> paths, List<string> pathsIgnore)
+    {
+        if (paths.Count == 0 && pathsIgnore.Count == 0) return true;
+        if (changedFiles.Count == 0) return paths.Count == 0;
+
+        // paths-ignore: if ALL changed files match ignore patterns, skip
+        if (pathsIgnore.Count > 0 && paths.Count == 0)
+            return !changedFiles.All(f => pathsIgnore.Any(p => FileMatchesGlob(f, p)));
+
+        // paths: at least one changed file must match a path pattern
+        if (paths.Count > 0)
+            return changedFiles.Any(f => paths.Any(p => FileMatchesGlob(f, p)));
+
+        return true;
+    }
+
+    /// <summary>Simple glob matching: supports ** (any path), * (any segment), and literal matching.</summary>
+    private static bool FileMatchesGlob(string filePath, string pattern)
+    {
+        // Normalize
+        filePath = filePath.Replace('\\', '/');
+        pattern = pattern.Replace('\\', '/');
+
+        // Convert glob to regex
+        var regexPattern = "^" + System.Text.RegularExpressions.Regex.Escape(pattern)
+            .Replace(@"\*\*", ".*")
+            .Replace(@"\*", "[^/]*") + "$";
+
+        return System.Text.RegularExpressions.Regex.IsMatch(filePath, regexPattern);
     }
 
     private async Task CancelPreviousRunsAsync(string repoName, string workflowName)
@@ -314,6 +395,63 @@ public class WorkflowService : IWorkflowService
 
         await db.SaveChangesAsync();
         _logger.LogInformation("Cancelled workflow run {RunId} for {RepoName}", runId, repoName);
+    }
+
+    public async Task<WorkflowRun?> RerunWorkflowRunAsync(string repoName, int runId)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var original = await db.WorkflowRuns
+            .Include(r => r.Jobs).ThenInclude(j => j.Steps)
+            .FirstOrDefaultAsync(r => r.Id == runId && r.RepoName == repoName);
+
+        if (original == null) return null;
+
+        // Create a new run cloned from the original
+        var newRun = new WorkflowRun
+        {
+            RepoName = original.RepoName,
+            WorkflowName = original.WorkflowName,
+            Branch = original.Branch,
+            CommitSha = original.CommitSha,
+            CommitMessage = original.CommitMessage,
+            TriggeredBy = original.TriggeredBy,
+            InputsJson = original.InputsJson,
+            Status = WorkflowStatus.Queued,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        foreach (var origJob in original.Jobs)
+        {
+            var job = new WorkflowJob
+            {
+                Name = origJob.Name,
+                RunsOn = origJob.RunsOn,
+                Needs = origJob.Needs,
+                Condition = origJob.Condition,
+                TimeoutMinutes = origJob.TimeoutMinutes,
+                Status = WorkflowStatus.Queued
+            };
+
+            foreach (var origStep in origJob.Steps)
+            {
+                job.Steps.Add(new WorkflowStep
+                {
+                    Name = origStep.Name,
+                    Command = origStep.Command,
+                    Condition = origStep.Condition,
+                    ContinueOnError = origStep.ContinueOnError,
+                    Status = WorkflowStatus.Queued
+                });
+            }
+
+            newRun.Jobs.Add(job);
+        }
+
+        db.WorkflowRuns.Add(newRun);
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Re-run {NewRunId} created from run {OrigRunId} for {RepoName}", newRun.Id, runId, repoName);
+        return newRun;
     }
 
     private static bool ShouldTriggerOnPush(WorkflowDefinition workflow, string branch)

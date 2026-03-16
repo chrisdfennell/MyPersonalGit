@@ -2630,11 +2630,17 @@ namespace MyPersonalGit.Migrations
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Condition")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Needs")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OutputsJson")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("RunsOn")
@@ -2756,6 +2762,9 @@ namespace MyPersonalGit.Migrations
 
                     b.Property<string>("Condition")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("ContinueOnError")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("TEXT");

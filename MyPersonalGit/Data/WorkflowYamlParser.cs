@@ -10,6 +10,7 @@ public class WorkflowDefinition
     public string FileName { get; set; } = "";
     public object? On { get; set; }
     public Dictionary<string, string>? Env { get; set; }
+    public string? DefaultWorkingDirectory { get; set; }
     public Dictionary<string, JobDefinition> Jobs { get; set; } = new();
     public List<WorkflowInput> Inputs { get; set; } = new();
 }
@@ -20,17 +21,19 @@ public class WorkflowInput
     public string Description { get; set; } = "";
     public bool Required { get; set; }
     public string? Default { get; set; }
-    public string Type { get; set; } = "string"; // string, boolean, choice, number
+    public string Type { get; set; } = "string";
     public List<string> Options { get; set; } = new();
 }
 
 public class JobDefinition
 {
     public string RunsOn { get; set; } = "ubuntu-latest";
+    public string? If { get; set; }
     public List<string> Needs { get; set; } = new();
     public int? TimeoutMinutes { get; set; }
     public Dictionary<string, List<string>>? Matrix { get; set; }
     public bool FailFast { get; set; } = true;
+    public Dictionary<string, string>? Outputs { get; set; }
     public Dictionary<string, string>? Env { get; set; }
     public List<StepDefinition> Steps { get; set; } = new();
 }
@@ -40,7 +43,9 @@ public class StepDefinition
     public string? Id { get; set; }
     public string? Name { get; set; }
     public string? If { get; set; }
+    public bool ContinueOnError { get; set; }
     public int? TimeoutMinutes { get; set; }
+    public string? WorkingDirectory { get; set; }
     public string? Run { get; set; }
     public string? Uses { get; set; }
     public Dictionary<string, string>? With { get; set; }
@@ -108,12 +113,21 @@ public class WorkflowYamlParser
                 On = raw.ContainsKey("on") ? raw["on"] : null
             };
 
-            // Parse workflow_dispatch inputs
             ParseWorkflowDispatchInputs(def);
 
             // Workflow-level env
             if (raw.ContainsKey("env") && raw["env"] is Dictionary<object, object> wfEnvDict)
                 def.Env = wfEnvDict.ToDictionary(k => k.Key.ToString()!, v => v.Value?.ToString() ?? "");
+
+            // defaults.run.working-directory
+            if (raw.ContainsKey("defaults") && raw["defaults"] is Dictionary<object, object> defaultsObj)
+            {
+                if (defaultsObj.ContainsKey("run") && defaultsObj["run"] is Dictionary<object, object> runObj)
+                {
+                    if (runObj.ContainsKey("working-directory"))
+                        def.DefaultWorkingDirectory = runObj["working-directory"]?.ToString();
+                }
+            }
 
             if (!raw.ContainsKey("jobs")) return def;
 
@@ -128,6 +142,10 @@ public class WorkflowYamlParser
 
                 if (jobObj.ContainsKey("runs-on"))
                     jobDef.RunsOn = jobObj["runs-on"]?.ToString() ?? "ubuntu-latest";
+
+                // if:
+                if (jobObj.ContainsKey("if"))
+                    jobDef.If = jobObj["if"]?.ToString();
 
                 // needs: (string or list)
                 if (jobObj.ContainsKey("needs"))
@@ -144,6 +162,10 @@ public class WorkflowYamlParser
                 // timeout-minutes
                 if (jobObj.ContainsKey("timeout-minutes") && int.TryParse(jobObj["timeout-minutes"]?.ToString(), out var jobTimeout))
                     jobDef.TimeoutMinutes = jobTimeout;
+
+                // outputs:
+                if (jobObj.ContainsKey("outputs") && jobObj["outputs"] is Dictionary<object, object> outputsObj)
+                    jobDef.Outputs = outputsObj.ToDictionary(k => k.Key.ToString()!, v => v.Value?.ToString() ?? "");
 
                 // strategy.matrix and strategy.fail-fast
                 if (jobObj.ContainsKey("strategy") && jobObj["strategy"] is Dictionary<object, object> strategyObj)
@@ -179,7 +201,11 @@ public class WorkflowYamlParser
                             Name = stepDict.ContainsKey("name") ? stepDict["name"]?.ToString() : null,
                             If   = stepDict.ContainsKey("if")   ? stepDict["if"]?.ToString()   : null,
                             Run  = stepDict.ContainsKey("run")  ? stepDict["run"]?.ToString()  : null,
-                            Uses = stepDict.ContainsKey("uses") ? stepDict["uses"]?.ToString() : null
+                            Uses = stepDict.ContainsKey("uses") ? stepDict["uses"]?.ToString() : null,
+                            ContinueOnError = stepDict.ContainsKey("continue-on-error") &&
+                                stepDict["continue-on-error"]?.ToString()?.Equals("true", StringComparison.OrdinalIgnoreCase) == true,
+                            WorkingDirectory = stepDict.ContainsKey("working-directory")
+                                ? stepDict["working-directory"]?.ToString() : null
                         };
 
                         if (stepDict.ContainsKey("timeout-minutes") && int.TryParse(stepDict["timeout-minutes"]?.ToString(), out var stepTimeout))
@@ -204,6 +230,33 @@ public class WorkflowYamlParser
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Extracts the paths: and paths-ignore: filters from a push or pull_request trigger config.
+    /// </summary>
+    public static (List<string> paths, List<string> pathsIgnore) GetPathFilters(WorkflowDefinition workflow, string eventName)
+    {
+        var paths = new List<string>();
+        var pathsIgnore = new List<string>();
+
+        if (workflow.On is not Dictionary<object, object> onDict) return (paths, pathsIgnore);
+
+        var eventKey = onDict.Keys.FirstOrDefault(k =>
+            k.ToString()?.Equals(eventName, StringComparison.OrdinalIgnoreCase) == true);
+        if (eventKey == null) return (paths, pathsIgnore);
+
+        if (onDict[eventKey] is not Dictionary<object, object> eventConfig) return (paths, pathsIgnore);
+
+        if (eventConfig.Keys.FirstOrDefault(k => k.ToString() == "paths") is { } pathsKey
+            && eventConfig[pathsKey] is List<object> pathsList)
+            paths = pathsList.Select(p => p?.ToString() ?? "").Where(p => !string.IsNullOrEmpty(p)).ToList();
+
+        if (eventConfig.Keys.FirstOrDefault(k => k.ToString() == "paths-ignore") is { } ignoreKey
+            && eventConfig[ignoreKey] is List<object> ignoreList)
+            pathsIgnore = ignoreList.Select(p => p?.ToString() ?? "").Where(p => !string.IsNullOrEmpty(p)).ToList();
+
+        return (paths, pathsIgnore);
     }
 
     private static void ParseWorkflowDispatchInputs(WorkflowDefinition def)

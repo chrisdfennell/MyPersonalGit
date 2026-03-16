@@ -88,6 +88,12 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Matrix Builds** — `strategy.matrix` expands jobs across multiple variable combinations (e.g., OS x version). Supports `fail-fast` and `${{ matrix.X }}` substitution in `runs-on`, step commands, and step names
 - **`workflow_dispatch` Inputs** — Manual triggers with typed input parameters (string, boolean, choice, number). UI shows an input form when triggering workflows with inputs. Values injected as `INPUT_*` env vars
 - **Job Timeouts (`timeout-minutes`)** — Set `timeout-minutes` on jobs to automatically fail them if they exceed the limit. Default: 360 minutes (matches GitHub Actions)
+- **Job-Level `if:`** — Skip entire jobs based on conditions. Jobs with `if: always()` run even when dependencies fail. Skipped jobs don't fail the run
+- **Job Outputs** — Jobs declare `outputs:` that downstream `needs:` jobs consume via `${{ needs.X.outputs.Y }}`. Outputs are resolved from step outputs after the job completes
+- **`continue-on-error`** — Mark individual steps as allowed to fail without failing the job. Useful for optional validation or notification steps
+- **`on.push.paths` Filter** — Only trigger workflows when specific files change. Supports glob patterns (`src/**`, `*.ts`) and `paths-ignore:` for exclusions
+- **Re-run Workflows** — Re-run failed, succeeded, or cancelled workflow runs with one click from the Actions UI. Creates a fresh run with the same configuration
+- **`working-directory`** — Set `defaults.run.working-directory` at workflow level or per-step `working-directory:` to control where commands execute
 - **Auto-Release Pipeline** — Built-in workflow auto-tags versions, generates changelogs, and pushes Docker images to Docker Hub on every push to main
 - **Commit Status Checks** — Workflows automatically set pending/success/failure status on commits, visible on pull requests
 - **Workflow Cancellation** — Cancel running or queued workflows from the Actions UI
@@ -544,6 +550,95 @@ jobs:
       - run: make build
 ```
 Default timeout is 360 minutes (6 hours), matching GitHub Actions.
+
+**Job-level conditionals:**
+Use `if:` on jobs to skip them based on conditions:
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: dotnet test
+
+  deploy:
+    needs: test
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "deploying..."
+
+  notify:
+    needs: test
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -X POST https://hooks.example.com/alert
+```
+
+**Job outputs:**
+Jobs can pass values to downstream jobs via `outputs:`:
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+    steps:
+      - id: ver
+        run: echo "version=1.2.3" >> $GITHUB_OUTPUT
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying version $version"
+```
+
+**Continue on error:**
+Let a step fail without failing the job:
+```yaml
+steps:
+  - name: Optional lint
+    continue-on-error: true
+    run: npm run lint
+
+  - name: Build (always runs)
+    run: npm run build
+```
+
+**Path filtering:**
+Only trigger workflows when specific files change:
+```yaml
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - '*.csproj'
+    # or use paths-ignore:
+    # paths-ignore:
+    #   - 'docs/**'
+    #   - '*.md'
+```
+
+**Working directory:**
+Set where commands execute:
+```yaml
+defaults:
+  run:
+    working-directory: src/app
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm install          # runs in src/app
+      - run: npm test
+        working-directory: tests  # overrides default
+```
+
+**Re-run workflows:**
+Click the **Re-run** button on any completed, failed, or cancelled workflow run to create a fresh run with the same jobs, steps, and configuration.
 
 **Pull request workflows:**
 Workflows with `on: pull_request` auto-trigger when a non-draft PR is created, running checks against the source branch.
