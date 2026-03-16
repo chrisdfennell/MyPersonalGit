@@ -101,6 +101,13 @@ public class WorkflowRunnerService : BackgroundService
             .Include(r => r.Jobs).ThenInclude(j => j.Steps)
             .FirstOrDefaultAsync(r => r.Id == run.Id, ct) ?? run;
 
+        // Check if this run was cancelled by a newer push while we were executing
+        if (freshRun.Status == WorkflowStatus.Cancelled)
+        {
+            _logger.LogInformation("Workflow run {RunId} was cancelled by a newer run — skipping completion", run.Id);
+            return;
+        }
+
         freshRun.Status = runSuccess ? WorkflowStatus.Success : WorkflowStatus.Failure;
         freshRun.CompletedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
@@ -515,6 +522,20 @@ public class WorkflowRunnerService : BackgroundService
             foreach (var step in job.Steps)
             {
                 if (ct.IsCancellationRequested) break;
+
+                // Check if run was cancelled by a newer push
+                try
+                {
+                    using var cancelCheckScope = _scopeFactory.CreateScope();
+                    var cancelDb = cancelCheckScope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
+                    var runStatus = await cancelDb.WorkflowRuns.Where(r => r.Id == run.Id).Select(r => r.Status).FirstOrDefaultAsync(ct);
+                    if (runStatus == WorkflowStatus.Cancelled)
+                    {
+                        _logger.LogInformation("Run {RunId} cancelled mid-execution — aborting remaining steps", run.Id);
+                        break;
+                    }
+                }
+                catch { }
 
                 // Evaluate if: condition before running
                 if (!EvaluateCondition(step.Condition, anyStepFailed))

@@ -565,11 +565,9 @@ else
                                 <div class="d-flex flex-wrap gap-1">
                                     @foreach (var c in repoContributors)
                                     {
-                                        <a href="/user/@c.Name" title="@c.Name (@c.Commits commits)" class="text-decoration-none">
-                                            <div class="rounded-circle bg-secondary bg-opacity-25 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 13px; font-weight: 600;">
-                                                @c.Name.Substring(0, 1).ToUpperInvariant()
-                                            </div>
-                                        </a>
+                                        <div title="@c.Name (@c.Commits commits)" class="rounded-circle bg-secondary bg-opacity-25 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 13px; font-weight: 600; cursor: default;">
+                                            @c.Name.Substring(0, 1).ToUpperInvariant()
+                                        </div>
                                     }
                                 </div>
                             </div>
