@@ -85,6 +85,9 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Parallel Jobs with `needs:`** — Jobs declare dependencies via `needs:` and run in parallel when independent. Dependent jobs wait for their prerequisites and are automatically cancelled if a dependency fails
 - **Conditional Steps (`if:`)** — Steps support `if:` expressions: `always()`, `success()`, `failure()`, `cancelled()`, `true`, `false`. Cleanup steps with `if: failure()` or `if: always()` still run after earlier failures
 - **Step Outputs (`$GITHUB_OUTPUT`)** — Steps can write `key=value` pairs to `$GITHUB_OUTPUT` and subsequent steps receive them as environment variables, compatible with `${{ steps.X.outputs.Y }}` syntax
+- **Matrix Builds** — `strategy.matrix` expands jobs across multiple variable combinations (e.g., OS x version). Supports `fail-fast` and `${{ matrix.X }}` substitution in `runs-on`, step commands, and step names
+- **`workflow_dispatch` Inputs** — Manual triggers with typed input parameters (string, boolean, choice, number). UI shows an input form when triggering workflows with inputs. Values injected as `INPUT_*` env vars
+- **Job Timeouts (`timeout-minutes`)** — Set `timeout-minutes` on jobs to automatically fail them if they exceed the limit. Default: 360 minutes (matches GitHub Actions)
 - **Auto-Release Pipeline** — Built-in workflow auto-tags versions, generates changelogs, and pushes Docker images to Docker Hub on every push to main
 - **Commit Status Checks** — Workflows automatically set pending/success/failure status on commits, visible on pull requests
 - **Workflow Cancellation** — Cancel running or queued workflows from the Actions UI
@@ -487,6 +490,60 @@ steps:
   - name: Use version
     run: echo "Building version $version"
 ```
+
+**Matrix builds:**
+Fan out jobs across multiple combinations using `strategy.matrix`:
+```yaml
+jobs:
+  test:
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, node-20]
+        version: ["1.0", "2.0"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - run: echo "Testing on ${{ matrix.os }} with version ${{ matrix.version }}"
+```
+This creates 4 jobs: `test (ubuntu-latest, 1.0)`, `test (ubuntu-latest, 2.0)`, etc. All run in parallel.
+
+**Manual triggers with inputs (`workflow_dispatch`):**
+Define typed inputs that show as a form in the UI when triggering manually:
+```yaml
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      debug:
+        description: "Enable debug mode"
+        type: boolean
+        default: "false"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying to $INPUT_ENVIRONMENT (debug=$INPUT_DEBUG)"
+```
+Input values are injected as `INPUT_<NAME>` environment variables (uppercased).
+
+**Job timeouts:**
+Set `timeout-minutes` on jobs to automatically fail them if they run too long:
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - run: make build
+```
+Default timeout is 360 minutes (6 hours), matching GitHub Actions.
 
 **Pull request workflows:**
 Workflows with `on: pull_request` auto-trigger when a non-draft PR is created, running checks against the source branch.
