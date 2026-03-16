@@ -3234,18 +3234,19 @@ else
                 latestCommit = MapCommit(branch.Tip, repo);
                 isEmpty = false;
 
-                if (activeTab == "commits")
                 {
                     var filter = new CommitFilter { IncludeReachableFrom = branch.Tip };
-                    if (isFile && !string.IsNullOrEmpty(Path))
+                    // Always count commits for the badge
+                    commitCount = isFile && !string.IsNullOrEmpty(Path)
+                        ? repo.Commits.QueryBy(Path, filter).Count()
+                        : repo.Commits.QueryBy(filter).Count();
+
+                    if (activeTab == "commits")
                     {
-                        commitHistory = repo.Commits.QueryBy(Path, filter).Select(c => MapCommit(c.Commit, repo)).Take(20).ToList();
-                        commitCount = repo.Commits.QueryBy(Path, filter).Count();
-                    }
-                    else
-                    {
-                        commitHistory = repo.Commits.QueryBy(filter).Select(c => MapCommit(c, repo)).Take(20).ToList();
-                        commitCount = repo.Commits.QueryBy(filter).Count();
+                        if (isFile && !string.IsNullOrEmpty(Path))
+                            commitHistory = repo.Commits.QueryBy(Path, filter).Select(c => MapCommit(c.Commit, repo)).Take(20).ToList();
+                        else
+                            commitHistory = repo.Commits.QueryBy(filter).Select(c => MapCommit(c, repo)).Take(20).ToList();
                     }
                 }
 
