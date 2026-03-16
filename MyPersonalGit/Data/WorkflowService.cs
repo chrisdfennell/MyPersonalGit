@@ -323,6 +323,20 @@ public class WorkflowService : IWorkflowService
         if (uses.StartsWith("actions/checkout"))
             return "echo 'Checkout: repo already cloned to /workspace'";
 
+        // actions/setup-dotnet — install .NET SDK via official install script
+        if (uses.StartsWith("actions/setup-dotnet"))
+        {
+            var dotnetVersion = with.GetValueOrDefault("dotnet-version", "8.0.x");
+            // Extract channel from version string: "10.0.x" -> "10.0", "8.0.100" -> "8.0"
+            var channel = System.Text.RegularExpressions.Regex.Match(dotnetVersion, @"^\d+\.\d+").Value;
+            if (string.IsNullOrEmpty(channel)) channel = "8.0";
+            return $"curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh && " +
+                   $"chmod +x /tmp/dotnet-install.sh && " +
+                   $"/tmp/dotnet-install.sh --channel {channel} --install-dir /usr/local/dotnet && " +
+                   $"ln -sf /usr/local/dotnet/dotnet /usr/local/bin/dotnet && " +
+                   $"dotnet --version";
+        }
+
         // docker/login-action — translate to docker login
         if (uses.StartsWith("docker/login-action"))
         {
