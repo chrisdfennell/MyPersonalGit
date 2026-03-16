@@ -529,6 +529,38 @@ public class WorkflowService : IWorkflowService
                    $"dotnet --version";
         }
 
+        // actions/setup-node — install Node.js via nvm
+        if (uses.StartsWith("actions/setup-node"))
+        {
+            var nodeVersion = with.GetValueOrDefault("node-version", "20");
+            // Strip .x suffix: "20.x" -> "20"
+            nodeVersion = nodeVersion.Replace(".x", "");
+            return $"curl -fsSL https://deb.nodesource.com/setup_{nodeVersion}.x | bash - > /dev/null 2>&1 && " +
+                   $"apt-get install -y -qq nodejs > /dev/null 2>&1 || " +
+                   $"(apk add --no-cache nodejs npm > /dev/null 2>&1) || true && " +
+                   $"node --version && npm --version";
+        }
+
+        // actions/setup-python — install Python
+        if (uses.StartsWith("actions/setup-python"))
+        {
+            var pyVersion = with.GetValueOrDefault("python-version", "3.12");
+            return $"which python3 > /dev/null 2>&1 || " +
+                   $"(apt-get update -qq && apt-get install -y -qq python{pyVersion} python3-pip > /dev/null 2>&1) || " +
+                   $"(apk add --no-cache python3 py3-pip > /dev/null 2>&1) || true && " +
+                   $"python3 --version";
+        }
+
+        // actions/setup-java — install JDK
+        if (uses.StartsWith("actions/setup-java"))
+        {
+            var javaVersion = with.GetValueOrDefault("java-version", "17");
+            return $"which java > /dev/null 2>&1 || " +
+                   $"(apt-get update -qq && apt-get install -y -qq openjdk-{javaVersion}-jdk-headless > /dev/null 2>&1) || " +
+                   $"(apk add --no-cache openjdk{javaVersion}-jdk > /dev/null 2>&1) || true && " +
+                   $"java -version";
+        }
+
         // docker/login-action — translate to docker login
         if (uses.StartsWith("docker/login-action"))
         {

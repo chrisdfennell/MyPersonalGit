@@ -114,6 +114,68 @@ public class WorkflowRunnerService : BackgroundService
             await TryAutoMerge(run.RepoName, ct);
             await TryCreateTagFromWorkflow(freshRun, ct);
         }
+
+        // Trigger on.workflow_run workflows
+        await TriggerWorkflowRunWorkflows(freshRun, ct);
+    }
+
+    /// <summary>
+    /// Scans for workflows with on: workflow_run trigger and fires them if they match
+    /// the completed workflow's name and conclusion.
+    /// </summary>
+    private async Task TriggerWorkflowRunWorkflows(WorkflowRun completedRun, CancellationToken ct)
+    {
+        try
+        {
+            var repoPath = GetRepoPath(completedRun.RepoName);
+            if (repoPath == null) return;
+
+            var parser = new WorkflowYamlParser();
+            var workflows = parser.ParseFromRepo(repoPath);
+            var conclusion = completedRun.Status == WorkflowStatus.Success ? "success" : "failure";
+
+            foreach (var wf in workflows)
+            {
+                if (wf.On is not Dictionary<object, object> onDict) continue;
+
+                var wrKey = onDict.Keys.FirstOrDefault(k =>
+                    k.ToString()?.Equals("workflow_run", StringComparison.OrdinalIgnoreCase) == true);
+                if (wrKey == null) continue;
+
+                if (onDict[wrKey] is not Dictionary<object, object> wrConfig) continue;
+
+                // Check workflows: [name1, name2] filter
+                bool workflowMatches = true;
+                var wfKey = wrConfig.Keys.FirstOrDefault(k => k.ToString() == "workflows");
+                if (wfKey != null && wrConfig[wfKey] is List<object> wfNames)
+                    workflowMatches = wfNames.Any(n =>
+                        n?.ToString()?.Equals(completedRun.WorkflowName, StringComparison.OrdinalIgnoreCase) == true);
+
+                if (!workflowMatches) continue;
+
+                // Check types: [completed] filter (default: completed)
+                bool typeMatches = true;
+                var typeKey = wrConfig.Keys.FirstOrDefault(k => k.ToString() == "types");
+                if (typeKey != null && wrConfig[typeKey] is List<object> types)
+                    typeMatches = types.Any(t =>
+                        t?.ToString()?.Equals("completed", StringComparison.OrdinalIgnoreCase) == true);
+
+                if (!typeMatches) continue;
+
+                _logger.LogInformation("Triggering workflow '{Name}' via workflow_run from '{Source}'",
+                    wf.Name, completedRun.WorkflowName);
+
+                using var scope = _scopeFactory.CreateScope();
+                var workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
+                await workflowService.CreateWorkflowRunWithJobsAsync(
+                    completedRun.RepoName, wf, completedRun.Branch, completedRun.CommitSha,
+                    $"Triggered by {completedRun.WorkflowName} ({conclusion})", "workflow_run");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to trigger workflow_run workflows for run {RunId}", completedRun.Id);
+        }
     }
 
     /// <summary>
@@ -123,6 +185,19 @@ public class WorkflowRunnerService : BackgroundService
     private async Task<bool> ExecuteJobsAsync(WorkflowRun run, CancellationToken ct)
     {
         var jobs = run.Jobs.ToList();
+
+        // Determine max-parallel from YAML (limits concurrent matrix jobs)
+        int? maxParallel = null;
+        try
+        {
+            var mpParser = new WorkflowYamlParser();
+            var mpDefs = mpParser.ParseFromRepo(GetRepoPath(run.RepoName) ?? "");
+            var mpWf = mpDefs.FirstOrDefault(d => d.Name == run.WorkflowName);
+            if (mpWf != null)
+                maxParallel = mpWf.Jobs.Values.Max(j => j.MaxParallel);
+        }
+        catch { }
+        var parallelSemaphore = maxParallel.HasValue ? new SemaphoreSlim(maxParallel.Value) : null;
 
         // Each job gets a TCS so dependent jobs can await it
         var completions = jobs.ToDictionary(j => j.Name, _ => new TaskCompletionSource<bool>());
@@ -174,25 +249,30 @@ public class WorkflowRunnerService : BackgroundService
                             upstreamOutputs[k] = v;
                 }
 
-                var result = await ExecuteJobById(jobId, run, upstreamOutputs, ct);
-                completions[jobName].SetResult(result);
-
-                // Collect this job's outputs for downstream jobs
+                if (parallelSemaphore != null) await parallelSemaphore.WaitAsync(ct);
                 try
                 {
-                    using var scope = _scopeFactory.CreateScope();
-                    var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
-                    var finishedJob = await db.WorkflowJobs.FirstOrDefaultAsync(j => j.Id == jobId, ct);
-                    if (finishedJob?.OutputsJson != null)
-                    {
-                        var outputs = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(finishedJob.OutputsJson);
-                        if (outputs != null)
-                            jobOutputs[jobName] = outputs;
-                    }
-                }
-                catch { }
+                    var result = await ExecuteJobById(jobId, run, upstreamOutputs, ct);
+                    completions[jobName].SetResult(result);
 
-                return result;
+                    // Collect this job's outputs for downstream jobs
+                    try
+                    {
+                        using var scope = _scopeFactory.CreateScope();
+                        var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
+                        var finishedJob = await db.WorkflowJobs.FirstOrDefaultAsync(j => j.Id == jobId, ct);
+                        if (finishedJob?.OutputsJson != null)
+                        {
+                            var outputs = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(finishedJob.OutputsJson);
+                            if (outputs != null)
+                                jobOutputs[jobName] = outputs;
+                        }
+                    }
+                    catch { }
+
+                    return result;
+                }
+                finally { parallelSemaphore?.Release(); }
             }, ct);
         }).ToList();
 
@@ -299,6 +379,21 @@ public class WorkflowRunnerService : BackgroundService
             {
                 _logger.LogWarning(ex, "Failed to load secrets for {RepoName}", run.RepoName);
             }
+
+            // Inject github.* context as env vars
+            var repoDisplayName = run.RepoName.EndsWith(".git") ? run.RepoName[..^4] : run.RepoName;
+            envVars.Add($"GITHUB_SHA={run.CommitSha}");
+            envVars.Add($"GITHUB_REF=refs/heads/{run.Branch}");
+            envVars.Add($"GITHUB_REF_NAME={run.Branch}");
+            envVars.Add($"GITHUB_ACTOR={run.TriggeredBy}");
+            envVars.Add($"GITHUB_REPOSITORY={repoDisplayName}");
+            envVars.Add($"GITHUB_EVENT_NAME={(run.TriggeredBy == "Manual trigger" ? "workflow_dispatch" : "push")}");
+            envVars.Add($"GITHUB_WORKSPACE=/workspace");
+            envVars.Add($"GITHUB_RUN_ID={run.Id}");
+            envVars.Add($"GITHUB_RUN_NUMBER={run.Id}");
+            envVars.Add($"GITHUB_JOB={job.Name}");
+            envVars.Add($"GITHUB_WORKFLOW={run.WorkflowName}");
+            envVars.Add($"CI=true");
 
             // Inject upstream job outputs as env vars (for needs.X.outputs.Y -> $Y)
             if (upstreamOutputs != null)
@@ -435,6 +530,26 @@ public class WorkflowRunnerService : BackgroundService
                 await db.SaveChangesAsync(ct);
 
                 var command = step.Command ?? step.Name ?? "echo 'No command'";
+                // Determine shell: step-level overrides job-level overrides default (sh)
+                var shell = "sh";
+                try
+                {
+                    var shellParser = new WorkflowYamlParser();
+                    var shellDefs = shellParser.ParseFromRepo(GetRepoPath(run.RepoName) ?? "");
+                    var shellWf = shellDefs.FirstOrDefault(d => d.Name == run.WorkflowName);
+                    if (shellWf != null)
+                    {
+                        if (!string.IsNullOrEmpty(shellWf.DefaultShell)) shell = shellWf.DefaultShell;
+                        var baseJobName = job.Name.Contains(" (") ? job.Name[..job.Name.IndexOf(" (")] : job.Name;
+                        if (shellWf.Jobs.TryGetValue(baseJobName, out var jd))
+                        {
+                            var stepIdx = job.Steps.IndexOf(step);
+                            if (stepIdx >= 0 && stepIdx < jd.Steps.Count && !string.IsNullOrEmpty(jd.Steps[stepIdx].Shell))
+                                shell = jd.Steps[stepIdx].Shell;
+                        }
+                    }
+                }
+                catch { }
                 var wrappedCommand = $"cd /workspace 2>/dev/null; {command}";
 
                 // Inject GITHUB_OUTPUT path plus any outputs from previous steps
@@ -444,21 +559,17 @@ public class WorkflowRunnerService : BackgroundService
                 };
 
                 var (exitCode, output) = await ExecInContainer(containerId,
-                    new[] { "sh", "-c", wrappedCommand }, execEnv, ct);
+                    new[] { shell, "-c", wrappedCommand }, execEnv, ct);
 
                 step.Output = output;
                 step.CompletedAt = DateTime.UtcNow;
 
                 // Read and process $GITHUB_OUTPUT entries written by the step
+                // Supports both key=value and key<<DELIMITER\nvalue\nDELIMITER formats
                 var (_, outputFileContent) = await ExecInContainer(containerId,
                     new[] { "sh", "-c", "cat /tmp/github_output 2>/dev/null; : > /tmp/github_output" }, null, ct);
 
-                foreach (var line in outputFileContent.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-                {
-                    var eqIdx = line.IndexOf('=');
-                    if (eqIdx > 0)
-                        stepOutputs[line[..eqIdx].Trim()] = line[(eqIdx + 1)..];
-                }
+                ParseGitHubOutput(outputFileContent, stepOutputs);
 
                 if (exitCode != 0)
                 {
@@ -580,6 +691,42 @@ public class WorkflowRunnerService : BackgroundService
             "false" or "0"               => false,
             _                            => !anyStepFailed
         };
+    }
+
+    /// <summary>
+    /// Parses GITHUB_OUTPUT content supporting both key=value and key&lt;&lt;DELIMITER multiline formats.
+    /// </summary>
+    private static void ParseGitHubOutput(string content, Dictionary<string, string> outputs)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return;
+        var lines = content.Split('\n');
+        int i = 0;
+        while (i < lines.Length)
+        {
+            var line = lines[i];
+            // Check for multiline: key<<DELIMITER
+            var heredocMatch = System.Text.RegularExpressions.Regex.Match(line, @"^(\w+)<<(.+)$");
+            if (heredocMatch.Success)
+            {
+                var key = heredocMatch.Groups[1].Value;
+                var delimiter = heredocMatch.Groups[2].Value.Trim();
+                var valueLines = new List<string>();
+                i++;
+                while (i < lines.Length && lines[i].Trim() != delimiter)
+                {
+                    valueLines.Add(lines[i]);
+                    i++;
+                }
+                outputs[key] = string.Join("\n", valueLines);
+                i++; // skip delimiter line
+                continue;
+            }
+            // Simple key=value
+            var eqIdx = line.IndexOf('=');
+            if (eqIdx > 0)
+                outputs[line[..eqIdx].Trim()] = line[(eqIdx + 1)..];
+            i++;
+        }
     }
 
     private static List<string> ParseJobNeeds(string? needs) =>
