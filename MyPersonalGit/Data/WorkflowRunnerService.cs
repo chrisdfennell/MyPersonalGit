@@ -641,8 +641,8 @@ public class WorkflowRunnerService : BackgroundService
             catch { }
 
             // Check for release metadata written by softprops/action-gh-release translation
-            if (!anyStepFailed && containerId != null)
-                await TryCreateReleaseFromContainer(containerId, run, ct);
+            if (containerId != null)
+                await TryCreateReleaseFromContainer(containerId, run, stepOutputs, ct);
 
             job.Status = anyStepFailed ? WorkflowStatus.Failure : WorkflowStatus.Success;
             job.CompletedAt = DateTime.UtcNow;
@@ -800,7 +800,7 @@ public class WorkflowRunnerService : BackgroundService
     /// Reads /tmp/release_meta from the container (written by softprops/action-gh-release translation)
     /// and creates a real Release entity in the database.
     /// </summary>
-    private async Task TryCreateReleaseFromContainer(string containerId, WorkflowRun run, CancellationToken ct)
+    private async Task TryCreateReleaseFromContainer(string containerId, WorkflowRun run, Dictionary<string, string> stepOutputs, CancellationToken ct)
     {
         try
         {
@@ -808,7 +808,6 @@ public class WorkflowRunnerService : BackgroundService
                 new[] { "sh", "-c", "cat /tmp/release_meta 2>/dev/null" }, null, ct);
             if (exitCode != 0 || string.IsNullOrWhiteSpace(metaContent)) return;
 
-            // Parse key=value pairs
             var meta = new Dictionary<string, string>();
             foreach (var line in metaContent.Split('\n', StringSplitOptions.RemoveEmptyEntries))
             {
@@ -822,18 +821,16 @@ public class WorkflowRunnerService : BackgroundService
             var isPrerelease = meta.GetValueOrDefault("PRERELEASE", "false").Equals("true", StringComparison.OrdinalIgnoreCase);
             var isDraft = meta.GetValueOrDefault("DRAFT", "false").Equals("true", StringComparison.OrdinalIgnoreCase);
 
-            // Read body from separate file (may be multiline)
+            // Construct release body from step outputs (avoids shell escaping issues)
             string? body = null;
-            var (bodyExit, bodyContent) = await ExecInContainer(containerId,
-                new[] { "sh", "-c", "cat /tmp/release_body 2>/dev/null" }, null, ct);
-            if (bodyExit == 0 && !string.IsNullOrWhiteSpace(bodyContent))
-                body = bodyContent.Trim();
+            if (stepOutputs.TryGetValue("changelog", out var changelog) && !string.IsNullOrWhiteSpace(changelog))
+            {
+                body = $"## Changes\n{changelog}\n\n## Docker\n```bash\ndocker pull fennch/mypersonalgit:{tagName}\n```";
+            }
 
-            // Create the release via ReleaseService
             using var scope = _scopeFactory.CreateScope();
             var releaseService = scope.ServiceProvider.GetRequiredService<IReleaseService>();
 
-            // Check if release with this tag already exists
             var existing = await releaseService.GetReleasesAsync(run.RepoName);
             if (existing.Any(r => r.TagName == tagName))
             {
