@@ -81,7 +81,10 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 
 ### CI/CD & DevOps
 - **CI/CD Runner** — Define workflows in `.github/workflows/*.yml` and run them in Docker containers. Auto-triggers on push and pull request events
-- **GitHub Actions Compatibility** — Same workflow YAML works on both MyPersonalGit and GitHub Actions. Translates `uses:` actions (`actions/checkout`, `docker/login-action`, `docker/build-push-action`) into equivalent shell commands
+- **GitHub Actions Compatibility** — Same workflow YAML works on both MyPersonalGit and GitHub Actions. Translates `uses:` actions (`actions/checkout`, `actions/setup-dotnet`, `docker/login-action`, `docker/build-push-action`) into equivalent shell commands
+- **Parallel Jobs with `needs:`** — Jobs declare dependencies via `needs:` and run in parallel when independent. Dependent jobs wait for their prerequisites and are automatically cancelled if a dependency fails
+- **Conditional Steps (`if:`)** — Steps support `if:` expressions: `always()`, `success()`, `failure()`, `cancelled()`, `true`, `false`. Cleanup steps with `if: failure()` or `if: always()` still run after earlier failures
+- **Step Outputs (`$GITHUB_OUTPUT`)** — Steps can write `key=value` pairs to `$GITHUB_OUTPUT` and subsequent steps receive them as environment variables, compatible with `${{ steps.X.outputs.Y }}` syntax
 - **Auto-Release Pipeline** — Built-in workflow auto-tags versions, generates changelogs, and pushes Docker images to Docker Hub on every push to main
 - **Commit Status Checks** — Workflows automatically set pending/success/failure status on commits, visible on pull requests
 - **Workflow Cancellation** — Cancel running or queued workflows from the Actions UI
@@ -426,11 +429,64 @@ The same workflow YAML also works on GitHub Actions — no changes needed. MyPer
 | GitHub Action | MyPersonalGit Translation |
 |---|---|
 | `actions/checkout@v4` | Repo already cloned to `/workspace` |
+| `actions/setup-dotnet@v4` | Installs .NET SDK via official install script |
 | `docker/login-action@v3` | `docker login` with stdin password |
 | `docker/build-push-action@v6` | `docker build && docker push` |
 | `docker/setup-buildx-action@v3` | No-op (uses default builder) |
 | `softprops/action-gh-release@v2` | Log message (GitHub handles natively) |
 | `${{ secrets.X }}` | `$X` environment variable |
+| `${{ steps.X.outputs.Y }}` | `$Y` environment variable |
+
+**Parallel jobs:**
+Jobs run in parallel by default. Use `needs:` to declare dependencies:
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: dotnet build
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: dotnet test
+
+  deploy:
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "deploying..."
+```
+Jobs with no `needs:` start immediately. A job is cancelled if any of its dependencies fail.
+
+**Conditional steps:**
+Use `if:` to control when steps run:
+```yaml
+steps:
+  - name: Build
+    run: dotnet build
+
+  - name: Notify on failure
+    if: failure()
+    run: curl -X POST https://hooks.example.com/alert
+
+  - name: Cleanup
+    if: always()
+    run: rm -rf ./tmp
+```
+Supported expressions: `always()`, `success()` (default), `failure()`, `cancelled()`, `true`, `false`.
+
+**Step outputs:**
+Steps can pass values to subsequent steps via `$GITHUB_OUTPUT`:
+```yaml
+steps:
+  - name: Determine version
+    run: echo "version=1.2.3" >> $GITHUB_OUTPUT
+
+  - name: Use version
+    run: echo "Building version $version"
+```
 
 **Pull request workflows:**
 Workflows with `on: pull_request` auto-trigger when a non-draft PR is created, running checks against the source branch.
