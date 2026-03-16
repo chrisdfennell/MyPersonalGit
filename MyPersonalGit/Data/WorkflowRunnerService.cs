@@ -18,7 +18,6 @@ public class WorkflowRunnerService : BackgroundService
 
         try
         {
-            // Connect to Docker socket
             var dockerUri = OperatingSystem.IsWindows()
                 ? new Uri("npipe://./pipe/docker_engine")
                 : new Uri("unix:///var/run/docker.sock");
@@ -82,7 +81,6 @@ public class WorkflowRunnerService : BackgroundService
         run.StartedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
 
-        // Set pending commit status
         var pendingContext = $"ci/{run.WorkflowName.ToLowerInvariant().Replace(' ', '-')}";
         db.CommitStatuses.Add(new CommitStatus
         {
@@ -95,38 +93,416 @@ public class WorkflowRunnerService : BackgroundService
         });
         try { await db.SaveChangesAsync(ct); } catch { }
 
-        var runSuccess = true;
+        var runSuccess = await ExecuteJobsAsync(run, ct);
 
-        foreach (var job in run.Jobs)
-        {
-            if (ct.IsCancellationRequested) break;
+        // Re-fetch run so we have fresh job/step data for tag creation
+        db.ChangeTracker.Clear();
+        var freshRun = await db.WorkflowRuns
+            .Include(r => r.Jobs).ThenInclude(j => j.Steps)
+            .FirstOrDefaultAsync(r => r.Id == run.Id, ct) ?? run;
 
-            var jobSuccess = await ExecuteJob(db, run, job, ct);
-            if (!jobSuccess) runSuccess = false;
-        }
-
-        run.Status = runSuccess ? WorkflowStatus.Success : WorkflowStatus.Failure;
-        run.CompletedAt = DateTime.UtcNow;
+        freshRun.Status = runSuccess ? WorkflowStatus.Success : WorkflowStatus.Failure;
+        freshRun.CompletedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
 
-        _logger.LogInformation("Workflow run {RunId} completed with status {Status}", run.Id, run.Status);
+        _logger.LogInformation("Workflow run {RunId} completed with status {Status}", run.Id, freshRun.Status);
 
-        // Set commit status based on workflow result
-        await SetCommitStatus(db, run, runSuccess);
+        await SetCommitStatus(db, freshRun, runSuccess);
 
-        // Auto-merge: if the run succeeded, check for PRs with auto-merge enabled
         if (runSuccess)
         {
             await TryAutoMerge(run.RepoName, ct);
-            await TryCreateTagFromWorkflow(run, ct);
+            await TryCreateTagFromWorkflow(freshRun, ct);
         }
     }
 
-    private async Task TryCreateTagFromWorkflow(WorkflowRun run, CancellationToken ct)
+    /// <summary>
+    /// Executes all jobs in the run, respecting needs: dependencies and running
+    /// independent jobs in parallel.
+    /// </summary>
+    private async Task<bool> ExecuteJobsAsync(WorkflowRun run, CancellationToken ct)
+    {
+        var jobs = run.Jobs.ToList();
+
+        // Each job gets a TCS so dependent jobs can await it
+        var completions = jobs.ToDictionary(j => j.Name, _ => new TaskCompletionSource<bool>());
+
+        var jobTasks = jobs.Select(job =>
+        {
+            var jobId = job.Id;
+            var jobName = job.Name;
+            var needs = ParseJobNeeds(job.Needs);
+
+            return Task.Run(async () =>
+            {
+                // Wait for all declared dependencies to finish
+                if (needs.Count > 0)
+                {
+                    var depTasks = needs
+                        .Where(n => completions.ContainsKey(n))
+                        .Select(n => completions[n].Task);
+
+                    var depResults = await Task.WhenAll(depTasks);
+
+                    if (!depResults.All(r => r))
+                    {
+                        // A required dependency failed — skip this job
+                        await CancelJobAsync(jobId, ct);
+                        completions[jobName].SetResult(false);
+                        return false;
+                    }
+                }
+
+                var result = await ExecuteJobById(jobId, run, ct);
+                completions[jobName].SetResult(result);
+                return result;
+            }, ct);
+        }).ToList();
+
+        var results = await Task.WhenAll(jobTasks);
+        return results.All(r => r);
+    }
+
+    private async Task CancelJobAsync(int jobId, CancellationToken ct)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
+        var job = await db.WorkflowJobs.Include(j => j.Steps).FirstOrDefaultAsync(j => j.Id == jobId, ct);
+        if (job == null) return;
+
+        job.Status = WorkflowStatus.Cancelled;
+        job.CompletedAt = DateTime.UtcNow;
+        foreach (var step in job.Steps)
+        {
+            step.Status = WorkflowStatus.Cancelled;
+            step.CompletedAt = DateTime.UtcNow;
+        }
+        await db.SaveChangesAsync(ct);
+    }
+
+    private async Task<bool> ExecuteJobById(int jobId, WorkflowRun run, CancellationToken ct)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
+        var job = await db.WorkflowJobs.Include(j => j.Steps).FirstOrDefaultAsync(j => j.Id == jobId, ct);
+        if (job == null) return false;
+
+        return await ExecuteJob(db, run, job, ct);
+    }
+
+    private async Task<bool> ExecuteJob(AppDbContext db, WorkflowRun run, WorkflowJob job, CancellationToken ct)
+    {
+        job.Status = WorkflowStatus.InProgress;
+        job.StartedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+
+        var image = MapImage(job.RunsOn);
+        string? containerId = null;
+
+        try
+        {
+            _logger.LogInformation("Pulling image {Image} for job {JobName}", image, job.Name);
+            await _docker!.Images.CreateImageAsync(
+                new ImagesCreateParameters { FromImage = image },
+                null,
+                new Progress<JSONMessage>(),
+                ct);
+
+            var repoMount = GetRepoPath(run.RepoName);
+
+            var envVars = new List<string>();
+            try
+            {
+                var parser = new WorkflowYamlParser();
+                var definitions = parser.ParseFromRepo(repoMount ?? "");
+                var wfDef = definitions.FirstOrDefault(d => d.Name == run.WorkflowName);
+                if (wfDef != null)
+                {
+                    if (wfDef.Env != null)
+                        foreach (var (k, v) in wfDef.Env)
+                            envVars.Add($"{k}={v}");
+                    if (wfDef.Jobs.TryGetValue(job.Name, out var jobDef) && jobDef.Env != null)
+                        foreach (var (k, v) in jobDef.Env)
+                            envVars.Add($"{k}={v}");
+                }
+            }
+            catch { }
+
+            try
+            {
+                using var secretsScope = _scopeFactory.CreateScope();
+                var secretsService = secretsScope.ServiceProvider.GetRequiredService<ISecretsService>();
+                var secrets = await secretsService.GetAllSecretsForRunAsync(run.RepoName);
+                foreach (var (name, value) in secrets)
+                    envVars.Add($"{name}={value}");
+                _logger.LogInformation("Loaded {Count} secret(s) for repo '{RepoName}'", secrets.Count, run.RepoName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load secrets for {RepoName}", run.RepoName);
+            }
+
+            string? artifactHostDir = null;
+            try
+            {
+                using var artifactScope = _scopeFactory.CreateScope();
+                var artifactService = artifactScope.ServiceProvider.GetRequiredService<IArtifactService>();
+                artifactHostDir = Path.Combine(artifactService.GetArtifactsDirectory(), run.Id.ToString());
+                if (!Directory.Exists(artifactHostDir))
+                    Directory.CreateDirectory(artifactHostDir);
+            }
+            catch { }
+
+            var binds = new List<string>();
+            if (File.Exists("/var/run/docker.sock"))
+                binds.Add("/var/run/docker.sock:/var/run/docker.sock");
+            if (artifactHostDir != null)
+                binds.Add($"{artifactHostDir}:/artifacts");
+
+            var createParams = new CreateContainerParameters
+            {
+                Image = image,
+                Cmd = new[] { "sleep", "3600" },
+                Env = envVars,
+                HostConfig = new HostConfig
+                {
+                    Memory = 512 * 1024 * 1024,
+                    NanoCPUs = 1_000_000_000,
+                    Binds = binds
+                },
+                WorkingDir = "/workspace"
+            };
+
+            var container = await _docker.Containers.CreateContainerAsync(createParams, ct);
+            containerId = container.ID;
+
+            await _docker.Containers.StartContainerAsync(containerId, null, ct);
+
+            await ExecInContainer(containerId, new[] { "sh", "-c",
+                "which git > /dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq git curl ca-certificates > /dev/null 2>&1) || " +
+                "(apk add --no-cache git curl ca-certificates > /dev/null 2>&1) || true"
+            }, null, ct);
+
+            await ExecInContainer(containerId, new[] { "sh", "-c",
+                "which docker > /dev/null 2>&1 || " +
+                "(curl -fsSL https://get.docker.com | sh > /dev/null 2>&1) || " +
+                "(apk add --no-cache docker-cli > /dev/null 2>&1) || true"
+            }, null, ct);
+
+            if (repoMount != null)
+            {
+                try
+                {
+                    _logger.LogInformation("Copying repo from {RepoPath} into workflow container", repoMount);
+
+                    var tempClone = Path.Combine(Path.GetTempPath(), $"wf-{run.Id}-{Guid.NewGuid():N}");
+                    try
+                    {
+                        var cloneProc = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = "git",
+                            Arguments = $"clone \"{repoMount}\" \"{tempClone}\"",
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        });
+                        if (cloneProc != null)
+                            await cloneProc.WaitForExitAsync(ct);
+
+                        if (Directory.Exists(tempClone))
+                        {
+                            using var tarStream = new MemoryStream();
+                            await CreateTarFromDirectory(tempClone, tarStream);
+                            tarStream.Position = 0;
+                            await _docker!.Containers.ExtractArchiveToContainerAsync(
+                                containerId,
+                                new ContainerPathStatParameters { Path = "/workspace", AllowOverwriteDirWithFile = true },
+                                tarStream, ct);
+                            _logger.LogInformation("Repo copied to workflow container successfully");
+                        }
+                    }
+                    finally
+                    {
+                        try { if (Directory.Exists(tempClone)) Directory.Delete(tempClone, true); } catch { }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to copy repo into workflow container");
+                }
+            }
+
+            // Initialize files used for step outputs
+            await ExecInContainer(containerId, new[] { "sh", "-c",
+                "touch /tmp/github_output" }, null, ct);
+
+            // Execute steps, tracking outputs and respecting if: conditions
+            var anyStepFailed = false;
+            var stepOutputs = new Dictionary<string, string>();
+
+            foreach (var step in job.Steps)
+            {
+                if (ct.IsCancellationRequested) break;
+
+                // Evaluate if: condition before running
+                if (!EvaluateCondition(step.Condition, anyStepFailed))
+                {
+                    step.Status = WorkflowStatus.Cancelled;
+                    step.CompletedAt = DateTime.UtcNow;
+                    await db.SaveChangesAsync(ct);
+                    continue;
+                }
+
+                step.Status = WorkflowStatus.InProgress;
+                step.StartedAt = DateTime.UtcNow;
+                await db.SaveChangesAsync(ct);
+
+                var command = step.Command ?? step.Name ?? "echo 'No command'";
+                var wrappedCommand = $"cd /workspace 2>/dev/null; {command}";
+
+                // Inject GITHUB_OUTPUT path plus any outputs from previous steps
+                var execEnv = new Dictionary<string, string>(stepOutputs)
+                {
+                    ["GITHUB_OUTPUT"] = "/tmp/github_output"
+                };
+
+                var (exitCode, output) = await ExecInContainer(containerId,
+                    new[] { "sh", "-c", wrappedCommand }, execEnv, ct);
+
+                step.Output = output;
+                step.CompletedAt = DateTime.UtcNow;
+
+                // Read and process $GITHUB_OUTPUT entries written by the step
+                var (_, outputFileContent) = await ExecInContainer(containerId,
+                    new[] { "sh", "-c", "cat /tmp/github_output 2>/dev/null; : > /tmp/github_output" }, null, ct);
+
+                foreach (var line in outputFileContent.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var eqIdx = line.IndexOf('=');
+                    if (eqIdx > 0)
+                        stepOutputs[line[..eqIdx].Trim()] = line[(eqIdx + 1)..];
+                }
+
+                if (exitCode != 0)
+                {
+                    step.Status = WorkflowStatus.Failure;
+                    step.Output += $"\n\nProcess exited with code {exitCode}";
+                    anyStepFailed = true;
+                }
+                else
+                {
+                    step.Status = WorkflowStatus.Success;
+                }
+
+                await db.SaveChangesAsync(ct);
+            }
+
+            // Mark any steps that never ran as cancelled
+            foreach (var remaining in job.Steps.Where(s => s.Status == WorkflowStatus.Queued))
+            {
+                remaining.Status = WorkflowStatus.Cancelled;
+                remaining.CompletedAt = DateTime.UtcNow;
+            }
+
+            // Collect artifacts
+            if (artifactHostDir != null && Directory.Exists(artifactHostDir))
+            {
+                try
+                {
+                    using var artScope = _scopeFactory.CreateScope();
+                    var artService = artScope.ServiceProvider.GetRequiredService<IArtifactService>();
+                    foreach (var file in Directory.GetFiles(artifactHostDir))
+                    {
+                        using var fs = File.OpenRead(file);
+                        await artService.SaveArtifactAsync(run.Id, Path.GetFileName(file), fs);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to collect artifacts for run {RunId}", run.Id);
+                }
+            }
+
+            job.Status = anyStepFailed ? WorkflowStatus.Failure : WorkflowStatus.Success;
+            job.CompletedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(ct);
+            return !anyStepFailed;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Job {JobName} failed in run {RunId}", job.Name, run.Id);
+            job.Status = WorkflowStatus.Failure;
+            job.CompletedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(ct);
+            return false;
+        }
+        finally
+        {
+            if (containerId != null)
+            {
+                try
+                {
+                    await _docker!.Containers.StopContainerAsync(containerId, new ContainerStopParameters { WaitBeforeKillSeconds = 5 }, ct);
+                    await _docker.Containers.RemoveContainerAsync(containerId, new ContainerRemoveParameters { Force = true }, ct);
+                }
+                catch { }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Returns true if a step should run given its if: condition and whether any previous step failed.
+    /// Supports: always(), success(), failure(), cancelled(), true, false.
+    /// Default (no condition) behaves like success() — only runs if no prior failures.
+    /// </summary>
+    private static bool EvaluateCondition(string? condition, bool anyStepFailed)
+    {
+        if (string.IsNullOrWhiteSpace(condition))
+            return !anyStepFailed;
+
+        return condition.Trim().ToLowerInvariant() switch
+        {
+            "always()" or "always"       => true,
+            "success()" or "success"     => !anyStepFailed,
+            "failure()" or "failure"     => anyStepFailed,
+            "cancelled()" or "cancelled" => false,
+            "true" or "1"                => true,
+            "false" or "0"               => false,
+            _                            => !anyStepFailed
+        };
+    }
+
+    private static List<string> ParseJobNeeds(string? needs) =>
+        string.IsNullOrEmpty(needs)
+            ? new List<string>()
+            : needs.Split(';', StringSplitOptions.RemoveEmptyEntries).ToList();
+
+    private async Task<(long ExitCode, string Output)> ExecInContainer(
+        string containerId, string[] cmd, Dictionary<string, string>? extraEnv, CancellationToken ct)
+    {
+        var execParams = new ContainerExecCreateParameters
+        {
+            Cmd = cmd,
+            AttachStdout = true,
+            AttachStderr = true,
+            Env = extraEnv?.Select(kv => $"{kv.Key}={kv.Value}").ToList()
+        };
+
+        var exec = await _docker!.Exec.ExecCreateContainerAsync(containerId, execParams, ct);
+        using var stream = await _docker.Exec.StartAndAttachContainerExecAsync(exec.ID, false, ct);
+
+        var (stdout, stderr) = await stream.ReadOutputToEndAsync(ct);
+        var output = stdout + (string.IsNullOrEmpty(stderr) ? "" : $"\nSTDERR:\n{stderr}");
+
+        var inspect = await _docker.Exec.InspectContainerExecAsync(exec.ID, ct);
+        return (inspect.ExitCode, output);
+    }
+
+    private async Task<bool> TryCreateTagFromWorkflow(WorkflowRun run, CancellationToken ct)
     {
         try
         {
-            // Look for "New tag: vX.Y.Z" in step outputs
             string? newTag = null;
             foreach (var job in run.Jobs)
             {
@@ -135,42 +511,32 @@ public class WorkflowRunnerService : BackgroundService
                     if (string.IsNullOrEmpty(step.Output)) continue;
                     var match = System.Text.RegularExpressions.Regex.Match(
                         step.Output, @"New tag:\s*(v[\d.]+)");
-                    if (match.Success)
-                    {
-                        newTag = match.Groups[1].Value;
-                        break;
-                    }
+                    if (match.Success) { newTag = match.Groups[1].Value; break; }
                 }
                 if (newTag != null) break;
             }
 
-            if (string.IsNullOrEmpty(newTag)) return;
+            if (string.IsNullOrEmpty(newTag)) return false;
 
             var repoPath = GetRepoPath(run.RepoName);
-            if (repoPath == null) return;
+            if (repoPath == null) return false;
 
             using var repo = new LibGit2Sharp.Repository(repoPath);
-
-            // Don't create if tag already exists
-            if (repo.Tags[newTag] != null)
-            {
-                _logger.LogDebug("Tag {Tag} already exists in {RepoName}", newTag, run.RepoName);
-                return;
-            }
+            if (repo.Tags[newTag] != null) return false;
 
             var commitObj = repo.Lookup(new LibGit2Sharp.ObjectId(run.CommitSha));
             var commit = (commitObj as LibGit2Sharp.Commit) ?? repo.Head?.Tip;
-
-            if (commit == null) return;
+            if (commit == null) return false;
 
             var tagger = new LibGit2Sharp.Signature("MyPersonalGit CI", "ci@localhost", DateTimeOffset.UtcNow);
             repo.Tags.Add(newTag, commit, tagger, $"Release {newTag}");
-
             _logger.LogInformation("Created tag {Tag} in {RepoName}", newTag, run.RepoName);
+            return true;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to create tag from workflow run {RunId}", run.Id);
+            return false;
         }
     }
 
@@ -248,336 +614,48 @@ public class WorkflowRunnerService : BackgroundService
         }
     }
 
-    private async Task<bool> ExecuteJob(AppDbContext db, WorkflowRun run, WorkflowJob job, CancellationToken ct)
-    {
-        job.Status = WorkflowStatus.InProgress;
-        job.StartedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync(ct);
-
-        var image = MapImage(job.RunsOn);
-        string? containerId = null;
-
-        try
-        {
-            // Pull image
-            _logger.LogInformation("Pulling image {Image} for job {JobName}", image, job.Name);
-            await _docker!.Images.CreateImageAsync(
-                new ImagesCreateParameters { FromImage = image },
-                null,
-                new Progress<JSONMessage>(),
-                ct);
-
-            // Resolve repo path
-            var repoMount = GetRepoPath(run.RepoName);
-
-            // Load workflow/job-level env vars from YAML definition
-            var envVars = new List<string>();
-            try
-            {
-                var parser = new WorkflowYamlParser();
-                var definitions = parser.ParseFromRepo(repoMount ?? "");
-                var wfDef = definitions.FirstOrDefault(d => d.Name == run.WorkflowName);
-                if (wfDef != null)
-                {
-                    // Workflow-level env
-                    if (wfDef.Env != null)
-                        foreach (var (k, v) in wfDef.Env)
-                            envVars.Add($"{k}={v}");
-                    // Job-level env
-                    if (wfDef.Jobs.TryGetValue(job.Name, out var jobDef) && jobDef.Env != null)
-                        foreach (var (k, v) in jobDef.Env)
-                            envVars.Add($"{k}={v}");
-                }
-            }
-            catch { }
-
-            // Load repository secrets (override env vars)
-            try
-            {
-                using var secretsScope = _scopeFactory.CreateScope();
-                var secretsService = secretsScope.ServiceProvider.GetRequiredService<ISecretsService>();
-                var secrets = await secretsService.GetAllSecretsForRunAsync(run.RepoName);
-                foreach (var (name, value) in secrets)
-                {
-                    envVars.Add($"{name}={value}");
-                }
-                _logger.LogInformation("Loaded {Count} secret(s) for repo '{RepoName}': [{Keys}]",
-                    secrets.Count, run.RepoName, string.Join(", ", secrets.Keys));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to load secrets for {RepoName}", run.RepoName);
-            }
-
-            // Setup artifact directory for this run
-            string? artifactHostDir = null;
-            try
-            {
-                using var artifactScope = _scopeFactory.CreateScope();
-                var artifactService = artifactScope.ServiceProvider.GetRequiredService<IArtifactService>();
-                artifactHostDir = Path.Combine(artifactService.GetArtifactsDirectory(), run.Id.ToString());
-                if (!Directory.Exists(artifactHostDir))
-                    Directory.CreateDirectory(artifactHostDir);
-            }
-            catch { }
-
-            // Create container
-            // Note: We use volumes_from or named volumes instead of bind mounts because
-            // when running inside Docker, local paths like /repos are container-internal
-            // and not accessible as host paths for bind mounts.
-            var binds = new List<string>();
-            // Mount Docker socket so workflows can build/push images
-            if (File.Exists("/var/run/docker.sock"))
-                binds.Add("/var/run/docker.sock:/var/run/docker.sock");
-            if (artifactHostDir != null) binds.Add($"{artifactHostDir}:/artifacts");
-
-            var createParams = new CreateContainerParameters
-            {
-                Image = image,
-                Cmd = new[] { "sleep", "3600" },
-                Env = envVars,
-                HostConfig = new HostConfig
-                {
-                    Memory = 512 * 1024 * 1024, // 512MB
-                    NanoCPUs = 1_000_000_000,    // 1 CPU
-                    Binds = binds
-                },
-                WorkingDir = "/workspace"
-            };
-
-            var container = await _docker.Containers.CreateContainerAsync(createParams, ct);
-            containerId = container.ID;
-
-            await _docker.Containers.StartContainerAsync(containerId, null, ct);
-
-            // Install essential tools if not present (ubuntu/debian images are bare)
-            await ExecInContainer(containerId, new[] { "sh", "-c",
-                "which git > /dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq git curl ca-certificates > /dev/null 2>&1) || " +
-                "(apk add --no-cache git curl ca-certificates > /dev/null 2>&1) || true"
-            }, ct);
-
-            // Install Docker CLI if not present and socket is available
-            await ExecInContainer(containerId, new[] { "sh", "-c",
-                "which docker > /dev/null 2>&1 || " +
-                "(curl -fsSL https://get.docker.com | sh > /dev/null 2>&1) || " +
-                "(apk add --no-cache docker-cli > /dev/null 2>&1) || true"
-            }, ct);
-
-            // Copy repo into the workflow container using docker cp
-            // (bind mounts don't work for container-internal paths in Docker-in-Docker)
-            if (repoMount != null)
-            {
-                try
-                {
-                    // Create a temp tar of the repo and stream it into the container
-                    _logger.LogInformation("Copying repo from {RepoPath} into workflow container", repoMount);
-
-                    // Use git clone locally first to create a working copy, then tar it
-                    var tempClone = Path.Combine(Path.GetTempPath(), $"wf-{run.Id}-{Guid.NewGuid():N}");
-                    try
-                    {
-                        var cloneProc = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                        {
-                            FileName = "git",
-                            Arguments = $"clone \"{repoMount}\" \"{tempClone}\"",
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true,
-                            UseShellExecute = false,
-                            CreateNoWindow = true
-                        });
-                        if (cloneProc != null)
-                        {
-                            await cloneProc.WaitForExitAsync(ct);
-                            _logger.LogInformation("Local clone exit code: {ExitCode}", cloneProc.ExitCode);
-                        }
-
-                        if (Directory.Exists(tempClone))
-                        {
-                            // Tar the contents and pipe into the container
-                            var tarParams = new Docker.DotNet.Models.ContainerPathStatParameters { Path = "/workspace" };
-                            using var tarStream = new MemoryStream();
-
-                            // Create a tar archive
-                            await CreateTarFromDirectory(tempClone, tarStream);
-                            tarStream.Position = 0;
-
-                            await _docker!.Containers.ExtractArchiveToContainerAsync(
-                                containerId,
-                                new ContainerPathStatParameters { Path = "/workspace", AllowOverwriteDirWithFile = true },
-                                tarStream, ct);
-
-                            _logger.LogInformation("Repo copied to workflow container successfully");
-                        }
-                    }
-                    finally
-                    {
-                        try { if (Directory.Exists(tempClone)) Directory.Delete(tempClone, true); } catch { }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to copy repo into workflow container");
-                }
-            }
-
-            // Execute each step
-            foreach (var step in job.Steps)
-            {
-                if (ct.IsCancellationRequested) break;
-
-                step.Status = WorkflowStatus.InProgress;
-                step.StartedAt = DateTime.UtcNow;
-                await db.SaveChangesAsync(ct);
-
-                var command = step.Command ?? step.Name ?? "echo 'No command'";
-                // Run all commands from /workspace (the cloned repo directory)
-                var wrappedCommand = $"cd /workspace 2>/dev/null; {command}";
-                var (exitCode, output) = await ExecInContainer(containerId, new[] { "sh", "-c", wrappedCommand }, ct);
-
-                step.Output = output;
-                step.CompletedAt = DateTime.UtcNow;
-
-                if (exitCode != 0)
-                {
-                    step.Status = WorkflowStatus.Failure;
-                    step.Output += $"\n\nProcess exited with code {exitCode}";
-                    await db.SaveChangesAsync(ct);
-
-                    // Mark remaining steps as cancelled
-                    foreach (var remaining in job.Steps.Where(s => s.Status == WorkflowStatus.Queued))
-                        remaining.Status = WorkflowStatus.Cancelled;
-
-                    job.Status = WorkflowStatus.Failure;
-                    job.CompletedAt = DateTime.UtcNow;
-                    await db.SaveChangesAsync(ct);
-                    return false;
-                }
-
-                step.Status = WorkflowStatus.Success;
-                await db.SaveChangesAsync(ct);
-            }
-
-            // Collect artifacts from /artifacts directory
-            if (artifactHostDir != null && Directory.Exists(artifactHostDir))
-            {
-                try
-                {
-                    using var artScope = _scopeFactory.CreateScope();
-                    var artService = artScope.ServiceProvider.GetRequiredService<IArtifactService>();
-                    foreach (var file in Directory.GetFiles(artifactHostDir))
-                    {
-                        using var fs = File.OpenRead(file);
-                        await artService.SaveArtifactAsync(run.Id, Path.GetFileName(file), fs);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to collect artifacts for run {RunId}", run.Id);
-                }
-            }
-
-            job.Status = WorkflowStatus.Success;
-            job.CompletedAt = DateTime.UtcNow;
-            await db.SaveChangesAsync(ct);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Job {JobName} failed in run {RunId}", job.Name, run.Id);
-            job.Status = WorkflowStatus.Failure;
-            job.CompletedAt = DateTime.UtcNow;
-            await db.SaveChangesAsync(ct);
-            return false;
-        }
-        finally
-        {
-            // Cleanup container
-            if (containerId != null)
-            {
-                try
-                {
-                    await _docker!.Containers.StopContainerAsync(containerId, new ContainerStopParameters { WaitBeforeKillSeconds = 5 }, ct);
-                    await _docker.Containers.RemoveContainerAsync(containerId, new ContainerRemoveParameters { Force = true }, ct);
-                }
-                catch { }
-            }
-        }
-    }
-
-    private async Task<(long ExitCode, string Output)> ExecInContainer(string containerId, string[] cmd, CancellationToken ct)
-    {
-        var execParams = new ContainerExecCreateParameters
-        {
-            Cmd = cmd,
-            AttachStdout = true,
-            AttachStderr = true
-        };
-
-        var exec = await _docker!.Exec.ExecCreateContainerAsync(containerId, execParams, ct);
-        using var stream = await _docker.Exec.StartAndAttachContainerExecAsync(exec.ID, false, ct);
-
-        var (stdout, stderr) = await stream.ReadOutputToEndAsync(ct);
-        var output = stdout + (string.IsNullOrEmpty(stderr) ? "" : $"\nSTDERR:\n{stderr}");
-
-        var inspect = await _docker.Exec.InspectContainerExecAsync(exec.ID, ct);
-        return (inspect.ExitCode, output);
-    }
-
     private static string MapImage(string runsOn)
     {
-        // If it looks like a full image name (contains / or :), use it directly
         if (runsOn.Contains('/') || (runsOn.Contains(':') && !runsOn.StartsWith("ubuntu") && !runsOn.StartsWith("node") && !runsOn.StartsWith("python") && !runsOn.StartsWith("dotnet")))
             return runsOn;
 
         return runsOn.ToLowerInvariant() switch
         {
             "ubuntu-latest" or "ubuntu-22.04" => "ubuntu:22.04",
-            "ubuntu-20.04" => "ubuntu:20.04",
+            "ubuntu-20.04"                    => "ubuntu:20.04",
             "node" or "node-latest" or "node-20" => "node:20",
-            "node-18" => "node:18",
+            "node-18"                         => "node:18",
             "python" or "python-latest" or "python-3.12" => "python:3.12",
-            "python-3.11" => "python:3.11",
+            "python-3.11"                     => "python:3.11",
             "dotnet" or "dotnet-8" or "dotnet-latest" => "mcr.microsoft.com/dotnet/sdk:8.0",
-            "dotnet-6" => "mcr.microsoft.com/dotnet/sdk:6.0",
-            _ => "ubuntu:22.04"
+            "dotnet-6"                        => "mcr.microsoft.com/dotnet/sdk:6.0",
+            _                                 => "ubuntu:22.04"
         };
     }
 
     private static async Task CreateTarFromDirectory(string sourceDir, Stream outputStream)
     {
-        // Simple tar archive creation (POSIX format)
         var files = Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories);
         foreach (var file in files)
         {
             var relativePath = Path.GetRelativePath(sourceDir, file).Replace('\\', '/');
-            // Keep .git directory so git commands (tags, log) work in workflow steps
-
             var fileInfo = new FileInfo(file);
             var content = await File.ReadAllBytesAsync(file);
 
-            // Write tar header (512 bytes)
             var header = new byte[512];
             var nameBytes = System.Text.Encoding.ASCII.GetBytes(relativePath);
             Array.Copy(nameBytes, header, Math.Min(nameBytes.Length, 100));
 
-            // File mode (octal, ASCII)
             System.Text.Encoding.ASCII.GetBytes("0100644\0").CopyTo(header, 100);
-            // Owner/group ID
             System.Text.Encoding.ASCII.GetBytes("0000000\0").CopyTo(header, 108);
             System.Text.Encoding.ASCII.GetBytes("0000000\0").CopyTo(header, 116);
-            // File size (octal, ASCII)
             System.Text.Encoding.ASCII.GetBytes(Convert.ToString(content.Length, 8).PadLeft(11, '0') + "\0").CopyTo(header, 124);
-            // Modification time
             var mtime = (long)(fileInfo.LastWriteTimeUtc - new DateTime(1970, 1, 1)).TotalSeconds;
             System.Text.Encoding.ASCII.GetBytes(Convert.ToString(mtime, 8).PadLeft(11, '0') + "\0").CopyTo(header, 136);
-            // Type flag: regular file
             header[156] = (byte)'0';
-            // Magic
             System.Text.Encoding.ASCII.GetBytes("ustar\0").CopyTo(header, 257);
             System.Text.Encoding.ASCII.GetBytes("00").CopyTo(header, 263);
 
-            // Compute checksum
-            // Fill checksum field with spaces first
             for (int i = 148; i < 156; i++) header[i] = (byte)' ';
             var checksum = 0;
             for (int i = 0; i < 512; i++) checksum += header[i];
@@ -586,13 +664,11 @@ public class WorkflowRunnerService : BackgroundService
             await outputStream.WriteAsync(header);
             await outputStream.WriteAsync(content);
 
-            // Pad to 512-byte boundary
             var padding = 512 - (content.Length % 512);
             if (padding < 512)
                 await outputStream.WriteAsync(new byte[padding]);
         }
 
-        // Write two empty blocks to signal end of archive
         await outputStream.WriteAsync(new byte[1024]);
     }
 
