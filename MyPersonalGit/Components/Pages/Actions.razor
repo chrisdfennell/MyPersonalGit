@@ -154,14 +154,20 @@
                         {
                             <div><i class="bi bi-hourglass-split me-1"></i>Running: @FormatDuration(DateTime.UtcNow - selectedRun.StartedAt.Value)</div>
                         }
-                        @if (selectedRun.Status == WorkflowStatus.Queued || selectedRun.Status == WorkflowStatus.InProgress)
-                        {
-                            <div class="mt-2">
+                        <div class="mt-2 d-flex gap-2">
+                            @if (selectedRun.Status == WorkflowStatus.Queued || selectedRun.Status == WorkflowStatus.InProgress)
+                            {
                                 <button class="btn btn-outline-danger btn-sm" @onclick="CancelRun">
                                     <i class="bi bi-x-circle me-1"></i>Cancel
                                 </button>
-                            </div>
-                        }
+                            }
+                            @if (selectedRun.Status == WorkflowStatus.Failure || selectedRun.Status == WorkflowStatus.Success || selectedRun.Status == WorkflowStatus.Cancelled)
+                            {
+                                <button class="btn btn-outline-primary btn-sm" @onclick="RerunWorkflow">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Re-run
+                                </button>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
@@ -983,5 +989,15 @@
         if (selectedRun == null) return;
         await WorkflowService.CancelWorkflowRunAsync(RepoName, selectedRun.Id);
         await LoadData();
+    }
+
+    private async Task RerunWorkflow()
+    {
+        if (selectedRun == null) return;
+        var newRun = await WorkflowService.RerunWorkflowRunAsync(RepoName, selectedRun.Id);
+        if (newRun != null)
+            Navigation.NavigateTo($"/repo/{RepoName}/actions/{newRun.Id}", forceLoad: true);
+        else
+            await LoadData();
     }
 }

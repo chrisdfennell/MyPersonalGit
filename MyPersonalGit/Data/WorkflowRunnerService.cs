@@ -117,8 +117,8 @@ public class WorkflowRunnerService : BackgroundService
     }
 
     /// <summary>
-    /// Executes all jobs in the run, respecting needs: dependencies and running
-    /// independent jobs in parallel.
+    /// Executes all jobs in the run, respecting needs: dependencies, job-level if:,
+    /// and running independent jobs in parallel. Collects job outputs for downstream consumption.
     /// </summary>
     private async Task<bool> ExecuteJobsAsync(WorkflowRun run, CancellationToken ct)
     {
@@ -126,16 +126,20 @@ public class WorkflowRunnerService : BackgroundService
 
         // Each job gets a TCS so dependent jobs can await it
         var completions = jobs.ToDictionary(j => j.Name, _ => new TaskCompletionSource<bool>());
+        // Collect job outputs: jobName -> {key: value}
+        var jobOutputs = new System.Collections.Concurrent.ConcurrentDictionary<string, Dictionary<string, string>>();
 
         var jobTasks = jobs.Select(job =>
         {
             var jobId = job.Id;
             var jobName = job.Name;
             var needs = ParseJobNeeds(job.Needs);
+            var jobCondition = job.Condition;
 
             return Task.Run(async () =>
             {
                 // Wait for all declared dependencies to finish
+                bool anyDepFailed = false;
                 if (needs.Count > 0)
                 {
                     var depTasks = needs
@@ -143,18 +147,51 @@ public class WorkflowRunnerService : BackgroundService
                         .Select(n => completions[n].Task);
 
                     var depResults = await Task.WhenAll(depTasks);
+                    anyDepFailed = !depResults.All(r => r);
 
-                    if (!depResults.All(r => r))
+                    if (anyDepFailed && string.IsNullOrEmpty(jobCondition))
                     {
-                        // A required dependency failed — skip this job
                         await CancelJobAsync(jobId, ct);
                         completions[jobName].SetResult(false);
                         return false;
                     }
                 }
 
-                var result = await ExecuteJobById(jobId, run, ct);
+                // Evaluate job-level if: condition
+                if (!string.IsNullOrEmpty(jobCondition) && !EvaluateCondition(jobCondition, anyDepFailed))
+                {
+                    await CancelJobAsync(jobId, ct);
+                    completions[jobName].SetResult(true); // skipped jobs don't fail the run
+                    return true;
+                }
+
+                // Build env vars from upstream job outputs for this job
+                var upstreamOutputs = new Dictionary<string, string>();
+                foreach (var depName in needs)
+                {
+                    if (jobOutputs.TryGetValue(depName, out var depOutputs))
+                        foreach (var (k, v) in depOutputs)
+                            upstreamOutputs[k] = v;
+                }
+
+                var result = await ExecuteJobById(jobId, run, upstreamOutputs, ct);
                 completions[jobName].SetResult(result);
+
+                // Collect this job's outputs for downstream jobs
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
+                    var finishedJob = await db.WorkflowJobs.FirstOrDefaultAsync(j => j.Id == jobId, ct);
+                    if (finishedJob?.OutputsJson != null)
+                    {
+                        var outputs = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(finishedJob.OutputsJson);
+                        if (outputs != null)
+                            jobOutputs[jobName] = outputs;
+                    }
+                }
+                catch { }
+
                 return result;
             }, ct);
         }).ToList();
@@ -180,25 +217,23 @@ public class WorkflowRunnerService : BackgroundService
         await db.SaveChangesAsync(ct);
     }
 
-    private async Task<bool> ExecuteJobById(int jobId, WorkflowRun run, CancellationToken ct)
+    private async Task<bool> ExecuteJobById(int jobId, WorkflowRun run, Dictionary<string, string>? upstreamOutputs, CancellationToken ct)
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
         var job = await db.WorkflowJobs.Include(j => j.Steps).FirstOrDefaultAsync(j => j.Id == jobId, ct);
         if (job == null) return false;
 
-        // Enforce timeout-minutes (default: 360 minutes like GitHub Actions)
         var timeoutMinutes = job.TimeoutMinutes ?? 360;
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         timeoutCts.CancelAfter(TimeSpan.FromMinutes(timeoutMinutes));
 
         try
         {
-            return await ExecuteJob(db, run, job, timeoutCts.Token);
+            return await ExecuteJob(db, run, job, upstreamOutputs, timeoutCts.Token);
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
-            // Timeout fired, not a global cancellation
             _logger.LogWarning("Job {JobName} in run {RunId} timed out after {Timeout} minutes", job.Name, run.Id, timeoutMinutes);
             job.Status = WorkflowStatus.Failure;
             job.CompletedAt = DateTime.UtcNow;
@@ -213,7 +248,7 @@ public class WorkflowRunnerService : BackgroundService
         }
     }
 
-    private async Task<bool> ExecuteJob(AppDbContext db, WorkflowRun run, WorkflowJob job, CancellationToken ct)
+    private async Task<bool> ExecuteJob(AppDbContext db, WorkflowRun run, WorkflowJob job, Dictionary<string, string>? upstreamOutputs, CancellationToken ct)
     {
         job.Status = WorkflowStatus.InProgress;
         job.StartedAt = DateTime.UtcNow;
@@ -264,6 +299,11 @@ public class WorkflowRunnerService : BackgroundService
             {
                 _logger.LogWarning(ex, "Failed to load secrets for {RepoName}", run.RepoName);
             }
+
+            // Inject upstream job outputs as env vars (for needs.X.outputs.Y -> $Y)
+            if (upstreamOutputs != null)
+                foreach (var (k, v) in upstreamOutputs)
+                    envVars.Add($"{k}={v}");
 
             // Inject workflow_dispatch inputs as INPUT_* env vars
             if (!string.IsNullOrEmpty(run.InputsJson))
@@ -424,7 +464,10 @@ public class WorkflowRunnerService : BackgroundService
                 {
                     step.Status = WorkflowStatus.Failure;
                     step.Output += $"\n\nProcess exited with code {exitCode}";
-                    anyStepFailed = true;
+                    if (!step.ContinueOnError)
+                        anyStepFailed = true;
+                    else
+                        step.Output += "\n(continue-on-error: true — job not failed)";
                 }
                 else
                 {
@@ -459,6 +502,32 @@ public class WorkflowRunnerService : BackgroundService
                     _logger.LogWarning(ex, "Failed to collect artifacts for run {RunId}", run.Id);
                 }
             }
+
+            // Resolve job outputs from step outputs (outputs: { key: ${{ steps.X.outputs.Y }} })
+            try
+            {
+                var parser = new WorkflowYamlParser();
+                var defs = parser.ParseFromRepo(GetRepoPath(run.RepoName) ?? "");
+                var wfDef = defs.FirstOrDefault(d => d.Name == run.WorkflowName);
+                // Find the base job name (strip matrix suffix)
+                var baseJobName = job.Name.Contains(" (") ? job.Name[..job.Name.IndexOf(" (")] : job.Name;
+                if (wfDef?.Jobs.TryGetValue(baseJobName, out var jobDef) == true && jobDef.Outputs != null)
+                {
+                    var resolvedOutputs = new Dictionary<string, string>();
+                    foreach (var (key, expr) in jobDef.Outputs)
+                    {
+                        // Resolve ${{ steps.X.outputs.Y }} to the actual value from stepOutputs
+                        var match = System.Text.RegularExpressions.Regex.Match(expr, @"\$\{\{\s*steps\.\w+\.outputs\.(\w+)\s*\}\}");
+                        if (match.Success && stepOutputs.TryGetValue(match.Groups[1].Value, out var val))
+                            resolvedOutputs[key] = val;
+                        else
+                            resolvedOutputs[key] = expr; // pass through unresolved
+                    }
+                    if (resolvedOutputs.Count > 0)
+                        job.OutputsJson = System.Text.Json.JsonSerializer.Serialize(resolvedOutputs);
+                }
+            }
+            catch { }
 
             job.Status = anyStepFailed ? WorkflowStatus.Failure : WorkflowStatus.Success;
             job.CompletedAt = DateTime.UtcNow;
