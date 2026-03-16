@@ -584,14 +584,28 @@ public class WorkflowService : IWorkflowService
             return string.Join(" && ", cmds);
         }
 
-        // softprops/action-gh-release — translate to git tag (release creation)
+        // softprops/action-gh-release — write release metadata for runner to create a real Release
         if (uses.StartsWith("softprops/action-gh-release"))
         {
             var tagName = TranslateExpression(with.GetValueOrDefault("tag_name", ""));
             var name = TranslateExpression(with.GetValueOrDefault("name", tagName));
-            if (!string.IsNullOrEmpty(tagName))
-                return $"echo 'Release {name} created (tag: {tagName})'";
-            return "echo 'Release step (no tag specified)'";
+            var prerelease = with.GetValueOrDefault("prerelease", "false");
+            var draft = with.GetValueOrDefault("draft", "false");
+            var body = TranslateExpression(with.GetValueOrDefault("body", ""));
+
+            // Write each field to /tmp/release_meta (env vars get resolved by shell at runtime)
+            // Body goes to a separate file to handle multiline content
+            var cmds = new List<string>
+            {
+                $"echo \"TAG_NAME={tagName}\" > /tmp/release_meta",
+                $"echo \"RELEASE_NAME={name}\" >> /tmp/release_meta",
+                $"echo \"PRERELEASE={prerelease}\" >> /tmp/release_meta",
+                $"echo \"DRAFT={draft}\" >> /tmp/release_meta"
+            };
+            if (!string.IsNullOrEmpty(body))
+                cmds.Add($"printf '%s' \"{body.Replace("\"", "\\\"")}\" > /tmp/release_body");
+            cmds.Add($"echo 'Release {name} created (tag: {tagName})'");
+            return string.Join(" && ", cmds);
         }
 
         // Unknown action — log and skip

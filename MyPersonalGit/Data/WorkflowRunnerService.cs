@@ -529,6 +529,10 @@ public class WorkflowRunnerService : BackgroundService
             }
             catch { }
 
+            // Check for release metadata written by softprops/action-gh-release translation
+            if (!anyStepFailed && containerId != null)
+                await TryCreateReleaseFromContainer(containerId, run, ct);
+
             job.Status = anyStepFailed ? WorkflowStatus.Failure : WorkflowStatus.Success;
             job.CompletedAt = DateTime.UtcNow;
             await db.SaveChangesAsync(ct);
@@ -642,6 +646,60 @@ public class WorkflowRunnerService : BackgroundService
         {
             _logger.LogWarning(ex, "Failed to create tag from workflow run {RunId}", run.Id);
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Reads /tmp/release_meta from the container (written by softprops/action-gh-release translation)
+    /// and creates a real Release entity in the database.
+    /// </summary>
+    private async Task TryCreateReleaseFromContainer(string containerId, WorkflowRun run, CancellationToken ct)
+    {
+        try
+        {
+            var (exitCode, metaContent) = await ExecInContainer(containerId,
+                new[] { "sh", "-c", "cat /tmp/release_meta 2>/dev/null" }, null, ct);
+            if (exitCode != 0 || string.IsNullOrWhiteSpace(metaContent)) return;
+
+            // Parse key=value pairs
+            var meta = new Dictionary<string, string>();
+            foreach (var line in metaContent.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var eqIdx = line.IndexOf('=');
+                if (eqIdx > 0)
+                    meta[line[..eqIdx].Trim()] = line[(eqIdx + 1)..].Trim();
+            }
+
+            if (!meta.TryGetValue("TAG_NAME", out var tagName) || string.IsNullOrEmpty(tagName)) return;
+            var releaseName = meta.GetValueOrDefault("RELEASE_NAME", tagName);
+            var isPrerelease = meta.GetValueOrDefault("PRERELEASE", "false").Equals("true", StringComparison.OrdinalIgnoreCase);
+            var isDraft = meta.GetValueOrDefault("DRAFT", "false").Equals("true", StringComparison.OrdinalIgnoreCase);
+
+            // Read body from separate file (may be multiline)
+            string? body = null;
+            var (bodyExit, bodyContent) = await ExecInContainer(containerId,
+                new[] { "sh", "-c", "cat /tmp/release_body 2>/dev/null" }, null, ct);
+            if (bodyExit == 0 && !string.IsNullOrWhiteSpace(bodyContent))
+                body = bodyContent.Trim();
+
+            // Create the release via ReleaseService
+            using var scope = _scopeFactory.CreateScope();
+            var releaseService = scope.ServiceProvider.GetRequiredService<IReleaseService>();
+
+            // Check if release with this tag already exists
+            var existing = await releaseService.GetReleasesAsync(run.RepoName);
+            if (existing.Any(r => r.TagName == tagName))
+            {
+                _logger.LogDebug("Release for tag {Tag} already exists in {RepoName}", tagName, run.RepoName);
+                return;
+            }
+
+            await releaseService.CreateReleaseAsync(run.RepoName, tagName, releaseName, body, "ci", isDraft, isPrerelease);
+            _logger.LogInformation("Created release {Tag} for {RepoName}", tagName, run.RepoName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to create release from workflow run {RunId}", run.Id);
         }
     }
 
