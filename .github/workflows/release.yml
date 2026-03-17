@@ -86,27 +86,11 @@ jobs:
           username: fennch
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - uses: docker/setup-buildx-action@v3
-
       - name: Build and push Docker image
         run: |
           NEW_TAG=$(cat /tmp/new_tag 2>/dev/null || echo "latest")
           echo "Building with tag: $NEW_TAG"
-          echo "Working directory: $(pwd)"
-          echo "Files: $(ls -la 2>/dev/null | head -5)"
-          ls /workspace/Dockerfile 2>/dev/null && echo "Dockerfile found in /workspace"
-          ls Dockerfile 2>/dev/null && echo "Dockerfile found in cwd"
-          # Try current dir first, then /workspace
-          BUILD_DIR="."
-          if [ ! -f Dockerfile ] && [ -f /workspace/Dockerfile ]; then
-            BUILD_DIR="/workspace"
-          fi
-          if [ -f "${BUILD_DIR}/Dockerfile" ]; then
-            docker build -t fennch/mypersonalgit:latest -t "fennch/mypersonalgit:${NEW_TAG}" "${BUILD_DIR}"
-            docker push fennch/mypersonalgit:latest
-            docker push "fennch/mypersonalgit:${NEW_TAG}"
-            echo "Pushed fennch/mypersonalgit:latest and fennch/mypersonalgit:${NEW_TAG}"
-          else
-            echo "No Dockerfile found in ${BUILD_DIR} or /workspace — listing contents:"
-            ls -la /workspace/ 2>/dev/null | head -20
-          fi
+          docker build --no-cache -t fennch/mypersonalgit:latest -t "fennch/mypersonalgit:${NEW_TAG}" .
+          docker push fennch/mypersonalgit:latest
+          docker push "fennch/mypersonalgit:${NEW_TAG}"
+          echo "Pushed fennch/mypersonalgit:latest and fennch/mypersonalgit:${NEW_TAG}"
