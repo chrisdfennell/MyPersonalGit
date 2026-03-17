@@ -175,8 +175,18 @@ public class ReleaseService : IReleaseService
 
             var baseName = repoName.EndsWith(".git") ? repoName[..^4] : repoName;
 
+            // Try the tag first, fall back to HEAD if the tag doesn't exist in the repo
+            string? gitRef = tagName;
+            var probe = _archiveService.CreateArchive(repoPath, tagName, ArchiveFormat.Zip, out _);
+            if (probe == null)
+            {
+                _logger.LogInformation("Tag {TagName} not found in repo, falling back to HEAD for source archives", tagName);
+                gitRef = null; // null = HEAD in ArchiveService
+            }
+            probe?.Dispose();
+
             // Create zip archive
-            using var zipStream = _archiveService.CreateArchive(repoPath, tagName, ArchiveFormat.Zip, out _);
+            using var zipStream = _archiveService.CreateArchive(repoPath, gitRef, ArchiveFormat.Zip, out _);
             if (zipStream != null)
             {
                 var zipBytes = zipStream.ToArray();
@@ -184,7 +194,7 @@ public class ReleaseService : IReleaseService
             }
 
             // Create tar.gz archive
-            using var tarStream = _archiveService.CreateArchive(repoPath, tagName, ArchiveFormat.TarGz, out _);
+            using var tarStream = _archiveService.CreateArchive(repoPath, gitRef, ArchiveFormat.TarGz, out _);
             if (tarStream != null)
             {
                 var tarBytes = tarStream.ToArray();
