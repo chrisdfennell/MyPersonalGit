@@ -175,7 +175,7 @@ public class ReleaseService : IReleaseService
 
             var baseName = repoName.EndsWith(".git") ? repoName[..^4] : repoName;
 
-            // Try the tag first, fall back to HEAD if the tag doesn't exist in the repo
+            // Try the tag first, fall back to HEAD if the tag doesn't exist in the local repo
             string? gitRef = tagName;
             var probe = _archiveService.CreateArchive(repoPath, tagName, ArchiveFormat.Zip, out _);
             if (probe == null)
