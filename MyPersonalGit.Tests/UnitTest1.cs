@@ -2786,7 +2786,9 @@ public class ReleaseServiceTests
 
         _factory = new TestDbContextFactory(options);
         _activityService = Substitute.For<IActivityService>();
-        _service = new ReleaseService(_factory, NullLogger<ReleaseService>.Instance, _activityService);
+        var archiveService = Substitute.For<IArchiveService>();
+        var config = Substitute.For<IConfiguration>();
+        _service = new ReleaseService(_factory, NullLogger<ReleaseService>.Instance, _activityService, archiveService, config);
     }
 
     [Fact]

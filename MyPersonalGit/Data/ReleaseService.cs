@@ -19,13 +19,17 @@ public class ReleaseService : IReleaseService
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly ILogger<ReleaseService> _logger;
     private readonly IActivityService _activityService;
+    private readonly IArchiveService _archiveService;
+    private readonly IConfiguration _config;
     private const string AssetStoragePath = "/data/releases";
 
-    public ReleaseService(IDbContextFactory<AppDbContext> dbFactory, ILogger<ReleaseService> logger, IActivityService activityService)
+    public ReleaseService(IDbContextFactory<AppDbContext> dbFactory, ILogger<ReleaseService> logger, IActivityService activityService, IArchiveService archiveService, IConfiguration config)
     {
         _dbFactory = dbFactory;
         _logger = logger;
         _activityService = activityService;
+        _archiveService = archiveService;
+        _config = config;
     }
 
     public async Task<List<Release>> GetReleasesAsync(string repoName)
@@ -66,6 +70,9 @@ public class ReleaseService : IReleaseService
         db.Releases.Add(release);
         await db.SaveChangesAsync();
         _logger.LogInformation("Release {Title} created for {RepoName}", title, repoName);
+
+        // Auto-attach source code archives
+        await AttachSourceArchivesAsync(release, repoName, tagName);
 
         await _activityService.RecordActivityAsync(author, "created_release", repoName, $"{author} released {title} ({tagName})", $"/repo/{repoName}");
 
@@ -152,6 +159,52 @@ public class ReleaseService : IReleaseService
         db.ReleaseAssets.Remove(asset);
         await db.SaveChangesAsync();
         return true;
+    }
+
+    private async Task AttachSourceArchivesAsync(Release release, string repoName, string tagName)
+    {
+        try
+        {
+            var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
+            var repoPath = ResolveRepoPath(projectRoot, repoName);
+            if (repoPath == null)
+            {
+                _logger.LogWarning("Could not resolve repo path for {RepoName}, skipping source archives", repoName);
+                return;
+            }
+
+            var baseName = repoName.EndsWith(".git") ? repoName[..^4] : repoName;
+
+            // Create zip archive
+            using var zipStream = _archiveService.CreateArchive(repoPath, tagName, ArchiveFormat.Zip, out _);
+            if (zipStream != null)
+            {
+                var zipBytes = zipStream.ToArray();
+                await AddAssetAsync(release.Id, $"{baseName}-{tagName}.zip", zipBytes.Length, "application/zip", zipBytes);
+            }
+
+            // Create tar.gz archive
+            using var tarStream = _archiveService.CreateArchive(repoPath, tagName, ArchiveFormat.TarGz, out _);
+            if (tarStream != null)
+            {
+                var tarBytes = tarStream.ToArray();
+                await AddAssetAsync(release.Id, $"{baseName}-{tagName}.tar.gz", tarBytes.Length, "application/gzip", tarBytes);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to attach source archives for release {ReleaseId}", release.Id);
+        }
+    }
+
+    private static string? ResolveRepoPath(string projectRoot, string repoName)
+    {
+        var path = Path.Combine(projectRoot, repoName);
+        if (LibGit2Sharp.Repository.IsValid(path)) return path;
+        if (LibGit2Sharp.Repository.IsValid(path + ".git")) return path + ".git";
+        var nested = Path.Combine(path, repoName + ".git");
+        if (LibGit2Sharp.Repository.IsValid(nested)) return nested;
+        return null;
     }
 
     private static string GetAssetPath(int releaseId, string fileName)
