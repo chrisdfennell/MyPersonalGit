@@ -590,6 +590,11 @@ public class WorkflowRunnerService : BackgroundService
                 var (_, outputFileContent) = await ExecInContainer(containerId,
                     new[] { "sh", "-c", "cat /tmp/github_output 2>/dev/null; : > /tmp/github_output" }, null, ct);
 
+                if (!string.IsNullOrWhiteSpace(outputFileContent))
+                    _logger.LogInformation("Step '{StepName}' GITHUB_OUTPUT ({Len} chars): {Preview}",
+                        step.Name, outputFileContent.Length,
+                        outputFileContent.Length > 200 ? outputFileContent[..200] + "..." : outputFileContent);
+
                 ParseGitHubOutput(outputFileContent, stepOutputs);
 
                 if (exitCode != 0)
@@ -825,7 +830,8 @@ public class WorkflowRunnerService : BackgroundService
     {
         try
         {
-            _logger.LogInformation("Checking for release metadata in container for run {RunId}", run.Id);
+            _logger.LogInformation("Checking for release metadata in container for run {RunId}. StepOutputs keys: [{Keys}]",
+                run.Id, string.Join(", ", stepOutputs.Keys));
             var (exitCode, metaContent) = await ExecInContainer(containerId,
                 new[] { "sh", "-c", "cat /tmp/release_meta 2>/dev/null" }, null, ct);
             _logger.LogInformation("Release meta check: exit={ExitCode}, content='{Content}'", exitCode, metaContent?.Trim());
