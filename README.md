@@ -98,7 +98,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **`defaults.run.shell`** — Configure custom shell per workflow or per step (`bash`, `sh`, `python3`, etc.)
 - **`strategy.max-parallel`** — Limit concurrent matrix job execution
 - **`on.workflow_run`** — Chain workflows: trigger workflow B when workflow A completes. Filter by workflow name and `types: [completed]`
-- **Automatic Release Creation** — `softprops/action-gh-release` creates real Release entities with tag, title, changelog body, and pre-release/draft flags
+- **Automatic Release Creation** — `softprops/action-gh-release` creates real Release entities with tag, title, changelog body, and pre-release/draft flags. Source code archives (ZIP and TAR.GZ) are automatically attached as downloadable assets
 - **Auto-Release Pipeline** — Built-in workflow auto-tags versions, generates changelogs, and pushes Docker images to Docker Hub on every push to main
 - **Commit Status Checks** — Workflows automatically set pending/success/failure status on commits, visible on pull requests
 - **Workflow Cancellation** — Cancel running or queued workflows from the Actions UI
