@@ -24,6 +24,14 @@ public sealed class ApiAuthMiddleware
             return;
         }
 
+        // Allow unauthenticated downloads of release assets
+        if (context.Request.Method == "GET" && context.Request.Path.Value != null
+            && context.Request.Path.Value.Contains("/releases/") && context.Request.Path.Value.Contains("/assets/"))
+        {
+            await _next(context);
+            return;
+        }
+
         var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
         if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
