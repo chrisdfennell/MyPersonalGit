@@ -1003,7 +1003,7 @@
         if (selectedRun == null) return;
         var newRun = await WorkflowService.RerunWorkflowRunAsync(RepoName, selectedRun.Id);
         if (newRun != null)
-            Navigation.NavigateTo($"/repo/{RepoName}/actions/{newRun.Id}");
+            Navigation.NavigateTo($"/repo/{RepoName}/actions/runs/{newRun.Id}");
         else
             await LoadData();
     }
