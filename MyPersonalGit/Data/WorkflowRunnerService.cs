@@ -855,20 +855,25 @@ public class WorkflowRunnerService : BackgroundService
                 body = $"## Changes\n{changelog}\n\n## Docker\n```bash\ndocker pull fennch/mypersonalgit:{tagName}\n```";
             }
 
+            // Use the DB repo name (may have .git suffix) to match the Repositories table
+            var repoNameForRelease = run.RepoName;
+            if (!repoNameForRelease.EndsWith(".git"))
+                repoNameForRelease += ".git";
+
             using var scope = _scopeFactory.CreateScope();
             var releaseService = scope.ServiceProvider.GetRequiredService<IReleaseService>();
 
-            var existing = await releaseService.GetReleasesAsync(run.RepoName);
+            var existing = await releaseService.GetReleasesAsync(repoNameForRelease);
             if (existing.Any(r => r.TagName == tagName))
             {
-                _logger.LogDebug("Release for tag {Tag} already exists in {RepoName}", tagName, run.RepoName);
+                _logger.LogDebug("Release for tag {Tag} already exists in {RepoName}", tagName, repoNameForRelease);
                 return;
             }
 
             _logger.LogInformation("Creating release: tag={Tag}, name={Name}, repo={Repo}, hasBody={HasBody}",
-                tagName, releaseName, run.RepoName, body != null);
-            await releaseService.CreateReleaseAsync(run.RepoName, tagName, releaseName, body, "ci", isDraft, isPrerelease);
-            _logger.LogInformation("Created release {Tag} for {RepoName}", tagName, run.RepoName);
+                tagName, releaseName, repoNameForRelease, body != null);
+            await releaseService.CreateReleaseAsync(repoNameForRelease, tagName, releaseName, body, "ci", isDraft, isPrerelease);
+            _logger.LogInformation("Created release {Tag} for {RepoName}", tagName, repoNameForRelease);
         }
         catch (Exception ex)
         {
