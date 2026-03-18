@@ -1875,7 +1875,7 @@ else
                                 {
                                     var fileName = System.IO.Path.GetFileName(patch.Path);
                                     var dirPath = System.IO.Path.GetDirectoryName(patch.Path)?.Replace("\\", "/");
-                                    <a href="#diff-@patch.Path.Replace("/", "-").Replace(".", "-").Replace(" ", "-")" class="list-group-item list-group-item-action py-1 px-2">
+                                    <a href="javascript:void(0)" @onclick='() => ScrollToDiff(patch.Path)' @onclick:preventDefault class="list-group-item list-group-item-action py-1 px-2">
                                         <div class="d-flex align-items-center gap-1">
                                             <span class="text-success fw-bold" style="min-width: 28px; font-size: 11px;">+@patch.LinesAdded</span>
                                             <span class="text-danger fw-bold" style="min-width: 28px; font-size: 11px;">-@patch.LinesDeleted</span>
@@ -3757,6 +3757,12 @@ else
         await CommitCommentService.AddCommentAsync(dirName, CommitHash, UserService.Username, newCommitCommentBody);
         newCommitCommentBody = "";
         commitComments = await CommitCommentService.GetCommentsAsync(dirName, CommitHash);
+    }
+
+    private async Task ScrollToDiff(string path)
+    {
+        var id = "diff-" + path.Replace("/", "-").Replace(".", "-").Replace(" ", "-");
+        await JS.InvokeVoidAsync("eval", $"document.getElementById('{id}')?.scrollIntoView({{behavior:'smooth',block:'start'}})");
     }
 
     private async Task DeleteCommitComment(int commentId)
