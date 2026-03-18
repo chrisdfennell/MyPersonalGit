@@ -666,8 +666,26 @@
                                     <ul class="list-unstyled">
                                         @foreach (var reviewer in currentPR.Reviewers)
                                         {
-                                            <li>
-                                                <i class="bi bi-person"></i> @reviewer
+                                            <li class="mb-1">
+                                                @{
+                                                    var latestReview = currentPR.Reviews?
+                                                        .Where(r => r.Author.Equals(reviewer, StringComparison.OrdinalIgnoreCase))
+                                                        .OrderByDescending(r => r.CreatedAt)
+                                                        .FirstOrDefault();
+                                                }
+                                                @if (latestReview?.State == ReviewState.Approved)
+                                                {
+                                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                                }
+                                                else if (latestReview?.State == ReviewState.ChangesRequested)
+                                                {
+                                                    <i class="bi bi-x-circle-fill text-danger"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-circle text-muted"></i>
+                                                }
+                                                @reviewer
                                                 @if (codeOwnersReviewers.Contains(reviewer, StringComparer.OrdinalIgnoreCase))
                                                 {
                                                     <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning-subtle ms-1" style="font-size: 9px;">CODEOWNERS</span>

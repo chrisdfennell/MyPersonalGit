@@ -11,11 +11,13 @@ public class GpgKeysController : ControllerBase
 {
     private readonly IGpgKeyService _gpgKeyService;
     private readonly IAuthService _authService;
+    private readonly IConfiguration _config;
 
-    public GpgKeysController(IGpgKeyService gpgKeyService, IAuthService authService)
+    public GpgKeysController(IGpgKeyService gpgKeyService, IAuthService authService, IConfiguration config)
     {
         _gpgKeyService = gpgKeyService;
         _authService = authService;
+        _config = config;
     }
 
     [HttpGet("user/gpg_keys")]
@@ -95,6 +97,54 @@ public class GpgKeysController : ControllerBase
             return NotFound(new { error = "GPG key not found" });
 
         return NoContent();
+    }
+
+    [HttpGet("repos/{repoName}/commits/{sha}/signature")]
+    public async Task<IActionResult> VerifyCommitSignature(string repoName, string sha)
+    {
+        var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
+        var repoPath = Path.Combine(projectRoot, repoName);
+        if (!LibGit2Sharp.Repository.IsValid(repoPath))
+        {
+            repoPath = Path.Combine(projectRoot, repoName + ".git");
+            if (!LibGit2Sharp.Repository.IsValid(repoPath))
+                return NotFound(new { error = $"Repository '{repoName}' not found" });
+        }
+
+        var result = await _gpgKeyService.VerifyCommitSignatureAsync(sha, repoPath);
+        return Ok(new
+        {
+            is_signed = result.IsSigned,
+            is_verified = result.IsVerified,
+            signer_key_id = result.SignerKeyId,
+            signer_name = result.SignerName,
+            signer_email = result.SignerEmail,
+            trust_level = result.TrustLevel
+        });
+    }
+
+    [HttpGet("repos/{repoName}/tags/{tagName}/signature")]
+    public async Task<IActionResult> VerifyTagSignature(string repoName, string tagName)
+    {
+        var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
+        var repoPath = Path.Combine(projectRoot, repoName);
+        if (!LibGit2Sharp.Repository.IsValid(repoPath))
+        {
+            repoPath = Path.Combine(projectRoot, repoName + ".git");
+            if (!LibGit2Sharp.Repository.IsValid(repoPath))
+                return NotFound(new { error = $"Repository '{repoName}' not found" });
+        }
+
+        var result = await _gpgKeyService.VerifyTagSignatureAsync(tagName, repoPath);
+        return Ok(new
+        {
+            is_signed = result.IsSigned,
+            is_verified = result.IsVerified,
+            signer_key_id = result.SignerKeyId,
+            signer_name = result.SignerName,
+            signer_email = result.SignerEmail,
+            trust_level = result.TrustLevel
+        });
     }
 
     public class AddGpgKeyRequest

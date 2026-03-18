@@ -59,16 +59,24 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Repository Mirroring** — Mirror repositories to/from external Git remotes
 - **Compare View** — Compare branches with ahead/behind commit counts and full diff rendering
 - **Language Stats** — GitHub-style language breakdown bar on each repository page
-- **Branch Protection** — Configurable rules for required reviews, status checks, and force-push prevention
+- **Branch Protection** — Configurable rules for required reviews, status checks, force-push prevention, and CODEOWNERS approval enforcement
+- **Tag Protection** — Protect tags from deletion, force updates, and unauthorized creation with glob pattern matching and per-user allow lists
+- **Commit Signature Verification** — GPG signature verification on commits and annotated tags with "Verified" / "Signed" badges in the UI
+- **Repository Labels** — Manage labels with custom colors per repository; labels are automatically copied when creating repos from templates
 - **Explore** — Browse all accessible repositories with search, sort, and topic filtering
 - **Search** — Full-text search across repositories, issues, PRs, and code
 
 ### Collaboration
-- **Issues & Pull Requests** — Create, comment on, close/reopen issues and PRs with labels, assignees, and reviews. Merge PRs with merge commit, squash, or rebase strategies. Web-based merge conflict resolution with side-by-side diff view
+- **Issues & Pull Requests** — Create, comment on, close/reopen issues and PRs with labels, multiple assignees, due dates, and reviews. Merge PRs with merge commit, squash, or rebase strategies. Web-based merge conflict resolution with side-by-side diff view
+- **Issue Dependencies** — Define "blocked by" and "blocks" relationships between issues with circular dependency detection
+- **Issue Pinning & Locking** — Pin important issues to the top of the list and lock conversations to prevent further comments
+- **Comment Editing & Deletion** — Edit or delete your own comments on issues and pull requests with "(edited)" indicator
 - **Merge Conflict Resolution** — Resolve merge conflicts directly in the browser with a visual editor showing base/ours/theirs views, quick accept buttons, and conflict marker validation
 - **Discussions** — GitHub Discussions-style threaded conversations per repository with categories (General, Q&A, Announcements, Ideas, Show & Tell, Polls), pin/lock, mark as answer, and upvoting
 - **Code Review Suggestions** — "Suggest changes" mode in PR inline reviews lets reviewers propose code replacements directly in the diff
 - **Reaction Emoji** — React to issues, PRs, discussions, and comments with thumbs up/down, heart, laugh, hooray, confused, rocket, and eyes
+- **CODEOWNERS** — Auto-assign PR reviewers based on file paths with optional enforcement requiring CODEOWNERS approval before merge
+- **Repository Templates** — Create new repositories from templates with automatic copying of files, labels, issue templates, and branch protection rules
 - **Draft Issues & Issue Templates** — Create draft issues (work-in-progress) and define reusable issue templates (bug report, feature request) per repository with default labels
 - **Wiki** — Markdown-based wiki pages per repository with revision history
 - **Projects** — Kanban boards with drag-and-drop cards for organizing work

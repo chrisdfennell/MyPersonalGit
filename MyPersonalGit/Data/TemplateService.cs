@@ -112,6 +112,77 @@ public class TemplateService : ITemplateService
         db.Repositories.Add(newRepo2);
         await db.SaveChangesAsync();
 
+        // Copy repository labels from template
+        try
+        {
+            var templateLabels = await db.RepositoryLabels
+                .Where(l => l.RepoName == template.Name)
+                .ToListAsync();
+
+            foreach (var label in templateLabels)
+            {
+                db.RepositoryLabels.Add(new RepositoryLabel
+                {
+                    RepoName = repoFolderName,
+                    Name = label.Name,
+                    Color = label.Color,
+                    Description = label.Description,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
+            // Copy issue templates from template
+            var issueTemplates = await db.IssueTemplates
+                .Where(t => t.RepoName == template.Name)
+                .ToListAsync();
+
+            foreach (var tmpl in issueTemplates)
+            {
+                db.IssueTemplates.Add(new IssueTemplate
+                {
+                    RepoName = repoFolderName,
+                    Name = tmpl.Name,
+                    Description = tmpl.Description,
+                    Body = tmpl.Body,
+                    Labels = tmpl.Labels,
+                    SortOrder = tmpl.SortOrder,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
+            // Copy branch protection rules from template
+            var branchRules = await db.BranchProtectionRules
+                .Where(r => r.RepoName == template.Name)
+                .ToListAsync();
+
+            foreach (var rule in branchRules)
+            {
+                db.BranchProtectionRules.Add(new BranchProtectionRule
+                {
+                    RepoName = repoFolderName,
+                    BranchPattern = rule.BranchPattern,
+                    RequirePullRequest = rule.RequirePullRequest,
+                    RequiredApprovals = rule.RequiredApprovals,
+                    RequireStatusChecks = rule.RequireStatusChecks,
+                    RequiredStatusChecks = new List<string>(rule.RequiredStatusChecks),
+                    PreventForcePush = rule.PreventForcePush,
+                    PreventDeletion = rule.PreventDeletion,
+                    RequireLinearHistory = rule.RequireLinearHistory,
+                    RestrictPushes = rule.RestrictPushes,
+                    AllowedPushUsers = new List<string>(rule.AllowedPushUsers),
+                    RequireCodeOwnersApproval = rule.RequireCodeOwnersApproval,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
+            }
+
+            await db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to copy template metadata (labels/templates/rules) from {Template} to {New}", template.Name, repoFolderName);
+        }
+
         _logger.LogInformation("Repository {New} created from template {Template} by {Owner}", repoFolderName, template.Name, newOwner);
 
         await _activityService.RecordActivityAsync(newOwner, "created_repo", repoFolderName, $"{newOwner} created {repoFolderName} from template {template.Name}", $"/repo/{newName}");

@@ -35,6 +35,10 @@
 @using DeployKey = MyPersonalGit.Models.DeployKey
 @inject CurrentUserService UserService
 @inject ICodeOwnersService CodeOwnersService
+@inject ITagProtectionService TagProtectionService
+@inject IRepositoryLabelService LabelService
+@using TagProtectionRule = MyPersonalGit.Models.TagProtectionRule
+@using RepositoryLabel = MyPersonalGit.Models.RepositoryLabel
 @rendermode InteractiveServer
 
 <PageTitle>@GetPageTitle() · Personal Git</PageTitle>
@@ -667,6 +671,14 @@ else
                                         <span class="fw-bold">@t.Name</span>
                                         <div class="small text-muted font-monospace">@t.TargetSha.Substring(0, 7)</div>
                                     </div>
+                                    @if (t.IsVerified)
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle ms-2" title="Signed and verified"><i class="bi bi-shield-check me-1"></i>Verified</span>
+                                    }
+                                    else if (t.IsSigned)
+                                    {
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle ms-2" title="Signed but not verified"><i class="bi bi-shield-exclamation me-1"></i>Signed</span>
+                                    }
                                 </div>
                                 <div class="d-flex gap-2">
                                     <a href="/repo/@RepoName/commit/@t.TargetSha" class="btn btn-light btn-sm border px-3">View commit</a>
@@ -969,6 +981,7 @@ else
                                                 @if (rule.PreventForcePush) { <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle me-1">No force push</span> }
                                                 @if (rule.PreventDeletion) { <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle me-1">No deletion</span> }
                                                 @if (rule.RequireLinearHistory) { <span class="badge bg-secondary bg-opacity-10 text-secondary border me-1">Linear history</span> }
+                                                @if (rule.RequireCodeOwnersApproval) { <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle me-1">CODEOWNERS</span> }
                                             </div>
                                         </div>
                                         @if (UserService.IsLoggedIn)
@@ -1019,6 +1032,10 @@ else
                                             <input type="checkbox" class="form-check-input" id="requireChecks" @bind="newProtectionRule.RequireStatusChecks" />
                                             <label class="form-check-label small" for="requireChecks">Require status checks</label>
                                         </div>
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" class="form-check-input" id="requireCodeOwners" @bind="newProtectionRule.RequireCodeOwnersApproval" />
+                                            <label class="form-check-label small" for="requireCodeOwners">Require CODEOWNERS approval</label>
+                                        </div>
                                     </div>
                                 </div>
                                 @if (newProtectionRule.RequirePullRequest)
@@ -1043,6 +1060,161 @@ else
                             {
                                 <button class="btn btn-outline-primary btn-sm" @onclick="() => showAddProtectionRule = true">
                                     <i class="bi bi-plus-lg me-1"></i>Add rule
+                                </button>
+                            }
+                        }
+                    </div>
+                </div>
+
+                @* Tag Protection Rules *@
+                <div class="card border shadow-sm mb-4">
+                    <div class="card-header bg-light-subtle py-2 small fw-bold">
+                        <i class="bi bi-tag me-1"></i> Tag protection rules
+                    </div>
+                    <div class="card-body">
+                        @if (tagProtectionRules.Any())
+                        {
+                            <div class="list-group list-group-flush mb-3">
+                                @foreach (var rule in tagProtectionRules)
+                                {
+                                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <div>
+                                            <span class="fw-bold font-monospace">@rule.TagPattern</span>
+                                            <div class="small text-muted mt-1">
+                                                @if (rule.PreventDeletion) { <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle me-1">No deletion</span> }
+                                                @if (rule.PreventForcePush) { <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle me-1">No force push</span> }
+                                                @if (rule.RestrictCreation) { <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle me-1">Restrict creation</span> }
+                                                @if (rule.RequireSignedTags) { <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle me-1">Require signed</span> }
+                                            </div>
+                                        </div>
+                                        @if (UserService.IsLoggedIn)
+                                        {
+                                            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteTagProtectionRule(rule.Id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted small mb-3">No tag protection rules configured yet.</p>
+                        }
+
+                        @if (showAddTagProtectionRule)
+                        {
+                            <div class="border rounded p-3 bg-light-subtle">
+                                <h6 class="fw-bold small mb-3">Add tag protection rule</h6>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Tag name pattern</label>
+                                    <input type="text" class="form-control form-control-sm" @bind="newTagProtectionRule.TagPattern" placeholder="v*, release-*, etc." />
+                                    <div class="form-text">Use * as wildcard. Example: v* matches v1.0, v2.0, etc.</div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" class="form-check-input" id="tagPreventDelete" @bind="newTagProtectionRule.PreventDeletion" />
+                                            <label class="form-check-label small" for="tagPreventDelete">Prevent tag deletion</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" class="form-check-input" id="tagPreventForce" @bind="newTagProtectionRule.PreventForcePush" />
+                                            <label class="form-check-label small" for="tagPreventForce">Prevent tag force update</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" class="form-check-input" id="tagRestrictCreate" @bind="newTagProtectionRule.RestrictCreation" />
+                                            <label class="form-check-label small" for="tagRestrictCreate">Restrict tag creation</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" class="form-check-input" id="tagRequireSigned" @bind="newTagProtectionRule.RequireSignedTags" />
+                                            <label class="form-check-label small" for="tagRequireSigned">Require signed tags</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    @if (UserService.IsLoggedIn)
+                                    {
+                                        <button class="btn btn-gh-primary btn-sm" @onclick="SaveTagProtectionRule" disabled="@string.IsNullOrWhiteSpace(newTagProtectionRule.TagPattern)">Save rule</button>
+                                    }
+                                    <button class="btn btn-light btn-sm border" @onclick="() => showAddTagProtectionRule = false">Cancel</button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            @if (UserService.IsLoggedIn)
+                            {
+                                <button class="btn btn-outline-primary btn-sm" @onclick="() => showAddTagProtectionRule = true">
+                                    <i class="bi bi-plus-lg me-1"></i>Add rule
+                                </button>
+                            }
+                        }
+                    </div>
+                </div>
+
+                @* Repository Labels *@
+                <div class="card border shadow-sm mb-4">
+                    <div class="card-header bg-light-subtle py-2 small fw-bold">
+                        <i class="bi bi-tags me-1"></i> Labels
+                    </div>
+                    <div class="card-body">
+                        @if (repoLabels.Any())
+                        {
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                @foreach (var label in repoLabels)
+                                {
+                                    <div class="d-inline-flex align-items-center gap-1">
+                                        <span class="badge rounded-pill" style="background-color: @label.Color; color: @GetContrastColor(label.Color);">@label.Name</span>
+                                        @if (UserService.IsLoggedIn)
+                                        {
+                                            <button class="btn btn-link btn-sm text-danger p-0 ms-1" style="font-size: 0.7rem;" @onclick="() => DeleteRepoLabel(label.Id)">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted small mb-3">No labels defined yet.</p>
+                        }
+
+                        @if (showAddLabel)
+                        {
+                            <div class="border rounded p-3 bg-light-subtle">
+                                <h6 class="fw-bold small mb-3">Add label</h6>
+                                <div class="row mb-2">
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Name</label>
+                                        <input type="text" class="form-control form-control-sm" @bind="newLabelName" placeholder="bug, feature, etc." />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">Color</label>
+                                        <input type="color" class="form-control form-control-sm form-control-color" @bind="newLabelColor" />
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label small fw-bold">Description</label>
+                                        <input type="text" class="form-control form-control-sm" @bind="newLabelDescription" placeholder="Optional description" />
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 mt-2">
+                                    @if (UserService.IsLoggedIn)
+                                    {
+                                        <button class="btn btn-gh-primary btn-sm" @onclick="SaveRepoLabel" disabled="@string.IsNullOrWhiteSpace(newLabelName)">Save label</button>
+                                    }
+                                    <button class="btn btn-light btn-sm border" @onclick="() => showAddLabel = false">Cancel</button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            @if (UserService.IsLoggedIn)
+                            {
+                                <button class="btn btn-outline-primary btn-sm" @onclick="() => showAddLabel = true">
+                                    <i class="bi bi-plus-lg me-1"></i>Add label
                                 </button>
                             }
                         }
@@ -2808,6 +2980,18 @@ else
     private bool showAddProtectionRule = false;
     private BranchProtectionRule newProtectionRule = new() { BranchPattern = "" };
 
+    // Tag protection
+    private List<TagProtectionRule> tagProtectionRules = new();
+    private bool showAddTagProtectionRule = false;
+    private TagProtectionRule newTagProtectionRule = new() { TagPattern = "" };
+
+    // Repository labels
+    private List<RepositoryLabel> repoLabels = new();
+    private bool showAddLabel = false;
+    private string newLabelName = "";
+    private string newLabelColor = "#0075ca";
+    private string? newLabelDescription;
+
     private string RootPath = "/repos";
     private string RepoFullPath => GetRepoFullPath();
     private string dirName => System.IO.Path.GetFileName(RepoFullPath);
@@ -3204,7 +3388,7 @@ else
         if (tab == "code" && string.IsNullOrEmpty(Path)) Nav.NavigateTo($"/repo/{RepoName}");
         else LoadRepoData();
         if (tab == "settings" || tab == "branches") await LoadBranchProtectionRules();
-        if (tab == "settings") { await LoadCollaborators(); await LoadMirrors(); await LoadDeployKeys(); }
+        if (tab == "settings") { await LoadCollaborators(); await LoadMirrors(); await LoadDeployKeys(); await LoadTagProtectionRules(); await LoadRepoLabels(); }
         if (tab == "releases") await LoadReleases();
         if (tab == "packages") await LoadContainerTags();
         if (tab == "graph") LoadGraph();
@@ -3223,6 +3407,23 @@ else
 
             branches = repo.Branches.Select(b => new BranchSummary { Name = b.FriendlyName, IsCurrent = b.IsCurrentRepositoryHead }).ToList();
             tags = repo.Tags.Select(t => new TagSummary { Name = t.FriendlyName, TargetSha = t.Target.Sha }).ToList();
+
+            // Check tag signatures asynchronously
+            var tagRepoPath = fullPath;
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    foreach (var tag in tags)
+                    {
+                        var sig = await GpgKeyService.VerifyTagSignatureAsync(tag.Name, tagRepoPath);
+                        tag.IsSigned = sig.IsSigned;
+                        tag.IsVerified = sig.IsVerified;
+                    }
+                    await InvokeAsync(StateHasChanged);
+                }
+                catch { }
+            });
 
             var branch = repo.Branches[currentBranch] ?? repo.Branches["main"] ?? repo.Branches["master"] ?? repo.Head;
             currentBranch = branch.FriendlyName;
@@ -4416,6 +4617,67 @@ else
         await LoadBranchProtectionRules();
     }
 
+    private async Task LoadTagProtectionRules()
+    {
+        tagProtectionRules = await TagProtectionService.GetRulesAsync(RepoName);
+    }
+
+    private async Task SaveTagProtectionRule()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (string.IsNullOrWhiteSpace(newTagProtectionRule.TagPattern)) return;
+        await TagProtectionService.AddRuleAsync(RepoName, newTagProtectionRule);
+        newTagProtectionRule = new TagProtectionRule { TagPattern = "" };
+        showAddTagProtectionRule = false;
+        await LoadTagProtectionRules();
+    }
+
+    private async Task DeleteTagProtectionRule(int ruleId)
+    {
+        if (!UserService.IsLoggedIn) return;
+        await TagProtectionService.DeleteRuleAsync(RepoName, ruleId);
+        await LoadTagProtectionRules();
+    }
+
+    private async Task LoadRepoLabels()
+    {
+        repoLabels = await LabelService.GetLabelsAsync(RepoName);
+    }
+
+    private async Task SaveRepoLabel()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (string.IsNullOrWhiteSpace(newLabelName)) return;
+        await LabelService.AddLabelAsync(RepoName, newLabelName, newLabelColor, newLabelDescription);
+        newLabelName = "";
+        newLabelColor = "#0075ca";
+        newLabelDescription = null;
+        showAddLabel = false;
+        await LoadRepoLabels();
+    }
+
+    private async Task DeleteRepoLabel(int labelId)
+    {
+        if (!UserService.IsLoggedIn) return;
+        await LabelService.DeleteLabelAsync(RepoName, labelId);
+        await LoadRepoLabels();
+    }
+
+    private static string GetContrastColor(string hexColor)
+    {
+        try
+        {
+            var hex = hexColor.TrimStart('#');
+            if (hex.Length != 6) return "#ffffff";
+            var r = Convert.ToInt32(hex.Substring(0, 2), 16);
+            var g = Convert.ToInt32(hex.Substring(2, 2), 16);
+            var b = Convert.ToInt32(hex.Substring(4, 2), 16);
+            var luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance > 0.5 ? "#000000" : "#ffffff";
+        }
+        catch { return "#ffffff"; }
+    }
+
     private string GetPrismLanguageClass(string? filePath)
     {
         if (string.IsNullOrEmpty(filePath)) return "language-none";
@@ -4483,7 +4745,7 @@ else
     public class TreeItem { public string Name { get; set; } = ""; public bool IsDirectory { get; set; } public string LastCommitMessage { get; set; } = ""; public DateTime? LastCommitDate { get; set; } }
     public class Crumb { public string Name { get; set; } = ""; public string Path { get; set; } = ""; public bool IsLast { get; set; } }
     public class BranchSummary { public string Name { get; set; } = ""; public bool IsCurrent { get; set; } }
-    public class TagSummary { public string Name { get; set; } = ""; public string TargetSha { get; set; } = ""; }
+    public class TagSummary { public string Name { get; set; } = ""; public string TargetSha { get; set; } = ""; public bool IsSigned { get; set; } public bool IsVerified { get; set; } }
     public class FilePatch { public string Path { get; set; } = ""; public int LinesAdded { get; set; } public int LinesDeleted { get; set; } public List<string> DiffLines { get; set; } = new(); }
     public class DiffPair { public string? Left { get; set; } public string? Right { get; set; } public int LeftLineNum { get; set; } public int RightLineNum { get; set; } }
     public class UnifiedDiffRow { public string OldNum { get; set; } = ""; public string NewNum { get; set; } = ""; public char Sign { get; set; } public string Content { get; set; } = ""; public string CssClass { get; set; } = ""; }

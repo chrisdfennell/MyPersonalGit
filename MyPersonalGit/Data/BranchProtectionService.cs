@@ -78,6 +78,7 @@ public class BranchProtectionService : IBranchProtectionService
         existing.RequireLinearHistory = updatedRule.RequireLinearHistory;
         existing.RestrictPushes = updatedRule.RestrictPushes;
         existing.AllowedPushUsers = updatedRule.AllowedPushUsers;
+        existing.RequireCodeOwnersApproval = updatedRule.RequireCodeOwnersApproval;
         existing.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();

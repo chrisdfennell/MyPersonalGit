@@ -21,6 +21,8 @@ public interface IGpgKeyService
     Task<List<GpgKey>> GetUserGpgKeysAsync(int userId);
     Task<bool> DeleteGpgKeyAsync(int id);
     Task<SignatureVerificationResult> VerifyCommitSignatureAsync(string commitSha, string repoPath);
+    Task<Dictionary<string, SignatureVerificationResult>> BatchVerifyCommitSignaturesAsync(IEnumerable<string> commitShas, string repoPath);
+    Task<SignatureVerificationResult> VerifyTagSignatureAsync(string tagName, string repoPath);
 }
 
 public class GpgKeyService : IGpgKeyService
@@ -153,6 +155,165 @@ public class GpgKeyService : IGpgKeyService
         }
 
         return result;
+    }
+
+    public async Task<Dictionary<string, SignatureVerificationResult>> BatchVerifyCommitSignaturesAsync(IEnumerable<string> commitShas, string repoPath)
+    {
+        var results = new Dictionary<string, SignatureVerificationResult>();
+
+        // Pre-load all GPG keys once
+        using var db = _dbFactory.CreateDbContext();
+        var allKeys = await db.GpgKeys.Include(k => k.User).ToListAsync();
+
+        foreach (var sha in commitShas)
+        {
+            var result = new SignatureVerificationResult();
+            try
+            {
+                var signature = ExtractSignatureFromRawCommit(sha, repoPath);
+                if (string.IsNullOrEmpty(signature))
+                {
+                    results[sha] = result;
+                    continue;
+                }
+
+                result.IsSigned = true;
+                result.TrustLevel = "signed";
+
+                using var repo = new LibGit2Sharp.Repository(repoPath);
+                var commit = repo.Lookup(sha) as LibGit2Sharp.Commit;
+                if (commit != null)
+                {
+                    result.SignerName = commit.Author.Name;
+                    result.SignerEmail = commit.Author.Email;
+                }
+
+                var keyId = ExtractKeyIdFromSignature(signature);
+                if (!string.IsNullOrEmpty(keyId))
+                {
+                    result.SignerKeyId = keyId;
+
+                    var matchingKey = allKeys.FirstOrDefault(k =>
+                        k.LongKeyId == keyId ||
+                        k.KeyId == keyId ||
+                        k.LongKeyId.EndsWith(keyId) ||
+                        keyId.EndsWith(k.KeyId));
+
+                    if (matchingKey != null && matchingKey.IsVerified)
+                    {
+                        result.IsVerified = true;
+                        result.TrustLevel = "verified";
+                        result.SignerName = matchingKey.User?.FullName ?? result.SignerName;
+                        result.SignerEmail = matchingKey.PrimaryEmail;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error batch-verifying commit {Sha}", sha);
+            }
+
+            results[sha] = result;
+        }
+
+        return results;
+    }
+
+    public async Task<SignatureVerificationResult> VerifyTagSignatureAsync(string tagName, string repoPath)
+    {
+        var result = new SignatureVerificationResult();
+
+        try
+        {
+            using var repo = new LibGit2Sharp.Repository(repoPath);
+            var tag = repo.Tags[tagName];
+            if (tag == null)
+                return result;
+
+            // Only annotated tags can have signatures
+            if (tag.Annotation == null)
+                return result;
+
+            // Extract signature from the annotated tag object
+            var signature = ExtractSignatureFromRawTag(tag.Annotation.Sha, repoPath);
+            if (string.IsNullOrEmpty(signature))
+                return result;
+
+            result.IsSigned = true;
+            result.TrustLevel = "signed";
+            result.SignerName = tag.Annotation.Tagger.Name;
+            result.SignerEmail = tag.Annotation.Tagger.Email;
+
+            var keyId = ExtractKeyIdFromSignature(signature);
+            if (!string.IsNullOrEmpty(keyId))
+            {
+                result.SignerKeyId = keyId;
+
+                using var db = _dbFactory.CreateDbContext();
+                var matchingKey = await db.GpgKeys
+                    .Include(k => k.User)
+                    .FirstOrDefaultAsync(k =>
+                        k.LongKeyId == keyId ||
+                        k.KeyId == keyId ||
+                        k.LongKeyId.EndsWith(keyId) ||
+                        keyId.EndsWith(k.KeyId));
+
+                if (matchingKey != null && matchingKey.IsVerified)
+                {
+                    result.IsVerified = true;
+                    result.TrustLevel = "verified";
+                    result.SignerName = matchingKey.User?.FullName ?? result.SignerName;
+                    result.SignerEmail = matchingKey.PrimaryEmail;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error verifying tag signature for {TagName} in {RepoPath}", tagName, repoPath);
+        }
+
+        return result;
+    }
+
+    private static string? ExtractSignatureFromRawTag(string tagSha, string repoPath)
+    {
+        try
+        {
+            // Try git cat-file for tag objects (similar to commit signature extraction)
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "git",
+                Arguments = $"cat-file tag {tagSha}",
+                WorkingDirectory = repoPath,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = System.Diagnostics.Process.Start(psi);
+            if (process == null) return null;
+
+            var output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit(5000);
+
+            if (process.ExitCode != 0 || string.IsNullOrEmpty(output))
+                return null;
+
+            // Tag signatures appear after the message, starting with "-----BEGIN PGP SIGNATURE-----"
+            var sigStart = output.IndexOf("-----BEGIN PGP SIGNATURE-----", StringComparison.Ordinal);
+            if (sigStart < 0)
+                sigStart = output.IndexOf("-----BEGIN PGP MESSAGE-----", StringComparison.Ordinal);
+
+            if (sigStart >= 0)
+                return output.Substring(sigStart);
+
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>
