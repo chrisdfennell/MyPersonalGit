@@ -1773,14 +1773,26 @@ else
                                 {
                                     var cx = entry.Lane * 30 + 20;
                                     var cy = entry.Row * 32 + 26;
-                                    @foreach (var parentRow in entry.ParentRows)
+                                    @foreach (var link in entry.ParentLinks)
                                     {
-                                        var parentEntry = graphEntries.FirstOrDefault(e => e.Row == parentRow);
-                                        if (parentEntry != null)
+                                        var px = link.ParentLane * 30 + 20;
+                                        var py = link.ParentRow * 32 + 26;
+                                        var linkColor = link.Color;
+                                        @if (cx == px)
                                         {
-                                            var px = parentEntry.Lane * 30 + 20;
-                                            var py = parentEntry.Row * 32 + 26;
-                                            <line x1="@cx" y1="@cy" x2="@px" y2="@py" stroke="@entry.Color" stroke-width="2" opacity="0.6" />
+                                            <!-- Straight vertical line -->
+                                            <line x1="@cx" y1="@cy" x2="@px" y2="@py" stroke="@linkColor" stroke-width="2" opacity="0.7" />
+                                        }
+                                        else
+                                        {
+                                            <!-- Curved path: bezier from child down to parent lane, then vertical to parent -->
+                                            var midY = cy + 16;
+                                            var pathD = $"M {cx} {cy} C {cx} {midY} {px} {midY} {px} {midY}";
+                                            <path d="@pathD" stroke="@linkColor" stroke-width="2" fill="none" opacity="0.7" />
+                                            @if (midY < py)
+                                            {
+                                                <line x1="@px" y1="@midY" x2="@px" y2="@py" stroke="@linkColor" stroke-width="2" opacity="0.7" />
+                                            }
                                         }
                                     }
                                 }
@@ -1788,7 +1800,7 @@ else
                                 {
                                     var cx = entry.Lane * 30 + 20;
                                     var cy = entry.Row * 32 + 26;
-                                    <circle cx="@cx" cy="@cy" r="5" fill="@entry.Color" stroke="white" stroke-width="2" />
+                                    <circle cx="@cx" cy="@cy" r="5" fill="@entry.Color" stroke="var(--bs-body-bg, white)" stroke-width="2" />
                                 }
                             </svg>
                             <div class="flex-grow-1" style="font-size: 12px; font-family: monospace;">
@@ -1906,7 +1918,7 @@ else
                         <div class="card-body p-0">
                             @if (diffViewMode == "unified")
                             {
-                                <div class="diff-container font-monospace" style="font-size: 12px; line-height: 1.4; overflow-x: auto;">
+                                <div class="diff-container font-monospace" data-diff-lang="@GetDiffLanguage(patch.Path)" style="font-size: 12px; line-height: 1.4; overflow-x: auto;">
                                     @foreach (var row in GetUnifiedDiffRows(patch.DiffLines))
                                     {
                                         <div class="diff-line d-flex @row.CssClass">
@@ -1920,7 +1932,7 @@ else
                             }
                             else
                             {
-                                <div class="diff-container font-monospace border-top" style="font-size: 12px; line-height: 1.4; overflow-x: auto;">
+                                <div class="diff-container font-monospace border-top" data-diff-lang="@GetDiffLanguage(patch.Path)" style="font-size: 12px; line-height: 1.4; overflow-x: auto;">
                                     @foreach (var pair in GetSplitDiffWithLineNumbers(patch.DiffLines))
                                     {
                                         <div class="d-flex border-bottom">
@@ -2150,6 +2162,51 @@ else
     .diff-sign {
         opacity: 0.6;
     }
+
+    /* Syntax highlighting in diffs - context lines use standard colors */
+    .diff-context .diff-text .token.keyword { color: #d73a49; font-weight: bold; }
+    .diff-context .diff-text .token.string,
+    .diff-context .diff-text .token.attr-value { color: #032f62; }
+    .diff-context .diff-text .token.comment { color: #6a737d; font-style: italic; }
+    .diff-context .diff-text .token.function { color: #6f42c1; }
+    .diff-context .diff-text .token.number { color: #005cc5; }
+    .diff-context .diff-text .token.operator { color: #d73a49; }
+    .diff-context .diff-text .token.class-name { color: #6f42c1; }
+    .diff-context .diff-text .token.punctuation { color: #24292e; }
+    .diff-context .diff-text .token.builtin { color: #005cc5; }
+    .diff-context .diff-text .token.property { color: #005cc5; }
+    .diff-context .diff-text .token.tag { color: #22863a; }
+    .diff-context .diff-text .token.attr-name { color: #6f42c1; }
+
+    /* Added lines - green-tinted tokens */
+    .diff-added .diff-text .token.keyword { color: #116329; font-weight: bold; }
+    .diff-added .diff-text .token.string,
+    .diff-added .diff-text .token.attr-value { color: #0a4a20; }
+    .diff-added .diff-text .token.comment { color: #4d7c56; font-style: italic; }
+    .diff-added .diff-text .token.function { color: #1a6b3a; }
+    .diff-added .diff-text .token.number { color: #0a5c2f; }
+    .diff-added .diff-text .token.operator { color: #116329; }
+    .diff-added .diff-text .token.class-name { color: #1a6b3a; }
+    .diff-added .diff-text .token.punctuation { color: #1a4731; }
+    .diff-added .diff-text .token.builtin { color: #0a5c2f; }
+    .diff-added .diff-text .token.property { color: #0a5c2f; }
+    .diff-added .diff-text .token.tag { color: #116329; }
+    .diff-added .diff-text .token.attr-name { color: #1a6b3a; }
+
+    /* Removed lines - red-tinted tokens */
+    .diff-removed .diff-text .token.keyword { color: #a0111f; font-weight: bold; }
+    .diff-removed .diff-text .token.string,
+    .diff-removed .diff-text .token.attr-value { color: #82071e; }
+    .diff-removed .diff-text .token.comment { color: #b35a5a; font-style: italic; }
+    .diff-removed .diff-text .token.function { color: #8a1538; }
+    .diff-removed .diff-text .token.number { color: #9a1c2e; }
+    .diff-removed .diff-text .token.operator { color: #a0111f; }
+    .diff-removed .diff-text .token.class-name { color: #8a1538; }
+    .diff-removed .diff-text .token.punctuation { color: #6e1520; }
+    .diff-removed .diff-text .token.builtin { color: #9a1c2e; }
+    .diff-removed .diff-text .token.property { color: #9a1c2e; }
+    .diff-removed .diff-text .token.tag { color: #a0111f; }
+    .diff-removed .diff-text .token.attr-name { color: #8a1538; }
 
     /* Markdown Styles */
     .markdown-body h1, .markdown-body h2 {
@@ -2463,6 +2520,39 @@ else
     [data-bs-theme="dark"] .diff-linenum {
         color: #8b949e;
     }
+
+    /* Dark mode diff syntax highlighting */
+    [data-bs-theme="dark"] .diff-context .diff-text .token.keyword { color: #ff7b72; }
+    [data-bs-theme="dark"] .diff-context .diff-text .token.string,
+    [data-bs-theme="dark"] .diff-context .diff-text .token.attr-value { color: #a5d6ff; }
+    [data-bs-theme="dark"] .diff-context .diff-text .token.comment { color: #8b949e; }
+    [data-bs-theme="dark"] .diff-context .diff-text .token.function { color: #d2a8ff; }
+    [data-bs-theme="dark"] .diff-context .diff-text .token.number { color: #79c0ff; }
+    [data-bs-theme="dark"] .diff-context .diff-text .token.operator { color: #ff7b72; }
+    [data-bs-theme="dark"] .diff-context .diff-text .token.class-name { color: #ffa657; }
+    [data-bs-theme="dark"] .diff-context .diff-text .token.punctuation { color: #c9d1d9; }
+    [data-bs-theme="dark"] .diff-context .diff-text .token.builtin { color: #79c0ff; }
+    [data-bs-theme="dark"] .diff-context .diff-text .token.property { color: #79c0ff; }
+    [data-bs-theme="dark"] .diff-context .diff-text .token.tag { color: #7ee787; }
+    [data-bs-theme="dark"] .diff-context .diff-text .token.attr-name { color: #d2a8ff; }
+
+    [data-bs-theme="dark"] .diff-added .diff-text .token.keyword { color: #7ee787; font-weight: bold; }
+    [data-bs-theme="dark"] .diff-added .diff-text .token.string,
+    [data-bs-theme="dark"] .diff-added .diff-text .token.attr-value { color: #56d364; }
+    [data-bs-theme="dark"] .diff-added .diff-text .token.comment { color: #57ab5a; font-style: italic; }
+    [data-bs-theme="dark"] .diff-added .diff-text .token.function { color: #7ee787; }
+    [data-bs-theme="dark"] .diff-added .diff-text .token.number { color: #56d364; }
+    [data-bs-theme="dark"] .diff-added .diff-text .token.punctuation { color: #aff5b4; }
+    [data-bs-theme="dark"] .diff-added .diff-text .token.tag { color: #7ee787; }
+
+    [data-bs-theme="dark"] .diff-removed .diff-text .token.keyword { color: #ff7b72; font-weight: bold; }
+    [data-bs-theme="dark"] .diff-removed .diff-text .token.string,
+    [data-bs-theme="dark"] .diff-removed .diff-text .token.attr-value { color: #ffa198; }
+    [data-bs-theme="dark"] .diff-removed .diff-text .token.comment { color: #d47979; font-style: italic; }
+    [data-bs-theme="dark"] .diff-removed .diff-text .token.function { color: #ffa198; }
+    [data-bs-theme="dark"] .diff-removed .diff-text .token.number { color: #ff7b72; }
+    [data-bs-theme="dark"] .diff-removed .diff-text .token.punctuation { color: #ffc1ba; }
+    [data-bs-theme="dark"] .diff-removed .diff-text .token.tag { color: #ff7b72; }
 
     [data-bs-theme="dark"] .upload-zone {
         border-color: #30363d;
@@ -2815,7 +2905,7 @@ else
         public string Author { get; set; } = "";
         public DateTime Date { get; set; }
         public string Color { get; set; } = "";
-        public List<int> ParentRows { get; set; } = new();
+        public List<(int ParentRow, int ParentLane, string Color)> ParentLinks { get; set; } = new();
     }
 
     private void LoadGraph()
@@ -2825,44 +2915,36 @@ else
         try
         {
             using var repo = new Repository(RepoFullPath);
-            var shaToRow = new Dictionary<string, int>();
-            var activeLanes = new Dictionary<string, int>(); // sha -> lane
-            int row = 0;
-            int nextLane = 0;
-
-            // Collect commits from all branches
             var allTips = repo.Branches.Select(b => b.Tip).Where(t => t != null).ToList();
             if (!allTips.Any()) return;
 
             var filter = new CommitFilter { IncludeReachableFrom = allTips, SortBy = CommitSortStrategies.Topological | CommitSortStrategies.Time };
-            var commits = repo.Commits.QueryBy(filter).Take(100).ToList();
+            var commits = repo.Commits.QueryBy(filter).Take(150).ToList();
 
-            // Assign branch colors
-            var branchColors = new Dictionary<string, string>();
-            int colorIdx = 0;
-            foreach (var branch in repo.Branches)
+            // activeLanes[i] = SHA expected at that lane slot, or null if free
+            var activeLanes = new List<string?>();
+            var shaToEntry = new Dictionary<string, GraphEntry>();
+
+            int FindOrAddFreeLane(string sha)
             {
-                if (branch.Tip != null)
-                    branchColors[branch.Tip.Sha] = GraphColors[colorIdx++ % GraphColors.Length];
+                for (int i = 0; i < activeLanes.Count; i++)
+                    if (activeLanes[i] == null) { activeLanes[i] = sha; return i; }
+                activeLanes.Add(sha);
+                return activeLanes.Count - 1;
             }
 
+            int row = 0;
             foreach (var commit in commits)
             {
-                // Determine lane for this commit
-                int lane;
-                if (activeLanes.ContainsKey(commit.Sha))
-                {
-                    lane = activeLanes[commit.Sha];
-                    activeLanes.Remove(commit.Sha);
-                }
-                else
-                {
-                    lane = nextLane++;
-                }
+                // Find which lane this commit occupies
+                int lane = activeLanes.IndexOf(commit.Sha);
+                if (lane == -1)
+                    lane = FindOrAddFreeLane(commit.Sha);
 
-                var color = branchColors.ContainsKey(commit.Sha) ? branchColors[commit.Sha] : GraphColors[lane % GraphColors.Length];
-                shaToRow[commit.Sha] = row;
+                // Clear this lane
+                activeLanes[lane] = null;
 
+                var color = GraphColors[lane % GraphColors.Length];
                 var entry = new GraphEntry
                 {
                     Row = row,
@@ -2875,22 +2957,42 @@ else
                     Color = color
                 };
 
-                // Link parents
-                foreach (var parent in commit.Parents)
+                // Assign parents to lanes
+                var parents = commit.Parents.ToList();
+                if (parents.Count > 0)
                 {
-                    if (shaToRow.ContainsKey(parent.Sha))
+                    // First parent inherits this commit's lane (straight line down)
+                    if (activeLanes[lane] == null)
+                        activeLanes[lane] = parents[0].Sha;
+                    else
+                        FindOrAddFreeLane(parents[0].Sha);
+
+                    // Additional parents (merge) get free lanes
+                    for (int i = 1; i < parents.Count; i++)
                     {
-                        entry.ParentRows.Add(shaToRow[parent.Sha]);
-                    }
-                    if (!activeLanes.ContainsKey(parent.Sha))
-                    {
-                        activeLanes[parent.Sha] = lane;
+                        // Only assign if not already reserved
+                        if (!activeLanes.Contains(parents[i].Sha))
+                            FindOrAddFreeLane(parents[i].Sha);
                     }
                 }
 
+                shaToEntry[commit.Sha] = entry;
                 graphEntries.Add(entry);
                 if (lane > graphMaxLane) graphMaxLane = lane;
                 row++;
+            }
+
+            // Resolve parent links now that all entries are placed
+            foreach (var entry in graphEntries)
+            {
+                var commit = commits[entry.Row];
+                foreach (var parent in commit.Parents)
+                {
+                    if (shaToEntry.TryGetValue(parent.Sha, out var parentEntry))
+                    {
+                        entry.ParentLinks.Add((parentEntry.Row, parentEntry.Lane, entry.Color));
+                    }
+                }
             }
         }
         catch { }
@@ -3411,6 +3513,10 @@ else
         if (isFile && !showRaw)
         {
             await JS.InvokeVoidAsync("Prism.highlightAll");
+        }
+        if (activeTab == "commit-detail" || activeTab == "compare")
+        {
+            try { await JS.InvokeVoidAsync("diffHighlight.apply"); } catch { }
         }
         if (showFolderUploadModal)
         {
@@ -4733,6 +4839,12 @@ else
             return luminance > 0.5 ? "#000000" : "#ffffff";
         }
         catch { return "#ffffff"; }
+    }
+
+    private string GetDiffLanguage(string? filePath)
+    {
+        var cls = GetPrismLanguageClass(filePath);
+        return cls.StartsWith("language-") ? cls.Substring(9) : "none";
     }
 
     private string GetPrismLanguageClass(string? filePath)

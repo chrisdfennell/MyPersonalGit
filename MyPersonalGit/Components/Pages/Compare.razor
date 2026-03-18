@@ -9,6 +9,7 @@
 @inject NavigationManager Nav
 @inject IAdminService AdminService
 @inject CurrentUserService UserService
+@inject IJSRuntime JS
 @rendermode InteractiveServer
 
 <PageTitle>Compare · @RepoName · Personal Git</PageTitle>
@@ -139,7 +140,7 @@
                         </div>
                     </div>
 
-                    <div class="overflow-auto" style="max-height: 600px;">
+                    <div class="overflow-auto" data-diff-lang="@GetDiffLanguage(patch.Path)" style="max-height: 600px;">
                         @if (diffMode == "unified")
                         {
                             <table class="table table-sm table-borderless mb-0 font-monospace" style="font-size: 12px;">
@@ -220,6 +221,32 @@
             selectedHead = Head;
             RunCompare();
         }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (compared && filePatches.Any())
+        {
+            try { await JS.InvokeVoidAsync("diffHighlight.apply"); } catch { }
+        }
+    }
+
+    private string GetDiffLanguage(string? filePath)
+    {
+        if (string.IsNullOrEmpty(filePath)) return "none";
+        var ext = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
+        return ext switch
+        {
+            ".cs" => "csharp", ".js" => "javascript", ".ts" => "typescript", ".tsx" => "tsx", ".jsx" => "jsx",
+            ".py" => "python", ".rb" => "ruby", ".java" => "java", ".go" => "go", ".rs" => "rust",
+            ".c" => "c", ".cpp" or ".cc" => "cpp", ".h" or ".hpp" => "cpp",
+            ".html" or ".htm" => "html", ".css" => "css", ".scss" => "scss",
+            ".json" => "json", ".xml" => "xml", ".yaml" or ".yml" => "yaml",
+            ".sql" => "sql", ".sh" or ".bash" => "bash", ".ps1" => "powershell",
+            ".razor" or ".cshtml" => "cshtml", ".md" => "markdown", ".php" => "php",
+            ".swift" => "swift", ".kt" => "kotlin", ".dart" => "dart",
+            _ => "none"
+        };
     }
 
     private async Task ResolveRootPath()

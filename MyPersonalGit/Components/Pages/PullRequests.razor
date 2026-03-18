@@ -15,6 +15,7 @@
 @inject CurrentUserService UserService
 @inject ICodeOwnersService CodeOwnersService
 @inject IConflictResolutionService ConflictService
+@inject IJSRuntime JS
 @rendermode InteractiveServer
 
 <PageTitle>Pull Requests · @RepoName</PageTitle>
@@ -425,7 +426,7 @@
                                                 <span class="badge bg-danger bg-opacity-10 text-danger">-@patch.LinesDeleted</span>
                                             </div>
                                         </div>
-                                        <div class="overflow-auto" style="max-height: 600px;">
+                                        <div class="overflow-auto" data-diff-lang="@GetDiffLanguage(patch.Path)" style="max-height: 600px;">
                                             @if (diffMode == "unified")
                                             {
                                                 <table class="table table-sm table-borderless mb-0 font-monospace" style="font-size: 12px;">
@@ -983,6 +984,32 @@
     private int openCount => prs.Count(pr => pr.State == PullRequestState.Open);
     private int closedCount => prs.Count(pr => pr.State == PullRequestState.Closed);
     private int mergedCount => prs.Count(pr => pr.State == PullRequestState.Merged);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (currentPR != null && filePatches.Any())
+        {
+            try { await JS.InvokeVoidAsync("diffHighlight.apply"); } catch { }
+        }
+    }
+
+    private string GetDiffLanguage(string? filePath)
+    {
+        if (string.IsNullOrEmpty(filePath)) return "none";
+        var ext = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
+        return ext switch
+        {
+            ".cs" => "csharp", ".js" => "javascript", ".ts" => "typescript", ".tsx" => "tsx", ".jsx" => "jsx",
+            ".py" => "python", ".rb" => "ruby", ".java" => "java", ".go" => "go", ".rs" => "rust",
+            ".c" => "c", ".cpp" or ".cc" => "cpp", ".h" or ".hpp" => "cpp",
+            ".html" or ".htm" => "html", ".css" => "css", ".scss" => "scss",
+            ".json" => "json", ".xml" => "xml", ".yaml" or ".yml" => "yaml",
+            ".sql" => "sql", ".sh" or ".bash" => "bash", ".ps1" => "powershell",
+            ".razor" or ".cshtml" => "cshtml", ".md" => "markdown", ".php" => "php",
+            ".swift" => "swift", ".kt" => "kotlin", ".dart" => "dart",
+            _ => "none"
+        };
+    }
 
     protected override async Task OnParametersSetAsync()
     {

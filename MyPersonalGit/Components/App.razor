@@ -82,6 +82,36 @@
                 return localStorage.getItem('theme') || 'light';
             }
         };
+        window.diffHighlight = {
+            apply: function() {
+                document.querySelectorAll('[data-diff-lang]').forEach(function(container) {
+                    var lang = container.getAttribute('data-diff-lang');
+                    if (!lang || lang === 'none') return;
+                    var grammar = Prism.languages[lang];
+                    if (!grammar) {
+                        try {
+                            Prism.plugins.autoloader.loadLanguages(lang, function() {
+                                window.diffHighlight.highlightContainer(container, lang);
+                            });
+                        } catch(e) {}
+                        return;
+                    }
+                    window.diffHighlight.highlightContainer(container, lang);
+                });
+            },
+            highlightContainer: function(container, lang) {
+                var grammar = Prism.languages[lang];
+                if (!grammar) return;
+                container.querySelectorAll('.diff-text').forEach(function(el) {
+                    if (el.getAttribute('data-highlighted')) return;
+                    var text = el.textContent;
+                    if (text.trim().length === 0) return;
+                    el.innerHTML = Prism.highlight(text, grammar, lang);
+                    el.setAttribute('data-highlighted', '1');
+                });
+            }
+        };
+
         window.folderUpload = {
             setWebkitDirectory: function (elementId) {
                 var el = document.getElementById(elementId);
