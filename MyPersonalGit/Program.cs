@@ -140,6 +140,25 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 
+    // Ensure new schema additions exist (safe to re-run)
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""TimeEntries"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""RepoName"" TEXT NOT NULL,
+            ""IssueNumber"" INTEGER NOT NULL,
+            ""Username"" TEXT NOT NULL,
+            ""Duration"" TEXT NOT NULL,
+            ""StartedAt"" TEXT NULL,
+            ""StoppedAt"" TEXT NULL,
+            ""IsRunning"" INTEGER NOT NULL,
+            ""Note"" TEXT NULL,
+            ""CreatedAt"" TEXT NOT NULL
+        );");
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""SignMergeCommits"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""ServerGpgKeyId"" TEXT NOT NULL DEFAULT '';"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_TimeEntries_RepoName_IssueNumber"" ON ""TimeEntries"" (""RepoName"", ""IssueNumber"");"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_TimeEntries_Username_IsRunning"" ON ""TimeEntries"" (""Username"", ""IsRunning"");"); } catch { }
+
     if (!db.Users.Any())
     {
         db.Users.Add(new User
