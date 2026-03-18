@@ -465,6 +465,24 @@ else
                                 <small class="form-text text-muted">Default: 2222. Use 22 if not running system SSH. Requires restart.</small>
                             </div>
 
+                            <h6 class="mt-4 mb-3">Merge Commit Signing</h6>
+                            <p class="text-muted small">GPG-sign merge, squash, and rebase commits created through the web UI. The GPG key must be imported into the server's keyring (<code>gpg --import</code>).</p>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.SignMergeCommits" id="signMergeCommits" />
+                                    <label class="form-check-label" for="signMergeCommits">
+                                        Sign merge commits with GPG
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Server GPG Key ID</label>
+                                <InputText class="form-control" @bind-Value="Settings.ServerGpgKeyId" placeholder="e.g. ABCD1234..." />
+                                <small class="form-text text-muted">The long or short key ID of the GPG key to use for signing</small>
+                            </div>
+
                             <h6 class="mt-4 mb-3">LDAP / Active Directory Authentication</h6>
                             <p class="text-muted small">Enable LDAP/AD authentication to let users sign in with their domain credentials. Users are auto-provisioned on first login.</p>
 
