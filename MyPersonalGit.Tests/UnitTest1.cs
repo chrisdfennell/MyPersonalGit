@@ -315,7 +315,7 @@ public class PullRequestServiceTests : IDisposable
         var config = Substitute.For<IConfiguration>();
         config["Git:ProjectRoot"].Returns(_repoDir);
 
-        _service = new PullRequestService(factory, NullLogger<PullRequestService>.Instance, _notifications, activityService, adminService, branchProtection, codeOwners, issueAutoClose, Substitute.For<IWorkflowService>(), config);
+        _service = new PullRequestService(factory, NullLogger<PullRequestService>.Instance, _notifications, activityService, adminService, branchProtection, codeOwners, issueAutoClose, Substitute.For<IWorkflowService>(), Substitute.For<IGpgKeyService>(), config);
     }
 
     public void Dispose()
