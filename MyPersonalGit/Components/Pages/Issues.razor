@@ -228,33 +228,33 @@
                     </div>
                     @if (UserService.IsLoggedIn)
                     {
-                        <div class="btn-group">
-                            @if (currentIssue.IsDraft)
-                            {
-                                <button class="btn btn-outline-success btn-sm" @onclick="ConvertDraftToIssue">
-                                    <i class="bi bi-check-circle me-1"></i> Convert to issue
+                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                            <div class="btn-group">
+                                @if (currentIssue.IsDraft)
+                                {
+                                    <button class="btn btn-outline-success btn-sm" @onclick="ConvertDraftToIssue">
+                                        <i class="bi bi-check-circle me-1"></i> Convert to issue
+                                    </button>
+                                }
+                                @if (currentIssue.State == IssueState.Open)
+                                {
+                                    <button class="btn btn-outline-danger btn-sm" @onclick="CloseIssue">
+                                        <i class="bi bi-check-circle me-1"></i> Close issue
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-outline-success btn-sm" @onclick="ReopenIssue">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reopen issue
+                                    </button>
+                                }
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="TogglePin" title="@(currentIssue.IsPinned ? "Unpin" : "Pin")">
+                                    <i class="bi @(currentIssue.IsPinned ? "bi-pin-angle-fill" : "bi-pin-angle")"></i>
                                 </button>
-                            }
-                            @if (currentIssue.State == IssueState.Open)
-                            {
-                                <button class="btn btn-outline-danger btn-sm" @onclick="CloseIssue">
-                                    <i class="bi bi-check-circle me-1"></i> Close issue
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="ToggleLock" title="@(currentIssue.IsLocked ? "Unlock" : "Lock")">
+                                    <i class="bi @(currentIssue.IsLocked ? "bi-unlock" : "bi-lock")"></i>
                                 </button>
-                            }
-                            else
-                            {
-                                <button class="btn btn-outline-success btn-sm" @onclick="ReopenIssue">
-                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reopen issue
-                                </button>
-                            }
-                            <button class="btn btn-outline-secondary btn-sm" @onclick="TogglePin" title="@(currentIssue.IsPinned ? "Unpin" : "Pin")">
-                                <i class="bi @(currentIssue.IsPinned ? "bi-pin-angle-fill" : "bi-pin-angle")"></i>
-                            </button>
-                            <button class="btn btn-outline-secondary btn-sm" @onclick="ToggleLock" title="@(currentIssue.IsLocked ? "Unlock" : "Lock")">
-                                <i class="bi @(currentIssue.IsLocked ? "bi-unlock" : "bi-lock")"></i>
-                            </button>
-                        </div>
-                        <div class="d-flex gap-2 mt-2">
+                            </div>
                             <div class="input-group input-group-sm" style="max-width: 250px;">
                                 <input type="text" class="form-control" @bind="newAssigneeInput" placeholder="Add assignee" />
                                 <button class="btn btn-outline-secondary" @onclick="AddAssignee"><i class="bi bi-person-plus"></i></button>
