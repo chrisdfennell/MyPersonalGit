@@ -178,6 +178,50 @@ namespace MyPersonalGit.Migrations
                     b.ToTable("CommitComments");
                 });
 
+            modelBuilder.Entity("MyPersonalGit.Models.TimeEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<TimeSpan>("Duration")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("IssueNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsRunning")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RepoName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("StoppedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RepoName", "IssueNumber");
+
+                    b.HasIndex("Username", "IsRunning");
+
+                    b.ToTable("TimeEntries");
+                });
+
             modelBuilder.Entity("MyPersonalGit.Models.CommitStatus", b =>
                 {
                     b.Property<int>("Id")
@@ -2045,6 +2089,13 @@ namespace MyPersonalGit.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("LdapSkipCertificateValidation")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ServerGpgKeyId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("SignMergeCommits")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("LdapServer")
