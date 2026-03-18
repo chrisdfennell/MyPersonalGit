@@ -1813,10 +1813,25 @@ else
         else if (activeTab == "commit-detail" && selectedCommit != null)
         {
             <div class="commit-detail mb-5">
+                @{
+                    var commitTitle = selectedCommit.Message;
+                    var commitBody = "";
+                    var fullMsg = selectedCommit.FullMessage ?? selectedCommit.Message;
+                    var firstNewline = fullMsg.IndexOf('\n');
+                    if (firstNewline > 0)
+                    {
+                        commitTitle = fullMsg.Substring(0, firstNewline).Trim();
+                        commitBody = fullMsg.Substring(firstNewline + 1).Trim();
+                    }
+                }
                 <div class="card border shadow-sm mb-4">
                     <div class="card-body bg-light-subtle">
-                        <h4 class="fw-bold mb-1">@((MarkupString)IssueAutoCloseService.RenderIssueLinks(selectedCommit.Message, dirName))</h4>
-                        <div class="text-muted small">
+                        <h4 class="fw-bold mb-1">@((MarkupString)IssueAutoCloseService.RenderIssueLinks(commitTitle, dirName))</h4>
+                        @if (!string.IsNullOrEmpty(commitBody))
+                        {
+                            <div class="mt-2 small" style="white-space: pre-wrap;">@((MarkupString)IssueAutoCloseService.RenderIssueLinks(commitBody, dirName))</div>
+                        }
+                        <div class="text-muted small mt-2">
                             <strong>@selectedCommit.AuthorName</strong> authored @selectedCommit.Date.ToString("f")
                             @if (selectedCommit.IsSigned)
                             {
@@ -1847,10 +1862,43 @@ else
                     </div>
                 </div>
 
-                <h6 class="fw-bold text-muted small text-uppercase mb-3">Showing @commitPatches.Count changed files</h6>
+                <div class="d-flex gap-3">
+                    <!-- File browser sidebar -->
+                    <div class="commit-file-sidebar" style="width: 260px; min-width: 260px; max-height: calc(100vh - 200px); overflow-y: auto; position: sticky; top: 80px;">
+                        <div class="card border shadow-sm">
+                            <div class="card-header bg-light-subtle py-2 d-flex justify-content-between align-items-center">
+                                <span class="fw-bold small">Changed files</span>
+                                <span class="badge bg-secondary">@commitPatches.Count</span>
+                            </div>
+                            <div class="list-group list-group-flush" style="font-size: 12px;">
+                                @foreach (var patch in commitPatches)
+                                {
+                                    var fileName = System.IO.Path.GetFileName(patch.Path);
+                                    var dirPath = System.IO.Path.GetDirectoryName(patch.Path)?.Replace("\\", "/");
+                                    <a href="#diff-@patch.Path.Replace("/", "-").Replace(".", "-").Replace(" ", "-")" class="list-group-item list-group-item-action py-1 px-2">
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span class="text-success fw-bold" style="min-width: 28px; font-size: 11px;">+@patch.LinesAdded</span>
+                                            <span class="text-danger fw-bold" style="min-width: 28px; font-size: 11px;">-@patch.LinesDeleted</span>
+                                            <div class="text-truncate">
+                                                @if (!string.IsNullOrEmpty(dirPath))
+                                                {
+                                                    <span class="text-muted">@dirPath/</span>
+                                                }
+                                                <span class="fw-semibold">@fileName</span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Diff content -->
+                    <div class="flex-grow-1" style="min-width: 0;">
+                        <h6 class="fw-bold text-muted small text-uppercase mb-3">Showing @commitPatches.Count changed files</h6>
                 @foreach (var patch in commitPatches)
                 {
-                    <div class="card border shadow-sm mb-3">
+                    <div id="diff-@patch.Path.Replace("/", "-").Replace(".", "-").Replace(" ", "-")" class="card border shadow-sm mb-3">
                         <div class="card-header py-2 bg-light-subtle d-flex justify-content-between">
                             <span class="fw-bold small font-monospace">@patch.Path</span>
                             <span class="badge border fw-normal">@patch.LinesAdded additions / @patch.LinesDeleted deletions</span>
@@ -1897,6 +1945,8 @@ else
                         </div>
                     </div>
                 }
+                    </div> <!-- end diff content -->
+                </div> <!-- end flex container -->
 
                 <!-- Commit Comments Section -->
                 <div class="mt-4">
@@ -3512,6 +3562,7 @@ else
             ShortSha = c.Id.ToString(7),
             AuthorName = c.Author.Name,
             Message = c.MessageShort,
+            FullMessage = c.Message?.Trim() ?? c.MessageShort,
             Date = c.Author.When.UtcDateTime
         };
 
@@ -4741,7 +4792,7 @@ else
         };
     }
 
-    public class GitCommit { public string Sha { get; set; } = ""; public string ShortSha { get; set; } = ""; public string AuthorName { get; set; } = ""; public string Message { get; set; } = ""; public DateTime Date { get; set; } public bool IsSigned { get; set; } public bool IsVerified { get; set; } public string SignerKeyId { get; set; } = ""; }
+    public class GitCommit { public string Sha { get; set; } = ""; public string ShortSha { get; set; } = ""; public string AuthorName { get; set; } = ""; public string Message { get; set; } = ""; public string FullMessage { get; set; } = ""; public DateTime Date { get; set; } public bool IsSigned { get; set; } public bool IsVerified { get; set; } public string SignerKeyId { get; set; } = ""; }
     public class TreeItem { public string Name { get; set; } = ""; public bool IsDirectory { get; set; } public string LastCommitMessage { get; set; } = ""; public DateTime? LastCommitDate { get; set; } }
     public class Crumb { public string Name { get; set; } = ""; public string Path { get; set; } = ""; public bool IsLast { get; set; } }
     public class BranchSummary { public string Name { get; set; } = ""; public bool IsCurrent { get; set; } }
