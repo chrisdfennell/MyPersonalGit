@@ -127,7 +127,9 @@ builder.Services.AddSingleton<IConflictResolutionService, ConflictResolutionServ
 builder.Services.AddSingleton<IIssueDependencyService, IssueDependencyService>();
 builder.Services.AddSingleton<IRepositoryLabelService, RepositoryLabelService>();
 builder.Services.AddSingleton<ITagProtectionService, TagProtectionService>();
+builder.Services.AddSingleton<IAutoMergeService, AutoMergeService>();
 builder.Services.AddSingleton<ICodeSearchService, CodeSearchService>();
+builder.Services.AddSingleton<ITimeTrackingService, TimeTrackingService>();
 builder.Services.AddScoped<CurrentUserService>();
 
 var app = builder.Build();

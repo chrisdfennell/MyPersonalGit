@@ -37,6 +37,7 @@ public class PullRequestService : IPullRequestService
     private readonly ICodeOwnersService _codeOwnersService;
     private readonly IIssueAutoCloseService _issueAutoCloseService;
     private readonly IWorkflowService _workflowService;
+    private readonly IGpgKeyService _gpgKeyService;
     private readonly IConfiguration _config;
 
     public PullRequestService(
@@ -49,6 +50,7 @@ public class PullRequestService : IPullRequestService
         ICodeOwnersService codeOwnersService,
         IIssueAutoCloseService issueAutoCloseService,
         IWorkflowService workflowService,
+        IGpgKeyService gpgKeyService,
         IConfiguration config)
     {
         _dbFactory = dbFactory;
@@ -60,6 +62,7 @@ public class PullRequestService : IPullRequestService
         _codeOwnersService = codeOwnersService;
         _issueAutoCloseService = issueAutoCloseService;
         _workflowService = workflowService;
+        _gpgKeyService = gpgKeyService;
         _config = config;
     }
 
@@ -473,14 +476,33 @@ public class PullRequestService : IPullRequestService
                     if (mergeResult.Status == MergeTreeStatus.Conflicts)
                         return (false, "Merge conflicts detected — resolve conflicts before merging");
 
-                    var mergeCommit = repo.ObjectDatabase.CreateCommit(
-                        author, author,
-                        $"Merge pull request #{pr.Number} from {pr.SourceBranch}\n\n{pr.Title}",
-                        mergeResult.Tree,
-                        new[] { targetBranch.Tip, sourceBranch.Tip },
-                        prettifyMessage: true);
+                    var msg = $"Merge pull request #{pr.Number} from {pr.SourceBranch}\n\n{pr.Title}";
 
-                    repo.Refs.UpdateTarget(repo.Refs[targetBranch.CanonicalName], mergeCommit.Id);
+                    // Try signed commit if enabled
+                    var settings = await _adminService.GetSystemSettingsAsync();
+                    string? signedSha = null;
+                    if (settings.SignMergeCommits && !string.IsNullOrEmpty(settings.ServerGpgKeyId))
+                    {
+                        signedSha = await _gpgKeyService.CreateSignedCommitAsync(
+                            repoPath, mergeResult.Tree.Sha,
+                            new[] { targetBranch.Tip.Sha, sourceBranch.Tip.Sha },
+                            msg, mergedBy, $"{mergedBy}@localhost", settings.ServerGpgKeyId);
+                    }
+
+                    if (signedSha != null)
+                    {
+                        var signedCommit = repo.Lookup<Commit>(new ObjectId(signedSha));
+                        repo.Refs.UpdateTarget(repo.Refs[targetBranch.CanonicalName], signedCommit.Id);
+                    }
+                    else
+                    {
+                        var mergeCommit = repo.ObjectDatabase.CreateCommit(
+                            author, author, msg,
+                            mergeResult.Tree,
+                            new[] { targetBranch.Tip, sourceBranch.Tip },
+                            prettifyMessage: true);
+                        repo.Refs.UpdateTarget(repo.Refs[targetBranch.CanonicalName], mergeCommit.Id);
+                    }
                     break;
                 }
 
@@ -490,7 +512,6 @@ public class PullRequestService : IPullRequestService
                     if (mergeResult.Status == MergeTreeStatus.Conflicts)
                         return (false, "Merge conflicts detected — resolve conflicts before merging");
 
-                    // Collect commit messages for squash message
                     var filter = new CommitFilter
                     {
                         IncludeReachableFrom = sourceBranch.Tip,
@@ -499,15 +520,32 @@ public class PullRequestService : IPullRequestService
                     };
                     var commits = repo.Commits.QueryBy(filter).ToList();
                     var messages = string.Join("\n", commits.Select(c => $"* {c.MessageShort}"));
+                    var msg = $"{pr.Title} (#{pr.Number})\n\n{messages}";
 
-                    var squashCommit = repo.ObjectDatabase.CreateCommit(
-                        author, author,
-                        $"{pr.Title} (#{pr.Number})\n\n{messages}",
-                        mergeResult.Tree,
-                        new[] { targetBranch.Tip },
-                        prettifyMessage: true);
+                    var squashSettings = await _adminService.GetSystemSettingsAsync();
+                    string? signedSha = null;
+                    if (squashSettings.SignMergeCommits && !string.IsNullOrEmpty(squashSettings.ServerGpgKeyId))
+                    {
+                        signedSha = await _gpgKeyService.CreateSignedCommitAsync(
+                            repoPath, mergeResult.Tree.Sha,
+                            new[] { targetBranch.Tip.Sha },
+                            msg, mergedBy, $"{mergedBy}@localhost", squashSettings.ServerGpgKeyId);
+                    }
 
-                    repo.Refs.UpdateTarget(repo.Refs[targetBranch.CanonicalName], squashCommit.Id);
+                    if (signedSha != null)
+                    {
+                        var signedCommit = repo.Lookup<Commit>(new ObjectId(signedSha));
+                        repo.Refs.UpdateTarget(repo.Refs[targetBranch.CanonicalName], signedCommit.Id);
+                    }
+                    else
+                    {
+                        var squashCommit = repo.ObjectDatabase.CreateCommit(
+                            author, author, msg,
+                            mergeResult.Tree,
+                            new[] { targetBranch.Tip },
+                            prettifyMessage: true);
+                        repo.Refs.UpdateTarget(repo.Refs[targetBranch.CanonicalName], squashCommit.Id);
+                    }
                     break;
                 }
 
@@ -524,35 +562,49 @@ public class PullRequestService : IPullRequestService
                     if (!commits.Any())
                         return (false, "No commits to rebase");
 
+                    var rebaseSettings = await _adminService.GetSystemSettingsAsync();
                     var currentTip = targetBranch.Tip;
 
                     foreach (var commit in commits)
                     {
+                        Tree rebasedTree;
                         var parent = commit.Parents.FirstOrDefault();
                         if (parent == null)
                         {
-                            // Root commit — just use the tree directly
-                            var newCommit = repo.ObjectDatabase.CreateCommit(
-                                commit.Author, author,
-                                commit.Message,
-                                commit.Tree,
-                                new[] { currentTip },
-                                prettifyMessage: true);
-                            currentTip = newCommit;
-                            continue;
+                            rebasedTree = commit.Tree;
+                        }
+                        else
+                        {
+                            var cherryResult = repo.ObjectDatabase.MergeCommits(currentTip, commit, null);
+                            if (cherryResult.Status == MergeTreeStatus.Conflicts)
+                                return (false, $"Conflict while rebasing commit {commit.Id.ToString(7)}: {commit.MessageShort}");
+                            rebasedTree = cherryResult.Tree;
                         }
 
-                        var cherryResult = repo.ObjectDatabase.MergeCommits(currentTip, commit, null);
-                        if (cherryResult.Status == MergeTreeStatus.Conflicts)
-                            return (false, $"Conflict while rebasing commit {commit.Id.ToString(7)}: {commit.MessageShort}");
+                        // Try signed commit if enabled
+                        string? signedSha = null;
+                        if (rebaseSettings.SignMergeCommits && !string.IsNullOrEmpty(rebaseSettings.ServerGpgKeyId))
+                        {
+                            signedSha = await _gpgKeyService.CreateSignedCommitAsync(
+                                repoPath, rebasedTree.Sha,
+                                new[] { currentTip.Sha },
+                                commit.Message, commit.Author.Name, commit.Author.Email, rebaseSettings.ServerGpgKeyId);
+                        }
 
-                        var rebasedCommit = repo.ObjectDatabase.CreateCommit(
-                            commit.Author, author,
-                            commit.Message,
-                            cherryResult.Tree,
-                            new[] { currentTip },
-                            prettifyMessage: true);
-                        currentTip = rebasedCommit;
+                        if (signedSha != null)
+                        {
+                            currentTip = repo.Lookup<Commit>(new ObjectId(signedSha));
+                        }
+                        else
+                        {
+                            var rebasedCommit = repo.ObjectDatabase.CreateCommit(
+                                commit.Author, author,
+                                commit.Message,
+                                rebasedTree,
+                                new[] { currentTip },
+                                prettifyMessage: true);
+                            currentTip = rebasedCommit;
+                        }
                     }
 
                     repo.Refs.UpdateTarget(repo.Refs[targetBranch.CanonicalName], currentTip.Id);

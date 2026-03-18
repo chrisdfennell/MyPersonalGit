@@ -23,6 +23,7 @@ public interface IGpgKeyService
     Task<SignatureVerificationResult> VerifyCommitSignatureAsync(string commitSha, string repoPath);
     Task<Dictionary<string, SignatureVerificationResult>> BatchVerifyCommitSignaturesAsync(IEnumerable<string> commitShas, string repoPath);
     Task<SignatureVerificationResult> VerifyTagSignatureAsync(string tagName, string repoPath);
+    Task<string?> CreateSignedCommitAsync(string repoPath, string treeSha, string[] parentShas, string message, string authorName, string authorEmail, string? gpgKeyId = null);
 }
 
 public class GpgKeyService : IGpgKeyService
@@ -273,6 +274,69 @@ public class GpgKeyService : IGpgKeyService
         }
 
         return result;
+    }
+
+    public async Task<string?> CreateSignedCommitAsync(string repoPath, string treeSha, string[] parentShas, string message, string authorName, string authorEmail, string? gpgKeyId = null)
+    {
+        try
+        {
+            var args = new List<string> { "commit-tree", treeSha };
+            foreach (var parent in parentShas)
+            {
+                args.Add("-p");
+                args.Add(parent);
+            }
+
+            if (!string.IsNullOrEmpty(gpgKeyId))
+                args.Add($"-S{gpgKeyId}");
+            else
+                args.Add("-S");
+
+            args.Add("-m");
+            args.Add(message);
+
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "git",
+                WorkingDirectory = repoPath,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                RedirectStandardInput = false,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            foreach (var arg in args)
+                psi.ArgumentList.Add(arg);
+
+            var now = DateTimeOffset.Now;
+            var dateStr = now.ToString("ddd MMM d HH:mm:ss yyyy K", System.Globalization.CultureInfo.InvariantCulture);
+            psi.Environment["GIT_AUTHOR_NAME"] = authorName;
+            psi.Environment["GIT_AUTHOR_EMAIL"] = authorEmail;
+            psi.Environment["GIT_AUTHOR_DATE"] = dateStr;
+            psi.Environment["GIT_COMMITTER_NAME"] = authorName;
+            psi.Environment["GIT_COMMITTER_EMAIL"] = authorEmail;
+            psi.Environment["GIT_COMMITTER_DATE"] = dateStr;
+
+            using var process = System.Diagnostics.Process.Start(psi);
+            if (process == null) return null;
+
+            var sha = (await process.StandardOutput.ReadToEndAsync()).Trim();
+            var stderr = await process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
+
+            if (process.ExitCode != 0)
+            {
+                _logger.LogWarning("git commit-tree failed: {Error}", stderr);
+                return null;
+            }
+
+            return sha;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to create signed commit");
+            return null;
+        }
     }
 
     private static string? ExtractSignatureFromRawTag(string tagSha, string repoPath)

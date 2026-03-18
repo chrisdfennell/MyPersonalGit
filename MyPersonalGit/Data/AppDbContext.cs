@@ -132,6 +132,9 @@ public class AppDbContext : DbContext
     // Commit Comments
     public DbSet<CommitComment> CommitComments => Set<CommitComment>();
 
+    // Time Tracking
+    public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
+
     // Discussions
     public DbSet<Discussion> Discussions => Set<Discussion>();
     public DbSet<DiscussionComment> DiscussionComments => Set<DiscussionComment>();
@@ -563,6 +566,13 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<RepositoryLabel>(e =>
         {
             e.HasIndex(l => new { l.RepoName, l.Name }).IsUnique();
+        });
+
+        // --- TimeEntry ---
+        modelBuilder.Entity<TimeEntry>(e =>
+        {
+            e.HasIndex(t => new { t.RepoName, t.IssueNumber });
+            e.HasIndex(t => new { t.Username, t.IsRunning });
         });
     }
 }

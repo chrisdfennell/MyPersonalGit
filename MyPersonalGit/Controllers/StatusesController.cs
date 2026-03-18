@@ -16,11 +16,13 @@ public class StatusesController : ControllerBase
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly ILogger<StatusesController> _logger;
+    private readonly IAutoMergeService _autoMergeService;
 
-    public StatusesController(IDbContextFactory<AppDbContext> dbFactory, ILogger<StatusesController> logger)
+    public StatusesController(IDbContextFactory<AppDbContext> dbFactory, ILogger<StatusesController> logger, IAutoMergeService autoMergeService)
     {
         _dbFactory = dbFactory;
         _logger = logger;
+        _autoMergeService = autoMergeService;
     }
 
     /// <summary>
@@ -69,6 +71,12 @@ public class StatusesController : ControllerBase
         }
 
         await db.SaveChangesAsync();
+
+        // Trigger auto-merge check when a status becomes success
+        if (state == CommitStatusState.Success)
+        {
+            try { await _autoMergeService.TryAutoMergeAsync(repoName); } catch { }
+        }
 
         _logger.LogInformation("Commit status {Context}={State} set for {RepoName}@{Sha} by {Creator}",
             request.Context, state, repoName, sha[..7], creator);

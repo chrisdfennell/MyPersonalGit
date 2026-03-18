@@ -50,6 +50,10 @@ public class SystemSettings
     public string LdapAdminGroupDn { get; set; } = string.Empty;
     public bool LdapSkipCertificateValidation { get; set; } = true;
 
+    // Merge Commit Signing
+    public bool SignMergeCommits { get; set; }
+    public string ServerGpgKeyId { get; set; } = string.Empty;
+
     // Footer Pages (customizable content)
     public string SiteName { get; set; } = "PersonalGit";
     public string FooterTerms { get; set; } = "## Terms of Service\n\nBy using this MyPersonalGit instance, you agree to use it responsibly.\n\n- Do not upload malicious code or content that violates applicable laws.\n- Administrators reserve the right to remove content or disable accounts.\n- This is a self-hosted service — your data stays on this server.\n\nFor questions, contact your instance administrator.";

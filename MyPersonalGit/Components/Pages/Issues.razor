@@ -10,6 +10,7 @@
 @inject IMilestoneService MilestoneService
 @inject IIssueTemplateService TemplateService
 @inject IReactionService ReactionService
+@inject ITimeTrackingService TimeTrackingService
 @inject IConfiguration Config
 @inject IAdminService AdminService
 @inject NavigationManager Nav
@@ -304,6 +305,62 @@
                         </span>
                     </div>
                 }
+
+                @* Time Tracking *@
+                <div class="mb-3">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="small fw-bold text-muted"><i class="bi bi-clock me-1"></i>Time Tracking</span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border">@FormatDuration(totalTime)</span>
+                    </div>
+                    @if (UserService.IsLoggedIn)
+                    {
+                        @if (runningTimer != null && runningTimer.RepoName == RepoName && runningTimer.IssueNumber == currentIssue.Number)
+                        {
+                            <button class="btn btn-outline-danger btn-sm w-100 mb-2" @onclick="StopTimer">
+                                <i class="bi bi-stop-circle me-1"></i> Stop Timer (@FormatDuration(DateTime.UtcNow - (runningTimer.StartedAt ?? DateTime.UtcNow)))
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-success btn-sm w-100 mb-2" @onclick="StartTimer">
+                                <i class="bi bi-play-circle me-1"></i> Start Timer
+                            </button>
+                        }
+                        <div class="input-group input-group-sm mb-2">
+                            <input type="number" class="form-control" @bind="logHours" min="0" placeholder="h" style="max-width: 50px;" />
+                            <span class="input-group-text">h</span>
+                            <input type="number" class="form-control" @bind="logMinutes" min="0" max="59" placeholder="m" style="max-width: 50px;" />
+                            <span class="input-group-text">m</span>
+                            <button class="btn btn-outline-primary" @onclick="LogManualTime" disabled="@(logHours == 0 && logMinutes == 0)">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                    }
+                    @if (timeEntries.Any())
+                    {
+                        <div style="max-height: 150px; overflow-y: auto; font-size: 12px;">
+                            @foreach (var entry in timeEntries)
+                            {
+                                <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                    <div>
+                                        <strong>@entry.Username</strong>
+                                        <span class="text-muted ms-1">@FormatDuration(entry.IsRunning && entry.StartedAt.HasValue ? DateTime.UtcNow - entry.StartedAt.Value : entry.Duration)</span>
+                                        @if (!string.IsNullOrEmpty(entry.Note))
+                                        {
+                                            <span class="text-muted ms-1">— @entry.Note</span>
+                                        }
+                                    </div>
+                                    @if (UserService.IsLoggedIn && entry.Username == UserService.Username && !entry.IsRunning)
+                                    {
+                                        <button class="btn btn-link btn-sm text-danger p-0" @onclick="() => DeleteTimeEntry(entry.Id)">
+                                            <i class="bi bi-x-lg" style="font-size: 10px;"></i>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
 
                 @if (currentIssue.Labels.Any())
                 {
@@ -706,6 +763,12 @@
     private string newAssigneeInput = "";
     private DateTime? dueDateInput;
 
+    // Time Tracking
+    private List<TimeEntry> timeEntries = new();
+    private TimeSpan totalTime;
+    private TimeEntry? runningTimer;
+    private int logHours, logMinutes;
+
     // Issue Templates
     private List<IssueTemplate> issueTemplates = new();
     private bool showNewTemplateModal;
@@ -766,6 +829,7 @@
                 }
             }
             await LoadDependencies();
+            await LoadTimeEntries();
         }
     }
 
@@ -774,6 +838,53 @@
         if (!Number.HasValue) return;
         blockedByIssues = await DependencyService.GetBlockingIssuesAsync(RepoName, Number.Value);
         blocksIssues = await DependencyService.GetBlockedByIssuesAsync(RepoName, Number.Value);
+    }
+
+    private async Task LoadTimeEntries()
+    {
+        if (currentIssue == null) return;
+        timeEntries = await TimeTrackingService.GetTimeEntriesAsync(RepoName, currentIssue.Number);
+        totalTime = await TimeTrackingService.GetTotalTimeAsync(RepoName, currentIssue.Number);
+        if (UserService.IsLoggedIn)
+            runningTimer = await TimeTrackingService.GetRunningTimerAsync(UserService.Username);
+    }
+
+    private async Task StartTimer()
+    {
+        if (currentIssue == null || !UserService.IsLoggedIn) return;
+        await TimeTrackingService.StartTimerAsync(RepoName, currentIssue.Number, UserService.Username);
+        await LoadTimeEntries();
+    }
+
+    private async Task StopTimer()
+    {
+        if (currentIssue == null || !UserService.IsLoggedIn) return;
+        await TimeTrackingService.StopTimerAsync(RepoName, currentIssue.Number, UserService.Username);
+        await LoadTimeEntries();
+    }
+
+    private async Task LogManualTime()
+    {
+        if (currentIssue == null || !UserService.IsLoggedIn) return;
+        var duration = new TimeSpan(logHours, logMinutes, 0);
+        if (duration <= TimeSpan.Zero) return;
+        await TimeTrackingService.LogTimeAsync(RepoName, currentIssue.Number, UserService.Username, duration, null);
+        logHours = 0; logMinutes = 0;
+        await LoadTimeEntries();
+    }
+
+    private async Task DeleteTimeEntry(int id)
+    {
+        if (!UserService.IsLoggedIn) return;
+        await TimeTrackingService.DeleteTimeEntryAsync(id, UserService.Username);
+        await LoadTimeEntries();
+    }
+
+    private string FormatDuration(TimeSpan ts)
+    {
+        if (ts.TotalHours >= 1) return $"{(int)ts.TotalHours}h {ts.Minutes}m";
+        if (ts.TotalMinutes >= 1) return $"{(int)ts.TotalMinutes}m";
+        return "0m";
     }
 
     private async Task AddDependency()
