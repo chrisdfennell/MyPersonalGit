@@ -241,8 +241,8 @@ public partial class IssueAutoCloseService : IIssueAutoCloseService
         if (string.IsNullOrWhiteSpace(message))
             return message;
 
-        // Replace #NNN with clickable links, but HTML-encode the rest
-        var encoded = System.Net.WebUtility.HtmlEncode(message);
+        // Replace #NNN with clickable links, but HTML-encode the rest (restore common safe chars)
+        var encoded = System.Net.WebUtility.HtmlEncode(message).Replace("&#39;", "'").Replace("&#x27;", "'");
         return Regex.Replace(encoded, @"(?<!\w)#(\d+)\b", match =>
         {
             var number = match.Groups[1].Value;

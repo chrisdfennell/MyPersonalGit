@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using MyPersonalGit.Data;
 using MyPersonalGit.Models;
 
@@ -16,7 +17,7 @@ public sealed class ApiAuthMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config, ICollaboratorService collaboratorService, IAuthService authService)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, ICollaboratorService collaboratorService, IAuthService authService, IDbContextFactory<AppDbContext> dbFactory)
     {
         if (!context.Request.Path.StartsWithSegments("/api"))
         {
@@ -67,6 +68,17 @@ public sealed class ApiAuthMiddleware
                 if (matchedToken != null) break;
             }
             catch (Exception ex) { _logger.LogWarning(ex, "Failed to read token file {File}", file); }
+        }
+
+        // Fallback: check database for tokens
+        if (matchedToken == null)
+        {
+            try
+            {
+                using var db = dbFactory.CreateDbContext();
+                matchedToken = await db.PersonalAccessTokens.FirstOrDefaultAsync(t => t.Token == token);
+            }
+            catch (Exception ex) { _logger.LogWarning(ex, "Failed to check database for token"); }
         }
 
         if (matchedToken == null)
