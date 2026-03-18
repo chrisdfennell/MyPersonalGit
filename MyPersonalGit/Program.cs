@@ -140,7 +140,57 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 
-    // Ensure new schema additions exist (safe to re-run)
+    // Ensure all schema additions exist (idempotent — safe to re-run)
+    // From 20260317200000: IssueDependencies, RepositoryLabels, TagProtectionRules, BranchProtection.RequireCodeOwnersApproval
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""IssueDependencies"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""RepoName"" TEXT NOT NULL,
+            ""BlockingIssueNumber"" INTEGER NOT NULL,
+            ""BlockedIssueNumber"" INTEGER NOT NULL,
+            ""CreatedBy"" TEXT NOT NULL,
+            ""CreatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_IssueDependencies_RepoName_BlockedIssueNumber"" ON ""IssueDependencies"" (""RepoName"", ""BlockedIssueNumber"");");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_IssueDependencies_RepoName_BlockingIssueNumber"" ON ""IssueDependencies"" (""RepoName"", ""BlockingIssueNumber"");");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_IssueDependencies_RepoName_BlockingIssueNumber_BlockedIssueNumber"" ON ""IssueDependencies"" (""RepoName"", ""BlockingIssueNumber"", ""BlockedIssueNumber"");");
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""RepositoryLabels"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""RepoName"" TEXT NOT NULL,
+            ""Name"" TEXT NOT NULL,
+            ""Color"" TEXT NOT NULL,
+            ""Description"" TEXT NULL,
+            ""CreatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_RepositoryLabels_RepoName_Name"" ON ""RepositoryLabels"" (""RepoName"", ""Name"");");
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""TagProtectionRules"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""RepoName"" TEXT NOT NULL,
+            ""TagPattern"" TEXT NOT NULL,
+            ""PreventDeletion"" INTEGER NOT NULL,
+            ""PreventForcePush"" INTEGER NOT NULL,
+            ""RestrictCreation"" INTEGER NOT NULL,
+            ""AllowedUsers"" TEXT NOT NULL,
+            ""RequireSignedTags"" INTEGER NOT NULL,
+            ""CreatedAt"" TEXT NOT NULL,
+            ""UpdatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_TagProtectionRules_RepoName"" ON ""TagProtectionRules"" (""RepoName"");");
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""BranchProtectionRules"" ADD COLUMN ""RequireCodeOwnersApproval"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
+
+    // From 20260317210000: Issue assignees/due date/pin/lock, PR pin/lock
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Issues"" ADD COLUMN ""Assignees"" TEXT NOT NULL DEFAULT '[]';"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Issues"" ADD COLUMN ""DueDate"" TEXT NULL;"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Issues"" ADD COLUMN ""IsPinned"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Issues"" ADD COLUMN ""IsLocked"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Issues"" ADD COLUMN ""LockReason"" TEXT NULL;"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""PullRequests"" ADD COLUMN ""IsPinned"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""PullRequests"" ADD COLUMN ""IsLocked"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""PullRequests"" ADD COLUMN ""LockReason"" TEXT NULL;"); } catch { }
+
+    // From 20260318200000: TimeEntries, SystemSettings signing columns
     db.Database.ExecuteSqlRaw(@"
         CREATE TABLE IF NOT EXISTS ""TimeEntries"" (
             ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -154,10 +204,10 @@ using (var scope = app.Services.CreateScope())
             ""Note"" TEXT NULL,
             ""CreatedAt"" TEXT NOT NULL
         );");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_TimeEntries_RepoName_IssueNumber"" ON ""TimeEntries"" (""RepoName"", ""IssueNumber"");");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_TimeEntries_Username_IsRunning"" ON ""TimeEntries"" (""Username"", ""IsRunning"");");
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""SignMergeCommits"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""ServerGpgKeyId"" TEXT NOT NULL DEFAULT '';"); } catch { }
-    try { db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_TimeEntries_RepoName_IssueNumber"" ON ""TimeEntries"" (""RepoName"", ""IssueNumber"");"); } catch { }
-    try { db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_TimeEntries_Username_IsRunning"" ON ""TimeEntries"" (""Username"", ""IsRunning"");"); } catch { }
 
     if (!db.Users.Any())
     {
