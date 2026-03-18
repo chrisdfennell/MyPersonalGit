@@ -16,10 +16,12 @@ public class RepositoriesController : ControllerBase
     private readonly IBlameService _blameService;
     private readonly ITemplateService _templateService;
     private readonly ICodeOwnersService _codeOwnersService;
+    private readonly ITagProtectionService _tagProtectionService;
+    private readonly IRepositoryLabelService _labelService;
     private readonly IConfiguration _config;
     private readonly ILogger<RepositoriesController> _logger;
 
-    public RepositoriesController(IRepositoryService repoService, IReleaseService releaseService, IArchiveService archiveService, IBlameService blameService, ITemplateService templateService, ICodeOwnersService codeOwnersService, IConfiguration config, ILogger<RepositoriesController> logger)
+    public RepositoriesController(IRepositoryService repoService, IReleaseService releaseService, IArchiveService archiveService, IBlameService blameService, ITemplateService templateService, ICodeOwnersService codeOwnersService, ITagProtectionService tagProtectionService, IRepositoryLabelService labelService, IConfiguration config, ILogger<RepositoriesController> logger)
     {
         _repoService = repoService;
         _releaseService = releaseService;
@@ -27,6 +29,8 @@ public class RepositoriesController : ControllerBase
         _blameService = blameService;
         _templateService = templateService;
         _codeOwnersService = codeOwnersService;
+        _tagProtectionService = tagProtectionService;
+        _labelService = labelService;
         _config = config;
         _logger = logger;
     }
@@ -467,4 +471,115 @@ public class RepositoriesController : ControllerBase
         });
     }
 
+    // --- Tag Protection ---
+
+    [HttpGet("{repoName}/tag-protection")]
+    public async Task<IActionResult> ListTagProtectionRules(string repoName)
+    {
+        var rules = await _tagProtectionService.GetRulesAsync(repoName);
+        return Ok(rules.Select(r => new
+        {
+            r.Id, tag_pattern = r.TagPattern, prevent_deletion = r.PreventDeletion,
+            prevent_force_push = r.PreventForcePush, restrict_creation = r.RestrictCreation,
+            allowed_users = r.AllowedUsers, require_signed_tags = r.RequireSignedTags,
+            created_at = r.CreatedAt, updated_at = r.UpdatedAt
+        }));
+    }
+
+    [HttpPost("{repoName}/tag-protection")]
+    public async Task<IActionResult> AddTagProtectionRule(string repoName, [FromBody] TagProtectionRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.TagPattern))
+            return BadRequest(new { error = "Tag pattern is required" });
+
+        var rule = await _tagProtectionService.AddRuleAsync(repoName, new Models.TagProtectionRule
+        {
+            TagPattern = request.TagPattern,
+            PreventDeletion = request.PreventDeletion,
+            PreventForcePush = request.PreventForcePush,
+            RestrictCreation = request.RestrictCreation,
+            AllowedUsers = request.AllowedUsers ?? new(),
+            RequireSignedTags = request.RequireSignedTags
+        });
+
+        return Created($"/api/v1/repos/{repoName}/tag-protection/{rule.Id}", new
+        {
+            rule.Id, tag_pattern = rule.TagPattern, prevent_deletion = rule.PreventDeletion,
+            prevent_force_push = rule.PreventForcePush, restrict_creation = rule.RestrictCreation,
+            allowed_users = rule.AllowedUsers, require_signed_tags = rule.RequireSignedTags
+        });
+    }
+
+    [HttpDelete("{repoName}/tag-protection/{ruleId:int}")]
+    public async Task<IActionResult> DeleteTagProtectionRule(string repoName, int ruleId)
+    {
+        var deleted = await _tagProtectionService.DeleteRuleAsync(repoName, ruleId);
+        if (!deleted) return NotFound(new { error = "Tag protection rule not found" });
+        return NoContent();
+    }
+
+    public class TagProtectionRequest
+    {
+        public string TagPattern { get; set; } = "";
+        public bool PreventDeletion { get; set; } = true;
+        public bool PreventForcePush { get; set; } = true;
+        public bool RestrictCreation { get; set; }
+        public List<string>? AllowedUsers { get; set; }
+        public bool RequireSignedTags { get; set; }
+    }
+
+    // --- Repository Labels ---
+
+    [HttpGet("{repoName}/labels")]
+    public async Task<IActionResult> ListLabels(string repoName)
+    {
+        var labels = await _labelService.GetLabelsAsync(repoName);
+        return Ok(labels.Select(l => new
+        {
+            l.Id, l.Name, l.Color, l.Description, created_at = l.CreatedAt
+        }));
+    }
+
+    [HttpPost("{repoName}/labels")]
+    public async Task<IActionResult> AddLabel(string repoName, [FromBody] LabelRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { error = "Label name is required" });
+
+        var label = await _labelService.AddLabelAsync(repoName, request.Name, request.Color ?? "#0075ca", request.Description);
+        if (label == null)
+            return Conflict(new { error = "Label with this name already exists" });
+
+        return Created($"/api/v1/repos/{repoName}/labels/{label.Id}", new
+        {
+            label.Id, label.Name, label.Color, label.Description, created_at = label.CreatedAt
+        });
+    }
+
+    [HttpPut("{repoName}/labels/{labelId:int}")]
+    public async Task<IActionResult> UpdateLabel(string repoName, int labelId, [FromBody] LabelRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { error = "Label name is required" });
+
+        var label = await _labelService.UpdateLabelAsync(repoName, labelId, request.Name, request.Color ?? "#0075ca", request.Description);
+        if (label == null) return NotFound(new { error = "Label not found" });
+
+        return Ok(new { label.Id, label.Name, label.Color, label.Description });
+    }
+
+    [HttpDelete("{repoName}/labels/{labelId:int}")]
+    public async Task<IActionResult> DeleteLabel(string repoName, int labelId)
+    {
+        var deleted = await _labelService.DeleteLabelAsync(repoName, labelId);
+        if (!deleted) return NotFound(new { error = "Label not found" });
+        return NoContent();
+    }
+
+    public class LabelRequest
+    {
+        public string Name { get; set; } = "";
+        public string? Color { get; set; }
+        public string? Description { get; set; }
+    }
 }

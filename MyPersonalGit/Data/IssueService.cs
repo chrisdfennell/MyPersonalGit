@@ -10,8 +10,14 @@ public interface IIssueService
     Task<Issue> CreateIssueAsync(string repoName, string title, string? body, string author, List<string>? labels = null);
     Task<bool> UpdateIssueAsync(string repoName, int number, Action<Issue> updateAction);
     Task<bool> AddCommentAsync(string repoName, int number, string author, string body);
+    Task<bool> EditCommentAsync(int commentId, string body, string username);
+    Task<bool> DeleteCommentAsync(int commentId, string username);
     Task<bool> CloseIssueAsync(string repoName, int number);
     Task<bool> ReopenIssueAsync(string repoName, int number);
+    Task<bool> TogglePinAsync(string repoName, int number);
+    Task<bool> ToggleLockAsync(string repoName, int number, string? reason = null);
+    Task<bool> SetAssigneesAsync(string repoName, int number, List<string> assignees);
+    Task<bool> SetDueDateAsync(string repoName, int number, DateTime? dueDate);
 }
 
 public class IssueService : IIssueService
@@ -179,6 +185,89 @@ public class IssueService : IIssueService
         await db.SaveChangesAsync();
 
         _logger.LogInformation("Issue #{Number} reopened in {RepoName}", number, repoName);
+        return true;
+    }
+
+    public async Task<bool> EditCommentAsync(int commentId, string body, string username)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var comment = await db.IssueComments.FindAsync(commentId);
+        if (comment == null) return false;
+        if (!comment.Author.Equals(username, StringComparison.OrdinalIgnoreCase)) return false;
+
+        comment.Body = body;
+        comment.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Comment {Id} edited by {User}", commentId, username);
+        return true;
+    }
+
+    public async Task<bool> DeleteCommentAsync(int commentId, string username)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var comment = await db.IssueComments.FindAsync(commentId);
+        if (comment == null) return false;
+        if (!comment.Author.Equals(username, StringComparison.OrdinalIgnoreCase)) return false;
+
+        db.IssueComments.Remove(comment);
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Comment {Id} deleted by {User}", commentId, username);
+        return true;
+    }
+
+    public async Task<bool> TogglePinAsync(string repoName, int number)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var issue = await db.Issues.FirstOrDefaultAsync(i => i.RepoName == repoName && i.Number == number);
+        if (issue == null) return false;
+
+        issue.IsPinned = !issue.IsPinned;
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Issue #{Number} in {RepoName} pin toggled to {IsPinned}", number, repoName, issue.IsPinned);
+        return true;
+    }
+
+    public async Task<bool> ToggleLockAsync(string repoName, int number, string? reason = null)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var issue = await db.Issues.FirstOrDefaultAsync(i => i.RepoName == repoName && i.Number == number);
+        if (issue == null) return false;
+
+        issue.IsLocked = !issue.IsLocked;
+        issue.LockReason = issue.IsLocked ? reason : null;
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Issue #{Number} in {RepoName} lock toggled to {IsLocked}", number, repoName, issue.IsLocked);
+        return true;
+    }
+
+    public async Task<bool> SetAssigneesAsync(string repoName, int number, List<string> assignees)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var issue = await db.Issues.FirstOrDefaultAsync(i => i.RepoName == repoName && i.Number == number);
+        if (issue == null) return false;
+
+        issue.Assignees = assignees;
+        issue.Assignee = assignees.FirstOrDefault();
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Issue #{Number} in {RepoName} assignees set to [{Assignees}]", number, repoName, string.Join(", ", assignees));
+        return true;
+    }
+
+    public async Task<bool> SetDueDateAsync(string repoName, int number, DateTime? dueDate)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var issue = await db.Issues.FirstOrDefaultAsync(i => i.RepoName == repoName && i.Number == number);
+        if (issue == null) return false;
+
+        issue.DueDate = dueDate;
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Issue #{Number} in {RepoName} due date set to {DueDate}", number, repoName, dueDate);
         return true;
     }
 }

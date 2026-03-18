@@ -6,6 +6,7 @@
 @using MyPersonalGit.Data
 @using LibGit2Sharp
 @inject IIssueService IssueService
+@inject IIssueDependencyService DependencyService
 @inject IMilestoneService MilestoneService
 @inject IIssueTemplateService TemplateService
 @inject IReactionService ReactionService
@@ -245,9 +246,64 @@
                                     <i class="bi bi-arrow-counterclockwise me-1"></i> Reopen issue
                                 </button>
                             }
+                            <button class="btn btn-outline-secondary btn-sm" @onclick="TogglePin" title="@(currentIssue.IsPinned ? "Unpin" : "Pin")">
+                                <i class="bi @(currentIssue.IsPinned ? "bi-pin-angle-fill" : "bi-pin-angle")"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" @onclick="ToggleLock" title="@(currentIssue.IsLocked ? "Unlock" : "Lock")">
+                                <i class="bi @(currentIssue.IsLocked ? "bi-unlock" : "bi-lock")"></i>
+                            </button>
+                        </div>
+                        <div class="d-flex gap-2 mt-2">
+                            <div class="input-group input-group-sm" style="max-width: 250px;">
+                                <input type="text" class="form-control" @bind="newAssigneeInput" placeholder="Add assignee" />
+                                <button class="btn btn-outline-secondary" @onclick="AddAssignee"><i class="bi bi-person-plus"></i></button>
+                            </div>
+                            <div class="input-group input-group-sm" style="max-width: 200px;">
+                                <input type="date" class="form-control" @bind="dueDateInput" />
+                                <button class="btn btn-outline-secondary" @onclick="SetDueDate"><i class="bi bi-calendar-check"></i></button>
+                            </div>
                         </div>
                     }
                 </div>
+
+                @* Pinned / Locked indicators *@
+                @if (currentIssue.IsPinned)
+                {
+                    <div class="mb-2">
+                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle"><i class="bi bi-pin-angle-fill me-1"></i>Pinned</span>
+                    </div>
+                }
+                @if (currentIssue.IsLocked)
+                {
+                    <div class="mb-2">
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle"><i class="bi bi-lock-fill me-1"></i>Locked@(string.IsNullOrEmpty(currentIssue.LockReason) ? "" : $": {currentIssue.LockReason}")</span>
+                    </div>
+                }
+
+                @* Assignees *@
+                @if (currentIssue.Assignees.Any())
+                {
+                    <div class="mb-3">
+                        <span class="small fw-bold text-muted me-1">Assignees:</span>
+                        @foreach (var assignee in currentIssue.Assignees)
+                        {
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border me-1"><i class="bi bi-person me-1"></i>@assignee</span>
+                        }
+                    </div>
+                }
+
+                @* Due Date *@
+                @if (currentIssue.DueDate.HasValue)
+                {
+                    <div class="mb-3">
+                        @{
+                            var isOverdue = currentIssue.DueDate.Value < DateTime.UtcNow && currentIssue.State == IssueState.Open;
+                        }
+                        <span class="badge @(isOverdue ? "bg-danger" : "bg-info bg-opacity-10 text-info border border-info-subtle")">
+                            <i class="bi bi-calendar-event me-1"></i>Due @currentIssue.DueDate.Value.ToString("MMM d, yyyy")
+                        </span>
+                    </div>
+                }
 
                 @if (currentIssue.Labels.Any())
                 {
@@ -264,6 +320,80 @@
                         <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle">
                             <i class="bi bi-signpost me-1"></i> @currentIssueMilestone.Title
                         </span>
+                    </div>
+                }
+
+                @* Issue Dependencies *@
+                @if (blockedByIssues.Any() || blocksIssues.Any())
+                {
+                    <div class="card border shadow-sm mb-3">
+                        <div class="card-header bg-light-subtle py-2 small fw-bold">
+                            <i class="bi bi-diagram-3 me-1"></i> Dependencies
+                        </div>
+                        <div class="card-body py-2">
+                            @if (blockedByIssues.Any())
+                            {
+                                <div class="mb-2">
+                                    <span class="small fw-bold text-danger"><i class="bi bi-lock me-1"></i>Blocked by:</span>
+                                    <div class="ms-3">
+                                        @foreach (var dep in blockedByIssues)
+                                        {
+                                            <a href="/repo/@RepoName/issues/@dep.Number" class="d-block small text-decoration-none">
+                                                <span class="badge @(dep.State == IssueState.Open ? "bg-success" : "bg-secondary") me-1">#@dep.Number</span>
+                                                @dep.Title
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            @if (blocksIssues.Any())
+                            {
+                                <div>
+                                    <span class="small fw-bold text-warning"><i class="bi bi-unlock me-1"></i>Blocks:</span>
+                                    <div class="ms-3">
+                                        @foreach (var dep in blocksIssues)
+                                        {
+                                            <a href="/repo/@RepoName/issues/@dep.Number" class="d-block small text-decoration-none">
+                                                <span class="badge @(dep.State == IssueState.Open ? "bg-success" : "bg-secondary") me-1">#@dep.Number</span>
+                                                @dep.Title
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (UserService.IsLoggedIn && currentIssue.State == IssueState.Open)
+                {
+                    <div class="mb-3">
+                        @if (showAddDependency)
+                        {
+                            <div class="border rounded p-2 bg-light-subtle">
+                                <div class="d-flex align-items-end gap-2">
+                                    <div>
+                                        <label class="form-label small fw-bold mb-1">Issue #</label>
+                                        <input type="number" class="form-control form-control-sm" style="width:100px;" @bind="newDepIssueNumber" min="1" />
+                                    </div>
+                                    <div>
+                                        <label class="form-label small fw-bold mb-1">Relationship</label>
+                                        <select class="form-select form-select-sm" @bind="newDepType">
+                                            <option value="blocked_by">is blocked by</option>
+                                            <option value="blocks">blocks</option>
+                                        </select>
+                                    </div>
+                                    <button class="btn btn-gh-primary btn-sm" @onclick="AddDependency" disabled="@(newDepIssueNumber <= 0)">Add</button>
+                                    <button class="btn btn-light btn-sm border" @onclick="() => showAddDependency = false">Cancel</button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-secondary btn-sm" @onclick="() => showAddDependency = true">
+                                <i class="bi bi-diagram-3 me-1"></i>Add dependency
+                            </button>
+                        }
                     </div>
                 }
 
@@ -312,15 +442,49 @@
                                 <i class="bi bi-person-circle"></i>
                                 <strong>@comment.Author</strong>
                                 <span class="text-muted small">commented @FormatDate(comment.CreatedAt)</span>
+                                @if (comment.UpdatedAt.HasValue)
+                                {
+                                    <span class="text-muted small fst-italic">(edited)</span>
+                                }
+                                @if (UserService.IsLoggedIn && comment.Author.Equals(UserService.Username, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <div class="ms-auto d-flex gap-1">
+                                        <button class="btn btn-link btn-sm text-muted p-0" @onclick="() => StartEditComment(comment)" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-link btn-sm text-danger p-0" @onclick="() => DeleteComment(comment.Id)" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                }
                             </div>
                             <div class="card-body">
-                                <div class="markdown-body">@((MarkupString)RenderMarkdown(comment.Body))</div>
+                                @if (editingCommentId == comment.Id)
+                                {
+                                    <textarea class="form-control mb-2" rows="4" @bind="editCommentBody"></textarea>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-success btn-sm" @onclick="SaveEditComment">Save</button>
+                                        <button class="btn btn-light btn-sm border" @onclick="CancelEditComment">Cancel</button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="markdown-body">@((MarkupString)RenderMarkdown(comment.Body))</div>
+                                }
                             </div>
                         </div>
                     }
                 }
 
-                @if (UserService.IsLoggedIn)
+                @if (currentIssue.IsLocked)
+                {
+                    <div class="card border-warning">
+                        <div class="card-body text-center text-muted py-3">
+                            <i class="bi bi-lock-fill me-1"></i> This conversation has been locked. Only collaborators can comment.
+                        </div>
+                    </div>
+                }
+                else if (UserService.IsLoggedIn)
                 {
                     <div class="card">
                         <div class="card-header bg-light">
@@ -388,6 +552,14 @@
                                         <i class="bi bi-check-circle-fill text-danger"></i>
                                     }
                                     <h6 class="mb-0">@issue.Title</h6>
+                                    @if (issue.IsPinned)
+                                    {
+                                        <i class="bi bi-pin-angle-fill text-warning" style="font-size: 12px;" title="Pinned"></i>
+                                    }
+                                    @if (issue.IsLocked)
+                                    {
+                                        <i class="bi bi-lock-fill text-muted" style="font-size: 12px;" title="Locked"></i>
+                                    }
                                     @if (issue.IsDraft)
                                     {
                                         <span class="badge bg-secondary" style="font-size: 10px;">Draft</span>
@@ -399,6 +571,15 @@
                                 </div>
                                 <small class="text-muted">
                                     #@issue.Number opened @FormatDate(issue.CreatedAt) by @issue.Author
+                                    @if (issue.Assignees.Any())
+                                    {
+                                        <span> · <i class="bi bi-person"></i> @string.Join(", ", issue.Assignees)</span>
+                                    }
+                                    @if (issue.DueDate.HasValue)
+                                    {
+                                        var overdue = issue.DueDate.Value < DateTime.UtcNow && issue.State == IssueState.Open;
+                                        <span class="@(overdue ? "text-danger" : "")"> · <i class="bi bi-calendar-event"></i> @issue.DueDate.Value.ToString("MMM d")</span>
+                                    }
                                     @if (issue.Comments.Any())
                                     {
                                         <span> · <i class="bi bi-chat-left"></i> @issue.Comments.Count</span>
@@ -510,6 +691,21 @@
     private bool newIssueIsDraft;
     private int selectedTemplateId;
 
+    // Issue Dependencies
+    private List<Issue> blockedByIssues = new();
+    private List<Issue> blocksIssues = new();
+    private bool showAddDependency;
+    private int newDepIssueNumber;
+    private string newDepType = "blocked_by";
+
+    // Comment editing
+    private int? editingCommentId;
+    private string editCommentBody = "";
+
+    // Assignees & Due Date
+    private string newAssigneeInput = "";
+    private DateTime? dueDateInput;
+
     // Issue Templates
     private List<IssueTemplate> issueTemplates = new();
     private bool showNewTemplateModal;
@@ -533,7 +729,7 @@
             var q = issues.Where(i => filterState == "open" ? i.State == IssueState.Open : i.State == IssueState.Closed);
             if (filterMilestoneId > 0)
                 q = q.Where(i => i.MilestoneId == filterMilestoneId);
-            return q.OrderByDescending(i => i.CreatedAt).ToList();
+            return q.OrderByDescending(i => i.IsPinned).ThenByDescending(i => i.CreatedAt).ToList();
         }
     }
 
@@ -569,7 +765,29 @@
                     currentIssueMilestone = milestones.FirstOrDefault(m => m.Id == currentIssue.MilestoneId);
                 }
             }
+            await LoadDependencies();
         }
+    }
+
+    private async Task LoadDependencies()
+    {
+        if (!Number.HasValue) return;
+        blockedByIssues = await DependencyService.GetBlockingIssuesAsync(RepoName, Number.Value);
+        blocksIssues = await DependencyService.GetBlockedByIssuesAsync(RepoName, Number.Value);
+    }
+
+    private async Task AddDependency()
+    {
+        if (!Number.HasValue || newDepIssueNumber <= 0) return;
+
+        if (newDepType == "blocked_by")
+            await DependencyService.AddDependencyAsync(RepoName, newDepIssueNumber, Number.Value, UserService.Username ?? "");
+        else
+            await DependencyService.AddDependencyAsync(RepoName, Number.Value, newDepIssueNumber, UserService.Username ?? "");
+
+        newDepIssueNumber = 0;
+        showAddDependency = false;
+        await LoadDependencies();
     }
 
     private async Task LoadMilestones()
@@ -676,6 +894,65 @@
             await IssueService.ReopenIssueAsync(RepoName, Number.Value);
             await LoadIssues();
         }
+    }
+
+    private void StartEditComment(IssueComment comment)
+    {
+        editingCommentId = comment.Id;
+        editCommentBody = comment.Body;
+    }
+
+    private void CancelEditComment()
+    {
+        editingCommentId = null;
+        editCommentBody = "";
+    }
+
+    private async Task SaveEditComment()
+    {
+        if (editingCommentId == null || string.IsNullOrWhiteSpace(editCommentBody)) return;
+        await IssueService.EditCommentAsync(editingCommentId.Value, editCommentBody, UserService.Username);
+        editingCommentId = null;
+        editCommentBody = "";
+        await LoadIssues();
+    }
+
+    private async Task DeleteComment(int commentId)
+    {
+        await IssueService.DeleteCommentAsync(commentId, UserService.Username);
+        await LoadIssues();
+    }
+
+    private async Task TogglePin()
+    {
+        if (!UserService.IsLoggedIn || !Number.HasValue) return;
+        await IssueService.TogglePinAsync(RepoName, Number.Value);
+        await LoadIssues();
+    }
+
+    private async Task ToggleLock()
+    {
+        if (!UserService.IsLoggedIn || !Number.HasValue) return;
+        await IssueService.ToggleLockAsync(RepoName, Number.Value);
+        await LoadIssues();
+    }
+
+    private async Task AddAssignee()
+    {
+        if (!UserService.IsLoggedIn || !Number.HasValue || string.IsNullOrWhiteSpace(newAssigneeInput)) return;
+        var assignees = new List<string>(currentIssue?.Assignees ?? new());
+        if (!assignees.Contains(newAssigneeInput, StringComparer.OrdinalIgnoreCase))
+            assignees.Add(newAssigneeInput);
+        await IssueService.SetAssigneesAsync(RepoName, Number.Value, assignees);
+        newAssigneeInput = "";
+        await LoadIssues();
+    }
+
+    private async Task SetDueDate()
+    {
+        if (!UserService.IsLoggedIn || !Number.HasValue) return;
+        await IssueService.SetDueDateAsync(RepoName, Number.Value, dueDateInput);
+        await LoadIssues();
     }
 
     private string FormatDate(DateTime date)

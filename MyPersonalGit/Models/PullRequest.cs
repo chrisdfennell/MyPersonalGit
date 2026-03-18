@@ -22,6 +22,9 @@ public class PullRequest
     public bool IsDraft { get; set; }
     public bool AutoMergeEnabled { get; set; }
     public string? AutoMergeStrategy { get; set; } // "MergeCommit", "Squash", "Rebase"
+    public bool IsPinned { get; set; }
+    public bool IsLocked { get; set; }
+    public string? LockReason { get; set; }
 }
 
 public enum PullRequestState

@@ -267,6 +267,53 @@ public class PullRequestService : IPullRequestService
                 // Linear history is enforced by only allowing squash or rebase merges
                 // This is informational — actual enforcement is in MergePullRequestAsync
             }
+
+            // Check CODEOWNERS approval requirement
+            if (protectionRule.RequireCodeOwnersApproval)
+            {
+                var coRepoPath = await GetRepoPath(repoName);
+                if (coRepoPath != null && GitRepository.IsValid(coRepoPath))
+                {
+                    try
+                    {
+                        using var coRepo = new GitRepository(coRepoPath);
+                        var coSource = coRepo.Branches[pr.SourceBranch];
+                        var coTarget = coRepo.Branches[pr.TargetBranch];
+
+                        if (coSource?.Tip != null && coTarget?.Tip != null)
+                        {
+                            var diff = coRepo.Diff.Compare<TreeChanges>(coTarget.Tip.Tree, coSource.Tip.Tree);
+                            var changedFiles = diff.Select(c => c.Path).ToList();
+                            var ownersByFile = _codeOwnersService.GetCodeOwnersForPullRequest(coRepoPath, pr.TargetBranch, changedFiles);
+
+                            var approvedAuthors = pr.Reviews
+                                .Where(r => r.State == ReviewState.Approved)
+                                .Select(r => r.Author)
+                                .Distinct(StringComparer.OrdinalIgnoreCase)
+                                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                            var unapprovedFiles = new List<string>();
+                            foreach (var (file, owners) in ownersByFile)
+                            {
+                                if (!owners.Any()) continue;
+                                if (!owners.Any(o => approvedAuthors.Contains(o)))
+                                    unapprovedFiles.Add(file);
+                            }
+
+                            if (unapprovedFiles.Any())
+                            {
+                                var fileList = string.Join(", ", unapprovedFiles.Take(3));
+                                var more = unapprovedFiles.Count > 3 ? $" and {unapprovedFiles.Count - 3} more" : "";
+                                return (false, $"CODEOWNERS approval required for: {fileList}{more}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to check CODEOWNERS approval for PR #{Number} in {RepoName}", number, repoName);
+                    }
+                }
+            }
         }
 
         var repoPath = await GetRepoPath(repoName);
@@ -360,6 +407,45 @@ public class PullRequestService : IPullRequestService
 
             if (protectionRule.RequireLinearHistory && strategy == MergeStrategy.MergeCommit)
                 return (false, "Branch protection: linear history required — use squash or rebase merge strategy");
+
+            // Enforce CODEOWNERS approval
+            if (protectionRule.RequireCodeOwnersApproval)
+            {
+                var coRepoPath = await GetRepoPath(repoName);
+                if (coRepoPath != null && GitRepository.IsValid(coRepoPath))
+                {
+                    try
+                    {
+                        using var coRepo = new GitRepository(coRepoPath);
+                        var coSource = coRepo.Branches[pr.SourceBranch];
+                        var coTarget = coRepo.Branches[pr.TargetBranch];
+
+                        if (coSource?.Tip != null && coTarget?.Tip != null)
+                        {
+                            var diff = coRepo.Diff.Compare<TreeChanges>(coTarget.Tip.Tree, coSource.Tip.Tree);
+                            var changedFiles = diff.Select(c => c.Path).ToList();
+                            var ownersByFile = _codeOwnersService.GetCodeOwnersForPullRequest(coRepoPath, pr.TargetBranch, changedFiles);
+
+                            var approvedAuthors = pr.Reviews
+                                .Where(r => r.State == ReviewState.Approved)
+                                .Select(r => r.Author)
+                                .Distinct(StringComparer.OrdinalIgnoreCase)
+                                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                            foreach (var (file, owners) in ownersByFile)
+                            {
+                                if (!owners.Any()) continue;
+                                if (!owners.Any(o => approvedAuthors.Contains(o)))
+                                    return (false, $"Branch protection: CODEOWNERS approval required for '{file}'");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to check CODEOWNERS for merge of PR #{Number}", number);
+                    }
+                }
+            }
         }
 
         var repoPath = await GetRepoPath(repoName);

@@ -11,10 +11,12 @@ namespace MyPersonalGit.Controllers;
 public class HooksController : ControllerBase
 {
     private readonly IBranchProtectionService _branchProtectionService;
+    private readonly ITagProtectionService _tagProtectionService;
 
-    public HooksController(IBranchProtectionService branchProtectionService)
+    public HooksController(IBranchProtectionService branchProtectionService, ITagProtectionService tagProtectionService)
     {
         _branchProtectionService = branchProtectionService;
+        _tagProtectionService = tagProtectionService;
     }
 
     /// <summary>
@@ -29,6 +31,60 @@ public class HooksController : ControllerBase
 
         foreach (var refUpdate in request.Updates)
         {
+            // Check tag protection rules
+            if (refUpdate.RefName.StartsWith("refs/tags/"))
+            {
+                var tagName = refUpdate.RefName["refs/tags/".Length..];
+                var tagRule = await _tagProtectionService.GetMatchingRuleAsync(request.RepoName, tagName);
+                if (tagRule != null)
+                {
+                    // Tag deletion
+                    if (refUpdate.NewSha == "0000000000000000000000000000000000000000")
+                    {
+                        if (tagRule.PreventDeletion)
+                        {
+                            var pushUser = request.PushUser ?? "";
+                            if (!tagRule.AllowedUsers.Contains(pushUser, StringComparer.OrdinalIgnoreCase))
+                                return Ok(new PreReceiveResponse
+                                {
+                                    Allowed = false,
+                                    Message = $"Tag protection: deletion of tag '{tagName}' is not allowed"
+                                });
+                        }
+                        continue;
+                    }
+
+                    // Tag creation
+                    if (refUpdate.OldSha == "0000000000000000000000000000000000000000")
+                    {
+                        if (tagRule.RestrictCreation)
+                        {
+                            var pushUser = request.PushUser ?? "";
+                            if (!tagRule.AllowedUsers.Contains(pushUser, StringComparer.OrdinalIgnoreCase))
+                                return Ok(new PreReceiveResponse
+                                {
+                                    Allowed = false,
+                                    Message = $"Tag protection: creation of tag '{tagName}' is restricted"
+                                });
+                        }
+                        continue;
+                    }
+
+                    // Tag force update (move)
+                    if (refUpdate.IsForcePush && tagRule.PreventForcePush)
+                    {
+                        var pushUser = request.PushUser ?? "";
+                        if (!tagRule.AllowedUsers.Contains(pushUser, StringComparer.OrdinalIgnoreCase))
+                            return Ok(new PreReceiveResponse
+                            {
+                                Allowed = false,
+                                Message = $"Tag protection: force update of tag '{tagName}' is not allowed"
+                            });
+                    }
+                }
+                continue;
+            }
+
             // Extract branch name from ref (refs/heads/main -> main)
             if (!refUpdate.RefName.StartsWith("refs/heads/"))
                 continue;

@@ -124,6 +124,10 @@ builder.Services.AddSingleton<IMigrationService, MigrationService>();
 builder.Services.AddSingleton<MigrationChannel>();
 builder.Services.AddHostedService<MigrationWorkerService>();
 builder.Services.AddSingleton<IConflictResolutionService, ConflictResolutionService>();
+builder.Services.AddSingleton<IIssueDependencyService, IssueDependencyService>();
+builder.Services.AddSingleton<IRepositoryLabelService, RepositoryLabelService>();
+builder.Services.AddSingleton<ITagProtectionService, TagProtectionService>();
+builder.Services.AddSingleton<ICodeSearchService, CodeSearchService>();
 builder.Services.AddScoped<CurrentUserService>();
 
 var app = builder.Build();

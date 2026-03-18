@@ -75,6 +75,15 @@ public class AppDbContext : DbContext
     // Branch Protection
     public DbSet<BranchProtectionRule> BranchProtectionRules => Set<BranchProtectionRule>();
 
+    // Tag Protection
+    public DbSet<TagProtectionRule> TagProtectionRules => Set<TagProtectionRule>();
+
+    // Issue Dependencies
+    public DbSet<IssueDependency> IssueDependencies => Set<IssueDependency>();
+
+    // Repository Labels
+    public DbSet<RepositoryLabel> RepositoryLabels => Set<RepositoryLabel>();
+
     // Admin
     public DbSet<SystemSettings> SystemSettings => Set<SystemSettings>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -215,6 +224,7 @@ public class AppDbContext : DbContext
         {
             e.HasIndex(i => new { i.RepoName, i.Number }).IsUnique();
             e.Property(i => i.Labels).HasConversion(listStringConverter, listStringComparer);
+            e.Property(i => i.Assignees).HasConversion(listStringConverter, listStringComparer);
             e.HasMany(i => i.Comments)
                 .WithOne()
                 .HasForeignKey(c => c.IssueId)
@@ -532,6 +542,27 @@ public class AppDbContext : DbContext
         {
             e.HasIndex(m => m.Owner);
             e.HasIndex(m => m.Status);
+        });
+
+        // --- TagProtectionRule ---
+        modelBuilder.Entity<TagProtectionRule>(e =>
+        {
+            e.Property(r => r.AllowedUsers).HasConversion(listStringConverter, listStringComparer);
+            e.HasIndex(r => r.RepoName);
+        });
+
+        // --- IssueDependency ---
+        modelBuilder.Entity<IssueDependency>(e =>
+        {
+            e.HasIndex(d => new { d.RepoName, d.BlockingIssueNumber });
+            e.HasIndex(d => new { d.RepoName, d.BlockedIssueNumber });
+            e.HasIndex(d => new { d.RepoName, d.BlockingIssueNumber, d.BlockedIssueNumber }).IsUnique();
+        });
+
+        // --- RepositoryLabel ---
+        modelBuilder.Entity<RepositoryLabel>(e =>
+        {
+            e.HasIndex(l => new { l.RepoName, l.Name }).IsUnique();
         });
     }
 }
