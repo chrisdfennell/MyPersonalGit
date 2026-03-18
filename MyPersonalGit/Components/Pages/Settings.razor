@@ -363,6 +363,17 @@ else
                         </button>
                     </div>
                     <div class="card-body">
+                        @if (!string.IsNullOrEmpty(lastGeneratedToken))
+                        {
+                            <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
+                                <i class="bi bi-key-fill"></i>
+                                <div class="flex-grow-1">
+                                    <strong>Your new token:</strong>
+                                    <code class="ms-2 user-select-all">@lastGeneratedToken</code>
+                                </div>
+                                <small class="text-muted">Copy it now — you won't see it again.</small>
+                            </div>
+                        }
                         @if (Tokens.Count == 0)
                         {
                             <p class="text-muted">No personal access tokens</p>
@@ -714,6 +725,7 @@ else
 
     private bool ShowAddToken = false;
     private string NewTokenName = "";
+    private string lastGeneratedToken = "";
     private bool TokenScopeRepo = false;
     private bool TokenScopeUser = false;
     private bool TokenScopeAdmin = false;
@@ -932,7 +944,7 @@ else
         if (TokenScopeAdmin) scopes.Add("admin");
 
         DateTime? expiresAt = TokenExpirationDays > 0 ? DateTime.UtcNow.AddDays(TokenExpirationDays) : null;
-        await ProfileService.CreateTokenAsync(UserService.Username, NewTokenName, scopes.ToArray(), expiresAt);
+        lastGeneratedToken = await ProfileService.CreateTokenAsync(UserService.Username, NewTokenName, scopes.ToArray(), expiresAt);
         ShowAddToken = false;
         NewTokenName = "";
         TokenScopeRepo = false;
