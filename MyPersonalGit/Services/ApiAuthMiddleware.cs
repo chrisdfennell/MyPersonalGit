@@ -46,16 +46,10 @@ public sealed class ApiAuthMiddleware
         var projectRoot = config["Git:ProjectRoot"] ?? "/repos";
         var dataPath = Path.Combine(projectRoot, ".mypersonalgit");
 
-        // Search all user token files for a match
-        if (!Directory.Exists(dataPath))
-        {
-            context.Response.StatusCode = 401;
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(JsonSerializer.Serialize(new { error = "Invalid token" }));
-            return;
-        }
-
+        // Search user token files for a match
         PersonalAccessToken? matchedToken = null;
+        if (Directory.Exists(dataPath))
+        {
         foreach (var file in Directory.GetFiles(dataPath, "*_tokens.json"))
         {
             try
@@ -68,6 +62,7 @@ public sealed class ApiAuthMiddleware
                 if (matchedToken != null) break;
             }
             catch (Exception ex) { _logger.LogWarning(ex, "Failed to read token file {File}", file); }
+        }
         }
 
         // Fallback: check database for tokens
