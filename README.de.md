@@ -4,11 +4,12 @@
 
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/) [![Blazor Server](https://img.shields.io/badge/Blazor-Server-512BD4?logo=blazor&logoColor=white)](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor) [![SQLite](https://img.shields.io/badge/SQLite-Default-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Optional-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/) [![Docker](https://img.shields.io/badge/Docker-Hub-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/fennch/mypersonalgit) [![CI/CD](https://img.shields.io/badge/CI%2FCD-Auto_Release-brightgreen?logo=githubactions&logoColor=white)](#ci-cd) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![GitHub last commit](https://img.shields.io/github/last-commit/ChrisDFennell/MyPersonalGit)](https://github.com/ChrisDFennell/MyPersonalGit)
 
-Ein selbst gehosteter Git-Server mit einer GitHub-aehnlichen Weboberflaeche, erstellt mit ASP.NET Core und Blazor Server. Durchsuchen Sie Repositories, verwalten Sie Issues, Pull Requests, Wikis, Projekte und mehr -- alles von Ihrem eigenen Rechner oder Server.
+Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, gebaut mit ASP.NET Core und Blazor Server. Durchsuchen Sie Repositories, verwalten Sie Issues, Pull Requests, Wikis, Projekte und mehr — alles auf Ihrem eigenen Rechner oder Server.
 
 ![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot.png)
 ![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot2.png)
 ![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot3.png)
+
 ---
 
 ## Inhaltsverzeichnis
@@ -17,34 +18,34 @@ Ein selbst gehosteter Git-Server mit einer GitHub-aehnlichen Weboberflaeche, ers
 - [Technologie-Stack](#technologie-stack)
 - [Schnellstart](#schnellstart)
   - [Docker (Empfohlen)](#docker-empfohlen)
-  - [Lokal ausfuehren](#lokal-ausfuehren)
+  - [Lokal ausführen](#lokal-ausführen)
   - [Umgebungsvariablen](#umgebungsvariablen)
-- [Nutzung](#nutzung)
+- [Verwendung](#verwendung)
   - [Anmelden](#1-anmelden)
   - [Ein Repository erstellen](#2-ein-repository-erstellen)
   - [Klonen und Pushen](#3-klonen-und-pushen)
   - [Aus einer IDE klonen](#4-aus-einer-ide-klonen)
   - [Web-Editor](#5-den-web-editor-verwenden)
   - [Container Registry](#6-container-registry)
-  - [Paket-Registry](#7-paket-registry)
-  - [Pages (Statische Webseiten)](#8-pages-statisches-webseiten-hosting)
+  - [Package Registry](#7-package-registry)
+  - [Pages (Statische Websites)](#8-pages-statisches-website-hosting)
   - [Push-Benachrichtigungen](#9-push-benachrichtigungen)
-  - [SSH-Schluessel-Authentifizierung](#10-ssh-schluessel-authentifizierung)
+  - [SSH-Schlüssel-Authentifizierung](#10-ssh-schlüssel-authentifizierung)
   - [LDAP / Active Directory](#11-ldap--active-directory-authentifizierung)
-  - [Repository-Geheimnisse](#12-repository-geheimnisse)
+  - [Repository Secrets](#12-repository-secrets)
   - [OAuth / SSO-Anmeldung](#13-oauth--sso-anmeldung)
   - [Repository importieren](#14-repository-importieren)
   - [Forking & Upstream-Synchronisation](#15-forking--upstream-synchronisation)
   - [CI/CD Auto-Release](#16-cicd-auto-release)
   - [RSS/Atom-Feeds](#17-rssatom-feeds)
-- [Datenbank-Konfiguration](#datenbank-konfiguration)
+- [Datenbankkonfiguration](#datenbankkonfiguration)
   - [PostgreSQL verwenden](#postgresql-verwenden)
-  - [Umschalten ueber das Admin-Dashboard](#umschalten-ueber-das-admin-dashboard)
-  - [Eine Datenbank waehlen](#eine-datenbank-waehlen)
-- [Auf einem NAS bereitstellen](#auf-einem-nas-bereitstellen)
+  - [Umschalten über das Admin-Dashboard](#umschalten-über-das-admin-dashboard)
+  - [Datenbank auswählen](#datenbank-auswählen)
+- [Deployment auf einem NAS](#deployment-auf-einem-nas)
 - [Konfiguration](#konfiguration)
 - [Projektstruktur](#projektstruktur)
-- [Tests ausfuehren](#tests-ausfuehren)
+- [Tests ausführen](#tests-ausführen)
 - [Lizenz](#lizenz)
 
 ---
@@ -52,115 +53,115 @@ Ein selbst gehosteter Git-Server mit einer GitHub-aehnlichen Weboberflaeche, ers
 ## Funktionen
 
 ### Code & Repositories
-- **Repository-Verwaltung** -- Erstellen, durchsuchen und loeschen Sie Git-Repositories mit einem vollstaendigen Code-Browser, Datei-Editor, Commit-Verlauf, Branches und Tags
-- **Repository-Import/Migration** -- Importieren Sie Repositories von GitHub, GitLab, Bitbucket oder einer beliebigen Git-URL mit optionalem Import von Issues und PRs. Hintergrundverarbeitung mit Fortschrittsverfolgung
-- **Repository-Archivierung** -- Markieren Sie Repositories als schreibgeschuetzt mit visuellen Badges; Pushes werden fuer archivierte Repos blockiert
-- **Git Smart HTTP** -- Klonen, Fetchen und Pushen ueber HTTP mit Basic Auth
-- **Integrierter SSH-Server** -- Nativer SSH-Server fuer Git-Operationen -- kein externes OpenSSH erforderlich. Unterstuetzt ECDH-Schluesselaustausch, AES-CTR-Verschluesselung und Public-Key-Authentifizierung (RSA, ECDSA, Ed25519)
-- **SSH-Schluessel-Authentifizierung** -- Fuegen Sie SSH-Public-Keys zu Ihrem Konto hinzu und authentifizieren Sie Git-Operationen ueber SSH mit automatisch verwalteten `authorized_keys` (oder dem integrierten SSH-Server)
-- **Forks & Upstream-Synchronisation** -- Forken Sie Repositories, synchronisieren Sie Forks mit dem Upstream per Mausklick und sehen Sie Fork-Beziehungen in der Oberflaeche
-- **Git LFS** -- Large File Storage-Unterstuetzung fuer die Verfolgung binaerer Dateien
-- **Repository-Spiegelung** -- Spiegeln Sie Repositories zu/von externen Git-Remotes
-- **Vergleichsansicht** -- Vergleichen Sie Branches mit Voraus-/Rueckstand-Commit-Zaehlung und vollstaendigem Diff-Rendering
-- **Sprachstatistiken** -- GitHub-aehnliche Sprachverteilungsleiste auf jeder Repository-Seite
-- **Branch-Schutz** -- Konfigurierbare Regeln fuer erforderliche Reviews, Status-Checks, Verhinderung von Force-Push und CODEOWNERS-Genehmigungsdurchsetzung
-- **Tag-Schutz** -- Schuetzen Sie Tags vor Loeschung, erzwungenen Aktualisierungen und unbefugter Erstellung mit Glob-Pattern-Matching und benutzerspezifischen Erlaubnislisten
-- **Commit-Signatur-Verifizierung** -- GPG-Signaturverifizierung fuer Commits und annotierte Tags mit "Verified" / "Signed"-Badges in der Oberflaeche
-- **Repository-Labels** -- Verwalten Sie Labels mit benutzerdefinierten Farben pro Repository; Labels werden beim Erstellen von Repos aus Templates automatisch kopiert
-- **AGit Flow** -- Push-to-Review-Workflow: `git push origin HEAD:refs/for/main` erstellt einen Pull Request ohne Forking oder Erstellen von Remote-Branches. Aktualisiert vorhandene offene PRs bei nachfolgenden Pushes
-- **Erkunden** -- Durchsuchen Sie alle zugaenglichen Repositories mit Suche, Sortierung und Themenfilterung
-- **Suche** -- Volltextsuche ueber Repositories, Issues, PRs und Code
+- **Repository-Verwaltung** — Erstellen, durchsuchen und löschen Sie Git-Repositories mit einem vollständigen Code-Browser, Datei-Editor, Commit-Verlauf, Branches und Tags
+- **Repository-Import/Migration** — Importieren Sie Repositories von GitHub, GitLab, Bitbucket oder einer beliebigen Git-URL mit optionalem Issue- und PR-Import. Hintergrundverarbeitung mit Fortschrittsanzeige
+- **Repository-Archivierung** — Markieren Sie Repositories als schreibgeschützt mit visuellen Badges; Pushes werden bei archivierten Repos blockiert
+- **Git Smart HTTP** — Klonen, Fetchen und Pushen über HTTP mit Basic Auth
+- **Integrierter SSH-Server** — Nativer SSH-Server für Git-Operationen — kein externes OpenSSH erforderlich. Unterstützt ECDH-Schlüsselaustausch, AES-CTR-Verschlüsselung und Public-Key-Authentifizierung (RSA, ECDSA, Ed25519)
+- **SSH-Schlüssel-Authentifizierung** — Fügen Sie SSH-Public-Keys zu Ihrem Konto hinzu und authentifizieren Sie Git-Operationen über SSH mit automatisch verwalteter `authorized_keys` (oder dem integrierten SSH-Server)
+- **Forks & Upstream-Synchronisation** — Forken Sie Repositories, synchronisieren Sie Forks mit einem Klick und sehen Sie Fork-Beziehungen in der Oberfläche
+- **Git LFS** — Large File Storage-Unterstützung für die Verwaltung binärer Dateien
+- **Repository-Spiegelung** — Spiegeln Sie Repositories zu/von externen Git-Remotes
+- **Vergleichsansicht** — Vergleichen Sie Branches mit Ahead/Behind-Commit-Zählern und vollständigem Diff-Rendering
+- **Sprachstatistiken** — GitHub-ähnliche Sprachaufschlüsselung auf jeder Repository-Seite
+- **Branch Protection** — Konfigurierbare Regeln für erforderliche Reviews, Status-Checks, Schutz vor Force-Push und CODEOWNERS-Genehmigungsdurchsetzung
+- **Tag Protection** — Schützen Sie Tags vor Löschung, erzwungenen Updates und unbefugter Erstellung mit Glob-Pattern-Matching und benutzerspezifischen Freigabelisten
+- **Commit-Signatur-Verifizierung** — GPG-Signaturverifizierung bei Commits und annotierten Tags mit "Verified"/"Signed"-Badges in der Oberfläche
+- **Repository Labels** — Verwalten Sie Labels mit benutzerdefinierten Farben pro Repository; Labels werden automatisch kopiert, wenn Repos aus Vorlagen erstellt werden
+- **AGit Flow** — Push-to-Review-Workflow: `git push origin HEAD:refs/for/main` erstellt einen Pull Request, ohne zu forken oder Remote-Branches zu erstellen. Aktualisiert bestehende offene PRs bei nachfolgenden Pushes
+- **Entdecken** — Durchsuchen Sie alle zugänglichen Repositories mit Suche, Sortierung und Topic-Filterung
+- **Suche** — Volltextsuche über Repositories, Issues, PRs und Code
 
 ### Zusammenarbeit
-- **Issues & Pull Requests** -- Erstellen, kommentieren, schliessen/wiedereroeffnen Sie Issues und PRs mit Labels, mehreren Zugewiesenen, Faelligkeitsdaten und Reviews. Mergen Sie PRs mit Merge-Commit-, Squash- oder Rebase-Strategien. Webbasierte Merge-Konfliktloesung mit Side-by-Side-Diff-Ansicht
-- **Issue-Abhaengigkeiten** -- Definieren Sie "blockiert durch"- und "blockiert"-Beziehungen zwischen Issues mit zirkulaerer Abhaengigkeitserkennung
-- **Issue-Anheften & Sperren** -- Heften Sie wichtige Issues oben an die Liste an und sperren Sie Konversationen, um weitere Kommentare zu verhindern
-- **Kommentare bearbeiten & loeschen** -- Bearbeiten oder loeschen Sie Ihre eigenen Kommentare zu Issues und Pull Requests mit "(bearbeitet)"-Anzeige
-- **Merge-Konfliktloesung** -- Loesen Sie Merge-Konflikte direkt im Browser mit einem visuellen Editor, der Base/Ours/Theirs-Ansichten, Schnell-Akzeptieren-Buttons und Konfliktmarkierungsvalidierung zeigt
-- **Diskussionen** -- GitHub Discussions-aehnliche Thread-Konversationen pro Repository mit Kategorien (Allgemein, Fragen & Antworten, Ankuendigungen, Ideen, Zeigen & Erzaehlen, Umfragen), Anheften/Sperren, als Antwort markieren und Abstimmung
-- **Code-Review-Vorschlaege** -- Der Modus "Aenderungen vorschlagen" in Inline-Reviews fuer PRs ermoeglicht es Reviewern, Code-Ersetzungen direkt im Diff vorzuschlagen
-- **Reaktions-Emoji** -- Reagieren Sie auf Issues, PRs, Diskussionen und Kommentare mit Daumen hoch/runter, Herz, Lachen, Hurra, Verwirrt, Rakete und Augen
-- **CODEOWNERS** -- Automatische Zuweisung von PR-Reviewern basierend auf Dateipfaden mit optionaler Durchsetzung, die CODEOWNERS-Genehmigung vor dem Merge erfordert
-- **Repository-Templates** -- Erstellen Sie neue Repositories aus Templates mit automatischem Kopieren von Dateien, Labels, Issue-Templates und Branch-Schutzregeln
-- **Entwurfs-Issues & Issue-Templates** -- Erstellen Sie Entwurfs-Issues (in Bearbeitung) und definieren Sie wiederverwendbare Issue-Templates (Fehlerbericht, Feature-Anfrage) pro Repository mit Standard-Labels
-- **Wiki** -- Markdown-basierte Wiki-Seiten pro Repository mit Revisionshistorie
-- **Projekte** -- Kanban-Boards mit Drag-and-Drop-Karten zur Arbeitsorganisation
-- **Snippets** -- Teilen Sie Code-Snippets (wie GitHub Gists) mit Syntaxhervorhebung und mehreren Dateien
-- **Organisationen & Teams** -- Erstellen Sie Organisationen mit Mitgliedern und Teams, weisen Sie Team-Berechtigungen fuer Repositories zu
-- **Granulare Berechtigungen** -- Fuenfstufiges Berechtigungsmodell (Lesen, Triage, Schreiben, Pflegen, Admin) fuer feinkoernige Zugriffskontrolle auf Repositories
-- **Meilensteine** -- Verfolgen Sie den Issue-Fortschritt in Richtung Meilensteine mit Fortschrittsbalken und Faelligkeitsdaten
-- **Commit-Kommentare** -- Kommentieren Sie einzelne Commits mit optionalen Datei-/Zeilenverweisen
-- **Repository-Themen** -- Versehen Sie Repositories mit Themen zur Entdeckung und Filterung auf der Erkunden-Seite
+- **Issues & Pull Requests** — Erstellen, kommentieren, schließen/wiedereröffnen Sie Issues und PRs mit Labels, mehreren Zugewiesenen, Fälligkeitsdaten und Reviews. Mergen Sie PRs mit Merge-Commit-, Squash- oder Rebase-Strategien. Webbasierte Merge-Konfliktlösung mit Side-by-Side-Diff-Ansicht
+- **Issue-Abhängigkeiten** — Definieren Sie "blockiert durch"- und "blockiert"-Beziehungen zwischen Issues mit Erkennung zirkulärer Abhängigkeiten
+- **Issue-Pinning & -Sperrung** — Pinnen Sie wichtige Issues an den Anfang der Liste und sperren Sie Konversationen, um weitere Kommentare zu verhindern
+- **Kommentare bearbeiten & löschen** — Bearbeiten oder löschen Sie Ihre eigenen Kommentare bei Issues und Pull Requests mit "(bearbeitet)"-Anzeige
+- **Merge-Konfliktlösung** — Lösen Sie Merge-Konflikte direkt im Browser mit einem visuellen Editor, der Base/Ours/Theirs-Ansichten, Schnellauswahl-Buttons und Konfliktmarker-Validierung zeigt
+- **Diskussionen** — GitHub-Discussions-ähnliche Thread-Konversationen pro Repository mit Kategorien (Allgemein, Fragen & Antworten, Ankündigungen, Ideen, Zeig & Erzähl, Umfragen), Pinnen/Sperren, als Antwort markieren und Upvoting
+- **Code-Review-Vorschläge** — Der "Änderungen vorschlagen"-Modus in PR-Inline-Reviews ermöglicht es Reviewern, Code-Ersetzungen direkt im Diff vorzuschlagen
+- **Reaktions-Emoji** — Reagieren Sie auf Issues, PRs, Diskussionen und Kommentare mit Daumen hoch/runter, Herz, Lachen, Hurra, Verwirrt, Rakete und Augen
+- **CODEOWNERS** — Automatische Zuweisung von PR-Reviewern basierend auf Dateipfaden mit optionaler Durchsetzung, die CODEOWNERS-Genehmigung vor dem Merge erfordert
+- **Repository-Vorlagen** — Erstellen Sie neue Repositories aus Vorlagen mit automatischem Kopieren von Dateien, Labels, Issue-Vorlagen und Branch-Protection-Regeln
+- **Entwurfs-Issues & Issue-Vorlagen** — Erstellen Sie Entwurfs-Issues (Work-in-Progress) und definieren Sie wiederverwendbare Issue-Vorlagen (Bug-Report, Feature-Request) pro Repository mit Standard-Labels
+- **Wiki** — Markdown-basierte Wiki-Seiten pro Repository mit Revisionshistorie
+- **Projekte** — Kanban-Boards mit Drag-and-Drop-Karten zur Arbeitsorganisation
+- **Snippets** — Teilen Sie Code-Snippets (wie GitHub Gists) mit Syntaxhervorhebung und mehreren Dateien
+- **Organisationen & Teams** — Erstellen Sie Organisationen mit Mitgliedern und Teams, weisen Sie Team-Berechtigungen für Repositories zu
+- **Granulare Berechtigungen** — Fünfstufiges Berechtigungsmodell (Lesen, Triage, Schreiben, Pflegen, Admin) für feinkörnige Zugriffskontrolle auf Repositories
+- **Meilensteine** — Verfolgen Sie den Issue-Fortschritt in Richtung Meilensteine mit Fortschrittsbalken und Fälligkeitsdaten
+- **Commit-Kommentare** — Kommentieren Sie einzelne Commits mit optionalen Datei-/Zeilenreferenzen
+- **Repository Topics** — Taggen Sie Repositories mit Topics zur Entdeckung und Filterung auf der Entdecken-Seite
 
 ### CI/CD & DevOps
-- **CI/CD-Runner** -- Definieren Sie Workflows in `.github/workflows/*.yml` und fuehren Sie sie in Docker-Containern aus. Automatische Ausloesung bei Push- und Pull-Request-Ereignissen
-- **GitHub Actions-Kompatibilitaet** -- Dasselbe Workflow-YAML funktioniert sowohl auf MyPersonalGit als auch auf GitHub Actions. Uebersetzt `uses:`-Actions (`actions/checkout`, `actions/setup-dotnet`, `actions/setup-node`, `actions/setup-python`, `actions/setup-java`, `docker/login-action`, `docker/build-push-action`, `softprops/action-gh-release`) in aequivalente Shell-Befehle
-- **Parallele Jobs mit `needs:`** -- Jobs deklarieren Abhaengigkeiten ueber `needs:` und laufen parallel, wenn sie unabhaengig sind. Abhaengige Jobs warten auf ihre Voraussetzungen und werden automatisch abgebrochen, wenn eine Abhaengigkeit fehlschlaegt
-- **Bedingte Schritte (`if:`)** -- Schritte unterstuetzen `if:`-Ausdruecke: `always()`, `success()`, `failure()`, `cancelled()`, `true`, `false`. Bereinigungsschritte mit `if: failure()` oder `if: always()` werden auch nach frueheren Fehlern ausgefuehrt
-- **Schritt-Ausgaben (`$GITHUB_OUTPUT`)** -- Schritte koennen `key=value` oder `key<<DELIMITER`-Mehrzeilenpaare in `$GITHUB_OUTPUT` schreiben, und nachfolgende Schritte empfangen sie als Umgebungsvariablen, kompatibel mit der Syntax `${{ steps.X.outputs.Y }}`
-- **`github`-Kontext** -- `GITHUB_SHA`, `GITHUB_REF`, `GITHUB_REF_NAME`, `GITHUB_ACTOR`, `GITHUB_REPOSITORY`, `GITHUB_EVENT_NAME`, `GITHUB_WORKSPACE`, `GITHUB_RUN_ID`, `GITHUB_JOB`, `GITHUB_WORKFLOW` und `CI=true` werden automatisch in jeden Job injiziert
-- **Matrix-Builds** -- `strategy.matrix` erweitert Jobs ueber mehrere Variablenkombinationen (z.B. OS x Version). Unterstuetzt `fail-fast` und `${{ matrix.X }}`-Substitution in `runs-on`, Schrittbefehlen und Schrittnamen
-- **`workflow_dispatch`-Eingaben** -- Manuelle Ausloeser mit typisierten Eingabeparametern (String, Boolean, Choice, Number). Die Oberflaeche zeigt ein Eingabeformular beim manuellen Ausloesen von Workflows mit Eingaben. Werte werden als `INPUT_*`-Umgebungsvariablen injiziert
-- **Job-Timeouts (`timeout-minutes`)** -- Setzen Sie `timeout-minutes` auf Jobs, um sie automatisch als fehlgeschlagen zu markieren, wenn sie das Limit ueberschreiten. Standard: 360 Minuten (entspricht GitHub Actions)
-- **Job-Level `if:`** -- Ueberspringen Sie ganze Jobs basierend auf Bedingungen. Jobs mit `if: always()` laufen auch wenn Abhaengigkeiten fehlschlagen. Uebersprungene Jobs lassen den Run nicht fehlschlagen
-- **Job-Ausgaben** -- Jobs deklarieren `outputs:`, die nachgelagerte `needs:`-Jobs ueber `${{ needs.X.outputs.Y }}` nutzen. Ausgaben werden aus Schritt-Ausgaben nach Abschluss des Jobs aufgeloest
-- **`continue-on-error`** -- Markieren Sie einzelne Schritte als fehlertolerant, ohne den Job fehlschlagen zu lassen. Nuetzlich fuer optionale Validierungs- oder Benachrichtigungsschritte
-- **`on.push.paths`-Filter** -- Loesen Sie Workflows nur aus, wenn bestimmte Dateien sich aendern. Unterstuetzt Glob-Muster (`src/**`, `*.ts`) und `paths-ignore:` fuer Ausnahmen
-- **Workflows erneut ausfuehren** -- Fuehren Sie fehlgeschlagene, erfolgreiche oder abgebrochene Workflow-Runs mit einem Klick ueber die Actions-Oberflaeche erneut aus. Erstellt einen frischen Run mit derselben Konfiguration
-- **`working-directory`** -- Setzen Sie `defaults.run.working-directory` auf Workflow-Ebene oder pro Schritt `working-directory:`, um zu steuern, wo Befehle ausgefuehrt werden
-- **`defaults.run.shell`** -- Konfigurieren Sie eine benutzerdefinierte Shell pro Workflow oder Schritt (`bash`, `sh`, `python3` usw.)
-- **`strategy.max-parallel`** -- Begrenzen Sie die gleichzeitige Ausfuehrung von Matrix-Jobs
-- **`on.workflow_run`** -- Verketten Sie Workflows: Loesen Sie Workflow B aus, wenn Workflow A abgeschlossen ist. Filtern Sie nach Workflow-Name und `types: [completed]`
-- **Automatische Release-Erstellung** -- `softprops/action-gh-release` erstellt echte Release-Entitaeten mit Tag, Titel, Changelog-Body und Pre-Release-/Draft-Flags. Quellcode-Archive (ZIP und TAR.GZ) werden automatisch als herunterladbare Assets angehaengt
-- **Auto-Release-Pipeline** -- Integrierter Workflow, der automatisch Versionen taggt, Changelogs generiert und Docker-Images bei jedem Push auf main zu Docker Hub pusht
-- **Commit-Status-Checks** -- Workflows setzen automatisch Pending/Success/Failure-Status auf Commits, sichtbar bei Pull Requests
-- **Workflow-Abbruch** -- Brechen Sie laufende oder wartende Workflows ueber die Actions-Oberflaeche ab
-- **Nebenlaeufigkeitskontrollen** -- Neue Pushes brechen automatisch wartende Runs desselben Workflows ab
-- **Workflow-Umgebungsvariablen** -- Setzen Sie `env:` auf Workflow-, Job- oder Schrittebene in YAML
-- **Status-Badges** -- Einbettbare SVG-Badges fuer Workflow- und Commit-Status (`/api/badge/{repo}/workflow`)
-- **Artefakt-Downloads** -- Laden Sie Build-Artefakte direkt aus der Actions-Oberflaeche herunter
-- **Geheimnisverwaltung** -- Verschluesselte Repository-Geheimnisse (AES-256), die als Umgebungsvariablen in CI/CD-Workflow-Runs injiziert werden
-- **Webhooks** -- Loesen Sie externe Dienste bei Repository-Ereignissen aus
-- **Prometheus-Metriken** -- Integrierter `/metrics`-Endpunkt zur Ueberwachung
+- **CI/CD Runner** — Definieren Sie Workflows in `.github/workflows/*.yml` und führen Sie sie in Docker-Containern aus. Automatische Auslösung bei Push- und Pull-Request-Events
+- **GitHub Actions-Kompatibilität** — Dasselbe Workflow-YAML funktioniert sowohl auf MyPersonalGit als auch auf GitHub Actions. Übersetzt `uses:`-Actions (`actions/checkout`, `actions/setup-dotnet`, `actions/setup-node`, `actions/setup-python`, `actions/setup-java`, `docker/login-action`, `docker/build-push-action`, `softprops/action-gh-release`) in äquivalente Shell-Befehle
+- **Parallele Jobs mit `needs:`** — Jobs deklarieren Abhängigkeiten über `needs:` und laufen parallel, wenn sie unabhängig sind. Abhängige Jobs warten auf ihre Voraussetzungen und werden automatisch abgebrochen, wenn eine Abhängigkeit fehlschlägt
+- **Bedingte Schritte (`if:`)** — Schritte unterstützen `if:`-Ausdrücke: `always()`, `success()`, `failure()`, `cancelled()`, `true`, `false`. Aufräumschritte mit `if: failure()` oder `if: always()` laufen auch nach früheren Fehlern
+- **Schritt-Ausgaben (`$GITHUB_OUTPUT`)** — Schritte können `key=value`- oder `key<<DELIMITER`-Multiline-Paare in `$GITHUB_OUTPUT` schreiben, und nachfolgende Schritte erhalten sie als Umgebungsvariablen, kompatibel mit `${{ steps.X.outputs.Y }}`-Syntax
+- **`github`-Kontext** — `GITHUB_SHA`, `GITHUB_REF`, `GITHUB_REF_NAME`, `GITHUB_ACTOR`, `GITHUB_REPOSITORY`, `GITHUB_EVENT_NAME`, `GITHUB_WORKSPACE`, `GITHUB_RUN_ID`, `GITHUB_JOB`, `GITHUB_WORKFLOW` und `CI=true` werden automatisch in jeden Job injiziert
+- **Matrix-Builds** — `strategy.matrix` expandiert Jobs über mehrere Variablenkombinationen (z.B. OS x Version). Unterstützt `fail-fast` und `${{ matrix.X }}`-Substitution in `runs-on`, Schrittbefehlen und Schrittnamen
+- **`workflow_dispatch`-Eingaben** — Manuelle Auslöser mit typisierten Eingabeparametern (String, Boolean, Choice, Number). Die Oberfläche zeigt ein Eingabeformular beim manuellen Auslösen von Workflows mit Eingaben. Werte werden als `INPUT_*`-Umgebungsvariablen injiziert
+- **Job-Timeouts (`timeout-minutes`)** — Setzen Sie `timeout-minutes` auf Jobs, um sie automatisch fehlschlagen zu lassen, wenn sie das Limit überschreiten. Standard: 360 Minuten (entspricht GitHub Actions)
+- **Job-Level `if:`** — Überspringen Sie ganze Jobs basierend auf Bedingungen. Jobs mit `if: always()` laufen auch, wenn Abhängigkeiten fehlschlagen. Übersprungene Jobs lassen den Run nicht fehlschlagen
+- **Job-Ausgaben** — Jobs deklarieren `outputs:`, die nachgelagerte `needs:`-Jobs über `${{ needs.X.outputs.Y }}` konsumieren. Ausgaben werden aus Schritt-Ausgaben aufgelöst, nachdem der Job abgeschlossen ist
+- **`continue-on-error`** — Markieren Sie einzelne Schritte als fehlschlagen-erlaubt, ohne den Job fehlschlagen zu lassen. Nützlich für optionale Validierungs- oder Benachrichtigungsschritte
+- **`on.push.paths`-Filter** — Lösen Sie Workflows nur aus, wenn bestimmte Dateien sich ändern. Unterstützt Glob-Patterns (`src/**`, `*.ts`) und `paths-ignore:` für Ausschlüsse
+- **Workflows erneut ausführen** — Führen Sie fehlgeschlagene, erfolgreiche oder abgebrochene Workflow-Runs mit einem Klick über die Actions-Oberfläche erneut aus. Erstellt einen neuen Run mit derselben Konfiguration
+- **`working-directory`** — Setzen Sie `defaults.run.working-directory` auf Workflow-Ebene oder pro Schritt `working-directory:`, um zu steuern, wo Befehle ausgeführt werden
+- **`defaults.run.shell`** — Konfigurieren Sie eine benutzerdefinierte Shell pro Workflow oder pro Schritt (`bash`, `sh`, `python3`, etc.)
+- **`strategy.max-parallel`** — Begrenzen Sie die gleichzeitige Ausführung von Matrix-Jobs
+- **`on.workflow_run`** — Verketten Sie Workflows: Lösen Sie Workflow B aus, wenn Workflow A abgeschlossen ist. Filtern Sie nach Workflow-Name und `types: [completed]`
+- **Automatische Release-Erstellung** — `softprops/action-gh-release` erstellt echte Release-Entitäten mit Tag, Titel, Changelog-Text und Pre-Release/Draft-Flags. Quellcode-Archive (ZIP und TAR.GZ) werden automatisch als herunterladbare Assets angehängt
+- **Auto-Release-Pipeline** — Integrierter Workflow, der automatisch Versionen taggt, Changelogs generiert und Docker-Images bei jedem Push auf main zu Docker Hub pusht
+- **Commit-Status-Checks** — Workflows setzen automatisch Pending/Success/Failure-Status auf Commits, sichtbar bei Pull Requests
+- **Workflow-Abbruch** — Brechen Sie laufende oder wartende Workflows über die Actions-Oberfläche ab
+- **Nebenläufigkeitskontrollen** — Neue Pushes brechen automatisch wartende Runs desselben Workflows ab
+- **Workflow-Umgebungsvariablen** — Setzen Sie `env:` auf Workflow-, Job- oder Schrittebene in YAML
+- **Status-Badges** — Einbettbare SVG-Badges für Workflow- und Commit-Status (`/api/badge/{repo}/workflow`)
+- **Artefakt-Downloads** — Laden Sie Build-Artefakte direkt aus der Actions-Oberfläche herunter
+- **Secrets-Verwaltung** — Verschlüsselte Repository-Secrets (AES-256), die als Umgebungsvariablen in CI/CD-Workflow-Runs injiziert werden
+- **Webhooks** — Lösen Sie externe Dienste bei Repository-Ereignissen aus
+- **Prometheus-Metriken** — Integrierter `/metrics`-Endpunkt für Monitoring
 
-### Paket- & Container-Hosting
-- **Container Registry** -- Hosten Sie Docker/OCI-Images mit `docker push` und `docker pull` (OCI Distribution Spec)
-- **NuGet Registry** -- Hosten Sie .NET-Pakete mit vollstaendiger NuGet v3 API (Service-Index, Suche, Push, Restore)
-- **npm Registry** -- Hosten Sie Node.js-Pakete mit Standard npm publish/install
-- **PyPI Registry** -- Hosten Sie Python-Pakete mit PEP 503 Simple API, JSON-Metadaten-API und `twine upload`-Kompatibilitaet
-- **Maven Registry** -- Hosten Sie Java/JVM-Pakete mit Standard-Maven-Repository-Layout, `maven-metadata.xml`-Generierung und `mvn deploy`-Unterstuetzung
-- **Generische Pakete** -- Laden Sie beliebige binaere Artefakte ueber die REST-API hoch und herunter
+### Package- & Container-Hosting
+- **Container Registry** — Hosten Sie Docker/OCI-Images mit `docker push` und `docker pull` (OCI Distribution Spec)
+- **NuGet Registry** — Hosten Sie .NET-Pakete mit vollständiger NuGet v3 API (Service Index, Suche, Push, Restore)
+- **npm Registry** — Hosten Sie Node.js-Pakete mit Standard npm publish/install
+- **PyPI Registry** — Hosten Sie Python-Pakete mit PEP 503 Simple API, JSON Metadata API und `twine upload`-Kompatibilität
+- **Maven Registry** — Hosten Sie Java/JVM-Pakete mit Standard-Maven-Repository-Layout, `maven-metadata.xml`-Generierung und `mvn deploy`-Unterstützung
+- **Generische Pakete** — Laden Sie beliebige binäre Artefakte über die REST API hoch und herunter
 
-### Statische Webseiten
-- **Pages** -- Stellen Sie statische Webseiten direkt aus einem Repository-Branch bereit (wie GitHub Pages) unter `/pages/{owner}/{repo}/`
+### Statische Websites
+- **Pages** — Stellen Sie statische Websites direkt aus einem Repository-Branch bereit (wie GitHub Pages) unter `/pages/{owner}/{repo}/`
 
 ### RSS/Atom-Feeds
-- **Repository-Feeds** -- Atom-Feeds fuer Commits, Releases und Tags pro Repository (`/api/feeds/{repo}/commits.atom`, `/api/feeds/{repo}/releases.atom`, `/api/feeds/{repo}/tags.atom`)
-- **Benutzer-Aktivitaets-Feed** -- Pro-Benutzer-Aktivitaets-Feed (`/api/feeds/users/{username}/activity.atom`)
-- **Globaler Aktivitaets-Feed** -- Seitenweiter Aktivitaets-Feed (`/api/feeds/global/activity.atom`)
+- **Repository-Feeds** — Atom-Feeds für Commits, Releases und Tags pro Repository (`/api/feeds/{repo}/commits.atom`, `/api/feeds/{repo}/releases.atom`, `/api/feeds/{repo}/tags.atom`)
+- **Benutzer-Aktivitäts-Feed** — Pro-Benutzer-Aktivitäts-Feed (`/api/feeds/users/{username}/activity.atom`)
+- **Globaler Aktivitäts-Feed** — Seitenweiter Aktivitäts-Feed (`/api/feeds/global/activity.atom`)
 
 ### Benachrichtigungen
-- **In-App-Benachrichtigungen** -- Erwahnungen, Kommentare und Repository-Aktivitaeten
-- **Push-Benachrichtigungen** -- Ntfy- und Gotify-Integration fuer Echtzeit-Mobil-/Desktop-Benachrichtigungen mit benutzerspezifischem Opt-in
+- **In-App-Benachrichtigungen** — Erwähnungen, Kommentare und Repository-Aktivität
+- **Push-Benachrichtigungen** — Ntfy- und Gotify-Integration für Echtzeit-Mobil-/Desktop-Benachrichtigungen mit benutzerspezifischer Opt-in-Funktion
 
 ### Authentifizierung
-- **OAuth2 / SSO** -- Melden Sie sich mit GitHub, Google, Microsoft, GitLab, Bitbucket, Facebook, Discord oder Twitter/X an. Administratoren konfigurieren Client-ID und Secret pro Anbieter im Admin-Dashboard -- nur Anbieter mit ausgefuellten Zugangsdaten werden den Benutzern angezeigt
-- **OAuth2-Anbieter** -- Fungieren Sie als Identitaetsanbieter, damit andere Apps "Mit MyPersonalGit anmelden" verwenden koennen. Implementiert Authorization Code Flow mit PKCE, Token-Aktualisierung, Userinfo-Endpunkt und OpenID Connect Discovery (`.well-known/openid-configuration`)
-- **LDAP / Active Directory** -- Authentifizieren Sie Benutzer gegen ein LDAP-Verzeichnis oder eine Active Directory-Domaene. Benutzer werden beim ersten Login automatisch angelegt mit synchronisierten Attributen (E-Mail, Anzeigename). Unterstuetzt gruppenbasierte Admin-Befoerderung, SSL/TLS und StartTLS
-- **SSPI / Windows-integrierte Authentifizierung** -- Transparentes Single Sign-On fuer Windows-Domaenenbenutzer ueber Negotiate/NTLM. Benutzer in einer Domaene werden automatisch ohne Eingabe von Zugangsdaten authentifiziert. Aktivierbar unter Admin > Einstellungen (nur Windows)
-- **Zwei-Faktor-Authentifizierung** -- TOTP-basierte 2FA mit Authenticator-App-Unterstuetzung und Wiederherstellungscodes
-- **WebAuthn / Passkeys** -- FIDO2-Hardware-Sicherheitsschluessel und Passkey-Unterstuetzung als zweiter Faktor. Registrieren Sie YubiKeys, Plattform-Authentifikatoren (Face ID, Windows Hello, Touch ID) und andere FIDO2-Geraete. Sign-Count-Verifizierung zur Erkennung geklonter Schluessel
-- **Verknuepfte Konten** -- Benutzer koennen mehrere OAuth-Anbieter mit ihrem Konto in den Einstellungen verknuepfen
+- **OAuth2 / SSO** — Anmeldung mit GitHub, Google, Microsoft, GitLab, Bitbucket, Facebook, Discord oder Twitter/X. Administratoren konfigurieren Client-ID und Secret pro Anbieter im Admin-Dashboard — nur Anbieter mit ausgefüllten Anmeldeinformationen werden den Benutzern angezeigt
+- **OAuth2-Provider** — Fungieren Sie als Identitätsanbieter, damit andere Apps "Mit MyPersonalGit anmelden" verwenden können. Implementiert Authorization Code Flow mit PKCE, Token-Refresh, Userinfo-Endpunkt und OpenID Connect Discovery (`.well-known/openid-configuration`)
+- **LDAP / Active Directory** — Authentifizieren Sie Benutzer gegen ein LDAP-Verzeichnis oder eine Active Directory-Domäne. Benutzer werden beim ersten Login automatisch mit synchronisierten Attributen (E-Mail, Anzeigename) angelegt. Unterstützt gruppenbasierte Admin-Beförderung, SSL/TLS und StartTLS
+- **SSPI / Windows Integrated Auth** — Transparentes Single Sign-On für Windows-Domänenbenutzer über Negotiate/NTLM. Benutzer in einer Domäne werden automatisch ohne Eingabe von Anmeldeinformationen authentifiziert. Aktivierung unter Admin > Einstellungen (nur Windows)
+- **Zwei-Faktor-Authentifizierung** — TOTP-basierte 2FA mit Authenticator-App-Unterstützung und Wiederherstellungscodes
+- **WebAuthn / Passkeys** — FIDO2-Hardware-Sicherheitsschlüssel und Passkey-Unterstützung als zweiter Faktor. Registrieren Sie YubiKeys, Plattform-Authenticatoren (Face ID, Windows Hello, Touch ID) und andere FIDO2-Geräte. Signaturzähler-Verifizierung zur Erkennung geklonter Schlüssel
+- **Verknüpfte Konten** — Benutzer können mehrere OAuth-Anbieter mit ihrem Konto in den Einstellungen verknüpfen
 
 ### Administration
-- **Admin-Dashboard** -- Systemeinstellungen (einschliesslich Datenbankanbieter, SSH-Server, LDAP/AD, Footer-Seiten), Benutzerverwaltung, Audit-Logs und Statistiken
-- **Anpassbare Footer-Seiten** -- Nutzungsbedingungen, Datenschutzrichtlinie, Dokumentation und Kontaktseiten mit Markdown-Inhalt, bearbeitbar ueber Admin > Einstellungen
-- **Benutzerprofile** -- Beitrags-Heatmap, Aktivitaets-Feed und Statistiken pro Benutzer
-- **Persoenliche Zugangstokens** -- Token-basierte API-Authentifizierung mit konfigurierbaren Bereichen und optionalen routenspezifischen Einschraenkungen (Glob-Muster wie `/api/packages/**` zur Beschraenkung des Token-Zugriffs auf bestimmte API-Pfade)
-- **Sicherung & Wiederherstellung** -- Exportieren und importieren Sie Serverdaten
-- **Sicherheits-Scanning** -- Echtes Schwachstellen-Scanning von Abhaengigkeiten, betrieben von der [OSV.dev](https://osv.dev/)-Datenbank. Extrahiert automatisch Abhaengigkeiten aus `.csproj` (NuGet), `package.json` (npm) und `requirements.txt` (PyPI) und prueft jede gegen bekannte CVEs. Berichtet Schweregrad, behobene Versionen und Advisory-Links. Plus manuelle Sicherheitshinweise mit Entwurf-/Veroeffentlichungs-/Schliessen-Workflow
-- **Dunkelmodus** -- Volle Unterstuetzung fuer Dunkel-/Hellmodus mit Umschalter im Header
-- **Mehrsprachigkeit / i18n** -- Vollstaendige Lokalisierung ueber alle 27 Seiten mit 676 Ressourcenschluesseln. Wird mit 11 Sprachen ausgeliefert: Englisch, Spanisch, Franzoesisch, Deutsch, Japanisch, Koreanisch, Chinesisch (Vereinfacht), Portugiesisch, Russisch, Italienisch und Tuerkisch. Weitere hinzufuegen durch Erstellen von `SharedResource.{locale}.resx`-Dateien
+- **Admin-Dashboard** — Systemeinstellungen (einschließlich Datenbankanbieter, SSH-Server, LDAP/AD, Footer-Seiten), Benutzerverwaltung, Audit-Logs und Statistiken
+- **Anpassbare Footer-Seiten** — Nutzungsbedingungen, Datenschutzrichtlinie, Dokumentation und Kontaktseiten mit Markdown-Inhalten, bearbeitbar unter Admin > Einstellungen
+- **Benutzerprofile** — Beitrags-Heatmap, Aktivitäts-Feed und Statistiken pro Benutzer
+- **Persönliche Zugriffstoken** — Token-basierte API-Authentifizierung mit konfigurierbaren Geltungsbereichen und optionalen routenspezifischen Einschränkungen (Glob-Patterns wie `/api/packages/**` zur Beschränkung des Token-Zugriffs auf bestimmte API-Pfade)
+- **Backup & Wiederherstellung** — Exportieren und importieren Sie Serverdaten
+- **Sicherheitsscanning** — Echte Schwachstellenanalyse von Abhängigkeiten, basierend auf der [OSV.dev](https://osv.dev/)-Datenbank. Extrahiert automatisch Abhängigkeiten aus `.csproj` (NuGet), `package.json` (npm) und `requirements.txt` (PyPI) und prüft jede gegen bekannte CVEs. Berichtet Schweregrad, behobene Versionen und Advisory-Links. Plus manuelle Sicherheitshinweise mit Entwurf/Veröffentlichung/Schließen-Workflow
+- **Dark Mode** — Vollständige Dark/Light-Mode-Unterstützung mit einem Umschalter im Header
+- **Mehrsprachigkeit / i18n** — Vollständige Lokalisierung über alle 27 Seiten mit 676 Ressourcenschlüsseln. Wird mit 11 Sprachen ausgeliefert: Englisch, Spanisch, Französisch, Deutsch, Japanisch, Koreanisch, Chinesisch (vereinfacht), Portugiesisch, Russisch, Italienisch und Türkisch. Weitere Sprachen können durch Erstellen von `SharedResource.{locale}.resx`-Dateien hinzugefügt werden
 
 ## Technologie-Stack
 
@@ -168,24 +169,24 @@ Ein selbst gehosteter Git-Server mit einer GitHub-aehnlichen Weboberflaeche, ers
 |-----------|-----------|
 | Backend | ASP.NET Core 10.0 |
 | Frontend | Blazor Server (interaktives serverseitiges Rendering) |
-| Datenbank | SQLite (Standard) oder PostgreSQL ueber Entity Framework Core 10 |
-| Git-Engine | LibGit2Sharp |
-| Authentifizierung | BCrypt-Passwort-Hashing, sitzungsbasierte Authentifizierung, PAT-Tokens, OAuth2 (8 Anbieter + Anbieter-Modus), TOTP 2FA, WebAuthn/Passkeys, LDAP/AD, SSPI |
+| Datenbank | SQLite (Standard) oder PostgreSQL via Entity Framework Core 10 |
+| Git Engine | LibGit2Sharp |
+| Auth | BCrypt-Passwort-Hashing, sitzungsbasierte Authentifizierung, PAT-Tokens, OAuth2 (8 Anbieter + Provider-Modus), TOTP 2FA, WebAuthn/Passkeys, LDAP/AD, SSPI |
 | SSH-Server | Integrierte SSH2-Protokollimplementierung (ECDH, AES-CTR, HMAC-SHA2) |
 | Markdown | Markdig |
 | CI/CD | Docker.DotNet, YamlDotNet |
-| Ueberwachung | Prometheus-Metriken |
+| Monitoring | Prometheus-Metriken |
 
 ## Schnellstart
 
 ### Voraussetzungen
 
 - [Docker](https://docs.docker.com/get-docker/) (empfohlen)
-- Oder [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) + Git fuer die lokale Entwicklung
+- Oder [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) + Git für lokale Entwicklung
 
 ### Docker (Empfohlen)
 
-Von Docker Hub herunterladen und ausfuehren:
+Von Docker Hub herunterladen und ausführen:
 
 ```bash
 docker run -d --name mypersonalgit -p 8080:8080 -p 2222:2222 \
@@ -195,9 +196,9 @@ docker run -d --name mypersonalgit -p 8080:8080 -p 2222:2222 \
   fennch/mypersonalgit:latest
 ```
 
-> Port 2222 ist optional -- nur erforderlich, wenn Sie den integrierten SSH-Server unter Admin > Einstellungen aktivieren.
+> Port 2222 ist optional — wird nur benötigt, wenn Sie den integrierten SSH-Server unter Admin > Einstellungen aktivieren.
 
-Oder mit Docker Compose:
+Oder verwenden Sie Docker Compose:
 
 ```bash
 git clone https://github.com/ChrisDFennell/MyPersonalGit.git
@@ -205,13 +206,13 @@ cd MyPersonalGit
 docker compose up -d
 ```
 
-Die App ist unter **http://localhost:8080** verfuegbar.
+Die Anwendung ist unter **http://localhost:8080** verfügbar.
 
-> **Standard-Zugangsdaten**: `admin` / `admin`
+> **Standard-Anmeldedaten**: `admin` / `admin`
 >
-> **Aendern Sie das Standardpasswort sofort** ueber das Admin-Dashboard nach dem ersten Login.
+> **Ändern Sie das Standardpasswort sofort** über das Admin-Dashboard nach der ersten Anmeldung.
 
-### Lokal ausfuehren
+### Lokal ausführen
 
 ```bash
 git clone https://github.com/ChrisDFennell/MyPersonalGit.git
@@ -219,7 +220,7 @@ cd MyPersonalGit/MyPersonalGit
 dotnet run
 ```
 
-Die App startet unter **http://localhost:5146**.
+Die Anwendung startet unter **http://localhost:5146**.
 
 ### Umgebungsvariablen
 
@@ -228,24 +229,24 @@ Die App startet unter **http://localhost:5146**.
 | `Database__Provider` | Datenbank-Engine: `sqlite` oder `postgresql` | `sqlite` |
 | `ConnectionStrings__Default` | Datenbank-Verbindungszeichenfolge | `Data Source=/data/mypersonalgit.db` |
 | `Git__ProjectRoot` | Verzeichnis, in dem Git-Repos gespeichert werden | `/repos` |
-| `Git__RequireAuth` | Authentifizierung fuer Git-HTTP-Operationen erforderlich | `true` |
-| `Git__Users__<username>` | Passwort fuer Git HTTP Basic Auth-Benutzer setzen | -- |
-| `RESET_ADMIN_PASSWORD` | Notfall-Admin-Passwort-Zuruecksetzung beim Start | -- |
-| `Secrets__EncryptionKey` | Benutzerdefinierter Verschluesselungsschluessel fuer Repository-Geheimnisse | Abgeleitet aus dem DB-Verbindungsstring |
-| `Ssh__DataDir` | Verzeichnis fuer SSH-Daten (Host-Keys, authorized_keys) | `~/.mypersonalgit/ssh` |
+| `Git__RequireAuth` | Authentifizierung für Git-HTTP-Operationen erforderlich | `true` |
+| `Git__Users__<username>` | Passwort für Git-HTTP-Basic-Auth-Benutzer festlegen | — |
+| `RESET_ADMIN_PASSWORD` | Notfall-Admin-Passwort-Reset beim Start | — |
+| `Secrets__EncryptionKey` | Benutzerdefinierter Verschlüsselungsschlüssel für Repository-Secrets | Abgeleitet von der DB-Verbindungszeichenfolge |
+| `Ssh__DataDir` | Verzeichnis für SSH-Daten (Host-Schlüssel, authorized_keys) | `~/.mypersonalgit/ssh` |
 | `Ssh__AuthorizedKeysPath` | Pfad zur generierten authorized_keys-Datei | `<DataDir>/authorized_keys` |
 
-> **Hinweis:** Der Port des integrierten SSH-Servers und LDAP-Einstellungen werden ueber das Admin-Dashboard (Admin > Einstellungen) konfiguriert, nicht ueber Umgebungsvariablen. So koennen Sie diese ohne erneute Bereitstellung aendern.
+> **Hinweis:** Der integrierte SSH-Server-Port und die LDAP-Einstellungen werden über das Admin-Dashboard (Admin > Einstellungen) konfiguriert, nicht über Umgebungsvariablen. So können Sie diese ohne erneutes Deployment ändern.
 
-## Nutzung
+## Verwendung
 
 ### 1. Anmelden
 
-Oeffnen Sie die App und klicken Sie auf **Anmelden**. Bei einer Neuinstallation verwenden Sie die Standard-Zugangsdaten (`admin` / `admin`). Erstellen Sie zusaetzliche Benutzer ueber das **Admin**-Dashboard oder aktivieren Sie die Benutzerregistrierung unter Admin > Einstellungen.
+Öffnen Sie die Anwendung und klicken Sie auf **Anmelden**. Bei einer frischen Installation verwenden Sie die Standard-Anmeldedaten (`admin` / `admin`). Erstellen Sie zusätzliche Benutzer über das **Admin**-Dashboard oder aktivieren Sie die Benutzerregistrierung unter Admin > Einstellungen.
 
 ### 2. Ein Repository erstellen
 
-Klicken Sie auf der Startseite auf die gruene **Neu**-Schaltflaeche, geben Sie einen Namen ein und klicken Sie auf **Erstellen**. Dadurch wird ein Bare-Git-Repository auf dem Server erstellt, das Sie klonen, pushen und ueber die Weboberflaeche verwalten koennen.
+Klicken Sie auf der Startseite auf die grüne Schaltfläche **Neu**, geben Sie einen Namen ein und klicken Sie auf **Erstellen**. Dadurch wird ein Bare-Git-Repository auf dem Server erstellt, das Sie klonen, pushen und über die Weboberfläche verwalten können.
 
 ### 3. Klonen und Pushen
 
@@ -259,29 +260,29 @@ git commit -m "Initial commit"
 git push origin main
 ```
 
-Wenn Git-HTTP-Authentifizierung aktiviert ist, werden Sie nach den Zugangsdaten gefragt, die ueber die Umgebungsvariablen `Git__Users__<username>` konfiguriert wurden. Diese sind getrennt vom Web-UI-Login.
+Wenn Git-HTTP-Authentifizierung aktiviert ist, werden Sie nach den über `Git__Users__<username>`-Umgebungsvariablen konfigurierten Anmeldedaten gefragt. Diese sind separat von der Web-UI-Anmeldung.
 
 ### 4. Aus einer IDE klonen
 
-**VS Code**: `Ctrl+Shift+P` > **Git: Clone** > `http://localhost:8080/git/MyRepo.git` einfuegen
+**VS Code**: `Ctrl+Shift+P` > **Git: Clone** > `http://localhost:8080/git/MyRepo.git` einfügen
 
-**Visual Studio**: **Git > Repository klonen** > URL einfuegen
+**Visual Studio**: **Git > Repository klonen** > URL einfügen
 
-**JetBrains**: **Datei > Neu > Projekt aus Versionskontrolle** > URL einfuegen
+**JetBrains**: **File > New > Project from Version Control** > URL einfügen
 
 ### 5. Den Web-Editor verwenden
 
-Sie koennen Dateien direkt im Browser bearbeiten:
-- Navigieren Sie zu einem Repository und klicken Sie auf eine Datei, dann klicken Sie auf **Bearbeiten**
-- Verwenden Sie **Dateien hinzufuegen > Neue Datei erstellen**, um Dateien ohne lokalen Klon hinzuzufuegen
-- Verwenden Sie **Dateien hinzufuegen > Dateien/Ordner hochladen**, um von Ihrem Rechner hochzuladen
+Sie können Dateien direkt im Browser bearbeiten:
+- Navigieren Sie zu einem Repository und klicken Sie auf eine beliebige Datei, dann klicken Sie auf **Bearbeiten**
+- Verwenden Sie **Dateien hinzufügen > Neue Datei erstellen**, um Dateien ohne lokalen Klon hinzuzufügen
+- Verwenden Sie **Dateien hinzufügen > Dateien/Ordner hochladen**, um von Ihrem Rechner hochzuladen
 
 ### 6. Container Registry
 
 Pushen und pullen Sie Docker/OCI-Images direkt auf Ihren Server:
 
 ```bash
-# Anmelden (verwenden Sie einen Personal Access Token aus Einstellungen > Zugangstokens)
+# Anmelden (verwenden Sie einen persönlichen Zugriffstoken aus Einstellungen > Zugriffstoken)
 docker login localhost:8080 -u youruser
 
 # Ein Image pushen
@@ -292,12 +293,12 @@ docker push localhost:8080/myapp:v1
 docker pull localhost:8080/myapp:v1
 ```
 
-> **Hinweis:** Docker erfordert standardmaessig HTTPS. Fuer HTTP fuegen Sie Ihren Server zu Dockers `insecure-registries` in `~/.docker/daemon.json` hinzu:
+> **Hinweis:** Docker erfordert standardmäßig HTTPS. Für HTTP fügen Sie Ihren Server zu Dockers `insecure-registries` in `~/.docker/daemon.json` hinzu:
 > ```json
 > { "insecure-registries": ["localhost:8080"] }
 > ```
 
-### 7. Paket-Registry
+### 7. Package Registry
 
 **NuGet (.NET-Pakete):**
 ```bash
@@ -333,7 +334,7 @@ twine upload --repository mygit dist/*
 
 **Maven (Java/JVM-Pakete):**
 ```xml
-<!-- In Ihrer pom.xml, Repository hinzufuegen -->
+<!-- In Ihrer pom.xml das Repository hinzufügen -->
 <distributionManagement>
   <repository>
     <id>mygit</id>
@@ -342,7 +343,7 @@ twine upload --repository mygit dist/*
 </distributionManagement>
 ```
 ```xml
-<!-- In settings.xml, Zugangsdaten hinzufuegen -->
+<!-- In settings.xml Anmeldeinformationen hinzufügen -->
 <server>
   <id>mygit</id>
   <username>youruser</username>
@@ -353,100 +354,100 @@ twine upload --repository mygit dist/*
 mvn deploy
 ```
 
-**Generisch (beliebige Binaerdatei):**
+**Generisch (beliebige Binärdateien):**
 ```bash
 curl -u youruser:yourPAT -X PUT \
   --upload-file myfile.zip \
   http://localhost:8080/api/packages/generic/my-tool/1.0.0/myfile.zip
 ```
 
-Durchsuchen Sie alle Pakete unter `/packages` in der Weboberflaeche.
+Durchsuchen Sie alle Pakete unter `/packages` in der Weboberfläche.
 
-### 8. Pages (Statisches Webseiten-Hosting)
+### 8. Pages (Statisches Website-Hosting)
 
-Stellen Sie statische Webseiten aus einem Repository-Branch bereit:
+Stellen Sie statische Websites aus einem Repository-Branch bereit:
 
 1. Gehen Sie zum **Einstellungen**-Tab Ihres Repositorys und aktivieren Sie **Pages**
-2. Setzen Sie den Branch (Standard: `gh-pages`)
+2. Legen Sie den Branch fest (Standard: `gh-pages`)
 3. Pushen Sie HTML/CSS/JS in diesen Branch
 4. Besuchen Sie `http://localhost:8080/pages/{username}/{repo}/`
 
 ### 9. Push-Benachrichtigungen
 
-Konfigurieren Sie Ntfy oder Gotify unter **Admin > Systemeinstellungen**, um Push-Benachrichtigungen auf Ihrem Telefon oder Desktop zu erhalten, wenn Issues, PRs oder Kommentare erstellt werden. Benutzer koennen sich unter **Einstellungen > Benachrichtigungen** ein-/abmelden.
+Konfigurieren Sie Ntfy oder Gotify unter **Admin > Systemeinstellungen**, um Push-Benachrichtigungen auf Ihrem Smartphone oder Desktop zu erhalten, wenn Issues, PRs oder Kommentare erstellt werden. Benutzer können unter **Einstellungen > Benachrichtigungen** ein-/ausschalten.
 
-### 10. SSH-Schluessel-Authentifizierung
+### 10. SSH-Schlüssel-Authentifizierung
 
-Verwenden Sie SSH-Schluessel fuer passwortlose Git-Operationen. Es gibt zwei Optionen:
+Verwenden Sie SSH-Schlüssel für passwortlose Git-Operationen. Es gibt zwei Optionen:
 
 #### Option A: Integrierter SSH-Server (Empfohlen)
 
-Kein externer SSH-Daemon erforderlich -- MyPersonalGit betreibt seinen eigenen SSH-Server:
+Kein externer SSH-Daemon erforderlich — MyPersonalGit betreibt seinen eigenen SSH-Server:
 
 1. Gehen Sie zu **Admin > Einstellungen** und aktivieren Sie den **Integrierten SSH-Server**
-2. Setzen Sie den SSH-Port (Standard: 2222) -- verwenden Sie 22, wenn kein System-SSH laeuft
-3. Speichern Sie die Einstellungen und starten Sie den Server neu (Portaenderungen erfordern Neustart)
-4. Gehen Sie zu **Einstellungen > SSH-Schluessel** und fuegen Sie Ihren oeffentlichen Schluessel hinzu (`~/.ssh/id_ed25519.pub`, `~/.ssh/id_rsa.pub` oder `~/.ssh/id_ecdsa.pub`)
-5. Ueber SSH klonen:
+2. Legen Sie den SSH-Port fest (Standard: 2222) — verwenden Sie 22, wenn kein System-SSH läuft
+3. Speichern Sie die Einstellungen und starten Sie den Server neu (Portänderungen erfordern einen Neustart)
+4. Gehen Sie zu **Einstellungen > SSH-Schlüssel** und fügen Sie Ihren öffentlichen Schlüssel hinzu (`~/.ssh/id_ed25519.pub`, `~/.ssh/id_rsa.pub` oder `~/.ssh/id_ecdsa.pub`)
+5. Klonen über SSH:
    ```bash
    git clone ssh://youruser@yourserver:2222/MyRepo.git
    ```
 
-Der integrierte SSH-Server unterstuetzt ECDH-SHA2-NISTP256-Schluesselaustausch, AES-128/256-CTR-Verschluesselung, HMAC-SHA2-256 und Public-Key-Authentifizierung mit Ed25519-, RSA- und ECDSA-Schluesseln.
+Der integrierte SSH-Server unterstützt ECDH-SHA2-NISTP256-Schlüsselaustausch, AES-128/256-CTR-Verschlüsselung, HMAC-SHA2-256 und Public-Key-Authentifizierung mit Ed25519-, RSA- und ECDSA-Schlüsseln.
 
 #### Option B: System-OpenSSH
 
 Wenn Sie den SSH-Daemon Ihres Systems bevorzugen:
 
-1. Gehen Sie zu **Einstellungen > SSH-Schluessel** und fuegen Sie Ihren oeffentlichen Schluessel hinzu
-2. MyPersonalGit pflegt automatisch eine `authorized_keys`-Datei aus allen registrierten SSH-Schluesseln
-3. Konfigurieren Sie das OpenSSH Ihres Servers zur Verwendung der generierten authorized_keys-Datei:
+1. Gehen Sie zu **Einstellungen > SSH-Schlüssel** und fügen Sie Ihren öffentlichen Schlüssel hinzu
+2. MyPersonalGit pflegt automatisch eine `authorized_keys`-Datei aus allen registrierten SSH-Schlüsseln
+3. Konfigurieren Sie den OpenSSH Ihres Servers zur Verwendung der generierten authorized_keys-Datei:
    ```
    # In /etc/ssh/sshd_config
    AuthorizedKeysFile /path/to/.mypersonalgit/ssh/authorized_keys
    ```
-4. Ueber SSH klonen:
+4. Klonen über SSH:
    ```bash
    git clone ssh://git@yourserver:22/repos/MyRepo.git
    ```
 
-Der SSH-Auth-Dienst stellt auch eine API unter `/api/ssh/authorized-keys` bereit, die mit der `AuthorizedKeysCommand`-Direktive von OpenSSH verwendet werden kann.
+Der SSH-Auth-Dienst stellt auch eine API unter `/api/ssh/authorized-keys` zur Verwendung mit der `AuthorizedKeysCommand`-Direktive von OpenSSH bereit.
 
 ### 11. LDAP / Active Directory-Authentifizierung
 
-Authentifizieren Sie Benutzer gegen das LDAP-Verzeichnis oder die Active Directory-Domaene Ihrer Organisation:
+Authentifizieren Sie Benutzer gegen das LDAP-Verzeichnis oder die Active Directory-Domäne Ihrer Organisation:
 
 1. Gehen Sie zu **Admin > Einstellungen** und scrollen Sie zu **LDAP / Active Directory-Authentifizierung**
 2. Aktivieren Sie LDAP und geben Sie Ihre Serverdetails ein:
    - **Server**: Ihr LDAP-Server-Hostname (z.B. `dc01.corp.local`)
-   - **Port**: 389 fuer LDAP, 636 fuer LDAPS
-   - **SSL/TLS**: Aktivieren fuer LDAPS, oder StartTLS fuer das Upgrade einer unverschluesselten Verbindung verwenden
-3. Konfigurieren Sie ein Dienstkonto fuer die Benutzersuche:
+   - **Port**: 389 für LDAP, 636 für LDAPS
+   - **SSL/TLS**: Aktivieren für LDAPS, oder verwenden Sie StartTLS zum Upgraden einer unverschlüsselten Verbindung
+3. Konfigurieren Sie ein Dienstkonto für die Benutzersuche:
    - **Bind DN**: `CN=svc-git,OU=Service Accounts,DC=corp,DC=local`
    - **Bind-Passwort**: Das Passwort des Dienstkontos
-4. Setzen Sie die Suchparameter:
+4. Legen Sie die Suchparameter fest:
    - **Such-Basis-DN**: `OU=Users,DC=corp,DC=local`
-   - **Benutzerfilter**: `(sAMAccountName={0})` fuer AD, `(uid={0})` fuer OpenLDAP
+   - **Benutzerfilter**: `(sAMAccountName={0})` für AD, `(uid={0})` für OpenLDAP
 5. Ordnen Sie LDAP-Attribute den Benutzerfeldern zu:
    - **Benutzername**: `sAMAccountName` (AD) oder `uid` (OpenLDAP)
    - **E-Mail**: `mail`
    - **Anzeigename**: `displayName`
-6. Setzen Sie optional einen **Admin-Gruppen-DN** -- Mitglieder dieser Gruppe werden automatisch zum Admin befoerdert
-7. Klicken Sie auf **LDAP-Verbindung testen**, um die Einstellungen zu ueberpruefen
+6. Optional eine **Admin-Gruppen-DN** festlegen — Mitglieder dieser Gruppe werden automatisch zu Administratoren befördert
+7. Klicken Sie auf **LDAP-Verbindung testen**, um die Einstellungen zu überprüfen
 8. Einstellungen speichern
 
-Benutzer koennen sich nun mit ihren Domaenen-Zugangsdaten auf der Anmeldeseite anmelden. Beim ersten Login wird automatisch ein lokales Konto mit aus dem Verzeichnis synchronisierten Attributen erstellt. LDAP-Authentifizierung wird auch fuer Git-HTTP-Operationen (Klonen/Pushen) verwendet.
+Benutzer können sich jetzt mit ihren Domänenanmeldeinformationen auf der Anmeldeseite anmelden. Beim ersten Login wird automatisch ein lokales Konto mit synchronisierten Attributen aus dem Verzeichnis erstellt. Die LDAP-Authentifizierung wird auch für Git-HTTP-Operationen (Clone/Push) verwendet.
 
-### 12. Repository-Geheimnisse
+### 12. Repository Secrets
 
-Fuegen Sie Repositories verschluesselte Geheimnisse fuer die Verwendung in CI/CD-Workflows hinzu:
+Fügen Sie verschlüsselte Secrets zu Repositories für die Verwendung in CI/CD-Workflows hinzu:
 
 1. Gehen Sie zum **Einstellungen**-Tab Ihres Repositorys
-2. Scrollen Sie zur **Geheimnisse**-Karte und klicken Sie auf **Geheimnis hinzufuegen**
-3. Geben Sie einen Namen ein (z.B. `DEPLOY_TOKEN`) und einen Wert -- der Wert wird mit AES-256 verschluesselt
-4. Geheimnisse werden automatisch als Umgebungsvariablen in jeden Workflow-Run injiziert
+2. Scrollen Sie zur **Secrets**-Karte und klicken Sie auf **Secret hinzufügen**
+3. Geben Sie einen Namen (z.B. `DEPLOY_TOKEN`) und einen Wert ein — der Wert wird mit AES-256 verschlüsselt
+4. Secrets werden automatisch als Umgebungsvariablen in jeden Workflow-Run injiziert
 
-Referenzieren Sie Geheimnisse in Ihrem Workflow:
+Referenzieren Sie Secrets in Ihrem Workflow:
 ```yaml
 jobs:
   deploy:
@@ -458,70 +459,70 @@ jobs:
 
 ### 13. OAuth / SSO-Anmeldung
 
-Melden Sie sich mit externen Identitaetsanbietern an:
+Anmeldung mit externen Identitätsanbietern:
 
-1. Gehen Sie zu **Admin > OAuth / SSO** und konfigurieren Sie die Anbieter, die Sie aktivieren moechten
-2. Geben Sie die **Client-ID** und das **Client-Secret** aus der Entwicklerkonsole des Anbieters ein
-3. Aktivieren Sie **Aktivieren** -- nur Anbieter mit beiden ausgefuellten Zugangsdaten werden auf der Anmeldeseite angezeigt
-4. Die Callback-URL fuer jeden Anbieter wird im Admin-Panel angezeigt (z.B. `https://yourserver/oauth/callback/github`)
+1. Gehen Sie zu **Admin > OAuth / SSO** und konfigurieren Sie die gewünschten Anbieter
+2. Geben Sie die **Client-ID** und das **Client Secret** aus der Entwicklerkonsole des Anbieters ein
+3. Aktivieren Sie **Aktivieren** — nur Anbieter mit beiden ausgefüllten Anmeldeinformationen werden auf der Anmeldeseite angezeigt
+4. Die Callback-URL für jeden Anbieter wird im Admin-Panel angezeigt (z.B. `https://yourserver/oauth/callback/github`)
 
-Unterstuetzte Anbieter: GitHub, Google, Microsoft, GitLab, Bitbucket, Facebook, Discord, Twitter/X.
+Unterstützte Anbieter: GitHub, Google, Microsoft, GitLab, Bitbucket, Facebook, Discord, Twitter/X.
 
-Benutzer koennen mehrere Anbieter mit ihrem Konto unter **Einstellungen > Verknuepfte Konten** verknuepfen.
+Benutzer können mehrere Anbieter mit ihrem Konto unter **Einstellungen > Verknüpfte Konten** verknüpfen.
 
 ### 14. Repository importieren
 
-Importieren Sie Repositories aus externen Quellen mit vollstaendiger Historie:
+Importieren Sie Repositories aus externen Quellen mit vollständigem Verlauf:
 
 1. Klicken Sie auf der Startseite auf **Importieren**
-2. Waehlen Sie einen Quellentyp (Git-URL, GitHub, GitLab oder Bitbucket)
-3. Geben Sie die Repository-URL und optional ein Auth-Token fuer private Repos ein
-4. Fuer GitHub/GitLab/Bitbucket-Importe koennen Sie optional Issues und Pull Requests importieren
+2. Wählen Sie einen Quelltyp (Git-URL, GitHub, GitLab oder Bitbucket)
+3. Geben Sie die Repository-URL und optional ein Auth-Token für private Repos ein
+4. Bei GitHub/GitLab/Bitbucket-Importen können Sie optional Issues und Pull Requests importieren
 5. Verfolgen Sie den Importfortschritt in Echtzeit auf der Import-Seite
 
 ### 15. Forking & Upstream-Synchronisation
 
 Forken Sie ein Repository und halten Sie es synchron:
 
-1. Klicken Sie auf die **Fork**-Schaltflaeche auf einer beliebigen Repository-Seite
-2. Ein Fork wird unter Ihrem Benutzernamen mit einem Link zum Original erstellt
-3. Klicken Sie neben dem "Geforkt von"-Badge auf **Fork synchronisieren**, um die neuesten Aenderungen vom Upstream zu holen
+1. Klicken Sie auf die **Fork**-Schaltfläche auf einer beliebigen Repository-Seite
+2. Ein Fork wird unter Ihrem Benutzernamen erstellt, mit einem Link zum Original
+3. Klicken Sie neben dem "Geforkt von"-Badge auf **Fork synchronisieren**, um die neuesten Änderungen vom Upstream zu übernehmen
 
 ### 16. CI/CD Auto-Release
 
-MyPersonalGit enthaelt eine integrierte CI/CD-Pipeline, die bei jedem Push auf main automatisch taggt, released und Docker-Images pusht. Workflows werden bei Push automatisch ausgeloest -- kein externer CI-Dienst erforderlich.
+MyPersonalGit enthält eine integrierte CI/CD-Pipeline, die bei jedem Push auf main automatisch taggt, releast und Docker-Images pusht. Workflows werden automatisch bei Push ausgelöst — kein externer CI-Dienst erforderlich.
 
 **So funktioniert es:**
-1. Ein Push auf `main` loest automatisch `.github/workflows/release.yml` aus
-2. Erhoeht die Patch-Version (`v1.15.1` -> `v1.15.2`), erstellt einen Git-Tag
+1. Push auf `main` löst automatisch `.github/workflows/release.yml` aus
+2. Erhöht die Patch-Version (`v1.15.1` -> `v1.15.2`), erstellt einen Git-Tag
 3. Meldet sich bei Docker Hub an, baut das Image und pusht es als `:latest` und `:vX.Y.Z`
 
 **Einrichtung:**
-1. Gehen Sie zu den **Einstellungen > Geheimnisse** Ihres Repos in MyPersonalGit
-2. Fuegen Sie ein Geheimnis namens `DOCKERHUB_TOKEN` mit Ihrem Docker Hub-Zugangstokens hinzu
+1. Gehen Sie zu den **Einstellungen > Secrets** Ihres Repos in MyPersonalGit
+2. Fügen Sie ein Secret namens `DOCKERHUB_TOKEN` mit Ihrem Docker Hub-Zugriffstoken hinzu
 3. Stellen Sie sicher, dass der MyPersonalGit-Container den Docker-Socket gemountet hat (`-v /var/run/docker.sock:/var/run/docker.sock`)
-4. Pushen Sie auf main -- der Workflow wird automatisch ausgeloest
+4. Pushen Sie auf main — der Workflow wird automatisch ausgelöst
 
-**GitHub Actions-Kompatibilitaet:**
-Dasselbe Workflow-YAML funktioniert auch auf GitHub Actions -- keine Aenderungen noetig. MyPersonalGit uebersetzt `uses:`-Actions zur Laufzeit in aequivalente Shell-Befehle:
+**GitHub Actions-Kompatibilität:**
+Dasselbe Workflow-YAML funktioniert auch auf GitHub Actions — keine Änderungen nötig. MyPersonalGit übersetzt `uses:`-Actions zur Laufzeit in äquivalente Shell-Befehle:
 
-| GitHub Action | MyPersonalGit-Uebersetzung |
+| GitHub Action | MyPersonalGit-Übersetzung |
 |---|---|
 | `actions/checkout@v4` | Repo bereits nach `/workspace` geklont |
-| `actions/setup-dotnet@v4` | Installiert .NET SDK ueber das offizielle Installationsskript |
-| `actions/setup-node@v4` | Installiert Node.js ueber NodeSource |
-| `actions/setup-python@v5` | Installiert Python ueber apt/apk |
-| `actions/setup-java@v4` | Installiert OpenJDK ueber apt/apk |
+| `actions/setup-dotnet@v4` | Installiert .NET SDK über offizielles Installationsskript |
+| `actions/setup-node@v4` | Installiert Node.js über NodeSource |
+| `actions/setup-python@v5` | Installiert Python über apt/apk |
+| `actions/setup-java@v4` | Installiert OpenJDK über apt/apk |
 | `docker/login-action@v3` | `docker login` mit stdin-Passwort |
 | `docker/build-push-action@v6` | `docker build && docker push` |
-| `docker/setup-buildx-action@v3` | Keine Aktion (verwendet Standard-Builder) |
-| `softprops/action-gh-release@v2` | Erstellt eine echte Release-Entitaet in der Datenbank |
+| `docker/setup-buildx-action@v3` | No-op (verwendet Standard-Builder) |
+| `softprops/action-gh-release@v2` | Erstellt eine echte Release-Entität in der Datenbank |
 | `${{ secrets.X }}` | `$X`-Umgebungsvariable |
 | `${{ steps.X.outputs.Y }}` | `$Y`-Umgebungsvariable |
 | `${{ github.sha }}` | `$GITHUB_SHA`-Umgebungsvariable |
 
 **Parallele Jobs:**
-Jobs laufen standardmaessig parallel. Verwenden Sie `needs:`, um Abhaengigkeiten zu deklarieren:
+Jobs laufen standardmäßig parallel. Verwenden Sie `needs:`, um Abhängigkeiten zu deklarieren:
 ```yaml
 jobs:
   build:
@@ -541,38 +542,38 @@ jobs:
     steps:
       - run: echo "deploying..."
 ```
-Jobs ohne `needs:` starten sofort. Ein Job wird abgebrochen, wenn eine seiner Abhaengigkeiten fehlschlaegt.
+Jobs ohne `needs:` starten sofort. Ein Job wird abgebrochen, wenn eine seiner Abhängigkeiten fehlschlägt.
 
 **Bedingte Schritte:**
-Verwenden Sie `if:`, um zu steuern, wann Schritte ausgefuehrt werden:
+Verwenden Sie `if:`, um zu steuern, wann Schritte ausgeführt werden:
 ```yaml
 steps:
   - name: Build
     run: dotnet build
 
-  - name: Notify on failure
+  - name: Bei Fehler benachrichtigen
     if: failure()
     run: curl -X POST https://hooks.example.com/alert
 
-  - name: Cleanup
+  - name: Aufräumen
     if: always()
     run: rm -rf ./tmp
 ```
-Unterstuetzte Ausdruecke: `always()`, `success()` (Standard), `failure()`, `cancelled()`, `true`, `false`.
+Unterstützte Ausdrücke: `always()`, `success()` (Standard), `failure()`, `cancelled()`, `true`, `false`.
 
 **Schritt-Ausgaben:**
-Schritte koennen Werte an nachfolgende Schritte ueber `$GITHUB_OUTPUT` weitergeben:
+Schritte können Werte an nachfolgende Schritte über `$GITHUB_OUTPUT` weitergeben:
 ```yaml
 steps:
-  - name: Determine version
+  - name: Version bestimmen
     run: echo "version=1.2.3" >> $GITHUB_OUTPUT
 
-  - name: Use version
+  - name: Version verwenden
     run: echo "Building version $version"
 ```
 
 **Matrix-Builds:**
-Faechern Sie Jobs ueber mehrere Kombinationen mit `strategy.matrix` auf:
+Fächern Sie Jobs über mehrere Kombinationen mit `strategy.matrix` auf:
 ```yaml
 jobs:
   test:
@@ -587,21 +588,21 @@ jobs:
 ```
 Dies erstellt 4 Jobs: `test (ubuntu-latest, 1.0)`, `test (ubuntu-latest, 2.0)` usw. Alle laufen parallel.
 
-**Manuelle Ausloeser mit Eingaben (`workflow_dispatch`):**
-Definieren Sie typisierte Eingaben, die als Formular in der Oberflaeche beim manuellen Ausloesen angezeigt werden:
+**Manuelle Auslöser mit Eingaben (`workflow_dispatch`):**
+Definieren Sie typisierte Eingaben, die als Formular in der Oberfläche angezeigt werden, wenn manuell ausgelöst wird:
 ```yaml
 on:
   workflow_dispatch:
     inputs:
       environment:
-        description: "Target environment"
+        description: "Zielumgebung"
         required: true
         type: choice
         options:
           - staging
           - production
       debug:
-        description: "Enable debug mode"
+        description: "Debug-Modus aktivieren"
         type: boolean
         default: "false"
 
@@ -611,10 +612,10 @@ jobs:
     steps:
       - run: echo "Deploying to $INPUT_ENVIRONMENT (debug=$INPUT_DEBUG)"
 ```
-Eingabewerte werden als `INPUT_<NAME>`-Umgebungsvariablen (grossgeschrieben) injiziert.
+Eingabewerte werden als `INPUT_<NAME>`-Umgebungsvariablen (in Großbuchstaben) injiziert.
 
 **Job-Timeouts:**
-Setzen Sie `timeout-minutes` auf Jobs, um sie automatisch als fehlgeschlagen zu markieren, wenn sie zu lange laufen:
+Setzen Sie `timeout-minutes` auf Jobs, um sie automatisch fehlschlagen zu lassen, wenn sie zu lange laufen:
 ```yaml
 jobs:
   build:
@@ -623,10 +624,10 @@ jobs:
     steps:
       - run: make build
 ```
-Standard-Timeout ist 360 Minuten (6 Stunden), entspricht GitHub Actions.
+Standard-Timeout beträgt 360 Minuten (6 Stunden), entsprechend GitHub Actions.
 
 **Job-Level-Bedingungen:**
-Verwenden Sie `if:` bei Jobs, um sie basierend auf Bedingungen zu ueberspringen:
+Verwenden Sie `if:` auf Jobs, um sie basierend auf Bedingungen zu überspringen:
 ```yaml
 jobs:
   test:
@@ -650,7 +651,7 @@ jobs:
 ```
 
 **Job-Ausgaben:**
-Jobs koennen Werte ueber `outputs:` an nachgelagerte Jobs weitergeben:
+Jobs können Werte an nachgelagerte Jobs über `outputs:` weitergeben:
 ```yaml
 jobs:
   build:
@@ -669,19 +670,19 @@ jobs:
 ```
 
 **Bei Fehler fortfahren:**
-Lassen Sie einen Schritt fehlschlagen, ohne den Job zu beenden:
+Lassen Sie einen Schritt fehlschlagen, ohne den Job fehlschlagen zu lassen:
 ```yaml
 steps:
-  - name: Optional lint
+  - name: Optionales Linting
     continue-on-error: true
     run: npm run lint
 
-  - name: Build (always runs)
+  - name: Build (läuft immer)
     run: npm run build
 ```
 
 **Pfadfilterung:**
-Loesen Sie Workflows nur aus, wenn bestimmte Dateien sich aendern:
+Lösen Sie Workflows nur aus, wenn bestimmte Dateien sich ändern:
 ```yaml
 on:
   push:
@@ -689,14 +690,14 @@ on:
     paths:
       - 'src/**'
       - '*.csproj'
-    # or use paths-ignore:
+    # oder verwenden Sie paths-ignore:
     # paths-ignore:
     #   - 'docs/**'
     #   - '*.md'
 ```
 
 **Arbeitsverzeichnis:**
-Legen Sie fest, wo Befehle ausgefuehrt werden:
+Legen Sie fest, wo Befehle ausgeführt werden:
 ```yaml
 defaults:
   run:
@@ -706,22 +707,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - run: npm install          # runs in src/app
+      - run: npm install          # läuft in src/app
       - run: npm test
-        working-directory: tests  # overrides default
+        working-directory: tests  # überschreibt Standard
 ```
 
-**Workflows erneut ausfuehren:**
-Klicken Sie auf die **Erneut ausfuehren**-Schaltflaeche bei jedem abgeschlossenen, fehlgeschlagenen oder abgebrochenen Workflow-Run, um einen frischen Run mit denselben Jobs, Schritten und Konfigurationen zu erstellen.
+**Workflows erneut ausführen:**
+Klicken Sie auf die **Erneut ausführen**-Schaltfläche bei jedem abgeschlossenen, fehlgeschlagenen oder abgebrochenen Workflow-Run, um einen neuen Run mit denselben Jobs, Schritten und Konfigurationen zu erstellen.
 
 **Pull-Request-Workflows:**
-Workflows mit `on: pull_request` werden automatisch ausgeloest, wenn ein Nicht-Entwurfs-PR erstellt wird, und fuehren Checks gegen den Quell-Branch aus.
+Workflows mit `on: pull_request` werden automatisch ausgelöst, wenn ein Nicht-Entwurfs-PR erstellt wird, und führen Checks gegen den Quell-Branch aus.
 
 **Commit-Status-Checks:**
-Workflows setzen automatisch Commit-Statusse (Pending/Success/Failure), damit Sie Build-Ergebnisse bei PRs sehen und erforderliche Checks ueber Branch-Schutz durchsetzen koennen.
+Workflows setzen automatisch Commit-Status (Pending/Success/Failure), damit Sie Build-Ergebnisse bei PRs sehen und erforderliche Checks über Branch Protection durchsetzen können.
 
 **Workflow-Abbruch:**
-Klicken Sie auf die **Abbrechen**-Schaltflaeche bei jedem laufenden oder wartenden Workflow in der Actions-Oberflaeche, um ihn sofort zu stoppen.
+Klicken Sie in der Actions-Oberfläche auf die **Abbrechen**-Schaltfläche bei jedem laufenden oder wartenden Workflow, um ihn sofort zu stoppen.
 
 **Status-Badges:**
 Betten Sie Build-Status-Badges in Ihre README oder anderswo ein:
@@ -733,7 +734,7 @@ Nach Workflow-Name filtern: `/api/badge/YourRepo/workflow?workflow=Release%20%26
 
 ### 17. RSS/Atom-Feeds
 
-Abonnieren Sie Repository-Aktivitaeten ueber Standard-Atom-Feeds in jedem RSS-Reader:
+Abonnieren Sie Repository-Aktivitäten mit Standard-Atom-Feeds in jedem RSS-Reader:
 
 ```
 # Repository-Commits
@@ -745,24 +746,24 @@ http://localhost:8080/api/feeds/MyRepo/releases.atom
 # Repository-Tags
 http://localhost:8080/api/feeds/MyRepo/tags.atom
 
-# Benutzer-Aktivitaet
+# Benutzer-Aktivität
 http://localhost:8080/api/feeds/users/admin/activity.atom
 
-# Globale Aktivitaet (alle Repositories)
+# Globale Aktivität (alle Repositories)
 http://localhost:8080/api/feeds/global/activity.atom
 ```
 
-Keine Authentifizierung fuer oeffentliche Repositories erforderlich. Fuegen Sie diese URLs zu jedem Feed-Reader (Feedly, Miniflux, FreshRSS usw.) hinzu, um ueber Aenderungen informiert zu bleiben.
+Keine Authentifizierung für öffentliche Repositories erforderlich. Fügen Sie diese URLs zu jedem Feed-Reader (Feedly, Miniflux, FreshRSS usw.) hinzu, um über Änderungen informiert zu bleiben.
 
-## Datenbank-Konfiguration
+## Datenbankkonfiguration
 
-MyPersonalGit verwendet standardmaessig **SQLite** -- keine Konfiguration, Einzeldatei-Datenbank, perfekt fuer den persoenlichen Gebrauch und kleine Teams.
+MyPersonalGit verwendet standardmäßig **SQLite** — keine Konfiguration erforderlich, Einzeldatei-Datenbank, perfekt für den persönlichen Gebrauch und kleine Teams.
 
-Fuer groessere Bereitstellungen (viele gleichzeitige Benutzer, hohe Verfuegbarkeit oder wenn Sie bereits PostgreSQL betreiben) koennen Sie auf **PostgreSQL** umschalten:
+Für größere Deployments (viele gleichzeitige Benutzer, Hochverfügbarkeit oder wenn Sie bereits PostgreSQL betreiben) können Sie zu **PostgreSQL** wechseln:
 
 ### PostgreSQL verwenden
 
-**Docker Compose** (empfohlen fuer PostgreSQL):
+**Docker Compose** (empfohlen für PostgreSQL):
 ```yaml
 services:
   mypersonalgit:
@@ -801,33 +802,33 @@ docker run -d --name mypersonalgit -p 8080:8080 \
   fennch/mypersonalgit:latest
 ```
 
-EF Core-Migrationen laufen beim Start automatisch fuer beide Anbieter. Kein manuelles Schema-Setup erforderlich.
+EF Core-Migrationen werden beim Start für beide Anbieter automatisch ausgeführt. Kein manuelles Schema-Setup erforderlich.
 
-### Umschalten ueber das Admin-Dashboard
+### Umschalten über das Admin-Dashboard
 
-Sie koennen den Datenbankanbieter auch direkt ueber die Weboberflaeche umschalten:
+Sie können den Datenbankanbieter auch direkt über die Weboberfläche wechseln:
 
-1. Gehen Sie zu **Admin > Einstellungen** -- die **Datenbank**-Karte befindet sich oben
-2. Waehlen Sie **PostgreSQL** aus dem Anbieter-Dropdown
-3. Geben Sie Ihren PostgreSQL-Verbindungsstring ein (z.B. `Host=localhost;Database=mypersonalgit;Username=mypg;Password=secret`)
+1. Gehen Sie zu **Admin > Einstellungen** — die **Datenbank**-Karte ist oben
+2. Wählen Sie **PostgreSQL** aus dem Anbieter-Dropdown
+3. Geben Sie Ihre PostgreSQL-Verbindungszeichenfolge ein (z.B. `Host=localhost;Database=mypersonalgit;Username=mypg;Password=secret`)
 4. Klicken Sie auf **Datenbankeinstellungen speichern**
-5. Starten Sie die Anwendung neu, damit die Aenderung wirksam wird
+5. Starten Sie die Anwendung neu, damit die Änderung wirksam wird
 
-Die Konfiguration wird in `~/.mypersonalgit/database.json` gespeichert (ausserhalb der Datenbank selbst, damit sie vor dem Verbinden gelesen werden kann).
+Die Konfiguration wird in `~/.mypersonalgit/database.json` gespeichert (außerhalb der Datenbank selbst, damit sie vor dem Verbinden gelesen werden kann).
 
-### Eine Datenbank waehlen
+### Datenbank auswählen
 
 | | SQLite | PostgreSQL |
 |---|---|---|
 | **Einrichtung** | Keine Konfiguration (Standard) | Erfordert einen PostgreSQL-Server |
-| **Ideal fuer** | Persoenlichen Gebrauch, kleine Teams, NAS | Teams von 50+, hohe Nebenlaeufigkeit |
-| **Sicherung** | `.db`-Datei kopieren | Standard `pg_dump` |
-| **Nebenlaeufigkeit** | Einzelner Schreiber (ausreichend fuer die meisten Faelle) | Volle Multi-Writer-Unterstuetzung |
-| **Migration** | Nicht zutreffend | Anbieter wechseln + App starten (migriert automatisch) |
+| **Ideal für** | Persönlichen Gebrauch, kleine Teams, NAS | Teams ab 50+, hohe Nebenläufigkeit |
+| **Backup** | `.db`-Datei kopieren | Standard `pg_dump` |
+| **Nebenläufigkeit** | Single-Writer (ausreichend für die meisten Fälle) | Voller Multi-Writer-Betrieb |
+| **Migration** | N/A | Anbieter wechseln + App starten (auto-migriert) |
 
-## Auf einem NAS bereitstellen
+## Deployment auf einem NAS
 
-MyPersonalGit funktioniert hervorragend auf einem NAS (QNAP, Synology usw.) ueber Docker:
+MyPersonalGit funktioniert hervorragend auf einem NAS (QNAP, Synology usw.) über Docker:
 
 ```bash
 docker run -d --name mypersonalgit -p 8080:8080 -p 2222:2222 \
@@ -839,22 +840,22 @@ docker run -d --name mypersonalgit -p 8080:8080 -p 2222:2222 \
   fennch/mypersonalgit:latest
 ```
 
-Der Docker-Socket-Mount ist optional -- nur erforderlich, wenn Sie CI/CD-Workflow-Ausfuehrung wuenschen. Port 2222 wird nur benoetigt, wenn Sie den integrierten SSH-Server aktivieren.
+Der Docker-Socket-Mount ist optional — wird nur benötigt, wenn Sie CI/CD-Workflow-Ausführung wünschen. Port 2222 wird nur benötigt, wenn Sie den integrierten SSH-Server aktivieren.
 
 ## Konfiguration
 
-Alle Einstellungen koennen in `appsettings.json`, ueber Umgebungsvariablen oder ueber das Admin-Dashboard unter `/admin` konfiguriert werden:
+Alle Einstellungen können in `appsettings.json`, über Umgebungsvariablen oder über das Admin-Dashboard unter `/admin` konfiguriert werden:
 
 - Datenbankanbieter (SQLite oder PostgreSQL)
-- Projektverzeichnis
+- Projekt-Stammverzeichnis
 - Authentifizierungsanforderungen
-- Benutzerregistrierungseinstellungen
-- Funktionsumschalter (Issues, Wiki, Projekte, Actions)
-- Maximale Repository-Groesse und Anzahl pro Benutzer
-- SMTP-Einstellungen fuer E-Mail-Benachrichtigungen
-- Push-Benachrichtigungseinstellungen (Ntfy/Gotify)
+- Benutzerregistrierungs-Einstellungen
+- Feature-Toggles (Issues, Wiki, Projekte, Actions)
+- Maximale Repository-Größe und -Anzahl pro Benutzer
+- SMTP-Einstellungen für E-Mail-Benachrichtigungen
+- Push-Benachrichtigungs-Einstellungen (Ntfy/Gotify)
 - Integrierter SSH-Server (aktivieren/deaktivieren, Port)
-- LDAP/Active Directory-Authentifizierung (Server, Bind-DN, Such-Basis, Benutzerfilter, Attributzuordnung, Admin-Gruppe)
+- LDAP/Active Directory-Authentifizierung (Server, Bind-DN, Such-Basis, Benutzerfilter, Attribut-Mapping, Admin-Gruppe)
 - OAuth/SSO-Anbieterkonfiguration (Client-ID/Secret pro Anbieter)
 
 ## Projektstruktur
@@ -864,18 +865,18 @@ MyPersonalGit/
   Components/
     Layout/          # MainLayout, NavMenu
     Pages/           # Blazor-Seiten (Home, RepoDetails, Issues, PRs, Packages usw.)
-  Controllers/       # REST-API-Endpunkte (NuGet, npm, Generic, Registry usw.)
+  Controllers/       # REST API-Endpunkte (NuGet, npm, Generic, Registry usw.)
   Data/              # EF Core DbContext, Service-Implementierungen
-  Models/            # Domaenenmodelle
+  Models/            # Domänenmodelle
   Migrations/        # EF Core-Migrationen
-  Services/          # Middleware (Auth, Git-HTTP-Backend, Pages, Registry-Auth)
+  Services/          # Middleware (Auth, Git HTTP-Backend, Pages, Registry-Auth)
     SshServer/       # Integrierter SSH-Server (SSH2-Protokoll, ECDH, AES-CTR)
   Program.cs         # App-Start, DI, Middleware-Pipeline
 MyPersonalGit.Tests/
   UnitTest1.cs       # xUnit-Tests mit InMemory-Datenbank
 ```
 
-## Tests ausfuehren
+## Tests ausführen
 
 ```bash
 dotnet test
