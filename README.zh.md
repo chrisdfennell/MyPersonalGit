@@ -7,6 +7,8 @@
 一个自托管的 Git 服务器，带有类似 GitHub 的 Web 界面，基于 ASP.NET Core 和 Blazor Server 构建。可以在您自己的机器或服务器上浏览仓库、管理 Issue、Pull Request、Wiki、项目等。
 
 ![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot2.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot3.png)
 
 ---
 

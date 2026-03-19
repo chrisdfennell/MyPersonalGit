@@ -7,6 +7,8 @@
 Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con ASP.NET Core e Blazor Server. Esplora repository, gestisci issue, pull request, wiki, progetti e altro -- tutto dal tuo computer o server.
 
 ![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot2.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot3.png)
 
 ---
 

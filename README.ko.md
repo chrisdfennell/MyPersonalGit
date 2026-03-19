@@ -6,7 +6,9 @@
 
 ASP.NET Core와 Blazor Server로 구축된 GitHub 스타일의 웹 인터페이스를 갖춘 셀프 호스팅 Git 서버입니다. 저장소 탐색, 이슈, 풀 리퀘스트, 위키, 프로젝트 등을 자신의 머신이나 서버에서 모두 관리할 수 있습니다.
 
-![MyPersonalGit 스크린샷](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot2.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot3.png)
 
 ---
 

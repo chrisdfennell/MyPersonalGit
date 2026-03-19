@@ -6,7 +6,10 @@
 
 ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne sahip kendi sunucunuzda barındırılan bir Git sunucusu. Depoları görüntüleyin, sorunları, pull request'leri, wikileri, projeleri ve daha fazlasını yönetin — hepsi kendi makinenizde veya sunucunuzda.
 
-![MyPersonalGit Ekran Görüntüsü](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot2.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot3.png)
+
 
 ---
 
