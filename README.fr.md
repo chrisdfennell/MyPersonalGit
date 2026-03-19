@@ -161,7 +161,13 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Sauvegarde et restauration** — Exportez et importez les données du serveur
 - **Analyse de sécurité** — Analyse réelle des vulnérabilités des dépendances alimentée par la base de données [OSV.dev](https://osv.dev/). Extrait automatiquement les dépendances depuis `.csproj` (NuGet), `package.json` (npm) et `requirements.txt` (PyPI), puis vérifie chacune par rapport aux CVEs connues. Rapporte la sévérité, les versions corrigées et les liens vers les avis de sécurité. Plus des avis de sécurité manuels avec workflow brouillon/publication/clôture
 - **Mode sombre** — Support complet du mode sombre/clair avec un bouton de basculement dans l'en-tête
-- **Multi-langue / i18n** — Localisation complète sur les 27 pages avec 676 clés de ressources. Livré avec 11 langues : anglais, espagnol, français, allemand, japonais, coréen, chinois (simplifié), portugais, russe, italien et turc. Ajoutez-en d'autres en créant des fichiers `SharedResource.{locale}.resx`
+- **Multi-langue / i18n** — Localisation complète sur les 27 pages avec 676 clés de ressources. Livré avec 11 langues : anglais, espagnol, français, allemand, japonais, coréen, chinois (simplifié), portugais, russe, italien et turc. Sélecteur de langue dans l'en-tête. Ajoutez-en d'autres en créant des fichiers `SharedResource.{locale}.resx`
+- **Swagger / OpenAPI** — Documentation interactive de l'API à `/swagger` avec tous les endpoints REST découvrables et testables
+- **Mermaid Diagrams** — Rendu de diagrammes Mermaid dans les fichiers Markdown (organigrammes, diagrammes de séquence, diagrammes de Gantt, etc.)
+- **Math Rendering** — Expressions mathématiques LaTeX/KaTeX dans le Markdown (syntaxe `$inline$` et `$$display$$`)
+- **CSV/TSV Viewer** — Les fichiers CSV et TSV sont affichés sous forme de tableaux formatés et triables au lieu de texte brut
+- **Repository Transfer** — Transférez la propriété du dépôt à un autre utilisateur ou organisation depuis les Paramètres du dépôt
+- **Default Branch Configuration** — Changez la branche par défaut par dépôt depuis l'onglet Paramètres
 
 ## Stack technique
 

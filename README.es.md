@@ -161,7 +161,13 @@ Un servidor Git autoalojado con una interfaz web similar a GitHub, construido co
 - **Respaldo y Restauracion** — Exporta e importa datos del servidor
 - **Escaneo de Seguridad** — Escaneo real de vulnerabilidades en dependencias impulsado por la base de datos [OSV.dev](https://osv.dev/). Extrae automaticamente dependencias de `.csproj` (NuGet), `package.json` (npm) y `requirements.txt` (PyPI), luego verifica cada una contra CVEs conocidos. Reporta severidad, versiones corregidas y enlaces a avisos. Ademas, avisos de seguridad manuales con flujo de trabajo borrador/publicar/cerrar
 - **Modo Oscuro** — Soporte completo de modo oscuro/claro con un boton en el encabezado
-- **Multi-Idioma / i18n** — Localizacion completa en las 27 paginas con 676 claves de recursos. Incluye 11 idiomas: ingles, espanol, frances, aleman, japones, coreano, chino (simplificado), portugues, ruso, italiano y turco. Agrega mas creando archivos `SharedResource.{locale}.resx`
+- **Multi-Idioma / i18n** — Localizacion completa en las 27 paginas con 676 claves de recursos. Incluye 11 idiomas: ingles, espanol, frances, aleman, japones, coreano, chino (simplificado), portugues, ruso, italiano y turco. Selector de idioma en el encabezado. Agrega mas creando archivos `SharedResource.{locale}.resx`
+- **Swagger / OpenAPI** — Documentacion interactiva de la API en `/swagger` con todos los endpoints REST descubribles y comprobables
+- **Mermaid Diagrams** — Renderizado de diagramas Mermaid en archivos Markdown (diagramas de flujo, diagramas de secuencia, diagramas de Gantt, etc.)
+- **Math Rendering** — Expresiones matematicas LaTeX/KaTeX en Markdown (sintaxis `$inline$` y `$$display$$`)
+- **CSV/TSV Viewer** — Los archivos CSV y TSV se renderizan como tablas formateadas y ordenables en lugar de texto sin formato
+- **Repository Transfer** — Transfiere la propiedad del repositorio a otro usuario u organizacion desde la Configuracion del repositorio
+- **Default Branch Configuration** — Cambia la rama predeterminada por repositorio desde la pestana de Configuracion
 
 ## Stack Tecnologico
 

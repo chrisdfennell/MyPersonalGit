@@ -161,7 +161,13 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **Backup e Ripristino** — Esporta e importa dati del server
 - **Scansione di Sicurezza** — Scansione reale delle vulnerabilità delle dipendenze basata sul database [OSV.dev](https://osv.dev/). Estrae automaticamente le dipendenze da `.csproj` (NuGet), `package.json` (npm) e `requirements.txt` (PyPI), quindi verifica ciascuna contro CVE noti. Riporta gravità, versioni corrette e link agli advisory. Più advisory di sicurezza manuali con workflow bozza/pubblicazione/chiusura
 - **Dark Mode** — Supporto completo dark/light mode con toggle nell'intestazione
-- **Multilingua / i18n** — Localizzazione completa su tutte le 27 pagine con 676 chiavi di risorsa. Viene fornito con 11 lingue: inglese, spagnolo, francese, tedesco, giapponese, coreano, cinese (semplificato), portoghese, russo, italiano e turco. Aggiungi altre lingue creando file `SharedResource.{locale}.resx`
+- **Multilingua / i18n** — Localizzazione completa su tutte le 27 pagine con 676 chiavi di risorsa. Viene fornito con 11 lingue: inglese, spagnolo, francese, tedesco, giapponese, coreano, cinese (semplificato), portoghese, russo, italiano e turco. Selettore della lingua nell'intestazione. Aggiungi altre lingue creando file `SharedResource.{locale}.resx`
+- **Swagger / OpenAPI** — Documentazione API interattiva su `/swagger` con tutti gli endpoint REST individuabili e testabili
+- **Mermaid Diagrams** — Rendering di diagrammi Mermaid nei file Markdown (diagrammi di flusso, diagrammi di sequenza, diagrammi di Gantt, ecc.)
+- **Math Rendering** — Espressioni matematiche LaTeX/KaTeX nel Markdown (sintassi `$inline$` e `$$display$$`)
+- **CSV/TSV Viewer** — I file CSV e TSV vengono visualizzati come tabelle formattate e ordinabili invece di testo grezzo
+- **Repository Transfer** — Trasferisci la proprietà del repository a un altro utente o organizzazione dalle Impostazioni del repository
+- **Default Branch Configuration** — Cambia il branch predefinito per repository dalla scheda Impostazioni
 
 ## Stack Tecnologico
 

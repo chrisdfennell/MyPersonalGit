@@ -161,7 +161,13 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Backup & Wiederherstellung** — Exportieren und importieren Sie Serverdaten
 - **Sicherheitsscanning** — Echte Schwachstellenanalyse von Abhängigkeiten, basierend auf der [OSV.dev](https://osv.dev/)-Datenbank. Extrahiert automatisch Abhängigkeiten aus `.csproj` (NuGet), `package.json` (npm) und `requirements.txt` (PyPI) und prüft jede gegen bekannte CVEs. Berichtet Schweregrad, behobene Versionen und Advisory-Links. Plus manuelle Sicherheitshinweise mit Entwurf/Veröffentlichung/Schließen-Workflow
 - **Dark Mode** — Vollständige Dark/Light-Mode-Unterstützung mit einem Umschalter im Header
-- **Mehrsprachigkeit / i18n** — Vollständige Lokalisierung über alle 27 Seiten mit 676 Ressourcenschlüsseln. Wird mit 11 Sprachen ausgeliefert: Englisch, Spanisch, Französisch, Deutsch, Japanisch, Koreanisch, Chinesisch (vereinfacht), Portugiesisch, Russisch, Italienisch und Türkisch. Weitere Sprachen können durch Erstellen von `SharedResource.{locale}.resx`-Dateien hinzugefügt werden
+- **Mehrsprachigkeit / i18n** — Vollständige Lokalisierung über alle 27 Seiten mit 676 Ressourcenschlüsseln. Wird mit 11 Sprachen ausgeliefert: Englisch, Spanisch, Französisch, Deutsch, Japanisch, Koreanisch, Chinesisch (vereinfacht), Portugiesisch, Russisch, Italienisch und Türkisch. Sprachauswahl in der Kopfzeile. Weitere Sprachen können durch Erstellen von `SharedResource.{locale}.resx`-Dateien hinzugefügt werden
+- **Swagger / OpenAPI** — Interaktive API-Dokumentation unter `/swagger` mit allen REST-Endpunkten auffindbar und testbar
+- **Mermaid Diagrams** — Mermaid-Diagramm-Rendering in Markdown-Dateien (Flussdiagramme, Sequenzdiagramme, Gantt-Diagramme usw.)
+- **Math Rendering** — LaTeX/KaTeX-Mathematikausdrücke in Markdown (`$inline$`- und `$$display$$`-Syntax)
+- **CSV/TSV Viewer** — CSV- und TSV-Dateien werden als formatierte, sortierbare Tabellen anstatt als Rohtext dargestellt
+- **Repository Transfer** — Übertragen Sie die Repository-Inhaberschaft an einen anderen Benutzer oder eine Organisation über die Repository-Einstellungen
+- **Default Branch Configuration** — Ändern Sie den Standard-Branch pro Repository über den Einstellungen-Tab
 
 ## Technologie-Stack
 
