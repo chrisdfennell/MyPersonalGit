@@ -6,7 +6,9 @@
 
 Самостоятельно размещаемый Git-сервер с веб-интерфейсом в стиле GitHub, построенный на ASP.NET Core и Blazor Server. Просматривайте репозитории, управляйте задачами, пулл-реквестами, вики, проектами и многим другим — всё на вашей собственной машине или сервере.
 
-![Скриншот MyPersonalGit](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot2.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot3.png)
 
 ---
 

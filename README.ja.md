@@ -6,7 +6,9 @@
 
 ASP.NET Core と Blazor Server で構築された、GitHub ライクな Web インターフェースを備えたセルフホスト型 Git サーバーです。リポジトリの閲覧、Issue、プルリクエスト、Wiki、プロジェクトなどの管理を、自分のマシンやサーバー上ですべて行えます。
 
-![MyPersonalGit スクリーンショット](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot2.png)
+![MyPersonalGit Screenshot](https://github.com/chrisdfennell/MyPersonalGit/raw/main/assets/images/screenshot3.png)
 
 ---
 
