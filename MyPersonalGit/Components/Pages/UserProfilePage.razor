@@ -9,7 +9,10 @@
 @inject IConfiguration Config
 @inject NavigationManager Navigation
 @using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject CurrentUserService UserService
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
 <PageTitle>@Username - MyPersonalGit</PageTitle>
@@ -68,7 +71,7 @@
                     @if (IsOwnProfile)
                     {
                         <button class="btn btn-primary w-100 mt-3" @onclick='() => Navigation.NavigateTo("/settings")'>
-                            <i class="bi bi-gear"></i> Edit Profile
+                            <i class="bi bi-gear"></i> @L["Profile_EditProfile"]
                         </button>
                     }
                 </div>
@@ -79,17 +82,17 @@
             <ul class="nav nav-tabs mb-4">
                 <li class="nav-item">
                     <a class="nav-link @(ActiveTab == "overview" ? "active" : "")" @onclick='() => ActiveTab = "overview"' style="cursor: pointer;">
-                        Overview
+                        @L["Profile_Overview"]
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link @(ActiveTab == "activity" ? "active" : "")" @onclick='() => ActiveTab = "activity"' style="cursor: pointer;">
-                        Activity
+                        @L["Profile_Activity"]
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link @(ActiveTab == "repositories" ? "active" : "")" @onclick='() => ActiveTab = "repositories"' style="cursor: pointer;">
-                        Repositories
+                        @L["Profile_Repositories"]
                     </a>
                 </li>
             </ul>
@@ -101,7 +104,7 @@
                         <div class="card text-center">
                             <div class="card-body">
                                 <h3 class="mb-0">@Statistics.TotalRepositories</h3>
-                                <small class="text-muted">Repositories</small>
+                                <small class="text-muted">@L["Profile_Repositories"]</small>
                             </div>
                         </div>
                     </div>
@@ -109,7 +112,7 @@
                         <div class="card text-center">
                             <div class="card-body">
                                 <h3 class="mb-0">@Statistics.TotalCommits</h3>
-                                <small class="text-muted">Commits</small>
+                                <small class="text-muted">@L["Profile_Commits"]</small>
                             </div>
                         </div>
                     </div>
@@ -117,7 +120,7 @@
                         <div class="card text-center">
                             <div class="card-body">
                                 <h3 class="mb-0">@Statistics.TotalPullRequests</h3>
-                                <small class="text-muted">Pull Requests</small>
+                                <small class="text-muted">@L["Profile_PullRequests"]</small>
                             </div>
                         </div>
                     </div>
@@ -125,7 +128,7 @@
                         <div class="card text-center">
                             <div class="card-body">
                                 <h3 class="mb-0">@Statistics.TotalIssues</h3>
-                                <small class="text-muted">Issues</small>
+                                <small class="text-muted">@L["Profile_Issues"]</small>
                             </div>
                         </div>
                     </div>
@@ -185,25 +188,25 @@
                             </div>
                         </div>
                         <div class="mt-3 d-flex align-items-center" style="gap: 4px;">
-                            <small class="text-muted me-1">Less</small>
+                            <small class="text-muted me-1">@L["Profile_Less"]</small>
                             <div class="contribution-day level-0" style="width: 11px; height: 11px; border-radius: 2px;"></div>
                             <div class="contribution-day level-1" style="width: 11px; height: 11px; border-radius: 2px;"></div>
                             <div class="contribution-day level-2" style="width: 11px; height: 11px; border-radius: 2px;"></div>
                             <div class="contribution-day level-3" style="width: 11px; height: 11px; border-radius: 2px;"></div>
                             <div class="contribution-day level-4" style="width: 11px; height: 11px; border-radius: 2px;"></div>
-                            <small class="text-muted ms-1">More</small>
+                            <small class="text-muted ms-1">@L["Profile_More"]</small>
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Recent Activity</h5>
+                        <h5 class="mb-0">@L["Profile_RecentActivity"]</h5>
                     </div>
                     <div class="card-body">
                         @if (Activities.Count == 0)
                         {
-                            <p class="text-muted">No recent activity</p>
+                            <p class="text-muted">@L["Profile_NoRecentActivity"]</p>
                         }
                         else
                         {
@@ -231,12 +234,12 @@
             {
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">All Activity</h5>
+                        <h5 class="mb-0">@L["Profile_AllActivity"]</h5>
                     </div>
                     <div class="card-body">
                         @if (Activities.Count == 0)
                         {
-                            <p class="text-muted">No activity yet</p>
+                            <p class="text-muted">@L["Profile_NoActivity"]</p>
                         }
                         else
                         {
@@ -269,13 +272,13 @@
             {
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Repositories</h5>
+                        <h5 class="mb-0">@L["Profile_Repositories"]</h5>
                         <small class="text-muted">@VisibleRepos.Count() repositories</small>
                     </div>
                     @if (UserRepos.Count == 0)
                     {
                         <div class="card-body">
-                            <p class="text-muted">No repositories yet</p>
+                            <p class="text-muted">@L["Profile_NoRepositories"]</p>
                         </div>
                     }
                     else

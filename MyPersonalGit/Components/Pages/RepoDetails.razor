@@ -31,12 +31,15 @@
 @inject IGpgKeyService GpgKeyService
 @inject IIssueAutoCloseService IssueAutoCloseService
 @using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @using RepositorySecret = MyPersonalGit.Models.RepositorySecret
 @using DeployKey = MyPersonalGit.Models.DeployKey
 @inject CurrentUserService UserService
 @inject ICodeOwnersService CodeOwnersService
 @inject ITagProtectionService TagProtectionService
 @inject IRepositoryLabelService LabelService
+@inject IStringLocalizer<SharedResource> L
 @using TagProtectionRule = MyPersonalGit.Models.TagProtectionRule
 @using RepositoryLabel = MyPersonalGit.Models.RepositoryLabel
 @rendermode InteractiveServer
@@ -46,13 +49,13 @@
 @if (notFound)
 {
     <div class="container py-5 text-center">
-        <h1 class="display-4 text-muted">Repository not found</h1>
+        <h1 class="display-4 text-muted">@L["Repo_NotFound"]</h1>
         <p>The repository <strong>@RepoName</strong> does not exist on this server.</p>
         <div class="alert alert-warning d-inline-block mt-3">
             <small>Searching in: <code>@RootPath</code></small>
         </div>
         <br />
-        <a href="/" class="btn btn-primary mt-3">Back to Dashboard</a>
+        <a href="/" class="btn btn-primary mt-3">@L["Repo_BackToDashboard"]</a>
     </div>
 }
 else
@@ -108,7 +111,7 @@ else
                     @if (showCloneDropdown)
                     {
                         <div class="dropdown-menu dropdown-menu-end show shadow p-3" style="width: 320px; display: block; position: absolute; right: 0; z-index: 1000;">
-                            <h6 class="fw-bold small mb-2">Clone</h6>
+                            <h6 class="fw-bold small mb-2">@L["Repo_Clone"]</h6>
                             <div class="input-group input-group-sm mb-2">
                                 <input type="text" class="form-control bg-light" readonly value="@CloneUrl" id="cloneUrlInput" />
                                 <button class="btn btn-outline-secondary" type="button" @onclick="CopyCloneUrl" title="Copy to clipboard"><i class="bi bi-clipboard"></i></button>
@@ -116,7 +119,7 @@ else
                             <p class="x-small text-muted mb-0">Use the Git HTTP URL to clone this repository.</p>
 
                             <hr class="my-2" />
-                            <h6 class="fw-bold small mb-2">Download</h6>
+                            <h6 class="fw-bold small mb-2">@L["Repo_Download"]</h6>
                             <a href="/api/v1/repos/@(System.IO.Path.GetFileName(RepoFullPath))/archive/@(currentBranch).zip" class="btn btn-sm btn-outline-secondary w-100 text-start mb-1">
                                 <i class="bi bi-file-earmark-zip me-2"></i>Download ZIP
                             </a>
@@ -128,7 +131,7 @@ else
                             {
                                 <hr class="my-2" />
 
-                                <h6 class="fw-bold small mb-2">Add files</h6>
+                                <h6 class="fw-bold small mb-2">@L["Repo_AddFiles"]</h6>
                                 <div class="d-grid gap-2">
                                     <button class="btn btn-sm btn-outline-secondary text-start" @onclick="NavigateToCreateFile">
                                         <i class="bi bi-file-earmark-plus me-2"></i>Create new file
@@ -179,86 +182,86 @@ else
             <ul class="nav nav-tabs border-bottom-0 gap-2">
                 <li class="nav-item">
                     <button class="nav-link @(activeTab == "code" || activeTab == "edit" || activeTab == "add-file" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("code")'>
-                        <i class="bi bi-code-slash me-1"></i> Code
+                        <i class="bi bi-code-slash me-1"></i> @L["Repo_Code"]
                     </button>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/issues">
-                        <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> Issues
+                        <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> @L["Repo_Issues"]
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/pulls">
-                        <i class="bi bi-git me-1"></i> Pull requests
+                        <i class="bi bi-git me-1"></i> @L["Repo_PullRequests"]
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/discussions">
-                        <i class="bi bi-chat-square-text me-1"></i> Discussions
+                        <i class="bi bi-chat-square-text me-1"></i> @L["Repo_Discussions"]
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/actions">
-                        <i class="bi bi-play-circle me-1"></i> Actions
+                        <i class="bi bi-play-circle me-1"></i> @L["Repo_Actions"]
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/wiki">
-                        <i class="bi bi-book me-1"></i> Wiki
+                        <i class="bi bi-book me-1"></i> @L["Repo_Wiki"]
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/projects">
-                        <i class="bi bi-kanban me-1"></i> Projects
+                        <i class="bi bi-kanban me-1"></i> @L["Repo_Projects"]
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/security">
-                        <i class="bi bi-shield-check me-1"></i> Security
+                        <i class="bi bi-shield-check me-1"></i> @L["Repo_Security"]
                     </a>
                 </li>
                 <li class="nav-item">
                     <button class="nav-link @(activeTab == "commits" || activeTab == "commit-detail" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("commits")'>
-                        <i class="bi bi-clock-history me-1"></i> Commits
+                        <i class="bi bi-clock-history me-1"></i> @L["Repo_Commits"]
                         <span class="badge rounded-pill bg-secondary bg-opacity-10 text-body ms-1">@commitCount</span>
                     </button>
                 </li>
                 <li class="nav-item">
                     <button class="nav-link @(activeTab == "graph" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("graph")'>
-                        <i class="bi bi-diagram-3 me-1"></i> Graph
+                        <i class="bi bi-diagram-3 me-1"></i> @L["Repo_Graph"]
                     </button>
                 </li>
                 <li class="nav-item">
                     <button class="nav-link @(activeTab == "branches" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("branches")'>
-                        <i class="bi bi-branches me-1"></i> Branches
+                        <i class="bi bi-branches me-1"></i> @L["Repo_Branches"]
                         <span class="badge rounded-pill bg-secondary bg-opacity-10 text-body ms-1">@branches.Count</span>
                     </button>
                 </li>
                 <li class="nav-item">
                     <button class="nav-link @(activeTab == "tags" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("tags")'>
-                        <i class="bi bi-tags me-1"></i> Tags
+                        <i class="bi bi-tags me-1"></i> @L["Repo_Tags"]
                         <span class="badge rounded-pill bg-secondary bg-opacity-10 text-body ms-1">@tags.Count</span>
                     </button>
                 </li>
                 <li class="nav-item">
                     <button class="nav-link @(activeTab == "releases" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("releases")'>
-                        <i class="bi bi-tag me-1"></i> Releases
+                        <i class="bi bi-tag me-1"></i> @L["Repo_Releases"]
                         @if (releases.Any()) { <span class="badge rounded-pill bg-secondary bg-opacity-10 text-body ms-1">@releases.Count</span> }
                     </button>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/insights">
-                        <i class="bi bi-graph-up me-1"></i> Insights
+                        <i class="bi bi-graph-up me-1"></i> @L["Repo_Insights"]
                     </a>
                 </li>
                 <li class="nav-item">
                     <button class="nav-link @(activeTab == "packages" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("packages")'>
-                        <i class="bi bi-box me-1"></i> Packages
+                        <i class="bi bi-box me-1"></i> @L["Repo_Packages"]
                     </button>
                 </li>
                 <li class="nav-item">
                     <button class="nav-link @(activeTab == "settings" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("settings")'>
-                        <i class="bi bi-gear me-1"></i> Settings
+                        <i class="bi bi-gear me-1"></i> @L["Repo_Settings"]
                     </button>
                 </li>
             </ul>
@@ -272,7 +275,7 @@ else
             {
                 <div class="blankslate p-5 border rounded-3 bg-light text-center shadow-sm">
                     <i class="bi bi-terminal-fill display-4 text-muted mb-3"></i>
-                    <h3 class="h5 fw-bold">Quick setup — if you’ve done this kind of thing before</h3>
+                    <h3 class="h5 fw-bold">@L["Repo_QuickSetup"]</h3>
                     <p class="text-muted mb-4 small">
                         Get started by <button class="btn btn-link p-0 pb-1 small fw-bold text-decoration-none" @onclick="EnterAddFileMode">creating a new file</button> or pushing an existing repository.
                     </p>
@@ -308,13 +311,13 @@ else
                         <div class="btn-group shadow-sm">
                             @if (UserService.IsLoggedIn)
                             {
-                                <button class="btn btn-light btn-sm border" @onclick="EnterEditMode"><i class="bi bi-pencil me-1"></i> Edit</button>
+                                <button class="btn btn-light btn-sm border" @onclick="EnterEditMode"><i class="bi bi-pencil me-1"></i> @L["Repo_Edit"]</button>
                             }
-                            <button class="btn btn-light btn-sm border" @onclick="ViewFileHistory"><i class="bi bi-clock-history me-1"></i> History</button>
-                            <a href="/blame/@repoOwner/@RepoName/@currentBranch/@Path" class="btn btn-light btn-sm border"><i class="bi bi-person-lines-fill me-1"></i> Blame</a>
+                            <button class="btn btn-light btn-sm border" @onclick="ViewFileHistory"><i class="bi bi-clock-history me-1"></i> @L["Repo_History"]</button>
+                            <a href="/blame/@repoOwner/@RepoName/@currentBranch/@Path" class="btn btn-light btn-sm border"><i class="bi bi-person-lines-fill me-1"></i> @L["Repo_Blame"]</a>
                             @if (UserService.IsLoggedIn)
                             {
-                                <button class="btn btn-light btn-sm border" @onclick="() => showDeleteModal = true"><i class="bi bi-trash me-1 text-danger"></i> Delete</button>
+                                <button class="btn btn-light btn-sm border" @onclick="() => showDeleteModal = true"><i class="bi bi-trash me-1 text-danger"></i> @L["Repo_Delete"]</button>
                             }
                             <button class="btn @(showRaw ? "btn-secondary" : "btn-light") btn-sm border" @onclick="() => showRaw = !showRaw">
                                 <i class="bi bi-code-square me-1"></i> Raw
@@ -366,7 +369,7 @@ else
                             @if (showBranchDropdown)
                             {
                                 <div class="dropdown-menu show shadow-sm" style="position: absolute; z-index: 1000; display: block;">
-                                    <div class="px-3 py-2 border-bottom small fw-bold">Switch branches</div>
+                                    <div class="px-3 py-2 border-bottom small fw-bold">@L["Repo_SwitchBranches"]</div>
                                     @foreach (var b in branches)
                                     {
                                         <button class="dropdown-item small d-flex align-items-center" @onclick="() => SwitchBranch(b.Name)">
@@ -387,7 +390,7 @@ else
 
                         <div class="input-group input-group-sm" style="width: 240px;">
                             <span class="input-group-text border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                            <input type="text" class="form-control border-start-0 ps-0 shadow-none" placeholder="Go to file..." @bind="fileSearchTerm" @bind:event="oninput" />
+                            <input type="text" class="form-control border-start-0 ps-0 shadow-none" placeholder="@L["Repo_GoToFile"]" @bind="fileSearchTerm" @bind:event="oninput" />
                         </div>
                     </div>
                     @if (UserService.IsLoggedIn && !repoIsArchived)
@@ -395,7 +398,7 @@ else
                         <div class="d-flex gap-2">
                             <div class="dropdown">
                                 <button class="btn btn-light btn-sm border shadow-sm px-3 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Add file
+                                    @L["Repo_AddFile"]
                                 </button>
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="#" @onclick="EnterAddFileMode" @onclick:preventDefault>Create new file</a></li>
@@ -490,7 +493,7 @@ else
                 {
                     <div class="col-md-3">
                         <div class="border-bottom pb-3 mb-3">
-                            <h6 class="fw-bold mb-3">About</h6>
+                            <h6 class="fw-bold mb-3">@L["Repo_About"]</h6>
                             @if (!string.IsNullOrEmpty(repoDescription))
                             {
                                 <p class="text-muted small">@repoDescription</p>
@@ -579,7 +582,7 @@ else
                         @if (languageStats.Any())
                         {
                             <div class="mb-4">
-                                <h6 class="fw-bold mb-3">Languages</h6>
+                                <h6 class="fw-bold mb-3">@L["Repo_Languages"]</h6>
                                 <div class="language-bar d-flex rounded overflow-hidden" style="height: 8px;">
                                     @foreach (var lang in languageStats)
                                     {
@@ -607,16 +610,16 @@ else
         {
             <div class="branches-view mb-5">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0">Branches</h5>
-                    <button class="btn btn-gh-primary btn-sm" @onclick="() => showNewBranchModal = true">New branch</button>
+                    <h5 class="fw-bold mb-0">@L["Repo_Branches"]</h5>
+                    <button class="btn btn-gh-primary btn-sm" @onclick="() => showNewBranchModal = true">@L["Repo_NewBranch"]</button>
                 </div>
 
                 <div class="card border shadow-sm">
-                    <div class="card-header bg-light-subtle py-2 small fw-bold">Active branches</div>
+                    <div class="card-header bg-light-subtle py-2 small fw-bold">@L["Repo_ActiveBranches"]</div>
                     <div class="list-group list-group-flush">
                         @if (!branches.Any())
                         {
-                            <div class="list-group-item py-4 text-center text-muted small">No branches found.</div>
+                            <div class="list-group-item py-4 text-center text-muted small">@L["Repo_NoBranches"]</div>
                         }
                         @foreach (var b in branches)
                         {
@@ -651,16 +654,16 @@ else
         {
             <div class="tags-view mb-5">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0">Tags</h5>
-                    <button class="btn btn-gh-primary btn-sm" @onclick="() => showNewTagModal = true">New tag</button>
+                    <h5 class="fw-bold mb-0">@L["Repo_Tags"]</h5>
+                    <button class="btn btn-gh-primary btn-sm" @onclick="() => showNewTagModal = true">@L["Repo_NewTag"]</button>
                 </div>
 
                 <div class="card border shadow-sm">
-                    <div class="card-header bg-light-subtle py-2 small fw-bold">Release tags</div>
+                    <div class="card-header bg-light-subtle py-2 small fw-bold">@L["Repo_ReleaseTags"]</div>
                     <div class="list-group list-group-flush">
                         @if (!tags.Any())
                         {
-                            <div class="list-group-item py-4 text-center text-muted small">No tags have been created yet.</div>
+                            <div class="list-group-item py-4 text-center text-muted small">@L["Repo_NoTags"]</div>
                         }
                         @foreach (var t in tags)
                         {
@@ -693,11 +696,11 @@ else
         {
             <div class="releases-view mb-5">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0">Releases</h5>
+                    <h5 class="fw-bold mb-0">@L["Repo_Releases"]</h5>
                     @if (UserService.IsLoggedIn)
                     {
                         <button class="btn btn-gh-primary btn-sm" @onclick="() => showCreateRelease = true">
-                            <i class="bi bi-plus-lg me-1"></i>New release
+                            <i class="bi bi-plus-lg me-1"></i>@L["Repo_NewRelease"]
                         </button>
                     }
                 </div>
@@ -706,7 +709,7 @@ else
                 {
                     <div class="card border shadow-sm mb-4">
                         <div class="card-header bg-light-subtle py-2">
-                            <h6 class="fw-bold mb-0 small">Create a new release</h6>
+                            <h6 class="fw-bold mb-0 small">@L["Repo_CreateNewRelease"]</h6>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
@@ -733,12 +736,12 @@ else
                                 }
                             </div>
                             <div class="mb-3">
-                                <label class="form-label small fw-bold">Release title</label>
+                                <label class="form-label small fw-bold">@L["Repo_ReleaseTitle"]</label>
                                 <input type="text" class="form-control form-control-sm" @bind="newReleaseTitle" placeholder="e.g. v1.0.0" />
                             </div>
                             <div class="mb-3">
-                                <label class="form-label small fw-bold">Description</label>
-                                <textarea class="form-control form-control-sm" @bind="newReleaseBody" rows="6" placeholder="Describe this release..."></textarea>
+                                <label class="form-label small fw-bold">@L["Repo_Description"]</label>
+                                <textarea class="form-control form-control-sm" @bind="newReleaseBody" rows="6" placeholder="@L["Repo_DescribeRelease"]"></textarea>
                             </div>
                             <div class="d-flex gap-3 mb-3">
                                 <div class="form-check">
@@ -755,8 +758,8 @@ else
                                 <div class="alert alert-danger small py-2">@releaseError</div>
                             }
                             <div class="d-flex gap-2">
-                                <button class="btn btn-gh-primary btn-sm" @onclick="CreateRelease">Publish release</button>
-                                <button class="btn btn-light btn-sm border" @onclick="() => showCreateRelease = false">Cancel</button>
+                                <button class="btn btn-gh-primary btn-sm" @onclick="CreateRelease">@L["Repo_PublishRelease"]</button>
+                                <button class="btn btn-light btn-sm border" @onclick="() => showCreateRelease = false">@L["Repo_Cancel"]</button>
                             </div>
                         </div>
                     </div>
@@ -767,8 +770,8 @@ else
                     <div class="card border shadow-sm">
                         <div class="card-body text-center py-5">
                             <i class="bi bi-tag display-4 text-muted mb-3 d-block"></i>
-                            <h6 class="fw-bold">No releases yet</h6>
-                            <p class="text-muted small">Create a release to bundle your software and share it with users.</p>
+                            <h6 class="fw-bold">@L["Repo_NoReleases"]</h6>
+                            <p class="text-muted small">@L["Repo_NoReleasesDescription"]</p>
                         </div>
                     </div>
                 }
@@ -857,8 +860,8 @@ else
         else if (activeTab == "packages")
         {
             <div class="mb-4">
-                <h5 class="fw-bold">Container Images</h5>
-                <p class="text-muted small">Docker and OCI images published to this repository.</p>
+                <h5 class="fw-bold">@L["Repo_ContainerImages"]</h5>
+                <p class="text-muted small">@L["Repo_ContainerImagesDescription"]</p>
                 @if (containerTags.Any())
                 {
                     <div class="list-group">
@@ -884,7 +887,7 @@ else
                 {
                     <div class="text-center py-4 text-muted">
                         <i class="bi bi-box" style="font-size: 2rem;"></i>
-                        <p class="mt-2">No container images published yet.</p>
+                        <p class="mt-2">@L["Repo_NoContainerImages"]</p>
                         <p class="small"><code>docker push @(new Uri(Nav.BaseUri).Authority)/v2/@(containerRegistryName):tag</code></p>
                     </div>
                 }
@@ -894,8 +897,8 @@ else
         {
             <div class="settings-view mb-5">
                 <div class="mb-4">
-                    <h5 class="fw-bold">Settings</h5>
-                    <p class="text-muted small">Manage repository lifecycle.</p>
+                    <h5 class="fw-bold">@L["Repo_Settings"]</h5>
+                    <p class="text-muted small">@L["Repo_SettingsDescription"]</p>
                 </div>
 
                 @if (UserService.IsLoggedIn)
@@ -1762,7 +1765,7 @@ else
         {
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-light-subtle py-2">
-                    <h6 class="fw-bold mb-0 small"><i class="bi bi-diagram-3 me-1"></i> Commit Graph</h6>
+                    <h6 class="fw-bold mb-0 small"><i class="bi bi-diagram-3 me-1"></i> @L["Repo_CommitGraph"]</h6>
                 </div>
                 <div class="card-body p-0" style="overflow-x: auto;">
                     @if (graphEntries.Any())
@@ -1817,7 +1820,7 @@ else
                     }
                     else
                     {
-                        <p class="text-muted p-3">No commits to display.</p>
+                        <p class="text-muted p-3">@L["Repo_NoCommits"]</p>
                     }
                 </div>
             </div>
@@ -2021,15 +2024,15 @@ else
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title fw-bold">Delete file</h5>
+                    <h5 class="modal-title fw-bold">@L["Repo_DeleteFile"]</h5>
                     <button type="button" class="btn-close shadow-none" @onclick="() => showDeleteModal = false"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to delete <strong>@Path</strong>?</p>
+                    <p>@L["Repo_ConfirmDeleteFile"] <strong>@Path</strong>?</p>
                 </div>
                 <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showDeleteModal = false">Cancel</button>
-                    <button type="button" class="btn btn-danger btn-sm shadow-sm" @onclick="DeleteFileCommit">Delete file</button>
+                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showDeleteModal = false">@L["Repo_Cancel"]</button>
+                    <button type="button" class="btn btn-danger btn-sm shadow-sm" @onclick="DeleteFileCommit">@L["Repo_DeleteFile"]</button>
                 </div>
             </div>
         </div>
@@ -2042,16 +2045,16 @@ else
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow border-danger border-opacity-25">
                 <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title fw-bold text-danger">Delete repository</h5>
+                    <h5 class="modal-title fw-bold text-danger">@L["Repo_DeleteRepository"]</h5>
                     <button type="button" class="btn-close shadow-none" @onclick="() => showDeleteRepoModal = false"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Permanently delete <strong>@RepoName</strong>?</p>
+                    <p>@L["Repo_ConfirmDeleteRepo"] <strong>@RepoName</strong>?</p>
                     <input type="text" class="form-control shadow-none mt-2" @bind="deleteConfirmName" @bind:event="oninput" placeholder="@RepoName" />
                 </div>
                 <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showDeleteRepoModal = false">Cancel</button>
-                    <button type="button" class="btn btn-danger btn-sm shadow-sm" @onclick="DeleteRepository" disabled="@(deleteConfirmName != RepoName)">Delete</button>
+                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showDeleteRepoModal = false">@L["Repo_Cancel"]</button>
+                    <button type="button" class="btn btn-danger btn-sm shadow-sm" @onclick="DeleteRepository" disabled="@(deleteConfirmName != RepoName)">@L["Repo_Delete"]</button>
                 </div>
             </div>
         </div>
@@ -2064,15 +2067,15 @@ else
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title fw-bold">Create branch</h5>
+                    <h5 class="modal-title fw-bold">@L["Repo_CreateBranch"]</h5>
                     <button type="button" class="btn-close shadow-none" @onclick="() => showNewBranchModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <input type="text" class="form-control shadow-none" @bind="newBranchName" @bind:event="oninput" placeholder="branch-name" />
                 </div>
                 <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showNewBranchModal = false">Cancel</button>
-                    <button type="button" class="btn btn-gh-primary btn-sm shadow-sm" @onclick="CreateBranch" disabled="@string.IsNullOrWhiteSpace(newBranchName)">Create</button>
+                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showNewBranchModal = false">@L["Repo_Cancel"]</button>
+                    <button type="button" class="btn btn-gh-primary btn-sm shadow-sm" @onclick="CreateBranch" disabled="@string.IsNullOrWhiteSpace(newBranchName)">@L["Repo_Create"]</button>
                 </div>
             </div>
         </div>
@@ -2085,15 +2088,15 @@ else
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title fw-bold">Create tag</h5>
+                    <h5 class="modal-title fw-bold">@L["Repo_CreateTag"]</h5>
                     <button type="button" class="btn-close shadow-none" @onclick="() => showNewTagModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <input type="text" class="form-control shadow-none" @bind="newTagName" @bind:event="oninput" placeholder="v1.0" />
                 </div>
                 <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showNewTagModal = false">Cancel</button>
-                    <button type="button" class="btn btn-gh-primary btn-sm shadow-sm" @onclick="CreateTag" disabled="@string.IsNullOrWhiteSpace(newTagName)">Create</button>
+                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showNewTagModal = false">@L["Repo_Cancel"]</button>
+                    <button type="button" class="btn btn-gh-primary btn-sm shadow-sm" @onclick="CreateTag" disabled="@string.IsNullOrWhiteSpace(newTagName)">@L["Repo_Create"]</button>
                 </div>
             </div>
         </div>

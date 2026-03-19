@@ -3,6 +3,8 @@
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @using UserProfileModel = MyPersonalGit.Models.UserProfile
 @inject IUserProfileService ProfileService
 @inject IGpgKeyService GpgKeyService
@@ -13,17 +15,18 @@
 @inject IOAuthService OAuthService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>Settings - MyPersonalGit</PageTitle>
+<PageTitle>@L["Settings_Title"] - MyPersonalGit</PageTitle>
 
 @if (!UserService.IsLoggedIn)
 {
     <div class="container py-5 text-center">
         <i class="bi bi-gear" style="font-size: 4rem; color: #6c757d;"></i>
-        <h3 class="mt-3">Authentication Required</h3>
-        <p class="text-muted">Please sign in to access your settings.</p>
-        <a href="/login" class="btn btn-primary">Sign in</a>
+        <h3 class="mt-3">@L["Settings_AuthRequired"]</h3>
+        <p class="text-muted">@L["Settings_AuthRequiredMessage"]</p>
+        <a href="/login" class="btn btn-primary">@L["Settings_SignIn"]</a>
     </div>
 }
 else
@@ -34,39 +37,39 @@ else
             <div class="list-group">
                 <a class="list-group-item list-group-item-action @(ActiveTab == "profile" ? "active" : "")" 
                    @onclick='() => SetTab("profile")' style="cursor: pointer;">
-                    <i class="bi bi-person"></i> Profile
+                    <i class="bi bi-person"></i> @L["Settings_Profile"]
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "account" ? "active" : "")" 
                    @onclick='() => SetTab("account")' style="cursor: pointer;">
-                    <i class="bi bi-shield-lock"></i> Account Security
+                    <i class="bi bi-shield-lock"></i> @L["Settings_AccountSecurity"]
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "ssh" ? "active" : "")"
                    @onclick='() => SetTab("ssh")' style="cursor: pointer;">
-                    <i class="bi bi-key"></i> SSH Keys
+                    <i class="bi bi-key"></i> @L["Settings_SSHKeys"]
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "gpg" ? "active" : "")"
                    @onclick='() => SetTab("gpg")' style="cursor: pointer;">
-                    <i class="bi bi-shield-lock-fill"></i> GPG Keys
+                    <i class="bi bi-shield-lock-fill"></i> @L["Settings_GPGKeys"]
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "tokens" ? "active" : "")" 
                    @onclick='() => SetTab("tokens")' style="cursor: pointer;">
-                    <i class="bi bi-code-square"></i> Access Tokens
+                    <i class="bi bi-code-square"></i> @L["Settings_AccessTokens"]
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "sessions" ? "active" : "")" 
                    @onclick='() => SetTab("sessions")' style="cursor: pointer;">
-                    <i class="bi bi-laptop"></i> Sessions
+                    <i class="bi bi-laptop"></i> @L["Settings_Sessions"]
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "passkeys" ? "active" : "")"
                    @onclick='() => SetTab("passkeys")' style="cursor: pointer;">
-                    <i class="bi bi-fingerprint"></i> Passkeys & Security Keys
+                    <i class="bi bi-fingerprint"></i> @L["Settings_Passkeys"]
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "notifications" ? "active" : "")"
                    @onclick='() => SetTab("notifications")' style="cursor: pointer;">
-                    <i class="bi bi-bell"></i> Notifications
+                    <i class="bi bi-bell"></i> @L["Settings_Notifications"]
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "linked" ? "active" : "")"
                    @onclick='() => SetTab("linked")' style="cursor: pointer;">
-                    <i class="bi bi-link-45deg"></i> Linked Accounts
+                    <i class="bi bi-link-45deg"></i> @L["Settings_LinkedAccounts"]
                 </a>
             </div>
         </div>
@@ -76,35 +79,35 @@ else
             {
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Public Profile</h5>
+                        <h5 class="mb-0">@L["Settings_PublicProfile"]</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label">Avatar URL</label>
+                            <label class="form-label">@L["Settings_AvatarUrl"]</label>
                             <input type="text" class="form-control" @bind="UserProfileData.AvatarUrl" placeholder="https://example.com/avatar.jpg" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Full Name</label>
+                            <label class="form-label">@L["Settings_FullName"]</label>
                             <input type="text" class="form-control" @bind="UserProfileData.FullName" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Bio</label>
+                            <label class="form-label">@L["Settings_Bio"]</label>
                             <textarea class="form-control" rows="3" @bind="UserProfileData.Bio"></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Company</label>
+                            <label class="form-label">@L["Settings_Company"]</label>
                             <input type="text" class="form-control" @bind="UserProfileData.Company" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Location</label>
+                            <label class="form-label">@L["Settings_Location"]</label>
                             <input type="text" class="form-control" @bind="UserProfileData.Location" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Website</label>
+                            <label class="form-label">@L["Settings_Website"]</label>
                             <input type="url" class="form-control" @bind="UserProfileData.Website" placeholder="https://example.com" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Twitter Username</label>
+                            <label class="form-label">@L["Settings_TwitterUsername"]</label>
                             <div class="input-group">
                                 <span class="input-group-text">@("@")</span>
                                 <input type="text" class="form-control" @bind="UserProfileData.TwitterHandle" />
@@ -114,12 +117,12 @@ else
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" @bind="UserProfileData.IsPublic" id="isPublic" />
                                 <label class="form-check-label" for="isPublic">
-                                    Make profile public
+                                    @L["Settings_MakeProfilePublic"]
                                 </label>
                             </div>
                         </div>
                         <button class="btn btn-primary" @onclick="SaveProfile">
-                            <i class="bi bi-check-lg"></i> Save Profile
+                            <i class="bi bi-check-lg"></i> @L["Settings_SaveProfile"]
                         </button>
                     </div>
                 </div>
@@ -128,30 +131,30 @@ else
             {
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0">Change Password</h5>
+                        <h5 class="mb-0">@L["Settings_ChangePassword"]</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label">Current Password</label>
+                            <label class="form-label">@L["Settings_CurrentPassword"]</label>
                             <input type="password" class="form-control" @bind="CurrentPassword" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">New Password</label>
+                            <label class="form-label">@L["Settings_NewPassword"]</label>
                             <input type="password" class="form-control" @bind="NewPassword" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Confirm New Password</label>
+                            <label class="form-label">@L["Settings_ConfirmNewPassword"]</label>
                             <input type="password" class="form-control" @bind="ConfirmPassword" />
                         </div>
                         <button class="btn btn-primary" @onclick="ChangePassword">
-                            <i class="bi bi-shield-check"></i> Update Password
+                            <i class="bi bi-shield-check"></i> @L["Settings_UpdatePassword"]
                         </button>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Two-Factor Authentication</h5>
+                        <h5 class="mb-0">@L["Settings_TwoFactorAuth"]</h5>
                     </div>
                     <div class="card-body">
                         @if (!string.IsNullOrEmpty(TwoFactorMessage))

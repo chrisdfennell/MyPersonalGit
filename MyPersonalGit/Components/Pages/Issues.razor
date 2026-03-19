@@ -5,6 +5,8 @@
 @using MyPersonalGit.Models
 @using MyPersonalGit.Data
 @using LibGit2Sharp
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject IIssueService IssueService
 @inject IIssueDependencyService DependencyService
 @inject IMilestoneService MilestoneService
@@ -16,6 +18,7 @@
 @inject NavigationManager Nav
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
 <PageTitle>Issues · @RepoName</PageTitle>
@@ -26,27 +29,27 @@
             <i class="bi bi-journal-bookmark text-muted me-2 h4 mb-0"></i>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 h4">
-                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Repositories</a></li>
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">@L["Nav_Repositories"]</a></li>
                     <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
-                    <li class="breadcrumb-item active fw-bold" aria-current="page">@(viewMode == "milestones" ? "Milestones" : "Issues")</li>
+                    <li class="breadcrumb-item active fw-bold" aria-current="page">@(viewMode == "milestones" ? L["Issues_Milestones"] : L["Issues_Title"])</li>
                 </ol>
             </nav>
         </div>
         <ul class="nav nav-tabs mt-2">
             <li class="nav-item">
                 <button class="nav-link @(viewMode == "issues" ? "active" : "")" @onclick='() => { viewMode = "issues"; }'>
-                    <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> Issues
+                    <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> @L["Issues_Title"]
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link @(viewMode == "milestones" ? "active" : "")" @onclick="SwitchToMilestones">
-                    <i class="bi bi-signpost me-1"></i> Milestones
+                    <i class="bi bi-signpost me-1"></i> @L["Issues_Milestones"]
                     <span class="badge bg-secondary ms-1">@milestones.Count</span>
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link @(viewMode == "templates" ? "active" : "")" @onclick='() => viewMode = "templates"'>
-                    <i class="bi bi-file-earmark-text me-1"></i> Templates
+                    <i class="bi bi-file-earmark-text me-1"></i> @L["Issues_Templates"]
                     <span class="badge bg-secondary ms-1">@issueTemplates.Count</span>
                 </button>
             </li>
@@ -58,11 +61,11 @@
     @if (viewMode == "templates")
     {
         <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
-            <h5 class="mb-0">Issue Templates</h5>
+            <h5 class="mb-0">@L["Issues_IssueTemplates"]</h5>
             @if (UserService.IsLoggedIn)
             {
                 <button class="btn btn-success btn-sm" @onclick="() => showNewTemplateModal = true">
-                    <i class="bi bi-plus-lg me-1"></i> New template
+                    <i class="bi bi-plus-lg me-1"></i> @L["Issues_NewTemplate"]
                 </button>
             }
         </div>
@@ -110,7 +113,7 @@
         {
             <div class="text-center py-5">
                 <i class="bi bi-file-earmark-text display-4 text-muted"></i>
-                <p class="text-muted mt-3">No issue templates configured.</p>
+                <p class="text-muted mt-3">@L["Issues_NoTemplates"]</p>
             </div>
         }
     }
@@ -119,16 +122,16 @@
         <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
             <div class="btn-group">
                 <button class="btn @(milestoneFilter == "open" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => milestoneFilter = "open"'>
-                    <i class="bi bi-signpost me-1"></i> @milestones.Count(m => m.State == MilestoneState.Open) Open
+                    <i class="bi bi-signpost me-1"></i> @milestones.Count(m => m.State == MilestoneState.Open) @L["Issues_Open"]
                 </button>
                 <button class="btn @(milestoneFilter == "closed" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => milestoneFilter = "closed"'>
-                    <i class="bi bi-check-circle me-1"></i> @milestones.Count(m => m.State == MilestoneState.Closed) Closed
+                    <i class="bi bi-check-circle me-1"></i> @milestones.Count(m => m.State == MilestoneState.Closed) @L["Issues_Closed"]
                 </button>
             </div>
             @if (UserService.IsLoggedIn)
             {
                 <button class="btn btn-gh-primary btn-sm" @onclick="() => showNewMilestoneModal = true">
-                    <i class="bi bi-plus-lg me-1"></i> New milestone
+                    <i class="bi bi-plus-lg me-1"></i> @L["Issues_NewMilestone"]
                 </button>
             }
         </div>
@@ -161,11 +164,11 @@
                                 {
                                     @if (ms.State == MilestoneState.Open)
                                     {
-                                        <button class="btn btn-outline-secondary btn-sm" @onclick="() => CloseMilestone(ms.Number)">Close</button>
+                                        <button class="btn btn-outline-secondary btn-sm" @onclick="() => CloseMilestone(ms.Number)">@L["Issues_Close"]</button>
                                     }
                                     else
                                     {
-                                        <button class="btn btn-outline-success btn-sm" @onclick="() => ReopenMilestone(ms.Number)">Reopen</button>
+                                        <button class="btn btn-outline-success btn-sm" @onclick="() => ReopenMilestone(ms.Number)">@L["Issues_Reopen"]</button>
                                     }
                                     <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteMilestone(ms.Number)"><i class="bi bi-trash"></i></button>
                                 }
@@ -183,7 +186,7 @@
         {
             <div class="text-center py-5">
                 <i class="bi bi-signpost display-4 text-muted"></i>
-                <p class="text-muted mt-3">No @milestoneFilter milestones.</p>
+                <p class="text-muted mt-3">@L["Issues_NoMilestones", milestoneFilter]</p>
             </div>
         }
     }
@@ -202,19 +205,19 @@
                             @if (currentIssue.IsDraft)
                             {
                                 <span class="badge bg-secondary d-flex align-items-center gap-1">
-                                    <i class="bi bi-pencil"></i> Draft
+                                    <i class="bi bi-pencil"></i> @L["Issues_Draft"]
                                 </span>
                             }
                             else if (currentIssue.State == IssueState.Open)
                             {
                                 <span class="badge bg-success d-flex align-items-center gap-1">
-                                    <i class="bi bi-circle-fill" style="font-size: 8px;"></i> Open
+                                    <i class="bi bi-circle-fill" style="font-size: 8px;"></i> @L["Issues_Open"]
                                 </span>
                             }
                             else
                             {
                                 <span class="badge bg-danger d-flex align-items-center gap-1">
-                                    <i class="bi bi-check-circle-fill"></i> Closed
+                                    <i class="bi bi-check-circle-fill"></i> @L["Issues_Closed"]
                                 </span>
                             }
                             <span class="text-muted small">
@@ -233,19 +236,19 @@
                                 @if (currentIssue.IsDraft)
                                 {
                                     <button class="btn btn-outline-success btn-sm" @onclick="ConvertDraftToIssue">
-                                        <i class="bi bi-check-circle me-1"></i> Convert to issue
+                                        <i class="bi bi-check-circle me-1"></i> @L["Issues_ConvertToIssue"]
                                     </button>
                                 }
                                 @if (currentIssue.State == IssueState.Open)
                                 {
                                     <button class="btn btn-outline-danger btn-sm" @onclick="CloseIssue">
-                                        <i class="bi bi-check-circle me-1"></i> Close issue
+                                        <i class="bi bi-check-circle me-1"></i> @L["Issues_CloseIssue"]
                                     </button>
                                 }
                                 else
                                 {
                                     <button class="btn btn-outline-success btn-sm" @onclick="ReopenIssue">
-                                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reopen issue
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i> @L["Issues_ReopenIssue"]
                                     </button>
                                 }
                                 <button class="btn btn-outline-secondary btn-sm" @onclick="TogglePin" title="@(currentIssue.IsPinned ? "Unpin" : "Pin")">
@@ -256,7 +259,7 @@
                                 </button>
                             </div>
                             <div class="input-group input-group-sm" style="max-width: 250px;">
-                                <input type="text" class="form-control" @bind="newAssigneeInput" placeholder="Add assignee" />
+                                <input type="text" class="form-control" @bind="newAssigneeInput" placeholder="@L["Issues_AddAssignee"]" />
                                 <button class="btn btn-outline-secondary" @onclick="AddAssignee"><i class="bi bi-person-plus"></i></button>
                             </div>
                             <div class="input-group input-group-sm" style="max-width: 200px;">
@@ -271,7 +274,7 @@
                 @if (currentIssue.IsPinned)
                 {
                     <div class="mb-2">
-                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle"><i class="bi bi-pin-angle-fill me-1"></i>Pinned</span>
+                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle"><i class="bi bi-pin-angle-fill me-1"></i>@L["Issues_Pinned"]</span>
                     </div>
                 }
                 @if (currentIssue.IsLocked)
@@ -285,7 +288,7 @@
                 @if (currentIssue.Assignees.Any())
                 {
                     <div class="mb-3">
-                        <span class="small fw-bold text-muted me-1">Assignees:</span>
+                        <span class="small fw-bold text-muted me-1">@L["Issues_Assignees"]:</span>
                         @foreach (var assignee in currentIssue.Assignees)
                         {
                             <span class="badge bg-secondary bg-opacity-10 text-secondary border me-1"><i class="bi bi-person me-1"></i>@assignee</span>
@@ -309,7 +312,7 @@
                 @* Time Tracking *@
                 <div class="mb-3">
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                        <span class="small fw-bold text-muted"><i class="bi bi-clock me-1"></i>Time Tracking</span>
+                        <span class="small fw-bold text-muted"><i class="bi bi-clock me-1"></i>@L["Issues_TimeTracking"]</span>
                         <span class="badge bg-secondary bg-opacity-10 text-secondary border">@FormatDuration(totalTime)</span>
                     </div>
                     @if (UserService.IsLoggedIn)
@@ -323,7 +326,7 @@
                         else
                         {
                             <button class="btn btn-outline-success btn-sm w-100 mb-2" @onclick="StartTimer">
-                                <i class="bi bi-play-circle me-1"></i> Start Timer
+                                <i class="bi bi-play-circle me-1"></i> @L["Issues_StartTimer"]
                             </button>
                         }
                         <div class="input-group input-group-sm mb-2">
@@ -385,13 +388,13 @@
                 {
                     <div class="card border shadow-sm mb-3">
                         <div class="card-header bg-light-subtle py-2 small fw-bold">
-                            <i class="bi bi-diagram-3 me-1"></i> Dependencies
+                            <i class="bi bi-diagram-3 me-1"></i> @L["Issues_Dependencies"]
                         </div>
                         <div class="card-body py-2">
                             @if (blockedByIssues.Any())
                             {
                                 <div class="mb-2">
-                                    <span class="small fw-bold text-danger"><i class="bi bi-lock me-1"></i>Blocked by:</span>
+                                    <span class="small fw-bold text-danger"><i class="bi bi-lock me-1"></i>@L["Issues_BlockedBy"]:</span>
                                     <div class="ms-3">
                                         @foreach (var dep in blockedByIssues)
                                         {
@@ -406,7 +409,7 @@
                             @if (blocksIssues.Any())
                             {
                                 <div>
-                                    <span class="small fw-bold text-warning"><i class="bi bi-unlock me-1"></i>Blocks:</span>
+                                    <span class="small fw-bold text-warning"><i class="bi bi-unlock me-1"></i>@L["Issues_Blocks"]:</span>
                                     <div class="ms-3">
                                         @foreach (var dep in blocksIssues)
                                         {
@@ -436,19 +439,19 @@
                                     <div>
                                         <label class="form-label small fw-bold mb-1">Relationship</label>
                                         <select class="form-select form-select-sm" @bind="newDepType">
-                                            <option value="blocked_by">is blocked by</option>
-                                            <option value="blocks">blocks</option>
+                                            <option value="blocked_by">@L["Issues_IsBlockedBy"]</option>
+                                            <option value="blocks">@L["Issues_BlocksOther"]</option>
                                         </select>
                                     </div>
-                                    <button class="btn btn-gh-primary btn-sm" @onclick="AddDependency" disabled="@(newDepIssueNumber <= 0)">Add</button>
-                                    <button class="btn btn-light btn-sm border" @onclick="() => showAddDependency = false">Cancel</button>
+                                    <button class="btn btn-gh-primary btn-sm" @onclick="AddDependency" disabled="@(newDepIssueNumber <= 0)">@L["Issues_Add"]</button>
+                                    <button class="btn btn-light btn-sm border" @onclick="() => showAddDependency = false">@L["Issues_Cancel"]</button>
                                 </div>
                             </div>
                         }
                         else
                         {
                             <button class="btn btn-outline-secondary btn-sm" @onclick="() => showAddDependency = true">
-                                <i class="bi bi-diagram-3 me-1"></i>Add dependency
+                                <i class="bi bi-diagram-3 me-1"></i>@L["Issues_AddDependency"]
                             </button>
                         }
                     </div>
@@ -467,7 +470,7 @@
                         }
                         else
                         {
-                            <p class="text-muted fst-italic">No description provided.</p>
+                            <p class="text-muted fst-italic">@L["Issues_NoDescription"]</p>
                         }
                     </div>
                 </div>
@@ -520,8 +523,8 @@
                                 {
                                     <textarea class="form-control mb-2" rows="4" @bind="editCommentBody"></textarea>
                                     <div class="d-flex gap-2">
-                                        <button class="btn btn-success btn-sm" @onclick="SaveEditComment">Save</button>
-                                        <button class="btn btn-light btn-sm border" @onclick="CancelEditComment">Cancel</button>
+                                        <button class="btn btn-success btn-sm" @onclick="SaveEditComment">@L["Issues_Save"]</button>
+                                        <button class="btn btn-light btn-sm border" @onclick="CancelEditComment">@L["Issues_Cancel"]</button>
                                     </div>
                                 }
                                 else
@@ -537,7 +540,7 @@
                 {
                     <div class="card border-warning">
                         <div class="card-body text-center text-muted py-3">
-                            <i class="bi bi-lock-fill me-1"></i> This conversation has been locked. Only collaborators can comment.
+                            <i class="bi bi-lock-fill me-1"></i> @L["Issues_LockedMessage"]
                         </div>
                     </div>
                 }
@@ -545,12 +548,12 @@
                 {
                     <div class="card">
                         <div class="card-header bg-light">
-                            <strong>Add a comment</strong>
+                            <strong>@L["Issues_AddComment"]</strong>
                         </div>
                         <div class="card-body">
-                            <textarea class="form-control mb-2" rows="4" @bind="newCommentBody" placeholder="Leave a comment"></textarea>
+                            <textarea class="form-control mb-2" rows="4" @bind="newCommentBody" placeholder="@L["Issues_LeaveComment"]"></textarea>
                             <button class="btn btn-success" @onclick="AddComment" disabled="@string.IsNullOrWhiteSpace(newCommentBody)">
-                                <i class="bi bi-chat-left-text me-1"></i> Comment
+                                <i class="bi bi-chat-left-text me-1"></i> @L["Issues_Comment"]
                             </button>
                         </div>
                     </div>
@@ -567,16 +570,16 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="btn-group">
                 <button class="btn @(filterState == "open" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => filterState = "open"'>
-                    <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> @openCount Open
+                    <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> @openCount @L["Issues_Open"]
                 </button>
                 <button class="btn @(filterState == "closed" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => filterState = "closed"'>
-                    <i class="bi bi-check-circle me-1"></i> @closedCount Closed
+                    <i class="bi bi-check-circle me-1"></i> @closedCount @L["Issues_Closed"]
                 </button>
             </div>
             @if (milestones.Any(m => m.State == MilestoneState.Open))
             {
                 <select class="form-select form-select-sm" style="width: auto; min-width: 150px;" @bind="filterMilestoneId">
-                    <option value="0">All milestones</option>
+                    <option value="0">@L["Issues_AllMilestones"]</option>
                     @foreach (var ms in milestones.Where(m => m.State == MilestoneState.Open))
                     {
                         <option value="@ms.Id">@ms.Title</option>
@@ -586,7 +589,7 @@
             @if (UserService.IsLoggedIn)
             {
                 <button class="btn btn-success btn-sm" @onclick="OpenNewIssueModal">
-                    <i class="bi bi-plus-circle me-1"></i> New issue
+                    <i class="bi bi-plus-circle me-1"></i> @L["Issues_NewIssue"]
                 </button>
             }
         </div>
@@ -619,7 +622,7 @@
                                     }
                                     @if (issue.IsDraft)
                                     {
-                                        <span class="badge bg-secondary" style="font-size: 10px;">Draft</span>
+                                        <span class="badge bg-secondary" style="font-size: 10px;">@L["Issues_Draft"]</span>
                                     }
                                     @foreach (var label in issue.Labels)
                                     {
@@ -652,8 +655,8 @@
         {
             <div class="blankslate p-5 border rounded-3 bg-light text-center">
                 <i class="bi bi-check-circle display-4 text-muted mb-3"></i>
-                <h3 class="h5">No @filterState issues</h3>
-                <p class="text-muted">There are no @filterState issues for this repository.</p>
+                <h3 class="h5">@L["Issues_NoIssuesTitle", filterState]</h3>
+                <p class="text-muted">@L["Issues_NoIssuesMessage", filterState]</p>
             </div>
         }
     }
@@ -665,28 +668,28 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">New Issue</h5>
+                    <h5 class="modal-title">@L["Issues_NewIssue"]</h5>
                     <button type="button" class="btn-close" @onclick="() => showNewIssueModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Title</label>
-                        <input type="text" class="form-control" @bind="newIssueTitle" placeholder="Issue title" />
+                        <label class="form-label fw-bold">@L["Issues_TitleLabel"]</label>
+                        <input type="text" class="form-control" @bind="newIssueTitle" placeholder="@L["Issues_IssueTitlePlaceholder"]" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Description</label>
-                        <textarea class="form-control" rows="6" @bind="newIssueBody" placeholder="Leave a comment"></textarea>
+                        <label class="form-label fw-bold">@L["Issues_Description"]</label>
+                        <textarea class="form-control" rows="6" @bind="newIssueBody" placeholder="@L["Issues_LeaveComment"]"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Labels (comma-separated)</label>
+                        <label class="form-label fw-bold">@L["Issues_LabelsLabel"]</label>
                         <input type="text" class="form-control" @bind="newIssueLabels" placeholder="bug, enhancement, documentation" />
                     </div>
                     @if (issueTemplates.Any())
                     {
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Template</label>
+                            <label class="form-label fw-bold">@L["Issues_Template"]</label>
                             <select class="form-select" @bind="selectedTemplateId" @bind:after="ApplyTemplate">
-                                <option value="0">No template</option>
+                                <option value="0">@L["Issues_NoTemplate"]</option>
                                 @foreach (var tmpl in issueTemplates)
                                 {
                                     <option value="@tmpl.Id">@tmpl.Name</option>
@@ -697,9 +700,9 @@
                     @if (milestones.Any(m => m.State == MilestoneState.Open))
                     {
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Milestone</label>
+                            <label class="form-label fw-bold">@L["Issues_Milestone"]</label>
                             <select class="form-select" @bind="newIssueMilestoneId">
-                                <option value="0">No milestone</option>
+                                <option value="0">@L["Issues_NoMilestone"]</option>
                                 @foreach (var ms in milestones.Where(m => m.State == MilestoneState.Open))
                                 {
                                     <option value="@ms.Id">@ms.Title</option>
@@ -710,15 +713,15 @@
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" @bind="newIssueIsDraft" id="issueDraftCheck">
                         <label class="form-check-label" for="issueDraftCheck">
-                            Create as draft
+                            @L["Issues_CreateAsDraft"]
                         </label>
-                        <div class="form-text">Draft issues are visible but marked as work-in-progress.</div>
+                        <div class="form-text">@L["Issues_DraftDescription"]</div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="() => showNewIssueModal = false">Cancel</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => showNewIssueModal = false">@L["Issues_Cancel"]</button>
                     <button type="button" class="btn btn-success" @onclick="CreateIssue" disabled="@string.IsNullOrWhiteSpace(newIssueTitle)">
-                        <i class="bi bi-plus-circle me-1"></i> @(newIssueIsDraft ? "Create draft" : "Create issue")
+                        <i class="bi bi-plus-circle me-1"></i> @(newIssueIsDraft ? L["Issues_CreateDraft"] : L["Issues_CreateIssue"])
                     </button>
                 </div>
             </div>
@@ -1189,26 +1192,26 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title fw-bold">New milestone</h5>
+                    <h5 class="modal-title fw-bold">@L["Issues_NewMilestone"]</h5>
                     <button type="button" class="btn-close" @onclick="() => showNewMilestoneModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Title</label>
+                        <label class="form-label small fw-bold">@L["Issues_TitleLabel"]</label>
                         <input type="text" class="form-control" @bind="newMilestoneTitle" placeholder="v1.0" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Due date (optional)</label>
+                        <label class="form-label small fw-bold">@L["Issues_DueDate"]</label>
                         <input type="text" class="form-control" @bind="newMilestoneDueDate" placeholder="YYYY-MM-DD" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Description</label>
-                        <textarea class="form-control" rows="3" @bind="newMilestoneDescription" placeholder="Describe the milestone..."></textarea>
+                        <label class="form-label small fw-bold">@L["Issues_Description"]</label>
+                        <textarea class="form-control" rows="3" @bind="newMilestoneDescription" placeholder="@L["Issues_DescribeMilestone"]"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0">
-                    <button class="btn btn-light border" @onclick="() => showNewMilestoneModal = false">Cancel</button>
-                    <button class="btn btn-gh-primary" @onclick="CreateMilestone" disabled="@string.IsNullOrWhiteSpace(newMilestoneTitle)">Create milestone</button>
+                    <button class="btn btn-light border" @onclick="() => showNewMilestoneModal = false">@L["Issues_Cancel"]</button>
+                    <button class="btn btn-gh-primary" @onclick="CreateMilestone" disabled="@string.IsNullOrWhiteSpace(newMilestoneTitle)">@L["Issues_CreateMilestone"]</button>
                 </div>
             </div>
         </div>
@@ -1221,30 +1224,30 @@
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title fw-bold">New Issue Template</h5>
+                    <h5 class="modal-title fw-bold">@L["Issues_NewIssueTemplate"]</h5>
                     <button type="button" class="btn-close" @onclick="() => showNewTemplateModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Template Name</label>
+                        <label class="form-label small fw-bold">@L["Issues_TemplateName"]</label>
                         <input type="text" class="form-control" @bind="newTemplateName" placeholder="Bug Report" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Description</label>
-                        <input type="text" class="form-control" @bind="newTemplateDescription" placeholder="File a bug report" />
+                        <label class="form-label small fw-bold">@L["Issues_Description"]</label>
+                        <input type="text" class="form-control" @bind="newTemplateDescription" placeholder="@L["Issues_TemplateDescPlaceholder"]" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Default Labels (comma-separated)</label>
+                        <label class="form-label small fw-bold">@L["Issues_DefaultLabels"]</label>
                         <input type="text" class="form-control" @bind="newTemplateLabels" placeholder="bug, triage" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Template Body (Markdown)</label>
+                        <label class="form-label small fw-bold">@L["Issues_TemplateBody"]</label>
                         <textarea class="form-control font-monospace" rows="10" @bind="newTemplateBody" placeholder="## Description&#10;&#10;## Steps to Reproduce&#10;&#10;## Expected Behavior&#10;&#10;## Actual Behavior"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0">
-                    <button class="btn btn-light border" @onclick="() => showNewTemplateModal = false">Cancel</button>
-                    <button class="btn btn-success" @onclick="CreateTemplate" disabled="@(string.IsNullOrWhiteSpace(newTemplateName) || string.IsNullOrWhiteSpace(newTemplateBody))">Create template</button>
+                    <button class="btn btn-light border" @onclick="() => showNewTemplateModal = false">@L["Issues_Cancel"]</button>
+                    <button class="btn btn-success" @onclick="CreateTemplate" disabled="@(string.IsNullOrWhiteSpace(newTemplateName) || string.IsNullOrWhiteSpace(newTemplateBody))">@L["Issues_CreateTemplate"]</button>
                 </div>
             </div>
         </div>

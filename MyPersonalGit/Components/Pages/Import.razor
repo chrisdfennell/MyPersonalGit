@@ -2,20 +2,23 @@
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject IMigrationService MigrationService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>Import Repository - MyPersonalGit</PageTitle>
+<PageTitle>@L["Import_Title"] - MyPersonalGit</PageTitle>
 
 @if (!UserService.IsLoggedIn)
 {
     <div class="container py-5 text-center">
         <i class="bi bi-box-arrow-in-down" style="font-size: 4rem; color: #6c757d;"></i>
-        <h3 class="mt-3">Authentication Required</h3>
-        <p class="text-muted">Please sign in to import a repository.</p>
-        <a href="/login" class="btn btn-primary">Sign in</a>
+        <h3 class="mt-3">@L["Import_AuthRequired"]</h3>
+        <p class="text-muted">@L["Import_AuthRequiredMessage"]</p>
+        <a href="/login" class="btn btn-primary">@L["Import_SignIn"]</a>
     </div>
 }
 else
@@ -23,14 +26,14 @@ else
     <div class="container-xl px-3 mt-4">
         <div class="d-flex align-items-center mb-4">
             <i class="bi bi-box-arrow-in-down h3 mb-0 me-2 text-primary"></i>
-            <h2 class="mb-0">Import Repository</h2>
+            <h2 class="mb-0">@L["Import_Title"]</h2>
         </div>
 
         <div class="row">
             <div class="col-md-8">
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-cloud-download me-1"></i> Import from external source</h5>
+                        <h5 class="mb-0"><i class="bi bi-cloud-download me-1"></i> @L["Import_FromExternalSource"]</h5>
                     </div>
                     <div class="card-body">
                         @if (!string.IsNullOrEmpty(errorMessage))
@@ -41,7 +44,7 @@ else
                         }
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Source type</label>
+                            <label class="form-label fw-bold">@L["Import_SourceType"]</label>
                             <select class="form-select" @bind="sourceType">
                                 <option value="GitUrl">Git URL (code only)</option>
                                 <option value="GitHub">GitHub (with optional issues/PRs)</option>
@@ -51,7 +54,7 @@ else
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Repository URL</label>
+                            <label class="form-label fw-bold">@L["Import_RepositoryUrl"]</label>
                             <input type="text" class="form-control" @bind="sourceUrl"
                                    placeholder="@GetUrlPlaceholder()" />
                             <div class="form-text">
@@ -63,14 +66,14 @@ else
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Repository name</label>
+                            <label class="form-label fw-bold">@L["Import_RepositoryName"]</label>
                             <input type="text" class="form-control" @bind="targetRepoName"
                                    placeholder="my-imported-repo" />
                             <div class="form-text">The name for the new local repository</div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Authentication token <span class="text-muted fw-normal">(optional)</span></label>
+                            <label class="form-label fw-bold">@L["Import_AuthToken"] <span class="text-muted fw-normal">(@L["Import_Optional"])</span></label>
                             <input type="password" class="form-control" @bind="authToken"
                                    placeholder="Personal access token for private repos" />
                             <div class="form-text">Required for private repositories. Use a personal access token with read access.</div>
@@ -79,11 +82,11 @@ else
                         @if (sourceType != "GitUrl")
                         {
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Import options</label>
+                                <label class="form-label fw-bold">@L["Import_Options"]</label>
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="checkbox" @bind="importIssues" id="importIssues" />
                                     <label class="form-check-label" for="importIssues">
-                                        Import issues
+                                        @L["Import_ImportIssues"]
                                     </label>
                                 </div>
                                 @if (sourceType != "Bitbucket")
@@ -91,7 +94,7 @@ else
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="checkbox" @bind="importPullRequests" id="importPRs" />
                                         <label class="form-check-label" for="importPRs">
-                                            Import pull requests (as issues)
+                                            @L["Import_ImportPullRequests"]
                                         </label>
                                     </div>
                                 }
@@ -101,7 +104,7 @@ else
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" @bind="makePrivate" id="makePrivate" />
                             <label class="form-check-label" for="makePrivate">
-                                Make repository private
+                                @L["Import_MakePrivate"]
                             </label>
                         </div>
 
@@ -109,12 +112,12 @@ else
                             @if (importing)
                             {
                                 <span class="spinner-border spinner-border-sm me-1"></span>
-                                <span>Starting import...</span>
+                                <span>@L["Import_StartingImport"]</span>
                             }
                             else
                             {
                                 <i class="bi bi-box-arrow-in-down me-1"></i>
-                                <span>Begin Import</span>
+                                <span>@L["Import_BeginImport"]</span>
                             }
                         </button>
                     </div>
@@ -124,18 +127,18 @@ else
                 {
                     <div class="card">
                         <div class="card-header">
-                            <h5 class="mb-0"><i class="bi bi-clock-history me-1"></i> Import History</h5>
+                            <h5 class="mb-0"><i class="bi bi-clock-history me-1"></i> @L["Import_History"]</h5>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
                                 <table class="table table-hover mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Repository</th>
-                                            <th>Source</th>
-                                            <th>Status</th>
-                                            <th>Progress</th>
-                                            <th>Started</th>
+                                            <th>@L["Import_Repository"]</th>
+                                            <th>@L["Import_Source"]</th>
+                                            <th>@L["Import_Status"]</th>
+                                            <th>@L["Import_Progress"]</th>
+                                            <th>@L["Import_Started"]</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -209,7 +212,7 @@ else
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">
-                        <h6 class="mb-0"><i class="bi bi-info-circle me-1"></i> About Import</h6>
+                        <h6 class="mb-0"><i class="bi bi-info-circle me-1"></i> @L["Import_About"]</h6>
                     </div>
                     <div class="card-body">
                         <p class="small text-muted">

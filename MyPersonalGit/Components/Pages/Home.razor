@@ -4,6 +4,8 @@
 @using System.IO.Compression
 @using Microsoft.AspNetCore.Components.Forms
 @using MyPersonalGit.Data
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject IConfiguration Config
 @inject NavigationManager Nav
 @inject IJSRuntime JS
@@ -13,9 +15,10 @@
 @inject ITemplateService TemplateService
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>Repositories · Personal Git</PageTitle>
+<PageTitle>@L["Home_PageTitle"]</PageTitle>
 
 <div class="row g-4">
     <!-- Left Sidebar -->
@@ -27,7 +30,7 @@
             <span class="fw-semibold small">@UserService.Username</span>
         </div>
         <hr class="my-3 opacity-10" />
-        <h6 class="fw-bold x-small text-uppercase text-muted mb-3" style="font-size: 12px;">Recent Repositories</h6>
+        <h6 class="fw-bold x-small text-uppercase text-muted mb-3" style="font-size: 12px;">@L["Home_RecentRepositories"]</h6>
         <ul class="list-unstyled small">
             @if (repositories.Any())
             {
@@ -43,7 +46,7 @@
             }
             else
             {
-                <li class="text-muted fst-italic">No repos yet</li>
+                <li class="text-muted fst-italic">@L["Home_NoReposYet"]</li>
             }
         </ul>
     </div>
@@ -51,14 +54,14 @@
     <!-- Main Feed -->
     <div class="col-lg-9">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="h5 fw-bold mb-0">Repositories</h2>
+            <h2 class="h5 fw-bold mb-0">@L["Home_Repositories"]</h2>
             @if (UserService.IsLoggedIn)
             {
                 <button class="btn btn-gh-primary shadow-sm" @onclick="ShowCreateModal">
-                    <i class="bi bi-journal-plus me-1"></i> New
+                    <i class="bi bi-journal-plus me-1"></i> @L["Home_NewRepo"]
                 </button>
                 <a href="/import" class="btn btn-outline-secondary shadow-sm ms-2">
-                    <i class="bi bi-box-arrow-in-down me-1"></i> Import
+                    <i class="bi bi-box-arrow-in-down me-1"></i> @L["Home_Import"]
                 </a>
             }
         </div>
@@ -67,7 +70,7 @@
             <div class="input-group shadow-sm rounded-2">
                 <input type="text"
                        class="form-control form-control-sm border-secondary-subtle py-2 shadow-none"
-                       placeholder="Find a repository..."
+                       placeholder="@L["Home_FindRepoPlaceholder"]"
                        @bind="searchTerm"
                        @bind:event="oninput" />
                 @if (!string.IsNullOrEmpty(searchTerm))
@@ -101,7 +104,7 @@
                         <i class="bi bi-search" style="font-size: 3rem;"></i>
                     }
                 </div>
-                <h3 class="h5 fw-bold">@(string.IsNullOrEmpty(searchTerm) ? "No repositories found" : "No matching results")</h3>
+                <h3 class="h5 fw-bold">@(string.IsNullOrEmpty(searchTerm) ? L["Home_NoRepositoriesFound"] : L["Home_NoMatchingResults"])</h3>
                 <p class="text-muted mb-4 small">
                     @(string.IsNullOrEmpty(searchTerm)
                                     ? $"Initialize a repository in {RootPath} to get started."
@@ -134,13 +137,13 @@
                                     @if (repo.IsTemplate)
                                     {
                                         <span class="badge rounded-pill border bg-info bg-opacity-10 text-info border-info-subtle fw-normal px-2 ms-1" style="font-size: 12px;">
-                                            <i class="bi bi-copy me-1"></i>Template
+                                            <i class="bi bi-copy me-1"></i>@L["Home_Template"]
                                         </span>
                                     }
                                     @if (repo.IsArchived)
                                     {
                                         <span class="badge rounded-pill border bg-secondary bg-opacity-10 text-secondary fw-normal px-2 ms-1" style="font-size: 12px;">
-                                            <i class="bi bi-archive me-1"></i>Archived
+                                            <i class="bi bi-archive me-1"></i>@L["Home_Archived"]
                                         </span>
                                     }
                                 </div>
@@ -194,7 +197,7 @@
         @if (recentActivities.Any())
         {
             <div class="mt-4">
-                <h2 class="h5 fw-bold mb-3">Recent Activity</h2>
+                <h2 class="h5 fw-bold mb-3">@L["Home_RecentActivity"]</h2>
                 <div class="border rounded-3 overflow-hidden shadow-sm">
                     @foreach (var activity in recentActivities)
                     {
@@ -231,16 +234,16 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title fw-bold">Create a new repository</h5>
+                    <h5 class="modal-title fw-bold">@L["Home_CreateNewRepo"]</h5>
                     <button type="button" class="btn-close shadow-none" @onclick="() => showModal = false"></button>
                 </div>
                 <div class="modal-body">
                     @if (templateRepos.Any())
                     {
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Repository template <span class="fw-normal text-muted">(optional)</span></label>
+                            <label class="form-label small fw-semibold">@L["Home_RepoTemplate"] <span class="fw-normal text-muted">@L["Home_Optional"]</span></label>
                             <select class="form-select form-select-sm shadow-none" @onchange="OnTemplateSelected">
-                                <option value="">No template</option>
+                                <option value="">@L["Home_NoTemplate"]</option>
                                 @foreach (var tmpl in templateRepos)
                                 {
                                     <option value="@tmpl.Id">@(tmpl.Name.EndsWith(".git") ? tmpl.Name[..^4] : tmpl.Name) @(!string.IsNullOrEmpty(tmpl.Description) ? $"— {tmpl.Description}" : "")</option>
@@ -249,11 +252,11 @@
                         </div>
                     }
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Repository name</label>
+                        <label class="form-label small fw-semibold">@L["Home_RepoName"]</label>
                         <input type="text" class="form-control shadow-none" @bind="newRepoName" @bind:event="oninput" placeholder="my-awesome-project" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Description <span class="fw-normal text-muted">(optional)</span></label>
+                        <label class="form-label small fw-semibold">@L["Home_Description"] <span class="fw-normal text-muted">@L["Home_Optional"]</span></label>
                         <input type="text" class="form-control shadow-none" @bind="newRepoDescription" @bind:event="oninput" placeholder="Short description of your project" />
                     </div>
                     <div class="mb-3">
@@ -261,33 +264,33 @@
                             <input class="form-check-input" type="radio" name="repoVisibility" id="repoPublic" checked="@(!newRepoIsPrivate)" @onchange="() => newRepoIsPrivate = false" />
                             <label class="form-check-label" for="repoPublic">
                                 <i class="bi bi-journal-bookmark me-1"></i>
-                                <strong>Public</strong>
-                                <span class="text-muted d-block small">Anyone can see this repository.</span>
+                                <strong>@L["Home_Public"]</strong>
+                                <span class="text-muted d-block small">@L["Home_PublicDescription"]</span>
                             </label>
                         </div>
                         <div class="form-check mt-2">
                             <input class="form-check-input" type="radio" name="repoVisibility" id="repoPrivate" checked="@newRepoIsPrivate" @onchange="() => newRepoIsPrivate = true" />
                             <label class="form-check-label" for="repoPrivate">
                                 <i class="bi bi-lock me-1"></i>
-                                <strong>Private</strong>
-                                <span class="text-muted d-block small">Only you (and collaborators) can see this repository.</span>
+                                <strong>@L["Home_Private"]</strong>
+                                <span class="text-muted d-block small">@L["Home_PrivateDescription"]</span>
                             </label>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Storage location</label>
+                        <label class="form-label small fw-semibold">@L["Home_StorageLocation"]</label>
                         <div class="input-group input-group-sm">
                             <input type="text" class="form-control shadow-none font-monospace" @bind="customRepoPath" @bind:event="oninput" />
                             <button class="btn btn-outline-secondary" type="button" @onclick="ResetRepoPath" title="Reset to default">
                                 <i class="bi bi-arrow-counterclockwise"></i>
                             </button>
                         </div>
-                        <div class="form-text">Full path where the bare repository will be created.</div>
+                        <div class="form-text">@L["Home_StorageLocationHint"]</div>
                     </div>
                     <p class="text-muted mt-2 x-small">Will be created at: <code>@GetFullRepoPath()</code></p>
 
                     <hr class="my-3 opacity-25" />
-                    <label class="form-label small fw-semibold">Initialize with files <span class="fw-normal text-muted">(optional)</span></label>
+                    <label class="form-label small fw-semibold">@L["Home_InitializeWithFiles"] <span class="fw-normal text-muted">@L["Home_Optional"]</span></label>
 
                     @if (initFileData.Any())
                     {
@@ -307,11 +310,11 @@
                     {
                         <div class="d-flex gap-2">
                             <label class="btn btn-light btn-sm border flex-fill text-center" style="cursor: pointer;">
-                                <i class="bi bi-folder-plus me-1"></i> Upload Folder
+                                <i class="bi bi-folder-plus me-1"></i> @L["Home_UploadFolder"]
                                 <InputFile id="initFolderInput" OnChange="HandleInitFolderSelected" multiple style="display: none;" />
                             </label>
                             <label class="btn btn-light btn-sm border flex-fill text-center" style="cursor: pointer;">
-                                <i class="bi bi-file-earmark-zip me-1"></i> Upload Zip
+                                <i class="bi bi-file-earmark-zip me-1"></i> @L["Home_UploadZip"]
                                 <InputFile OnChange="HandleInitZipSelected" accept=".zip" style="display: none;" />
                             </label>
                         </div>
@@ -325,16 +328,16 @@
                     }
                 </div>
                 <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showModal = false" disabled="@isCreating">Cancel</button>
+                    <button type="button" class="btn btn-light btn-sm border px-3" @onclick="() => showModal = false" disabled="@isCreating">@L["Home_Cancel"]</button>
                     <button type="button" class="btn btn-gh-primary btn-sm shadow-sm" @onclick="CreateNewRepository" disabled="@(string.IsNullOrWhiteSpace(newRepoName) || isCreating)">
                         @if (isCreating)
                         {
                             <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                            <span>Creating...</span>
+                            <span>@L["Home_Creating"]</span>
                         }
                         else
                         {
-                            <span>@(selectedTemplateId > 0 ? "Use this template" : "Create repository")</span>
+                            <span>@(selectedTemplateId > 0 ? L["Home_UseThisTemplate"] : L["Home_CreateRepository"])</span>
                         }
                     </button>
                 </div>

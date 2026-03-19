@@ -3,33 +3,36 @@
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject IConfiguration Config
 @inject IRepositoryService RepoService
 @inject IAdminService AdminService
 @inject ICollaboratorService CollaboratorService
 @inject CurrentUserService UserService
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>Explore · Personal Git</PageTitle>
+<PageTitle>@L["Explore_PageTitle"]</PageTitle>
 
 <div class="container-xl px-3 py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4 mb-0">Explore repositories</h2>
+        <h2 class="h4 mb-0">@L["Explore_Heading"]</h2>
     </div>
 
     <div class="row mb-4">
         <div class="col-md-8">
             <div class="input-group">
-                <input type="text" class="form-control" placeholder="Search repositories..." @bind="searchQuery" @bind:event="oninput" @onkeyup="HandleKeyPress" />
+                <input type="text" class="form-control" placeholder="@L["Explore_SearchPlaceholder"]" @bind="searchQuery" @bind:event="oninput" @onkeyup="HandleKeyPress" />
                 <button class="btn btn-outline-secondary" @onclick="FilterRepos"><i class="bi bi-search"></i></button>
             </div>
         </div>
         <div class="col-md-4">
             <select class="form-select" @bind="sortBy" @bind:after="FilterRepos">
-                <option value="updated">Recently updated</option>
-                <option value="name">Name</option>
-                <option value="stars">Most stars</option>
-                <option value="forks">Most forks</option>
+                <option value="updated">@L["Explore_SortRecentlyUpdated"]</option>
+                <option value="name">@L["Explore_SortName"]</option>
+                <option value="stars">@L["Explore_SortMostStars"]</option>
+                <option value="forks">@L["Explore_SortMostForks"]</option>
             </select>
         </div>
     </div>
@@ -37,7 +40,7 @@
     @if (allTopics.Any())
     {
         <div class="mb-4">
-            <h6 class="small fw-bold text-muted text-uppercase mb-2">Topics</h6>
+            <h6 class="small fw-bold text-muted text-uppercase mb-2">@L["Explore_Topics"]</h6>
             <div class="d-flex flex-wrap gap-2">
                 @foreach (var topic in allTopics)
                 {
@@ -50,7 +53,7 @@
                 @if (!string.IsNullOrEmpty(selectedTopic))
                 {
                     <button class="btn btn-sm btn-outline-secondary rounded-pill" @onclick="() => ToggleTopic(null)">
-                        <i class="bi bi-x me-1"></i>Clear
+                        <i class="bi bi-x me-1"></i>@L["Explore_ClearFilter"]
                     </button>
                 }
             </div>
@@ -78,16 +81,16 @@
                                 </h6>
                                 @if (repo.IsPrivate)
                                 {
-                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle ms-2" style="font-size: 10px;">Private</span>
+                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle ms-2" style="font-size: 10px;">@L["Explore_Private"]</span>
                                 }
                                 @if (repo.IsArchived)
                                 {
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border ms-2" style="font-size: 10px;">Archived</span>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border ms-2" style="font-size: 10px;">@L["Explore_Archived"]</span>
                                 }
                                 @if (!string.IsNullOrEmpty(repo.ForkedFrom))
                                 {
                                     <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle ms-2" style="font-size: 10px;">
-                                        <i class="bi bi-diagram-3 me-1"></i>Fork
+                                        <i class="bi bi-diagram-3 me-1"></i>@L["Explore_Fork"]
                                     </span>
                                 }
                             </div>
@@ -124,7 +127,7 @@
     {
         <div class="text-center py-5">
             <i class="bi bi-search display-4 text-muted"></i>
-            <p class="text-muted mt-3">No repositories found matching your criteria.</p>
+            <p class="text-muted mt-3">@L["Explore_NoResults"]</p>
         </div>
     }
 </div>

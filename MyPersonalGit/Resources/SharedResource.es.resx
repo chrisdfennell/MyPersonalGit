@@ -8,6 +8,7 @@
             <xsd:complexType>
               <xsd:sequence>
                 <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
               <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
@@ -16,26 +17,24 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <data name="Nav_PullRequests" xml:space="preserve"><value>Solicitudes de extracción</value></data>
+
+  <!-- Navigation -->
   <data name="Nav_Issues" xml:space="preserve"><value>Incidencias</value></data>
-  <data name="Nav_Search" xml:space="preserve"><value>Buscar</value></data>
-  <data name="Nav_Snippets" xml:space="preserve"><value>Fragmentos</value></data>
   <data name="Nav_Packages" xml:space="preserve"><value>Paquetes</value></data>
-  <data name="Nav_Admin" xml:space="preserve"><value>Administración</value></data>
   <data name="Nav_Profile" xml:space="preserve"><value>Tu perfil</value></data>
-  <data name="Nav_Settings" xml:space="preserve"><value>Configuración</value></data>
-  <data name="Nav_SignOut" xml:space="preserve"><value>Cerrar sesión</value></data>
-  <data name="Nav_SignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="Nav_PullRequests" xml:space="preserve"><value>Pull requests</value></data>
   <data name="Nav_Register" xml:space="preserve"><value>Registrarse</value></data>
+  <data name="Nav_Repositories" xml:space="preserve"><value>Repositorios</value></data>
+  <data name="Nav_Search" xml:space="preserve"><value>Buscar</value></data>
+  <data name="Nav_Settings" xml:space="preserve"><value>Configuración</value></data>
+  <data name="Nav_SignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="Nav_SignOut" xml:space="preserve"><value>Cerrar sesión</value></data>
+  <data name="Nav_Snippets" xml:space="preserve"><value>Fragmentos</value></data>
+  <data name="Nav_Admin" xml:space="preserve"><value>Administración</value></data>
   <data name="Nav_Notifications" xml:space="preserve"><value>Notificaciones</value></data>
-  <data name="Search_Placeholder" xml:space="preserve"><value>Buscar o ir a...</value></data>
-  <data name="Home_NewRepo" xml:space="preserve"><value>Nuevo</value></data>
-  <data name="Home_Import" xml:space="preserve"><value>Importar</value></data>
-  <data name="Home_Repositories" xml:space="preserve"><value>Repositorios</value></data>
-  <data name="Home_RecentActivity" xml:space="preserve"><value>Actividad reciente</value></data>
-  <data name="Home_NoRepos" xml:space="preserve"><value>No se encontraron repositorios</value></data>
-  <data name="Home_CreateFirst" xml:space="preserve"><value>Crea tu primer repositorio para comenzar.</value></data>
-  <data name="Home_SearchRepos" xml:space="preserve"><value>Buscar un repositorio...</value></data>
+
+  <!-- Common -->
+  <data name="Common_Loading" xml:space="preserve"><value>Cargando...</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Guardar</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Cancelar</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Eliminar</value></data>
@@ -43,21 +42,715 @@
   <data name="Common_Create" xml:space="preserve"><value>Crear</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Cerrar</value></data>
   <data name="Common_Open" xml:space="preserve"><value>Abrir</value></data>
-  <data name="Common_Loading" xml:space="preserve"><value>Cargando...</value></data>
   <data name="Common_Private" xml:space="preserve"><value>Privado</value></data>
   <data name="Common_Public" xml:space="preserve"><value>Público</value></data>
-  <data name="Footer_Terms" xml:space="preserve"><value>Términos</value></data>
-  <data name="Footer_Privacy" xml:space="preserve"><value>Privacidad</value></data>
-  <data name="Footer_Docs" xml:space="preserve"><value>Documentación</value></data>
+
+  <!-- Search -->
+  <data name="Search_Button" xml:space="preserve"><value>Buscar</value></data>
+  <data name="Search_Heading" xml:space="preserve"><value>Buscar</value></data>
+  <data name="Search_InitialHeading" xml:space="preserve"><value>Buscar en todos los repositorios</value></data>
+  <data name="Search_InitialSubheading" xml:space="preserve"><value>Encuentra repositorios, código, incidencias y pull requests</value></data>
+  <data name="Search_InputPlaceholder" xml:space="preserve"><value>Buscar repositorios, código, incidencias y pull requests...</value></data>
+  <data name="Search_NoCode" xml:space="preserve"><value>No se encontró código que coincida con tu búsqueda.</value></data>
+  <data name="Search_NoIssues" xml:space="preserve"><value>No se encontraron incidencias que coincidan con tu búsqueda.</value></data>
+  <data name="Search_NoPullRequests" xml:space="preserve"><value>No se encontraron pull requests que coincidan con tu búsqueda.</value></data>
+  <data name="Search_NoRepositories" xml:space="preserve"><value>No se encontraron repositorios que coincidan con tu búsqueda.</value></data>
+  <data name="Search_PageTitle" xml:space="preserve"><value>Buscar · Personal Git</value></data>
+  <data name="Search_Placeholder" xml:space="preserve"><value>Buscar o ir a...</value></data>
+  <data name="Search_Searching" xml:space="preserve"><value>Buscando en todos los repositorios...</value></data>
+  <data name="Search_TabCode" xml:space="preserve"><value>Código</value></data>
+  <data name="Search_TabIssues" xml:space="preserve"><value>Incidencias</value></data>
+  <data name="Search_TabPullRequests" xml:space="preserve"><value>Pull requests</value></data>
+  <data name="Search_TabRepositories" xml:space="preserve"><value>Repositorios</value></data>
+
+  <!-- Footer -->
   <data name="Footer_Contact" xml:space="preserve"><value>Contacto</value></data>
-  <data name="Login_Title" xml:space="preserve"><value>Iniciar sesión en MyPersonalGit</value></data>
-  <data name="Login_Username" xml:space="preserve"><value>Usuario o correo electrónico</value></data>
+  <data name="Footer_Docs" xml:space="preserve"><value>Docs</value></data>
+  <data name="Footer_Documentation" xml:space="preserve"><value>Documentación</value></data>
+  <data name="Footer_Page" xml:space="preserve"><value>Página</value></data>
+  <data name="Footer_PageNotFound" xml:space="preserve"><value>Página no encontrada</value></data>
+  <data name="Footer_Privacy" xml:space="preserve"><value>Privacidad</value></data>
+  <data name="Footer_PrivacyPolicy" xml:space="preserve"><value>Política de privacidad</value></data>
+  <data name="Footer_Terms" xml:space="preserve"><value>Términos</value></data>
+  <data name="Footer_TermsOfService" xml:space="preserve"><value>Términos de servicio</value></data>
+
+  <!-- Home -->
+  <data name="Home_Archived" xml:space="preserve"><value>Archivado</value></data>
+  <data name="Home_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Home_CreateNewRepo" xml:space="preserve"><value>Crear un nuevo repositorio</value></data>
+  <data name="Home_CreateRepository" xml:space="preserve"><value>Crear repositorio</value></data>
+  <data name="Home_Creating" xml:space="preserve"><value>Creando...</value></data>
+  <data name="Home_Description" xml:space="preserve"><value>Descripción</value></data>
+  <data name="Home_FindRepoPlaceholder" xml:space="preserve"><value>Buscar un repositorio...</value></data>
+  <data name="Home_Import" xml:space="preserve"><value>Importar</value></data>
+  <data name="Home_InitializeWithFiles" xml:space="preserve"><value>Inicializar con archivos</value></data>
+  <data name="Home_NewRepo" xml:space="preserve"><value>Nuevo</value></data>
+  <data name="Home_NoMatchingResults" xml:space="preserve"><value>Sin resultados coincidentes</value></data>
+  <data name="Home_NoReposYet" xml:space="preserve"><value>Aún no hay repositorios</value></data>
+  <data name="Home_NoRepositoriesFound" xml:space="preserve"><value>No se encontraron repositorios</value></data>
+  <data name="Home_NoTemplate" xml:space="preserve"><value>Sin plantilla</value></data>
+  <data name="Home_Optional" xml:space="preserve"><value>(opcional)</value></data>
+  <data name="Home_PageTitle" xml:space="preserve"><value>Repositorios · Personal Git</value></data>
+  <data name="Home_Private" xml:space="preserve"><value>Privado</value></data>
+  <data name="Home_PrivateDescription" xml:space="preserve"><value>Solo tú (y los colaboradores) pueden ver este repositorio.</value></data>
+  <data name="Home_Public" xml:space="preserve"><value>Público</value></data>
+  <data name="Home_PublicDescription" xml:space="preserve"><value>Cualquiera puede ver este repositorio.</value></data>
+  <data name="Home_RecentActivity" xml:space="preserve"><value>Actividad reciente</value></data>
+  <data name="Home_RecentRepositories" xml:space="preserve"><value>Repositorios recientes</value></data>
+  <data name="Home_RepoName" xml:space="preserve"><value>Nombre del repositorio</value></data>
+  <data name="Home_RepoTemplate" xml:space="preserve"><value>Plantilla de repositorio</value></data>
+  <data name="Home_Repositories" xml:space="preserve"><value>Repositorios</value></data>
+  <data name="Home_SearchRepos" xml:space="preserve"><value>Buscar un repositorio...</value></data>
+  <data name="Home_NoRepos" xml:space="preserve"><value>No se encontraron repositorios</value></data>
+  <data name="Home_CreateFirst" xml:space="preserve"><value>Crea tu primer repositorio para comenzar.</value></data>
+  <data name="Home_StorageLocation" xml:space="preserve"><value>Ubicación de almacenamiento</value></data>
+  <data name="Home_StorageLocationHint" xml:space="preserve"><value>Ruta completa donde se creará el repositorio bare.</value></data>
+  <data name="Home_Template" xml:space="preserve"><value>Plantilla</value></data>
+  <data name="Home_UploadFolder" xml:space="preserve"><value>Subir carpeta</value></data>
+  <data name="Home_UploadZip" xml:space="preserve"><value>Subir Zip</value></data>
+  <data name="Home_UseThisTemplate" xml:space="preserve"><value>Usar esta plantilla</value></data>
+
+  <!-- Login -->
+  <data name="Login_CreateAccount" xml:space="preserve"><value>Crear una cuenta</value></data>
+  <data name="Login_EnterCode" xml:space="preserve"><value>Ingresa el código de 6 dígitos de tu aplicación de autenticación</value></data>
+  <data name="Login_OrSignInWith" xml:space="preserve"><value>O iniciar sesión con</value></data>
   <data name="Login_Password" xml:space="preserve"><value>Contraseña</value></data>
   <data name="Login_SignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
-  <data name="Login_CreateAccount" xml:space="preserve"><value>Crear una cuenta</value></data>
-  <data name="Login_OrSignInWith" xml:space="preserve"><value>O iniciar sesión con</value></data>
+  <data name="Login_Title" xml:space="preserve"><value>Iniciar sesión en MyPersonalGit</value></data>
   <data name="Login_TwoFactor" xml:space="preserve"><value>Autenticación de dos factores</value></data>
-  <data name="Login_EnterCode" xml:space="preserve"><value>Ingresa el código de 6 dígitos de tu aplicación autenticadora</value></data>
   <data name="Login_UseRecoveryCode" xml:space="preserve"><value>Usar un código de recuperación</value></data>
+  <data name="Login_Username" xml:space="preserve"><value>Nombre de usuario o correo electrónico</value></data>
   <data name="Login_Verify" xml:space="preserve"><value>Verificar</value></data>
+
+  <!-- Register -->
+  <data name="Register_AlreadyHaveAccount" xml:space="preserve"><value>¿Ya tienes una cuenta?</value></data>
+  <data name="Register_ConfirmPassword" xml:space="preserve"><value>Confirmar contraseña</value></data>
+  <data name="Register_ConfirmPasswordPlaceholder" xml:space="preserve"><value>Confirma tu contraseña</value></data>
+  <data name="Register_CreateAccount" xml:space="preserve"><value>Crear cuenta</value></data>
+  <data name="Register_CreateAccountButton" xml:space="preserve"><value>Crear cuenta</value></data>
+  <data name="Register_CreatingAccount" xml:space="preserve"><value>Creando cuenta...</value></data>
+  <data name="Register_Email" xml:space="preserve"><value>Correo electrónico</value></data>
+  <data name="Register_EmailPlaceholder" xml:space="preserve"><value>Ingresa tu correo electrónico</value></data>
+  <data name="Register_FullName" xml:space="preserve"><value>Nombre completo (Opcional)</value></data>
+  <data name="Register_FullNamePlaceholder" xml:space="preserve"><value>Ingresa tu nombre completo</value></data>
+  <data name="Register_PageTitle" xml:space="preserve"><value>Registrarse - MyPersonalGit</value></data>
+  <data name="Register_Password" xml:space="preserve"><value>Contraseña</value></data>
+  <data name="Register_PasswordPlaceholder" xml:space="preserve"><value>Crea una contraseña</value></data>
+  <data name="Register_SignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="Register_Subtitle" xml:space="preserve"><value>Únete a MyPersonalGit hoy</value></data>
+  <data name="Register_Username" xml:space="preserve"><value>Nombre de usuario</value></data>
+  <data name="Register_UsernamePlaceholder" xml:space="preserve"><value>Elige un nombre de usuario</value></data>
+
+  <!-- Explore -->
+  <data name="Explore_Archived" xml:space="preserve"><value>Archivado</value></data>
+  <data name="Explore_ClearFilter" xml:space="preserve"><value>Limpiar</value></data>
+  <data name="Explore_Fork" xml:space="preserve"><value>Fork</value></data>
+  <data name="Explore_Heading" xml:space="preserve"><value>Explorar repositorios</value></data>
+  <data name="Explore_NoResults" xml:space="preserve"><value>No se encontraron repositorios que coincidan con tus criterios.</value></data>
+  <data name="Explore_PageTitle" xml:space="preserve"><value>Explorar · Personal Git</value></data>
+  <data name="Explore_Private" xml:space="preserve"><value>Privado</value></data>
+  <data name="Explore_SearchPlaceholder" xml:space="preserve"><value>Buscar repositorios...</value></data>
+  <data name="Explore_SortMostForks" xml:space="preserve"><value>Más forks</value></data>
+  <data name="Explore_SortMostStars" xml:space="preserve"><value>Más estrellas</value></data>
+  <data name="Explore_SortName" xml:space="preserve"><value>Nombre</value></data>
+  <data name="Explore_SortRecentlyUpdated" xml:space="preserve"><value>Actualizado recientemente</value></data>
+  <data name="Explore_Topics" xml:space="preserve"><value>Temas</value></data>
+
+  <!-- Repository -->
+  <data name="Repo_About" xml:space="preserve"><value>Acerca de</value></data>
+  <data name="Repo_Actions" xml:space="preserve"><value>Acciones</value></data>
+  <data name="Repo_ActiveBranches" xml:space="preserve"><value>Ramas activas</value></data>
+  <data name="Repo_AddFile" xml:space="preserve"><value>Agregar archivo</value></data>
+  <data name="Repo_AddFiles" xml:space="preserve"><value>Agregar archivos</value></data>
+  <data name="Repo_BackToDashboard" xml:space="preserve"><value>Volver al panel</value></data>
+  <data name="Repo_Blame" xml:space="preserve"><value>Blame</value></data>
+  <data name="Repo_Branches" xml:space="preserve"><value>Ramas</value></data>
+  <data name="Repo_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Repo_Clone" xml:space="preserve"><value>Clonar</value></data>
+  <data name="Repo_Code" xml:space="preserve"><value>Código</value></data>
+  <data name="Repo_CommitGraph" xml:space="preserve"><value>Gráfico de commits</value></data>
+  <data name="Repo_Commits" xml:space="preserve"><value>Commits</value></data>
+  <data name="Repo_ConfirmDeleteFile" xml:space="preserve"><value>¿Estás seguro de que deseas eliminar este archivo?</value></data>
+  <data name="Repo_ConfirmDeleteRepo" xml:space="preserve"><value>¿Estás seguro de que deseas eliminar este repositorio?</value></data>
+  <data name="Repo_ContainerImages" xml:space="preserve"><value>Imágenes de contenedor</value></data>
+  <data name="Repo_ContainerImagesDescription" xml:space="preserve"><value>Imágenes de contenedor para este repositorio</value></data>
+  <data name="Repo_Create" xml:space="preserve"><value>Crear</value></data>
+  <data name="Repo_CreateBranch" xml:space="preserve"><value>Crear rama</value></data>
+  <data name="Repo_CreateNewRelease" xml:space="preserve"><value>Crear un nuevo lanzamiento</value></data>
+  <data name="Repo_CreateTag" xml:space="preserve"><value>Crear etiqueta</value></data>
+  <data name="Repo_Delete" xml:space="preserve"><value>Eliminar</value></data>
+  <data name="Repo_DeleteFile" xml:space="preserve"><value>Eliminar archivo</value></data>
+  <data name="Repo_DeleteRepository" xml:space="preserve"><value>Eliminar repositorio</value></data>
+  <data name="Repo_DescribeRelease" xml:space="preserve"><value>Describe este lanzamiento</value></data>
+  <data name="Repo_Description" xml:space="preserve"><value>Descripción</value></data>
+  <data name="Repo_Discussions" xml:space="preserve"><value>Discusiones</value></data>
+  <data name="Repo_Download" xml:space="preserve"><value>Descargar</value></data>
+  <data name="Repo_Edit" xml:space="preserve"><value>Editar</value></data>
+  <data name="Repo_GoToFile" xml:space="preserve"><value>Ir al archivo</value></data>
+  <data name="Repo_Graph" xml:space="preserve"><value>Gráfico</value></data>
+  <data name="Repo_History" xml:space="preserve"><value>Historial</value></data>
+  <data name="Repo_Insights" xml:space="preserve"><value>Estadísticas</value></data>
+  <data name="Repo_Issues" xml:space="preserve"><value>Incidencias</value></data>
+  <data name="Repo_Languages" xml:space="preserve"><value>Lenguajes</value></data>
+  <data name="Repo_NewBranch" xml:space="preserve"><value>Nueva rama</value></data>
+  <data name="Repo_NewRelease" xml:space="preserve"><value>Nuevo lanzamiento</value></data>
+  <data name="Repo_NewTag" xml:space="preserve"><value>Nueva etiqueta</value></data>
+  <data name="Repo_NoBranches" xml:space="preserve"><value>Sin ramas</value></data>
+  <data name="Repo_NoCommits" xml:space="preserve"><value>Sin commits</value></data>
+  <data name="Repo_NoContainerImages" xml:space="preserve"><value>Sin imágenes de contenedor</value></data>
+  <data name="Repo_NoReleases" xml:space="preserve"><value>Sin lanzamientos</value></data>
+  <data name="Repo_NoReleasesDescription" xml:space="preserve"><value>Aún no se han publicado lanzamientos.</value></data>
+  <data name="Repo_NoTags" xml:space="preserve"><value>Sin etiquetas</value></data>
+  <data name="Repo_NotFound" xml:space="preserve"><value>Repositorio no encontrado</value></data>
+  <data name="Repo_Packages" xml:space="preserve"><value>Paquetes</value></data>
+  <data name="Repo_Projects" xml:space="preserve"><value>Proyectos</value></data>
+  <data name="Repo_PublishRelease" xml:space="preserve"><value>Publicar lanzamiento</value></data>
+  <data name="Repo_PullRequests" xml:space="preserve"><value>Pull Requests</value></data>
+  <data name="Repo_QuickSetup" xml:space="preserve"><value>Configuración rápida</value></data>
+  <data name="Repo_ReleaseTags" xml:space="preserve"><value>Etiquetas de lanzamiento</value></data>
+  <data name="Repo_ReleaseTitle" xml:space="preserve"><value>Título del lanzamiento</value></data>
+  <data name="Repo_Releases" xml:space="preserve"><value>Lanzamientos</value></data>
+  <data name="Repo_Security" xml:space="preserve"><value>Seguridad</value></data>
+  <data name="Repo_Settings" xml:space="preserve"><value>Configuración</value></data>
+  <data name="Repo_SettingsDescription" xml:space="preserve"><value>Administrar configuración del repositorio</value></data>
+  <data name="Repo_SwitchBranches" xml:space="preserve"><value>Cambiar ramas</value></data>
+  <data name="Repo_Tags" xml:space="preserve"><value>Etiquetas</value></data>
+  <data name="Repo_Wiki" xml:space="preserve"><value>Wiki</value></data>
+
+  <!-- Issues -->
+  <data name="Issues_Add" xml:space="preserve"><value>Agregar</value></data>
+  <data name="Issues_AddAssignee" xml:space="preserve"><value>Agregar asignado</value></data>
+  <data name="Issues_AddComment" xml:space="preserve"><value>Agregar comentario</value></data>
+  <data name="Issues_AddDependency" xml:space="preserve"><value>Agregar dependencia</value></data>
+  <data name="Issues_AllMilestones" xml:space="preserve"><value>Todos los hitos</value></data>
+  <data name="Issues_Assignees" xml:space="preserve"><value>Asignados</value></data>
+  <data name="Issues_BlockedBy" xml:space="preserve"><value>Bloqueado por</value></data>
+  <data name="Issues_Blocks" xml:space="preserve"><value>Bloquea</value></data>
+  <data name="Issues_BlocksOther" xml:space="preserve"><value>Bloquea otras incidencias</value></data>
+  <data name="Issues_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Issues_Close" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="Issues_CloseIssue" xml:space="preserve"><value>Cerrar incidencia</value></data>
+  <data name="Issues_Closed" xml:space="preserve"><value>Cerrada</value></data>
+  <data name="Issues_Comment" xml:space="preserve"><value>Comentar</value></data>
+  <data name="Issues_ConvertToIssue" xml:space="preserve"><value>Convertir a incidencia</value></data>
+  <data name="Issues_CreateAsDraft" xml:space="preserve"><value>Crear como borrador</value></data>
+  <data name="Issues_CreateDraft" xml:space="preserve"><value>Crear borrador</value></data>
+  <data name="Issues_CreateIssue" xml:space="preserve"><value>Crear incidencia</value></data>
+  <data name="Issues_CreateMilestone" xml:space="preserve"><value>Crear hito</value></data>
+  <data name="Issues_CreateTemplate" xml:space="preserve"><value>Crear plantilla</value></data>
+  <data name="Issues_DefaultLabels" xml:space="preserve"><value>Etiquetas predeterminadas</value></data>
+  <data name="Issues_Dependencies" xml:space="preserve"><value>Dependencias</value></data>
+  <data name="Issues_DescribeMilestone" xml:space="preserve"><value>Describir hito</value></data>
+  <data name="Issues_Description" xml:space="preserve"><value>Descripción</value></data>
+  <data name="Issues_Draft" xml:space="preserve"><value>Borrador</value></data>
+  <data name="Issues_DraftDescription" xml:space="preserve"><value>Las incidencias en borrador no son visibles para otros hasta que se publiquen.</value></data>
+  <data name="Issues_DueDate" xml:space="preserve"><value>Fecha de vencimiento</value></data>
+  <data name="Issues_IsBlockedBy" xml:space="preserve"><value>Está bloqueada por</value></data>
+  <data name="Issues_IssueTemplates" xml:space="preserve"><value>Plantillas de incidencias</value></data>
+  <data name="Issues_IssueTitlePlaceholder" xml:space="preserve"><value>Título de la incidencia</value></data>
+  <data name="Issues_LabelsLabel" xml:space="preserve"><value>Etiquetas</value></data>
+  <data name="Issues_LeaveComment" xml:space="preserve"><value>Deja un comentario</value></data>
+  <data name="Issues_LockedMessage" xml:space="preserve"><value>Esta incidencia está bloqueada.</value></data>
+  <data name="Issues_Milestone" xml:space="preserve"><value>Hito</value></data>
+  <data name="Issues_Milestones" xml:space="preserve"><value>Hitos</value></data>
+  <data name="Issues_NewIssue" xml:space="preserve"><value>Nueva incidencia</value></data>
+  <data name="Issues_NewIssueTemplate" xml:space="preserve"><value>Nueva plantilla de incidencia</value></data>
+  <data name="Issues_NewMilestone" xml:space="preserve"><value>Nuevo hito</value></data>
+  <data name="Issues_NewTemplate" xml:space="preserve"><value>Nueva plantilla</value></data>
+  <data name="Issues_NoDescription" xml:space="preserve"><value>No se proporcionó descripción.</value></data>
+  <data name="Issues_NoMilestone" xml:space="preserve"><value>Sin hito</value></data>
+  <data name="Issues_NoTemplate" xml:space="preserve"><value>Sin plantilla</value></data>
+  <data name="Issues_NoTemplates" xml:space="preserve"><value>Sin plantillas</value></data>
+  <data name="Issues_Open" xml:space="preserve"><value>Abierta</value></data>
+  <data name="Issues_Pinned" xml:space="preserve"><value>Fijada</value></data>
+  <data name="Issues_Reopen" xml:space="preserve"><value>Reabrir</value></data>
+  <data name="Issues_ReopenIssue" xml:space="preserve"><value>Reabrir incidencia</value></data>
+  <data name="Issues_Save" xml:space="preserve"><value>Guardar</value></data>
+  <data name="Issues_StartTimer" xml:space="preserve"><value>Iniciar temporizador</value></data>
+  <data name="Issues_Template" xml:space="preserve"><value>Plantilla</value></data>
+  <data name="Issues_TemplateBody" xml:space="preserve"><value>Cuerpo de la plantilla</value></data>
+  <data name="Issues_TemplateDescPlaceholder" xml:space="preserve"><value>Describe la plantilla</value></data>
+  <data name="Issues_TemplateName" xml:space="preserve"><value>Nombre de la plantilla</value></data>
+  <data name="Issues_Templates" xml:space="preserve"><value>Plantillas</value></data>
+  <data name="Issues_TimeTracking" xml:space="preserve"><value>Seguimiento de tiempo</value></data>
+  <data name="Issues_Title" xml:space="preserve"><value>Incidencias</value></data>
+  <data name="Issues_TitleLabel" xml:space="preserve"><value>Título</value></data>
+
+  <!-- Pull Requests -->
+  <data name="PR_Approve" xml:space="preserve"><value>Aprobar</value></data>
+  <data name="PR_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="PR_Close" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="PR_Closed" xml:space="preserve"><value>Cerrado</value></data>
+  <data name="PR_Comment" xml:space="preserve"><value>Comentar</value></data>
+  <data name="PR_Commits" xml:space="preserve"><value>Commits</value></data>
+  <data name="PR_Conversation" xml:space="preserve"><value>Conversación</value></data>
+  <data name="PR_ConvertToDraft" xml:space="preserve"><value>Convertir a borrador</value></data>
+  <data name="PR_CreateAsDraft" xml:space="preserve"><value>Crear como borrador</value></data>
+  <data name="PR_CreatePullRequest" xml:space="preserve"><value>Crear pull request</value></data>
+  <data name="PR_DescribePlaceholder" xml:space="preserve"><value>Describe tus cambios...</value></data>
+  <data name="PR_Description" xml:space="preserve"><value>Descripción</value></data>
+  <data name="PR_DisableAutoMerge" xml:space="preserve"><value>Desactivar fusión automática</value></data>
+  <data name="PR_Draft" xml:space="preserve"><value>Borrador</value></data>
+  <data name="PR_EnableAutoMerge" xml:space="preserve"><value>Activar fusión automática</value></data>
+  <data name="PR_FilesChanged" xml:space="preserve"><value>Archivos modificados</value></data>
+  <data name="PR_Labels" xml:space="preserve"><value>Etiquetas</value></data>
+  <data name="PR_LeaveReviewComment" xml:space="preserve"><value>Deja un comentario de revisión</value></data>
+  <data name="PR_MarkAsResolved" xml:space="preserve"><value>Marcar como resuelto</value></data>
+  <data name="PR_MergeCommit" xml:space="preserve"><value>Merge commit</value></data>
+  <data name="PR_MergePullRequest" xml:space="preserve"><value>Fusionar pull request</value></data>
+  <data name="PR_Merged" xml:space="preserve"><value>Fusionado</value></data>
+  <data name="PR_NewPullRequest" xml:space="preserve"><value>Nuevo pull request</value></data>
+  <data name="PR_NoDescription" xml:space="preserve"><value>No se proporcionó descripción.</value></data>
+  <data name="PR_NoLabels" xml:space="preserve"><value>Sin etiquetas</value></data>
+  <data name="PR_NoReviewers" xml:space="preserve"><value>Sin revisores</value></data>
+  <data name="PR_Open" xml:space="preserve"><value>Abierto</value></data>
+  <data name="PR_ReadyForReview" xml:space="preserve"><value>Listo para revisión</value></data>
+  <data name="PR_RebaseAndMerge" xml:space="preserve"><value>Rebase y fusionar</value></data>
+  <data name="PR_RequestChanges" xml:space="preserve"><value>Solicitar cambios</value></data>
+  <data name="PR_ResolveConflicts" xml:space="preserve"><value>Resolver conflictos</value></data>
+  <data name="PR_ResolveMergeConflicts" xml:space="preserve"><value>Resolver conflictos de fusión</value></data>
+  <data name="PR_ReviewChanges" xml:space="preserve"><value>Revisar cambios</value></data>
+  <data name="PR_Reviewers" xml:space="preserve"><value>Revisores</value></data>
+  <data name="PR_SelectBranch" xml:space="preserve"><value>Seleccionar rama</value></data>
+  <data name="PR_SourceBranch" xml:space="preserve"><value>Rama de origen</value></data>
+  <data name="PR_Split" xml:space="preserve"><value>Dividido</value></data>
+  <data name="PR_SquashAndMerge" xml:space="preserve"><value>Squash y fusionar</value></data>
+  <data name="PR_TargetBranch" xml:space="preserve"><value>Rama de destino</value></data>
+  <data name="PR_Title" xml:space="preserve"><value>Pull Requests</value></data>
+  <data name="PR_TitleLabel" xml:space="preserve"><value>Título</value></data>
+  <data name="PR_TitlePlaceholder" xml:space="preserve"><value>Título del pull request</value></data>
+  <data name="PR_Unified" xml:space="preserve"><value>Unificado</value></data>
+  <data name="PR_ViewComparison" xml:space="preserve"><value>Ver comparación</value></data>
+
+  <!-- Compare -->
+  <data name="Compare_Base" xml:space="preserve"><value>Base</value></data>
+  <data name="Compare_BranchesIdentical" xml:space="preserve"><value>Estas ramas son idénticas.</value></data>
+  <data name="Compare_ChooseBranches" xml:space="preserve"><value>Elegir ramas</value></data>
+  <data name="Compare_Commits" xml:space="preserve"><value>Commits</value></data>
+  <data name="Compare_Compare" xml:space="preserve"><value>Comparar</value></data>
+  <data name="Compare_CompareButton" xml:space="preserve"><value>Comparar</value></data>
+  <data name="Compare_ComparingChanges" xml:space="preserve"><value>Comparando cambios</value></data>
+  <data name="Compare_CreatePullRequest" xml:space="preserve"><value>Crear pull request</value></data>
+  <data name="Compare_FilesChanged" xml:space="preserve"><value>Archivos modificados</value></data>
+  <data name="Compare_Split" xml:space="preserve"><value>Dividido</value></data>
+  <data name="Compare_Title" xml:space="preserve"><value>Comparar</value></data>
+  <data name="Compare_Unified" xml:space="preserve"><value>Unificado</value></data>
+
+  <!-- Actions -->
+  <data name="Actions_AddWebhook" xml:space="preserve"><value>Agregar webhook</value></data>
+  <data name="Actions_Artifacts" xml:space="preserve"><value>Artefactos</value></data>
+  <data name="Actions_Back" xml:space="preserve"><value>Volver</value></data>
+  <data name="Actions_BackToRuns" xml:space="preserve"><value>Volver a ejecuciones</value></data>
+  <data name="Actions_BackToWebhooks" xml:space="preserve"><value>Volver a webhooks</value></data>
+  <data name="Actions_Branch" xml:space="preserve"><value>Rama</value></data>
+  <data name="Actions_BranchPlaceholder" xml:space="preserve"><value>Nombre de la rama</value></data>
+  <data name="Actions_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Actions_CommitMessage" xml:space="preserve"><value>Mensaje del commit</value></data>
+  <data name="Actions_CommitMessagePlaceholder" xml:space="preserve"><value>Ingresa el mensaje del commit</value></data>
+  <data name="Actions_CommitSHA" xml:space="preserve"><value>SHA del commit</value></data>
+  <data name="Actions_CommitSHAPlaceholder" xml:space="preserve"><value>Ingresa el SHA del commit</value></data>
+  <data name="Actions_Create" xml:space="preserve"><value>Crear</value></data>
+  <data name="Actions_CreateWorkflowRun" xml:space="preserve"><value>Crear ejecución de flujo de trabajo</value></data>
+  <data name="Actions_Download" xml:space="preserve"><value>Descargar</value></data>
+  <data name="Actions_Events" xml:space="preserve"><value>Eventos</value></data>
+  <data name="Actions_NoDeliveries" xml:space="preserve"><value>Sin entregas</value></data>
+  <data name="Actions_NoRunsYet" xml:space="preserve"><value>Aún no hay ejecuciones</value></data>
+  <data name="Actions_NoWebhooks" xml:space="preserve"><value>Sin webhooks</value></data>
+  <data name="Actions_NoWebhooksDescription" xml:space="preserve"><value>Aún no se han configurado webhooks.</value></data>
+  <data name="Actions_PayloadURL" xml:space="preserve"><value>URL del payload</value></data>
+  <data name="Actions_RecentDeliveries" xml:space="preserve"><value>Entregas recientes</value></data>
+  <data name="Actions_Repositories" xml:space="preserve"><value>Repositorios</value></data>
+  <data name="Actions_RequestPayload" xml:space="preserve"><value>Payload de la solicitud</value></data>
+  <data name="Actions_Rerun" xml:space="preserve"><value>Volver a ejecutar</value></data>
+  <data name="Actions_Response" xml:space="preserve"><value>Respuesta</value></data>
+  <data name="Actions_Run" xml:space="preserve"><value>Ejecutar</value></data>
+  <data name="Actions_RunNotFound" xml:space="preserve"><value>Ejecución no encontrada</value></data>
+  <data name="Actions_RunWorkflow" xml:space="preserve"><value>Ejecutar flujo de trabajo</value></data>
+  <data name="Actions_SaveChanges" xml:space="preserve"><value>Guardar cambios</value></data>
+  <data name="Actions_SelectWorkflow" xml:space="preserve"><value>Seleccionar flujo de trabajo</value></data>
+  <data name="Actions_Title" xml:space="preserve"><value>Acciones</value></data>
+  <data name="Actions_WebhookDetails" xml:space="preserve"><value>Detalles del webhook</value></data>
+  <data name="Actions_Webhooks" xml:space="preserve"><value>Webhooks</value></data>
+  <data name="Actions_WorkflowName" xml:space="preserve"><value>Nombre del flujo de trabajo</value></data>
+  <data name="Actions_WorkflowNamePlaceholder" xml:space="preserve"><value>Ingresa el nombre del flujo de trabajo</value></data>
+  <data name="Actions_WorkflowRuns" xml:space="preserve"><value>Ejecuciones del flujo de trabajo</value></data>
+
+  <!-- Blame -->
+  <data name="Blame_BackToFile" xml:space="preserve"><value>Volver al archivo</value></data>
+  <data name="Blame_FileNotFound" xml:space="preserve"><value>Archivo no encontrado</value></data>
+  <data name="Blame_Loading" xml:space="preserve"><value>Cargando...</value></data>
+  <data name="Blame_Repository" xml:space="preserve"><value>Repositorio</value></data>
+  <data name="Blame_Title" xml:space="preserve"><value>Blame</value></data>
+  <data name="Blame_UnableToLoad" xml:space="preserve"><value>No se pudieron cargar los datos de blame</value></data>
+
+  <!-- Discussions -->
+  <data name="Discussions_AcceptedAnswer" xml:space="preserve"><value>Respuesta aceptada</value></data>
+  <data name="Discussions_AddComment" xml:space="preserve"><value>Agregar comentario</value></data>
+  <data name="Discussions_All" xml:space="preserve"><value>Todas</value></data>
+  <data name="Discussions_Announcements" xml:space="preserve"><value>Anuncios</value></data>
+  <data name="Discussions_Answered" xml:space="preserve"><value>Respondida</value></data>
+  <data name="Discussions_BackToList" xml:space="preserve"><value>Volver a la lista</value></data>
+  <data name="Discussions_Body" xml:space="preserve"><value>Cuerpo</value></data>
+  <data name="Discussions_BodyPlaceholder" xml:space="preserve"><value>Escribe el cuerpo de tu discusión...</value></data>
+  <data name="Discussions_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Discussions_Category" xml:space="preserve"><value>Categoría</value></data>
+  <data name="Discussions_Comment" xml:space="preserve"><value>Comentar</value></data>
+  <data name="Discussions_Delete" xml:space="preserve"><value>Eliminar</value></data>
+  <data name="Discussions_Empty" xml:space="preserve"><value>Aún no hay discusiones</value></data>
+  <data name="Discussions_General" xml:space="preserve"><value>General</value></data>
+  <data name="Discussions_Ideas" xml:space="preserve"><value>Ideas</value></data>
+  <data name="Discussions_LeaveComment" xml:space="preserve"><value>Deja un comentario</value></data>
+  <data name="Discussions_Lock" xml:space="preserve"><value>Bloquear</value></data>
+  <data name="Discussions_Locked" xml:space="preserve"><value>Bloqueada</value></data>
+  <data name="Discussions_LockedMessage" xml:space="preserve"><value>Esta discusión está bloqueada.</value></data>
+  <data name="Discussions_MarkAsAnswer" xml:space="preserve"><value>Marcar como respuesta</value></data>
+  <data name="Discussions_NewDiscussion" xml:space="preserve"><value>Nueva discusión</value></data>
+  <data name="Discussions_Pin" xml:space="preserve"><value>Fijar</value></data>
+  <data name="Discussions_Pinned" xml:space="preserve"><value>Fijada</value></data>
+  <data name="Discussions_Polls" xml:space="preserve"><value>Encuestas</value></data>
+  <data name="Discussions_QAndA" xml:space="preserve"><value>Preguntas y respuestas</value></data>
+  <data name="Discussions_Reply" xml:space="preserve"><value>Responder</value></data>
+  <data name="Discussions_ShowAndTell" xml:space="preserve"><value>Mostrar y contar</value></data>
+  <data name="Discussions_StartDiscussion" xml:space="preserve"><value>Iniciar discusión</value></data>
+  <data name="Discussions_Title" xml:space="preserve"><value>Discusiones</value></data>
+  <data name="Discussions_TitleLabel" xml:space="preserve"><value>Título</value></data>
+  <data name="Discussions_TitlePlaceholder" xml:space="preserve"><value>Título de la discusión</value></data>
+  <data name="Discussions_Unlock" xml:space="preserve"><value>Desbloquear</value></data>
+  <data name="Discussions_Unmark" xml:space="preserve"><value>Desmarcar</value></data>
+  <data name="Discussions_Unpin" xml:space="preserve"><value>Desfijar</value></data>
+  <data name="Discussions_WriteReply" xml:space="preserve"><value>Escribe una respuesta...</value></data>
+
+  <!-- Insights -->
+  <data name="Insights_ActiveBranches" xml:space="preserve"><value>Ramas activas</value></data>
+  <data name="Insights_Additions" xml:space="preserve"><value>Adiciones</value></data>
+  <data name="Insights_Branches" xml:space="preserve"><value>Ramas</value></data>
+  <data name="Insights_CodeFrequency" xml:space="preserve"><value>Frecuencia de código</value></data>
+  <data name="Insights_CodeFrequencyDescription" xml:space="preserve"><value>Adiciones y eliminaciones a lo largo del tiempo</value></data>
+  <data name="Insights_CommitActivity" xml:space="preserve"><value>Actividad de commits</value></data>
+  <data name="Insights_Commits" xml:space="preserve"><value>Commits</value></data>
+  <data name="Insights_CommitsPerWeek" xml:space="preserve"><value>Commits por semana</value></data>
+  <data name="Insights_Contributors" xml:space="preserve"><value>Colaboradores</value></data>
+  <data name="Insights_Deletions" xml:space="preserve"><value>Eliminaciones</value></data>
+  <data name="Insights_LinesAdded" xml:space="preserve"><value>Líneas agregadas</value></data>
+  <data name="Insights_LinesDeleted" xml:space="preserve"><value>Líneas eliminadas</value></data>
+  <data name="Insights_Network" xml:space="preserve"><value>Red</value></data>
+  <data name="Insights_NetworkDescription" xml:space="preserve"><value>Gráfico de red de forks y ramas</value></data>
+  <data name="Insights_NetworkGraph" xml:space="preserve"><value>Gráfico de red</value></data>
+  <data name="Insights_NetworkInfo" xml:space="preserve"><value>Información de red</value></data>
+  <data name="Insights_NoCodeFrequency" xml:space="preserve"><value>No hay datos de frecuencia de código disponibles.</value></data>
+  <data name="Insights_NoCommitActivity" xml:space="preserve"><value>No hay datos de actividad de commits disponibles.</value></data>
+  <data name="Insights_NoContributors" xml:space="preserve"><value>No hay datos de colaboradores disponibles.</value></data>
+  <data name="Insights_Repositories" xml:space="preserve"><value>Repositorios</value></data>
+  <data name="Insights_Title" xml:space="preserve"><value>Estadísticas</value></data>
+  <data name="Insights_TotalCommits" xml:space="preserve"><value>Total de commits</value></data>
+
+  <!-- Wiki -->
+  <data name="Wiki_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Wiki_CommitMessage" xml:space="preserve"><value>Mensaje del commit</value></data>
+  <data name="Wiki_CommitMessagePlaceholder" xml:space="preserve"><value>Ingresa el mensaje del commit</value></data>
+  <data name="Wiki_ContentMarkdown" xml:space="preserve"><value>Contenido (Markdown)</value></data>
+  <data name="Wiki_CreateFirstPage" xml:space="preserve"><value>Crear la primera página</value></data>
+  <data name="Wiki_CreateFirstPrompt" xml:space="preserve"><value>Comienza creando la primera página del wiki.</value></data>
+  <data name="Wiki_CreateNewPage" xml:space="preserve"><value>Crear nueva página</value></data>
+  <data name="Wiki_CreatePage" xml:space="preserve"><value>Crear página</value></data>
+  <data name="Wiki_Delete" xml:space="preserve"><value>Eliminar</value></data>
+  <data name="Wiki_Edit" xml:space="preserve"><value>Editar</value></data>
+  <data name="Wiki_History" xml:space="preserve"><value>Historial</value></data>
+  <data name="Wiki_NoPagesYet" xml:space="preserve"><value>Aún no hay páginas</value></data>
+  <data name="Wiki_PageNotFound" xml:space="preserve"><value>Página no encontrada</value></data>
+  <data name="Wiki_PageTitle" xml:space="preserve"><value>Título de la página</value></data>
+  <data name="Wiki_PageTitlePlaceholder" xml:space="preserve"><value>Ingresa el título de la página</value></data>
+  <data name="Wiki_Pages" xml:space="preserve"><value>Páginas</value></data>
+  <data name="Wiki_RevisionHistory" xml:space="preserve"><value>Historial de revisiones</value></data>
+  <data name="Wiki_SaveChanges" xml:space="preserve"><value>Guardar cambios</value></data>
+  <data name="Wiki_Title" xml:space="preserve"><value>Wiki</value></data>
+  <data name="Wiki_View" xml:space="preserve"><value>Ver</value></data>
+  <data name="Wiki_ViewCurrentVersion" xml:space="preserve"><value>Ver versión actual</value></data>
+  <data name="Wiki_Welcome" xml:space="preserve"><value>Bienvenido al wiki</value></data>
+
+  <!-- Projects -->
+  <data name="Projects_AddCard" xml:space="preserve"><value>Agregar tarjeta</value></data>
+  <data name="Projects_AddColumn" xml:space="preserve"><value>Agregar columna</value></data>
+  <data name="Projects_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Projects_CardTitle" xml:space="preserve"><value>Título de la tarjeta</value></data>
+  <data name="Projects_CardTitlePlaceholder" xml:space="preserve"><value>Ingresa el título de la tarjeta</value></data>
+  <data name="Projects_CardType" xml:space="preserve"><value>Tipo de tarjeta</value></data>
+  <data name="Projects_CloseProject" xml:space="preserve"><value>Cerrar proyecto</value></data>
+  <data name="Projects_Closed" xml:space="preserve"><value>Cerrado</value></data>
+  <data name="Projects_ClosedProjects" xml:space="preserve"><value>Proyectos cerrados</value></data>
+  <data name="Projects_Column" xml:space="preserve"><value>Columna</value></data>
+  <data name="Projects_ColumnName" xml:space="preserve"><value>Nombre de la columna</value></data>
+  <data name="Projects_ColumnNamePlaceholder" xml:space="preserve"><value>Ingresa el nombre de la columna</value></data>
+  <data name="Projects_CreateFirstProject" xml:space="preserve"><value>Crear el primer proyecto</value></data>
+  <data name="Projects_CreateNewProject" xml:space="preserve"><value>Crear nuevo proyecto</value></data>
+  <data name="Projects_CreateProject" xml:space="preserve"><value>Crear proyecto</value></data>
+  <data name="Projects_Description" xml:space="preserve"><value>Descripción</value></data>
+  <data name="Projects_DescriptionPlaceholder" xml:space="preserve"><value>Ingresa la descripción del proyecto</value></data>
+  <data name="Projects_DropHere" xml:space="preserve"><value>Soltar aquí</value></data>
+  <data name="Projects_IssueNumber" xml:space="preserve"><value>Número de incidencia</value></data>
+  <data name="Projects_NewProject" xml:space="preserve"><value>Nuevo proyecto</value></data>
+  <data name="Projects_NoProjectsDescription" xml:space="preserve"><value>Los proyectos te ayudan a organizar y dar seguimiento a tu trabajo.</value></data>
+  <data name="Projects_NoProjectsYet" xml:space="preserve"><value>Aún no hay proyectos</value></data>
+  <data name="Projects_Note" xml:space="preserve"><value>Nota</value></data>
+  <data name="Projects_NotePlaceholder" xml:space="preserve"><value>Ingresa una nota</value></data>
+  <data name="Projects_Open" xml:space="preserve"><value>Abierto</value></data>
+  <data name="Projects_Project" xml:space="preserve"><value>Proyecto</value></data>
+  <data name="Projects_ProjectName" xml:space="preserve"><value>Nombre del proyecto</value></data>
+  <data name="Projects_ProjectNamePlaceholder" xml:space="preserve"><value>Ingresa el nombre del proyecto</value></data>
+  <data name="Projects_ReopenProject" xml:space="preserve"><value>Reabrir proyecto</value></data>
+  <data name="Projects_Repositories" xml:space="preserve"><value>Repositorios</value></data>
+  <data name="Projects_Title" xml:space="preserve"><value>Proyectos</value></data>
+
+  <!-- Security -->
+  <data name="Security_Advisories" xml:space="preserve"><value>Avisos</value></data>
+  <data name="Security_AdvisoryDescription" xml:space="preserve"><value>Descripción del aviso</value></data>
+  <data name="Security_AdvisoryDescriptionPlaceholder" xml:space="preserve"><value>Describe el aviso de seguridad</value></data>
+  <data name="Security_AdvisoryTitle" xml:space="preserve"><value>Título del aviso</value></data>
+  <data name="Security_AdvisoryTitlePlaceholder" xml:space="preserve"><value>Ingresa el título del aviso</value></data>
+  <data name="Security_AffectedVersions" xml:space="preserve"><value>Versiones afectadas</value></data>
+  <data name="Security_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Security_Close" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="Security_Closed" xml:space="preserve"><value>Cerrado</value></data>
+  <data name="Security_Create" xml:space="preserve"><value>Crear</value></data>
+  <data name="Security_CreateAdvisory" xml:space="preserve"><value>Crear aviso</value></data>
+  <data name="Security_CreateSecurityAdvisory" xml:space="preserve"><value>Crear aviso de seguridad</value></data>
+  <data name="Security_Critical" xml:space="preserve"><value>Crítico</value></data>
+  <data name="Security_Dependencies" xml:space="preserve"><value>Dependencias</value></data>
+  <data name="Security_Draft" xml:space="preserve"><value>Borrador</value></data>
+  <data name="Security_High" xml:space="preserve"><value>Alto</value></data>
+  <data name="Security_Low" xml:space="preserve"><value>Bajo</value></data>
+  <data name="Security_Medium" xml:space="preserve"><value>Medio</value></data>
+  <data name="Security_NoAdvisories" xml:space="preserve"><value>Sin avisos</value></data>
+  <data name="Security_NoAdvisoriesDescription" xml:space="preserve"><value>No se han publicado avisos de seguridad.</value></data>
+  <data name="Security_NoDependenciesDescription" xml:space="preserve"><value>No hay información de dependencias disponible.</value></data>
+  <data name="Security_NoDependenciesScanned" xml:space="preserve"><value>No se escanearon dependencias</value></data>
+  <data name="Security_NoKnownVulnerabilities" xml:space="preserve"><value>Sin vulnerabilidades conocidas</value></data>
+  <data name="Security_NoScansYet" xml:space="preserve"><value>Aún no hay escaneos</value></data>
+  <data name="Security_Overview" xml:space="preserve"><value>Resumen</value></data>
+  <data name="Security_Publish" xml:space="preserve"><value>Publicar</value></data>
+  <data name="Security_Published" xml:space="preserve"><value>Publicado</value></data>
+  <data name="Security_Repositories" xml:space="preserve"><value>Repositorios</value></data>
+  <data name="Security_RunSecurityScan" xml:space="preserve"><value>Ejecutar escaneo de seguridad</value></data>
+  <data name="Security_SecurityAdvisories" xml:space="preserve"><value>Avisos de seguridad</value></data>
+  <data name="Security_SecurityOverview" xml:space="preserve"><value>Resumen de seguridad</value></data>
+  <data name="Security_Severity" xml:space="preserve"><value>Severidad</value></data>
+  <data name="Security_Title" xml:space="preserve"><value>Seguridad</value></data>
+  <data name="Security_TotalVulnerabilities" xml:space="preserve"><value>Total de vulnerabilidades</value></data>
+
+  <!-- Packages -->
+  <data name="Packages_All" xml:space="preserve"><value>Todos</value></data>
+  <data name="Packages_Install" xml:space="preserve"><value>Instalar</value></data>
+  <data name="Packages_NoPackages" xml:space="preserve"><value>Sin paquetes</value></data>
+  <data name="Packages_NoPackagesDescription" xml:space="preserve"><value>Aún no se han publicado paquetes.</value></data>
+  <data name="Packages_SearchPlaceholder" xml:space="preserve"><value>Buscar paquetes...</value></data>
+  <data name="Packages_Title" xml:space="preserve"><value>Paquetes</value></data>
+  <data name="Packages_Versions" xml:space="preserve"><value>Versiones</value></data>
+
+  <!-- Snippets -->
+  <data name="Snippets_AddFile" xml:space="preserve"><value>Agregar archivo</value></data>
+  <data name="Snippets_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Snippets_CreateSnippet" xml:space="preserve"><value>Crear fragmento</value></data>
+  <data name="Snippets_Delete" xml:space="preserve"><value>Eliminar</value></data>
+  <data name="Snippets_DescriptionPlaceholder" xml:space="preserve"><value>Describe tu fragmento...</value></data>
+  <data name="Snippets_Edit" xml:space="preserve"><value>Editar</value></data>
+  <data name="Snippets_EditSnippet" xml:space="preserve"><value>Editar fragmento</value></data>
+  <data name="Snippets_Files" xml:space="preserve"><value>Archivos</value></data>
+  <data name="Snippets_FormDescription" xml:space="preserve"><value>Descripción</value></data>
+  <data name="Snippets_FormTitle" xml:space="preserve"><value>Título</value></data>
+  <data name="Snippets_NewSnippet" xml:space="preserve"><value>Nuevo fragmento</value></data>
+  <data name="Snippets_NoSnippetsDescription" xml:space="preserve"><value>Aún no se han creado fragmentos.</value></data>
+  <data name="Snippets_NoSnippetsYet" xml:space="preserve"><value>Aún no hay fragmentos</value></data>
+  <data name="Snippets_Optional" xml:space="preserve"><value>(opcional)</value></data>
+  <data name="Snippets_Private" xml:space="preserve"><value>Privado</value></data>
+  <data name="Snippets_Public" xml:space="preserve"><value>Público</value></data>
+  <data name="Snippets_PublicSnippet" xml:space="preserve"><value>Fragmento público</value></data>
+  <data name="Snippets_Title" xml:space="preserve"><value>Fragmentos</value></data>
+  <data name="Snippets_TitlePlaceholder" xml:space="preserve"><value>Ingresa el título del fragmento</value></data>
+  <data name="Snippets_UpdateSnippet" xml:space="preserve"><value>Actualizar fragmento</value></data>
+
+  <!-- Notifications -->
+  <data name="Notif_All" xml:space="preserve"><value>Todas</value></data>
+  <data name="Notif_AuthRequired" xml:space="preserve"><value>Autenticación requerida</value></data>
+  <data name="Notif_AuthRequiredMessage" xml:space="preserve"><value>Debes iniciar sesión para ver las notificaciones.</value></data>
+  <data name="Notif_MarkAllRead" xml:space="preserve"><value>Marcar todas como leídas</value></data>
+  <data name="Notif_New" xml:space="preserve"><value>Nuevas</value></data>
+  <data name="Notif_NoNotifications" xml:space="preserve"><value>Sin notificaciones</value></data>
+  <data name="Notif_SignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="Notif_Title" xml:space="preserve"><value>Notificaciones</value></data>
+  <data name="Notif_Unread" xml:space="preserve"><value>No leídas</value></data>
+
+  <!-- Import -->
+  <data name="Import_About" xml:space="preserve"><value>Acerca de</value></data>
+  <data name="Import_AuthRequired" xml:space="preserve"><value>Autenticación requerida</value></data>
+  <data name="Import_AuthRequiredMessage" xml:space="preserve"><value>Debes iniciar sesión para importar repositorios.</value></data>
+  <data name="Import_AuthToken" xml:space="preserve"><value>Token de autenticación</value></data>
+  <data name="Import_BeginImport" xml:space="preserve"><value>Iniciar importación</value></data>
+  <data name="Import_FromExternalSource" xml:space="preserve"><value>Desde fuente externa</value></data>
+  <data name="Import_History" xml:space="preserve"><value>Historial</value></data>
+  <data name="Import_ImportIssues" xml:space="preserve"><value>Importar incidencias</value></data>
+  <data name="Import_ImportPullRequests" xml:space="preserve"><value>Importar pull requests</value></data>
+  <data name="Import_MakePrivate" xml:space="preserve"><value>Hacer privado</value></data>
+  <data name="Import_Optional" xml:space="preserve"><value>(opcional)</value></data>
+  <data name="Import_Options" xml:space="preserve"><value>Opciones</value></data>
+  <data name="Import_Progress" xml:space="preserve"><value>Progreso</value></data>
+  <data name="Import_Repository" xml:space="preserve"><value>Repositorio</value></data>
+  <data name="Import_RepositoryName" xml:space="preserve"><value>Nombre del repositorio</value></data>
+  <data name="Import_RepositoryUrl" xml:space="preserve"><value>URL del repositorio</value></data>
+  <data name="Import_SignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="Import_Source" xml:space="preserve"><value>Origen</value></data>
+  <data name="Import_SourceType" xml:space="preserve"><value>Tipo de origen</value></data>
+  <data name="Import_Started" xml:space="preserve"><value>Iniciado</value></data>
+  <data name="Import_StartingImport" xml:space="preserve"><value>Iniciando importación...</value></data>
+  <data name="Import_Status" xml:space="preserve"><value>Estado</value></data>
+  <data name="Import_Title" xml:space="preserve"><value>Importar</value></data>
+
+  <!-- Profile -->
+  <data name="Profile_Activity" xml:space="preserve"><value>Actividad</value></data>
+  <data name="Profile_AllActivity" xml:space="preserve"><value>Toda la actividad</value></data>
+  <data name="Profile_Commits" xml:space="preserve"><value>Commits</value></data>
+  <data name="Profile_EditProfile" xml:space="preserve"><value>Editar perfil</value></data>
+  <data name="Profile_Issues" xml:space="preserve"><value>Incidencias</value></data>
+  <data name="Profile_Less" xml:space="preserve"><value>Menos</value></data>
+  <data name="Profile_More" xml:space="preserve"><value>Más</value></data>
+  <data name="Profile_NoActivity" xml:space="preserve"><value>Sin actividad</value></data>
+  <data name="Profile_NoRecentActivity" xml:space="preserve"><value>Sin actividad reciente</value></data>
+  <data name="Profile_NoRepositories" xml:space="preserve"><value>Sin repositorios</value></data>
+  <data name="Profile_Overview" xml:space="preserve"><value>Resumen</value></data>
+  <data name="Profile_PullRequests" xml:space="preserve"><value>Pull requests</value></data>
+  <data name="Profile_RecentActivity" xml:space="preserve"><value>Actividad reciente</value></data>
+  <data name="Profile_Repositories" xml:space="preserve"><value>Repositorios</value></data>
+
+  <!-- Organizations -->
+  <data name="Org_Add" xml:space="preserve"><value>Agregar</value></data>
+  <data name="Org_AddMemberPlaceholder" xml:space="preserve"><value>Agregar miembro...</value></data>
+  <data name="Org_AddRepoPlaceholder" xml:space="preserve"><value>Agregar repositorio...</value></data>
+  <data name="Org_BackToOrganizations" xml:space="preserve"><value>Volver a organizaciones</value></data>
+  <data name="Org_BackToTeams" xml:space="preserve"><value>Volver a equipos</value></data>
+  <data name="Org_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Org_Create" xml:space="preserve"><value>Crear</value></data>
+  <data name="Org_CreateOrganization" xml:space="preserve"><value>Crear organización</value></data>
+  <data name="Org_CreateTeam" xml:space="preserve"><value>Crear equipo</value></data>
+  <data name="Org_DangerZone" xml:space="preserve"><value>Zona de peligro</value></data>
+  <data name="Org_DeleteOrganization" xml:space="preserve"><value>Eliminar organización</value></data>
+  <data name="Org_Description" xml:space="preserve"><value>Descripción</value></data>
+  <data name="Org_DisplayName" xml:space="preserve"><value>Nombre para mostrar</value></data>
+  <data name="Org_DisplayNamePlaceholder" xml:space="preserve"><value>Ingresa el nombre para mostrar</value></data>
+  <data name="Org_Members" xml:space="preserve"><value>Miembros</value></data>
+  <data name="Org_Name" xml:space="preserve"><value>Nombre</value></data>
+  <data name="Org_NameHint" xml:space="preserve"><value>Nombre de la organización (usado en URLs)</value></data>
+  <data name="Org_NewOrganization" xml:space="preserve"><value>Nueva organización</value></data>
+  <data name="Org_NewTeam" xml:space="preserve"><value>Nuevo equipo</value></data>
+  <data name="Org_NoOrganizations" xml:space="preserve"><value>Sin organizaciones</value></data>
+  <data name="Org_NoTeams" xml:space="preserve"><value>Sin equipos</value></data>
+  <data name="Org_NotFound" xml:space="preserve"><value>Organización no encontrada</value></data>
+  <data name="Org_Permission" xml:space="preserve"><value>Permiso</value></data>
+  <data name="Org_SaveChanges" xml:space="preserve"><value>Guardar cambios</value></data>
+  <data name="Org_Settings" xml:space="preserve"><value>Configuración</value></data>
+  <data name="Org_SettingsHeader" xml:space="preserve"><value>Configuración de la organización</value></data>
+  <data name="Org_TeamName" xml:space="preserve"><value>Nombre del equipo</value></data>
+  <data name="Org_Teams" xml:space="preserve"><value>Equipos</value></data>
+  <data name="Org_Title" xml:space="preserve"><value>Organizaciones</value></data>
+
+  <!-- Settings -->
+  <data name="Settings_AccessTokens" xml:space="preserve"><value>Tokens de acceso</value></data>
+  <data name="Settings_AccountSecurity" xml:space="preserve"><value>Seguridad de la cuenta</value></data>
+  <data name="Settings_AuthRequired" xml:space="preserve"><value>Autenticación requerida</value></data>
+  <data name="Settings_AuthRequiredMessage" xml:space="preserve"><value>Debes iniciar sesión para acceder a la configuración.</value></data>
+  <data name="Settings_AvatarUrl" xml:space="preserve"><value>URL del avatar</value></data>
+  <data name="Settings_Bio" xml:space="preserve"><value>Biografía</value></data>
+  <data name="Settings_ChangePassword" xml:space="preserve"><value>Cambiar contraseña</value></data>
+  <data name="Settings_Company" xml:space="preserve"><value>Empresa</value></data>
+  <data name="Settings_ConfirmNewPassword" xml:space="preserve"><value>Confirmar nueva contraseña</value></data>
+  <data name="Settings_CurrentPassword" xml:space="preserve"><value>Contraseña actual</value></data>
+  <data name="Settings_FullName" xml:space="preserve"><value>Nombre completo</value></data>
+  <data name="Settings_GPGKeys" xml:space="preserve"><value>Claves GPG</value></data>
+  <data name="Settings_LinkedAccounts" xml:space="preserve"><value>Cuentas vinculadas</value></data>
+  <data name="Settings_Location" xml:space="preserve"><value>Ubicación</value></data>
+  <data name="Settings_MakeProfilePublic" xml:space="preserve"><value>Hacer perfil público</value></data>
+  <data name="Settings_NewPassword" xml:space="preserve"><value>Nueva contraseña</value></data>
+  <data name="Settings_Notifications" xml:space="preserve"><value>Notificaciones</value></data>
+  <data name="Settings_Passkeys" xml:space="preserve"><value>Passkeys</value></data>
+  <data name="Settings_Profile" xml:space="preserve"><value>Perfil</value></data>
+  <data name="Settings_PublicProfile" xml:space="preserve"><value>Perfil público</value></data>
+  <data name="Settings_SSHKeys" xml:space="preserve"><value>Claves SSH</value></data>
+  <data name="Settings_SaveProfile" xml:space="preserve"><value>Guardar perfil</value></data>
+  <data name="Settings_Sessions" xml:space="preserve"><value>Sesiones</value></data>
+  <data name="Settings_SignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Configuración</value></data>
+  <data name="Settings_TwitterUsername" xml:space="preserve"><value>Nombre de usuario de Twitter</value></data>
+  <data name="Settings_TwoFactorAuth" xml:space="preserve"><value>Autenticación de dos factores</value></data>
+  <data name="Settings_UpdatePassword" xml:space="preserve"><value>Actualizar contraseña</value></data>
+  <data name="Settings_Website" xml:space="preserve"><value>Sitio web</value></data>
+
+  <!-- Admin -->
+  <data name="Admin_AccessDenied" xml:space="preserve"><value>Acceso denegado</value></data>
+  <data name="Admin_AccessDeniedMessage" xml:space="preserve"><value>No tienes permiso para acceder al panel de administración.</value></data>
+  <data name="Admin_Action" xml:space="preserve"><value>Acción</value></data>
+  <data name="Admin_Actions" xml:space="preserve"><value>Acciones</value></data>
+  <data name="Admin_Active24h" xml:space="preserve"><value>Activos (24h)</value></data>
+  <data name="Admin_AddNewUser" xml:space="preserve"><value>Agregar nuevo usuario</value></data>
+  <data name="Admin_AddSecret" xml:space="preserve"><value>Agregar secreto</value></data>
+  <data name="Admin_AddUser" xml:space="preserve"><value>Agregar usuario</value></data>
+  <data name="Admin_AuditLogs" xml:space="preserve"><value>Registros de auditoría</value></data>
+  <data name="Admin_AuthRequired" xml:space="preserve"><value>Autenticación requerida</value></data>
+  <data name="Admin_AuthRequiredMessage" xml:space="preserve"><value>Debes iniciar sesión para acceder al panel de administración.</value></data>
+  <data name="Admin_BackToHome" xml:space="preserve"><value>Volver al inicio</value></data>
+  <data name="Admin_Backups" xml:space="preserve"><value>Copias de seguridad</value></data>
+  <data name="Admin_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Admin_Created" xml:space="preserve"><value>Creado</value></data>
+  <data name="Admin_Database" xml:space="preserve"><value>Base de datos</value></data>
+  <data name="Admin_Details" xml:space="preserve"><value>Detalles</value></data>
+  <data name="Admin_DownloadBackup" xml:space="preserve"><value>Descargar copia de seguridad</value></data>
+  <data name="Admin_Email" xml:space="preserve"><value>Correo electrónico</value></data>
+  <data name="Admin_EmailNotifications" xml:space="preserve"><value>Notificaciones por correo</value></data>
+  <data name="Admin_FeatureToggles" xml:space="preserve"><value>Funcionalidades activables</value></data>
+  <data name="Admin_GlobalSecrets" xml:space="preserve"><value>Secretos globales</value></data>
+  <data name="Admin_IPAddress" xml:space="preserve"><value>Dirección IP</value></data>
+  <data name="Admin_LDAPAuth" xml:space="preserve"><value>Autenticación LDAP</value></data>
+  <data name="Admin_MergeCommitSigning" xml:space="preserve"><value>Firma de merge commits</value></data>
+  <data name="Admin_NoRecentActivity" xml:space="preserve"><value>Sin actividad reciente</value></data>
+  <data name="Admin_OAuthSSO" xml:space="preserve"><value>OAuth SSO</value></data>
+  <data name="Admin_OAuthSSOProviders" xml:space="preserve"><value>Proveedores OAuth SSO</value></data>
+  <data name="Admin_Overview" xml:space="preserve"><value>Resumen</value></data>
+  <data name="Admin_PushNotifications" xml:space="preserve"><value>Notificaciones push</value></data>
+  <data name="Admin_RecentActivity" xml:space="preserve"><value>Actividad reciente</value></data>
+  <data name="Admin_Repositories" xml:space="preserve"><value>Repositorios</value></data>
+  <data name="Admin_RestoreBackup" xml:space="preserve"><value>Restaurar copia de seguridad</value></data>
+  <data name="Admin_Role" xml:space="preserve"><value>Rol</value></data>
+  <data name="Admin_SSHServer" xml:space="preserve"><value>Servidor SSH</value></data>
+  <data name="Admin_SignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="Admin_SiteBranding" xml:space="preserve"><value>Marca del sitio</value></data>
+  <data name="Admin_Status" xml:space="preserve"><value>Estado</value></data>
+  <data name="Admin_StorageUsed" xml:space="preserve"><value>Almacenamiento usado</value></data>
+  <data name="Admin_SystemInformation" xml:space="preserve"><value>Información del sistema</value></data>
+  <data name="Admin_SystemSettings" xml:space="preserve"><value>Configuración del sistema</value></data>
+  <data name="Admin_Timestamp" xml:space="preserve"><value>Marca de tiempo</value></data>
+  <data name="Admin_Title" xml:space="preserve"><value>Administración</value></data>
+  <data name="Admin_TotalUsers" xml:space="preserve"><value>Total de usuarios</value></data>
+  <data name="Admin_User" xml:space="preserve"><value>Usuario</value></data>
+  <data name="Admin_UserManagement" xml:space="preserve"><value>Gestión de usuarios</value></data>
+  <data name="Admin_Username" xml:space="preserve"><value>Nombre de usuario</value></data>
+
+  <!-- Error -->
+  <data name="Error_DevModeDescription" xml:space="preserve"><value>Cambiar al entorno de desarrollo mostrará información más detallada sobre el error que ocurrió.</value></data>
+  <data name="Error_DevModeTitle" xml:space="preserve"><value>Modo de desarrollo</value></data>
+  <data name="Error_DevModeWarning" xml:space="preserve"><value>El entorno de desarrollo no debe habilitarse en aplicaciones desplegadas. Puede resultar en la exposición de información sensible de excepciones a los usuarios finales. Para depuración local, habilita el entorno de desarrollo estableciendo la variable de entorno ASPNETCORE_ENVIRONMENT a Development y reiniciando la aplicación.</value></data>
+  <data name="Error_Heading" xml:space="preserve"><value>Error.</value></data>
+  <data name="Error_RequestId" xml:space="preserve"><value>ID de solicitud:</value></data>
+  <data name="Error_Subheading" xml:space="preserve"><value>Ocurrió un error al procesar tu solicitud.</value></data>
+  <data name="Error_Title" xml:space="preserve"><value>Error</value></data>
+
+  <!-- Not Found -->
+  <data name="NotFound_Message" xml:space="preserve"><value>Lo sentimos, el contenido que buscas no existe.</value></data>
+  <data name="NotFound_Title" xml:space="preserve"><value>No encontrado</value></data>
+
+  <!-- Language names (for the language picker) -->
+  <data name="Language_en" xml:space="preserve"><value>English</value></data>
+  <data name="Language_es" xml:space="preserve"><value>Español</value></data>
+  <data name="Language_fr" xml:space="preserve"><value>Français</value></data>
+  <data name="Language_de" xml:space="preserve"><value>Deutsch</value></data>
+  <data name="Language_ja" xml:space="preserve"><value>日本語</value></data>
+  <data name="Language_zh" xml:space="preserve"><value>中文</value></data>
+  <data name="Language_pt" xml:space="preserve"><value>Português</value></data>
+  <data name="Language_ko" xml:space="preserve"><value>한국어</value></data>
 </root>

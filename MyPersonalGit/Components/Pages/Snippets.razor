@@ -3,21 +3,24 @@
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject ISnippetService SnippetService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>Snippets - MyPersonalGit</PageTitle>
+<PageTitle>@L["Snippets_Title"] - MyPersonalGit</PageTitle>
 
 @if (ViewMode == "list")
 {
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-code-square"></i> Snippets</h2>
+        <h2><i class="bi bi-code-square"></i> @L["Snippets_Title"]</h2>
         @if (UserService.IsLoggedIn)
         {
             <button class="btn btn-primary btn-sm" @onclick="ShowCreateForm">
-                <i class="bi bi-plus-lg"></i> New Snippet
+                <i class="bi bi-plus-lg"></i> @L["Snippets_NewSnippet"]
             </button>
         }
     </div>
@@ -26,8 +29,8 @@
     {
         <div class="text-center py-5">
             <i class="bi bi-code-square" style="font-size: 4rem; color: #6c757d;"></i>
-            <h4 class="mt-3 text-muted">No snippets yet</h4>
-            <p class="text-muted">Create a snippet to share code fragments.</p>
+            <h4 class="mt-3 text-muted">@L["Snippets_NoSnippetsYet"]</h4>
+            <p class="text-muted">@L["Snippets_NoSnippetsDescription"]</p>
         </div>
     }
     else
@@ -72,7 +75,7 @@ else if (ViewMode == "detail" && CurrentSnippet != null)
 {
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/snippets" class="text-decoration-none">Snippets</a></li>
+            <li class="breadcrumb-item"><a href="/snippets" class="text-decoration-none">@L["Snippets_Title"]</a></li>
             <li class="breadcrumb-item active">@CurrentSnippet.Title</li>
         </ol>
     </nav>
@@ -90,17 +93,17 @@ else if (ViewMode == "detail" && CurrentSnippet != null)
                 {
                     <span> · updated @CurrentSnippet.UpdatedAt.ToString("MMM d, yyyy HH:mm")</span>
                 }
-                · <i class="bi @(CurrentSnippet.IsPublic ? "bi-unlock" : "bi-lock")"></i> @(CurrentSnippet.IsPublic ? "Public" : "Private")
+                · <i class="bi @(CurrentSnippet.IsPublic ? "bi-unlock" : "bi-lock")"></i> @(CurrentSnippet.IsPublic ? L["Snippets_Public"] : L["Snippets_Private"])
             </small>
         </div>
         @if (UserService.IsLoggedIn && UserService.Username == CurrentSnippet.Owner)
         {
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-primary btn-sm" @onclick="StartEdit">
-                    <i class="bi bi-pencil"></i> Edit
+                    <i class="bi bi-pencil"></i> @L["Snippets_Edit"]
                 </button>
                 <button class="btn btn-outline-danger btn-sm" @onclick="DeleteSnippet">
-                    <i class="bi bi-trash"></i> Delete
+                    <i class="bi bi-trash"></i> @L["Snippets_Delete"]
                 </button>
             </div>
         }
@@ -124,26 +127,26 @@ else if (ViewMode == "detail" && CurrentSnippet != null)
 }
 else if (ViewMode == "create" || ViewMode == "edit")
 {
-    <h3 class="mb-4">@(ViewMode == "edit" ? "Edit Snippet" : "New Snippet")</h3>
+    <h3 class="mb-4">@(ViewMode == "edit" ? L["Snippets_EditSnippet"] : L["Snippets_NewSnippet"])</h3>
 
     <div class="card">
         <div class="card-body">
             <div class="mb-3">
-                <label class="form-label">Title</label>
-                <input type="text" class="form-control" @bind="EditTitle" placeholder="Snippet title..." />
+                <label class="form-label">@L["Snippets_FormTitle"]</label>
+                <input type="text" class="form-control" @bind="EditTitle" placeholder="@L["Snippets_TitlePlaceholder"]" />
             </div>
             <div class="mb-3">
-                <label class="form-label">Description <span class="text-muted small">(optional)</span></label>
-                <input type="text" class="form-control" @bind="EditDescription" placeholder="A short description..." />
+                <label class="form-label">@L["Snippets_FormDescription"] <span class="text-muted small">(@L["Snippets_Optional"])</span></label>
+                <input type="text" class="form-control" @bind="EditDescription" placeholder="@L["Snippets_DescriptionPlaceholder"]" />
             </div>
             <div class="mb-3">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" @bind="EditIsPublic" id="snippetPublic" />
-                    <label class="form-check-label" for="snippetPublic">Public snippet</label>
+                    <label class="form-check-label" for="snippetPublic">@L["Snippets_PublicSnippet"]</label>
                 </div>
             </div>
 
-            <h6>Files</h6>
+            <h6>@L["Snippets_Files"]</h6>
             @for (int i = 0; i < EditFiles.Count; i++)
             {
                 var index = i;
@@ -171,7 +174,7 @@ else if (ViewMode == "create" || ViewMode == "edit")
             }
 
             <button class="btn btn-outline-secondary btn-sm mb-3" @onclick="AddFile">
-                <i class="bi bi-plus"></i> Add file
+                <i class="bi bi-plus"></i> @L["Snippets_AddFile"]
             </button>
 
             @if (!string.IsNullOrEmpty(ErrorMessage))
@@ -181,9 +184,9 @@ else if (ViewMode == "create" || ViewMode == "edit")
 
             <div class="d-flex gap-2">
                 <button class="btn btn-primary" @onclick="SaveSnippet">
-                    <i class="bi bi-check-lg"></i> @(ViewMode == "edit" ? "Update" : "Create") Snippet
+                    <i class="bi bi-check-lg"></i> @(ViewMode == "edit" ? L["Snippets_UpdateSnippet"] : L["Snippets_CreateSnippet"])
                 </button>
-                <button class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+                <button class="btn btn-secondary" @onclick="CancelEdit">@L["Snippets_Cancel"]</button>
             </div>
         </div>
     </div>

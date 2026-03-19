@@ -5,11 +5,14 @@
 @using System.Text.RegularExpressions
 @using MyPersonalGit.Data
 @using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject IConfiguration Config
 @inject NavigationManager Nav
 @inject IAdminService AdminService
 @inject CurrentUserService UserService
 @inject IJSRuntime JS
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
 <PageTitle>Compare · @RepoName · Personal Git</PageTitle>
@@ -18,16 +21,16 @@
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
-            <li class="breadcrumb-item active">Compare</li>
+            <li class="breadcrumb-item active">@L["Compare_Title"]</li>
         </ol>
     </nav>
 
-    <h2 class="h4 fw-bold mb-3">Comparing changes</h2>
-    <p class="text-muted small mb-3">Choose two branches to see what's changed or start a new pull request.</p>
+    <h2 class="h4 fw-bold mb-3">@L["Compare_ComparingChanges"]</h2>
+    <p class="text-muted small mb-3">@L["Compare_ChooseBranches"]</p>
 
     <div class="d-flex align-items-center gap-2 mb-4 flex-wrap">
         <div>
-            <label class="form-label small fw-semibold mb-1">base</label>
+            <label class="form-label small fw-semibold mb-1">@L["Compare_Base"]</label>
             <select class="form-select form-select-sm" style="min-width: 180px;" @bind="selectedBase">
                 @foreach (var b in branches)
                 {
@@ -39,7 +42,7 @@
             <i class="bi bi-arrow-left-right text-muted"></i>
         </div>
         <div>
-            <label class="form-label small fw-semibold mb-1">compare</label>
+            <label class="form-label small fw-semibold mb-1">@L["Compare_Compare"]</label>
             <select class="form-select form-select-sm" style="min-width: 180px;" @bind="selectedHead">
                 @foreach (var b in branches)
                 {
@@ -49,7 +52,7 @@
         </div>
         <div class="align-self-end">
             <button class="btn btn-sm btn-gh-primary" @onclick="RunCompare">
-                <i class="bi bi-arrow-left-right me-1"></i> Compare
+                <i class="bi bi-arrow-left-right me-1"></i> @L["Compare_CompareButton"]
             </button>
         </div>
     </div>
@@ -65,7 +68,7 @@
         {
             <div class="border rounded-3 p-4 text-center text-muted">
                 <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
-                <p class="mt-2 mb-0">These branches are identical. There's nothing to compare.</p>
+                <p class="mt-2 mb-0">@L["Compare_BranchesIdentical"]</p>
             </div>
         }
         else
@@ -89,7 +92,7 @@
                     @if (UserService.IsLoggedIn)
                     {
                         <a href="/repo/@RepoName/pulls" class="btn btn-sm btn-gh-primary ms-auto">
-                            <i class="bi bi-git me-1"></i> Create pull request
+                            <i class="bi bi-git me-1"></i> @L["Compare_CreatePullRequest"]
                         </a>
                     }
                 </div>
@@ -100,7 +103,7 @@
             {
                 <div class="mb-3">
                     <h5 class="fw-bold small text-uppercase text-muted mb-2">
-                        <i class="bi bi-clock-history me-1"></i> Commits
+                        <i class="bi bi-clock-history me-1"></i> @L["Compare_Commits"]
                     </h5>
                     <div class="list-group list-group-flush border rounded-3 overflow-hidden">
                         @foreach (var c in commits)
@@ -120,11 +123,11 @@
             <!-- Diff Toggle -->
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h5 class="fw-bold small text-uppercase text-muted mb-0">
-                    <i class="bi bi-file-earmark-diff me-1"></i> Files changed
+                    <i class="bi bi-file-earmark-diff me-1"></i> @L["Compare_FilesChanged"]
                 </h5>
                 <div class="btn-group btn-group-sm">
-                    <button class="btn @(diffMode == "unified" ? "btn-secondary" : "btn-outline-secondary")" @onclick='() => diffMode = "unified"'>Unified</button>
-                    <button class="btn @(diffMode == "split" ? "btn-secondary" : "btn-outline-secondary")" @onclick='() => diffMode = "split"'>Split</button>
+                    <button class="btn @(diffMode == "unified" ? "btn-secondary" : "btn-outline-secondary")" @onclick='() => diffMode = "unified"'>@L["Compare_Unified"]</button>
+                    <button class="btn @(diffMode == "split" ? "btn-secondary" : "btn-outline-secondary")" @onclick='() => diffMode = "split"'>@L["Compare_Split"]</button>
                 </div>
             </div>
 

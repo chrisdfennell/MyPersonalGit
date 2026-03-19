@@ -2,9 +2,12 @@
 @using LibGit2Sharp
 @using System.IO
 @using MyPersonalGit.Data
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject IConfiguration Config
 @inject IAdminService AdminService
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
 <PageTitle>Insights · @RepoName</PageTitle>
@@ -15,9 +18,9 @@
             <i class="bi bi-journal-bookmark text-muted me-2 h4 mb-0"></i>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 h4">
-                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Repositories</a></li>
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">@L["Insights_Repositories"]</a></li>
                     <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
-                    <li class="breadcrumb-item active fw-bold" aria-current="page">Insights</li>
+                    <li class="breadcrumb-item active fw-bold" aria-current="page">@L["Insights_Title"]</li>
                 </ol>
             </nav>
         </div>
@@ -29,16 +32,16 @@
         <div class="col-md-3 mb-4">
             <div class="list-group">
                 <button class="list-group-item list-group-item-action @(activeTab == "contributors" ? "active" : "")" @onclick='() => activeTab = "contributors"'>
-                    <i class="bi bi-people me-2"></i> Contributors
+                    <i class="bi bi-people me-2"></i> @L["Insights_Contributors"]
                 </button>
                 <button class="list-group-item list-group-item-action @(activeTab == "commits" ? "active" : "")" @onclick='() => activeTab = "commits"'>
-                    <i class="bi bi-graph-up me-2"></i> Commit activity
+                    <i class="bi bi-graph-up me-2"></i> @L["Insights_CommitActivity"]
                 </button>
                 <button class="list-group-item list-group-item-action @(activeTab == "frequency" ? "active" : "")" @onclick='() => activeTab = "frequency"'>
-                    <i class="bi bi-bar-chart me-2"></i> Code frequency
+                    <i class="bi bi-bar-chart me-2"></i> @L["Insights_CodeFrequency"]
                 </button>
                 <button class="list-group-item list-group-item-action @(activeTab == "network" ? "active" : "")" @onclick='() => activeTab = "network"'>
-                    <i class="bi bi-diagram-3 me-2"></i> Network
+                    <i class="bi bi-diagram-3 me-2"></i> @L["Insights_Network"]
                 </button>
             </div>
         </div>
@@ -47,7 +50,7 @@
             @if (activeTab == "contributors")
             {
                 <div class="contributors-view">
-                    <h4 class="mb-4">Contributors</h4>
+                    <h4 class="mb-4">@L["Insights_Contributors"]</h4>
                     
                     @if (contributors.Any())
                     {
@@ -67,7 +70,7 @@
                                         </div>
                                         <div class="text-end">
                                             <div class="h5 mb-0 text-primary">@contributor.CommitCount</div>
-                                            <small class="text-muted">commits</small>
+                                            <small class="text-muted">@L["Insights_Commits"]</small>
                                         </div>
                                     </div>
                                     <div class="mt-3">
@@ -75,8 +78,8 @@
                                             <div class="progress-bar bg-success" style="width: @GetContributionPercentage(contributor)%"></div>
                                         </div>
                                         <div class="d-flex justify-content-between mt-2 small text-muted">
-                                            <span>@contributor.Additions additions</span>
-                                            <span>@contributor.Deletions deletions</span>
+                                            <span>@contributor.Additions @L["Insights_Additions"]</span>
+                                            <span>@contributor.Deletions @L["Insights_Deletions"]</span>
                                         </div>
                                     </div>
                                 </div>
@@ -87,7 +90,7 @@
                     {
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle me-2"></i>
-                            No contributors found. Make some commits to see contributor statistics.
+                            @L["Insights_NoContributors"]
                         </div>
                     }
                 </div>
@@ -95,14 +98,14 @@
             else if (activeTab == "commits")
             {
                 <div class="commit-activity-view">
-                    <h4 class="mb-4">Commit Activity</h4>
+                    <h4 class="mb-4">@L["Insights_CommitActivity"]</h4>
                     
                     @if (commitActivity.Any())
                     {
                         <div class="card">
                             <div class="card-body">
                                 <div class="mb-4">
-                                    <h6 class="text-muted">Commits per week (last 12 weeks)</h6>
+                                    <h6 class="text-muted">@L["Insights_CommitsPerWeek"]</h6>
                                     <div class="d-flex align-items-end gap-1" style="height: 200px;">
                                         @{
                                             var maxCommits = commitActivity.Max(c => c.Count);
@@ -125,15 +128,15 @@
                                 <div class="row text-center">
                                     <div class="col-md-4">
                                         <div class="h3 text-primary mb-0">@totalCommits</div>
-                                        <small class="text-muted">Total commits</small>
+                                        <small class="text-muted">@L["Insights_TotalCommits"]</small>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="h3 text-success mb-0">@contributors.Count</div>
-                                        <small class="text-muted">Contributors</small>
+                                        <small class="text-muted">@L["Insights_Contributors"]</small>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="h3 text-info mb-0">@branches.Count</div>
-                                        <small class="text-muted">Branches</small>
+                                        <small class="text-muted">@L["Insights_Branches"]</small>
                                     </div>
                                 </div>
                             </div>
@@ -143,7 +146,7 @@
                     {
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle me-2"></i>
-                            No commit activity to display.
+                            @L["Insights_NoCommitActivity"]
                         </div>
                     }
                 </div>
@@ -151,11 +154,11 @@
             else if (activeTab == "frequency")
             {
                 <div class="code-frequency-view">
-                    <h4 class="mb-4">Code Frequency</h4>
+                    <h4 class="mb-4">@L["Insights_CodeFrequency"]</h4>
                     
                     <div class="card">
                         <div class="card-body">
-                            <p class="text-muted">Lines of code added and deleted over time</p>
+                            <p class="text-muted">@L["Insights_CodeFrequencyDescription"]</p>
                             
                             @if (codeFrequency.Any())
                             {
@@ -175,19 +178,19 @@
                                         }
                                     </div>
                                     <div class="d-flex gap-3 mt-3">
-                                        <span class="small"><span class="badge bg-success">+</span> Additions</span>
-                                        <span class="small"><span class="badge bg-danger">-</span> Deletions</span>
+                                        <span class="small"><span class="badge bg-success">+</span> @L["Insights_Additions"]</span>
+                                        <span class="small"><span class="badge bg-danger">-</span> @L["Insights_Deletions"]</span>
                                     </div>
                                 </div>
 
                                 <div class="row text-center">
                                     <div class="col-md-6">
                                         <div class="h3 text-success mb-0">+@codeFrequency.Sum(c => c.Additions)</div>
-                                        <small class="text-muted">Lines added</small>
+                                        <small class="text-muted">@L["Insights_LinesAdded"]</small>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="h3 text-danger mb-0">-@codeFrequency.Sum(c => c.Deletions)</div>
-                                        <small class="text-muted">Lines deleted</small>
+                                        <small class="text-muted">@L["Insights_LinesDeleted"]</small>
                                     </div>
                                 </div>
                             }
@@ -195,7 +198,7 @@
                             {
                                 <div class="alert alert-info">
                                     <i class="bi bi-info-circle me-2"></i>
-                                    No code frequency data available.
+                                    @L["Insights_NoCodeFrequency"]
                                 </div>
                             }
                         </div>
@@ -205,20 +208,20 @@
             else if (activeTab == "network")
             {
                 <div class="network-view">
-                    <h4 class="mb-4">Network Graph</h4>
+                    <h4 class="mb-4">@L["Insights_NetworkGraph"]</h4>
                     
                     <div class="card">
                         <div class="card-body">
-                            <p class="text-muted">Branch and merge visualization</p>
+                            <p class="text-muted">@L["Insights_NetworkDescription"]</p>
                             
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle me-2"></i>
-                                Network graph visualization shows the relationship between branches and commits.
+                                @L["Insights_NetworkInfo"]
                             </div>
 
                             @if (branches.Any())
                             {
-                                <h6 class="mt-4">Active Branches</h6>
+                                <h6 class="mt-4">@L["Insights_ActiveBranches"]</h6>
                                 <div class="list-group">
                                     @foreach (var branch in branches)
                                     {

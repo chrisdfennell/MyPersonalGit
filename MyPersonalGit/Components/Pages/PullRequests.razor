@@ -7,6 +7,8 @@
 @using Markdig
 @using Markdig.Syntax
 @using Markdig.Syntax.Inlines
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject IPullRequestService PRService
 @inject IConfiguration Config
 @inject IAdminService AdminService
@@ -16,6 +18,7 @@
 @inject ICodeOwnersService CodeOwnersService
 @inject IConflictResolutionService ConflictService
 @inject IJSRuntime JS
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
 <PageTitle>Pull Requests · @RepoName</PageTitle>
@@ -26,9 +29,9 @@
             <i class="bi bi-journal-bookmark text-muted me-2 h4 mb-0"></i>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 h4">
-                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Repositories</a></li>
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">@L["Nav_Repositories"]</a></li>
                     <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
-                    <li class="breadcrumb-item active fw-bold" aria-current="page">Pull Requests</li>
+                    <li class="breadcrumb-item active fw-bold" aria-current="page">@L["PR_Title"]</li>
                 </ol>
             </nav>
         </div>
@@ -53,26 +56,26 @@
                                 @if (currentPR.IsDraft)
                                 {
                                     <span class="badge bg-secondary d-flex align-items-center gap-1">
-                                        <i class="bi bi-git"></i> Draft
+                                        <i class="bi bi-git"></i> @L["PR_Draft"]
                                     </span>
                                 }
                                 else
                                 {
                                     <span class="badge bg-success d-flex align-items-center gap-1">
-                                        <i class="bi bi-git"></i> Open
+                                        <i class="bi bi-git"></i> @L["PR_Open"]
                                     </span>
                                 }
                             }
                             else if (currentPR.State == PullRequestState.Merged)
                             {
                                 <span class="badge bg-primary d-flex align-items-center gap-1">
-                                    <i class="bi bi-check2-all"></i> Merged
+                                    <i class="bi bi-check2-all"></i> @L["PR_Merged"]
                                 </span>
                             }
                             else
                             {
                                 <span class="badge bg-danger d-flex align-items-center gap-1">
-                                    <i class="bi bi-x-circle"></i> Closed
+                                    <i class="bi bi-x-circle"></i> @L["PR_Closed"]
                                 </span>
                             }
                             <span class="text-muted small">
@@ -81,7 +84,7 @@
                                 <code class="bg-light px-2 py-1 rounded">@currentPR.TargetBranch</code>
                             </span>
                             <a href="/repo/@RepoName/compare/@(currentPR.TargetBranch)...@(currentPR.SourceBranch)" class="btn btn-sm btn-outline-secondary ms-2">
-                                <i class="bi bi-arrow-left-right me-1"></i> View comparison
+                                <i class="bi bi-arrow-left-right me-1"></i> @L["PR_ViewComparison"]
                             </a>
                         </div>
                     </div>
@@ -105,39 +108,39 @@
                                     @if (mergeReason.Contains("conflicts", StringComparison.OrdinalIgnoreCase))
                                     {
                                         <button class="btn btn-warning btn-sm ms-2" @onclick="ShowConflictResolver">
-                                            <i class="bi bi-tools me-1"></i> Resolve conflicts
+                                            <i class="bi bi-tools me-1"></i> @L["PR_ResolveConflicts"]
                                         </button>
                                     }
                                 </div>
                             }
                             <div class="d-flex align-items-center gap-2">
                                 <select class="form-select form-select-sm" style="width: auto;" @bind="selectedStrategy">
-                                    <option value="@MergeStrategy.MergeCommit">Create a merge commit</option>
-                                    <option value="@MergeStrategy.Squash">Squash and merge</option>
-                                    <option value="@MergeStrategy.Rebase">Rebase and merge</option>
+                                    <option value="@MergeStrategy.MergeCommit">@L["PR_MergeCommit"]</option>
+                                    <option value="@MergeStrategy.Squash">@L["PR_SquashAndMerge"]</option>
+                                    <option value="@MergeStrategy.Rebase">@L["PR_RebaseAndMerge"]</option>
                                 </select>
                                 <button class="btn btn-success btn-sm" @onclick="MergePR" disabled="@(!canMerge || isMerging)">
                                     @if (isMerging)
                                     {
                                         <span class="spinner-border spinner-border-sm me-1"></span>
                                     }
-                                    <i class="bi bi-check2-all me-1"></i> Merge pull request
+                                    <i class="bi bi-check2-all me-1"></i> @L["PR_MergePullRequest"]
                                 </button>
                                 <button class="btn btn-outline-danger btn-sm" @onclick="ClosePR">
-                                    <i class="bi bi-x-circle me-1"></i> Close
+                                    <i class="bi bi-x-circle me-1"></i> @L["PR_Close"]
                                 </button>
                                 @if (currentPR.IsDraft)
                                 {
                                     <button class="btn btn-outline-success btn-sm" @onclick="ToggleDraft" disabled="@isTogglingDraft">
                                         @if (isTogglingDraft) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                                        <i class="bi bi-check-circle me-1"></i> Ready for review
+                                        <i class="bi bi-check-circle me-1"></i> @L["PR_ReadyForReview"]
                                     </button>
                                 }
                                 else
                                 {
                                     <button class="btn btn-outline-secondary btn-sm" @onclick="ToggleDraft" disabled="@isTogglingDraft">
                                         @if (isTogglingDraft) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                                        <i class="bi bi-pencil me-1"></i> Convert to draft
+                                        <i class="bi bi-pencil me-1"></i> @L["PR_ConvertToDraft"]
                                     </button>
                                 }
                             </div>
@@ -148,13 +151,13 @@
                                         <i class="bi bi-robot me-1"></i> Auto-merge enabled (@(currentPR.AutoMergeStrategy ?? "MergeCommit"))
                                     </span>
                                     <button class="btn btn-outline-secondary btn-sm" @onclick="DisableAutoMerge">
-                                        <i class="bi bi-x me-1"></i> Disable auto-merge
+                                        <i class="bi bi-x me-1"></i> @L["PR_DisableAutoMerge"]
                                     </button>
                                 }
                                 else if (!canMerge)
                                 {
                                     <button class="btn btn-outline-info btn-sm" @onclick="EnableAutoMerge">
-                                        <i class="bi bi-robot me-1"></i> Enable auto-merge
+                                        <i class="bi bi-robot me-1"></i> @L["PR_EnableAutoMerge"]
                                     </button>
                                 }
                             </div>
@@ -167,7 +170,7 @@
                 {
                     <div class="card mb-3 border-warning">
                         <div class="card-header bg-warning bg-opacity-10 d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0"><i class="bi bi-tools me-1"></i> Resolve Merge Conflicts</h5>
+                            <h5 class="mb-0"><i class="bi bi-tools me-1"></i> @L["PR_ResolveMergeConflicts"]</h5>
                             <button class="btn btn-sm btn-outline-secondary" @onclick="() => showConflictResolver = false">
                                 <i class="bi bi-x-lg"></i>
                             </button>
@@ -227,7 +230,7 @@
                                             <div class="mt-2 d-flex gap-2">
                                                 <button class="btn btn-sm btn-success" @onclick="() => MarkResolved(currentConflict)"
                                                         disabled="@HasConflictMarkers(currentEditContent)">
-                                                    <i class="bi bi-check-lg me-1"></i> Mark as resolved
+                                                    <i class="bi bi-check-lg me-1"></i> @L["PR_MarkAsResolved"]
                                                 </button>
                                                 @if (HasConflictMarkers(currentEditContent))
                                                 {
@@ -274,12 +277,12 @@
                         <ul class="nav nav-tabs mb-3">
                             <li class="nav-item">
                                 <button class="nav-link @(activeTab == "conversation" ? "active" : "")" @onclick='() => SetTab("conversation")'>
-                                    <i class="bi bi-chat-left me-1"></i> Conversation
+                                    <i class="bi bi-chat-left me-1"></i> @L["PR_Conversation"]
                                 </button>
                             </li>
                             <li class="nav-item">
                                 <button class="nav-link @(activeTab == "commits" ? "active" : "")" @onclick='() => SetTab("commits")'>
-                                    <i class="bi bi-clock-history me-1"></i> Commits
+                                    <i class="bi bi-clock-history me-1"></i> @L["PR_Commits"]
                                     @if (prCommits.Any())
                                     {
                                         <span class="badge bg-secondary bg-opacity-25 ms-1">@prCommits.Count</span>
@@ -288,7 +291,7 @@
                             </li>
                             <li class="nav-item">
                                 <button class="nav-link @(activeTab == "files" ? "active" : "")" @onclick='() => SetTab("files")'>
-                                    <i class="bi bi-file-diff me-1"></i> Files changed
+                                    <i class="bi bi-file-diff me-1"></i> @L["PR_FilesChanged"]
                                     @if (reviewComments.Any())
                                     {
                                         <span class="badge bg-secondary ms-1">@reviewComments.Count</span>
@@ -316,7 +319,7 @@
                                     }
                                     else
                                     {
-                                        <p class="text-muted fst-italic">No description provided.</p>
+                                        <p class="text-muted fst-italic">@L["PR_NoDescription"]</p>
                                     }
                                 </div>
                             </div>
@@ -356,19 +359,19 @@
                             {
                                 <div class="card">
                                     <div class="card-header bg-light">
-                                        <strong>Review changes</strong>
+                                        <strong>@L["PR_ReviewChanges"]</strong>
                                     </div>
                                     <div class="card-body">
-                                        <textarea class="form-control mb-2" rows="4" @bind="reviewBody" placeholder="Leave a review comment"></textarea>
+                                        <textarea class="form-control mb-2" rows="4" @bind="reviewBody" placeholder="@L["PR_LeaveReviewComment"]"></textarea>
                                         <div class="btn-group">
                                             <button class="btn btn-success btn-sm" @onclick='() => SubmitReview(ReviewState.Approved)'>
-                                                <i class="bi bi-check-circle me-1"></i> Approve
+                                                <i class="bi bi-check-circle me-1"></i> @L["PR_Approve"]
                                             </button>
                                             <button class="btn btn-warning btn-sm" @onclick='() => SubmitReview(ReviewState.ChangesRequested)'>
-                                                <i class="bi bi-x-circle me-1"></i> Request changes
+                                                <i class="bi bi-x-circle me-1"></i> @L["PR_RequestChanges"]
                                             </button>
                                             <button class="btn btn-secondary btn-sm" @onclick='() => SubmitReview(ReviewState.Commented)'>
-                                                <i class="bi bi-chat-left me-1"></i> Comment
+                                                <i class="bi bi-chat-left me-1"></i> @L["PR_Comment"]
                                             </button>
                                         </div>
                                     </div>
@@ -411,8 +414,8 @@
                                         <span class="text-danger fw-bold">@totalDeleted deletions</span>
                                     </span>
                                     <div class="btn-group btn-group-sm">
-                                        <button class="btn @(diffMode == "unified" ? "btn-secondary" : "btn-outline-secondary")" @onclick='() => diffMode = "unified"'>Unified</button>
-                                        <button class="btn @(diffMode == "split" ? "btn-secondary" : "btn-outline-secondary")" @onclick='() => diffMode = "split"'>Split</button>
+                                        <button class="btn @(diffMode == "unified" ? "btn-secondary" : "btn-outline-secondary")" @onclick='() => diffMode = "unified"'>@L["PR_Unified"]</button>
+                                        <button class="btn @(diffMode == "split" ? "btn-secondary" : "btn-outline-secondary")" @onclick='() => diffMode = "split"'>@L["PR_Split"]</button>
                                     </div>
                                 </div>
 
@@ -661,7 +664,7 @@
                     <div class="col-md-3">
                         <div class="card">
                             <div class="card-body">
-                                <h6 class="card-title">Reviewers</h6>
+                                <h6 class="card-title">@L["PR_Reviewers"]</h6>
                                 @if (currentPR.Reviewers.Any())
                                 {
                                     <ul class="list-unstyled">
@@ -697,12 +700,12 @@
                                 }
                                 else
                                 {
-                                    <p class="text-muted small">No reviewers assigned</p>
+                                    <p class="text-muted small">@L["PR_NoReviewers"]</p>
                                 }
 
                                 <hr />
 
-                                <h6 class="card-title">Labels</h6>
+                                <h6 class="card-title">@L["PR_Labels"]</h6>
                                 @if (currentPR.Labels.Any())
                                 {
                                     @foreach (var label in currentPR.Labels)
@@ -712,7 +715,7 @@
                                 }
                                 else
                                 {
-                                    <p class="text-muted small">No labels</p>
+                                    <p class="text-muted small">@L["PR_NoLabels"]</p>
                                 }
                             </div>
                         </div>
@@ -730,19 +733,19 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="btn-group">
                 <button class="btn @(filterState == "open" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => filterState = "open"'>
-                    <i class="bi bi-git me-1"></i> @openCount Open
+                    <i class="bi bi-git me-1"></i> @openCount @L["PR_Open"]
                 </button>
                 <button class="btn @(filterState == "closed" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => filterState = "closed"'>
-                    <i class="bi bi-x-circle me-1"></i> @closedCount Closed
+                    <i class="bi bi-x-circle me-1"></i> @closedCount @L["PR_Closed"]
                 </button>
                 <button class="btn @(filterState == "merged" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => filterState = "merged"'>
-                    <i class="bi bi-check2-all me-1"></i> @mergedCount Merged
+                    <i class="bi bi-check2-all me-1"></i> @mergedCount @L["PR_Merged"]
                 </button>
             </div>
             @if (UserService.IsLoggedIn)
             {
                 <button class="btn btn-success btn-sm" @onclick="OpenNewPRModal">
-                    <i class="bi bi-plus-circle me-1"></i> New pull request
+                    <i class="bi bi-plus-circle me-1"></i> @L["PR_NewPullRequest"]
                 </button>
             }
         </div>
@@ -771,7 +774,7 @@
                                     <h6 class="mb-0">@pr.Title</h6>
                                     @if (pr.IsDraft)
                                     {
-                                        <span class="badge bg-secondary" style="font-size: 10px;">Draft</span>
+                                        <span class="badge bg-secondary" style="font-size: 10px;">@L["PR_Draft"]</span>
                                     }
                                     @foreach (var label in pr.Labels)
                                     {
@@ -792,8 +795,8 @@
         {
             <div class="blankslate p-5 border rounded-3 bg-light text-center">
                 <i class="bi bi-git display-4 text-muted mb-3"></i>
-                <h3 class="h5">No @filterState pull requests</h3>
-                <p class="text-muted">There are no @filterState pull requests for this repository.</p>
+                <h3 class="h5">@L["PR_NoPRsTitle", filterState]</h3>
+                <p class="text-muted">@L["PR_NoPRsMessage", filterState]</p>
             </div>
         }
     }
@@ -805,23 +808,23 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">New Pull Request</h5>
+                    <h5 class="modal-title">@L["PR_NewPullRequest"]</h5>
                     <button type="button" class="btn-close" @onclick="() => showNewPRModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Title</label>
-                        <input type="text" class="form-control" @bind="newPRTitle" placeholder="Pull request title" />
+                        <label class="form-label fw-bold">@L["PR_TitleLabel"]</label>
+                        <input type="text" class="form-control" @bind="newPRTitle" placeholder="@L["PR_TitlePlaceholder"]" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Description</label>
-                        <textarea class="form-control" rows="6" @bind="newPRBody" placeholder="Describe your changes"></textarea>
+                        <label class="form-label fw-bold">@L["PR_Description"]</label>
+                        <textarea class="form-control" rows="6" @bind="newPRBody" placeholder="@L["PR_DescribePlaceholder"]"></textarea>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Source Branch</label>
+                            <label class="form-label fw-bold">@L["PR_SourceBranch"]</label>
                             <select class="form-select" @bind="newPRSourceBranch">
-                                <option value="">Select branch...</option>
+                                <option value="">@L["PR_SelectBranch"]</option>
                                 @foreach (var branch in branches)
                                 {
                                     <option value="@branch">@branch</option>
@@ -829,9 +832,9 @@
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Target Branch</label>
+                            <label class="form-label fw-bold">@L["PR_TargetBranch"]</label>
                             <select class="form-select" @bind="newPRTargetBranch">
-                                <option value="">Select branch...</option>
+                                <option value="">@L["PR_SelectBranch"]</option>
                                 @foreach (var branch in branches)
                                 {
                                     <option value="@branch">@branch</option>
@@ -842,15 +845,15 @@
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" @bind="newPRIsDraft" id="draftCheck">
                         <label class="form-check-label" for="draftCheck">
-                            Create as draft
+                            @L["PR_CreateAsDraft"]
                         </label>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="() => showNewPRModal = false">Cancel</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => showNewPRModal = false">@L["PR_Cancel"]</button>
                     <button type="button" class="btn btn-success" @onclick="CreatePR"
                             disabled="@(string.IsNullOrWhiteSpace(newPRTitle) || string.IsNullOrWhiteSpace(newPRSourceBranch) || string.IsNullOrWhiteSpace(newPRTargetBranch))">
-                        <i class="bi bi-plus-circle me-1"></i> Create pull request
+                        <i class="bi bi-plus-circle me-1"></i> @L["PR_CreatePullRequest"]
                     </button>
                 </div>
             </div>

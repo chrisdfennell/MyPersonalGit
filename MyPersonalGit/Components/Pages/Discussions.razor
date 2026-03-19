@@ -3,11 +3,14 @@
 @using Markdig
 @using MyPersonalGit.Models
 @using MyPersonalGit.Data
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject IDiscussionService DiscussionService
 @inject IReactionService ReactionService
 @inject NavigationManager Nav
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
 <PageTitle>Discussions · @RepoName</PageTitle>
@@ -18,9 +21,9 @@
             <i class="bi bi-journal-bookmark text-muted me-2 h4 mb-0"></i>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 h4">
-                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Repositories</a></li>
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">@L["Nav_Repositories"]</a></li>
                     <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
-                    <li class="breadcrumb-item active fw-bold" aria-current="page">Discussions</li>
+                    <li class="breadcrumb-item active fw-bold" aria-current="page">@L["Discussions_Title"]</li>
                 </ol>
             </nav>
         </div>
@@ -33,7 +36,7 @@
         <!-- Discussion detail view -->
         <div class="mb-3">
             <a href="/repo/@RepoName/discussions" class="text-decoration-none">
-                <i class="bi bi-arrow-left me-1"></i> Back to discussions
+                <i class="bi bi-arrow-left me-1"></i> @L["Discussions_BackToList"]
             </a>
         </div>
 
@@ -50,19 +53,19 @@
                     @if (currentDiscussion.IsPinned)
                     {
                         <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle">
-                            <i class="bi bi-pin-fill me-1"></i>Pinned
+                            <i class="bi bi-pin-fill me-1"></i>@L["Discussions_Pinned"]
                         </span>
                     }
                     @if (currentDiscussion.IsLocked)
                     {
                         <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle">
-                            <i class="bi bi-lock-fill me-1"></i>Locked
+                            <i class="bi bi-lock-fill me-1"></i>@L["Discussions_Locked"]
                         </span>
                     }
                     @if (currentDiscussion.IsAnswered)
                     {
                         <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle">
-                            <i class="bi bi-check-circle-fill me-1"></i>Answered
+                            <i class="bi bi-check-circle-fill me-1"></i>@L["Discussions_Answered"]
                         </span>
                     }
                     <span class="text-muted small">
@@ -77,10 +80,10 @@
                         <i class="bi bi-gear"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><button class="dropdown-item" @onclick="TogglePin"><i class="bi bi-pin me-2"></i>@(currentDiscussion.IsPinned ? "Unpin" : "Pin")</button></li>
-                        <li><button class="dropdown-item" @onclick="ToggleLock"><i class="bi bi-lock me-2"></i>@(currentDiscussion.IsLocked ? "Unlock" : "Lock")</button></li>
+                        <li><button class="dropdown-item" @onclick="TogglePin"><i class="bi bi-pin me-2"></i>@(currentDiscussion.IsPinned ? L["Discussions_Unpin"] : L["Discussions_Pin"])</button></li>
+                        <li><button class="dropdown-item" @onclick="ToggleLock"><i class="bi bi-lock me-2"></i>@(currentDiscussion.IsLocked ? L["Discussions_Unlock"] : L["Discussions_Lock"])</button></li>
                         <li><hr class="dropdown-divider" /></li>
-                        <li><button class="dropdown-item text-danger" @onclick="DeleteDiscussion"><i class="bi bi-trash me-2"></i>Delete</button></li>
+                        <li><button class="dropdown-item text-danger" @onclick="DeleteDiscussion"><i class="bi bi-trash me-2"></i>@L["Discussions_Delete"]</button></li>
                     </ul>
                 </div>
             }
@@ -109,7 +112,7 @@
                 {
                     <div class="card-header bg-success bg-opacity-10 text-success d-flex align-items-center gap-2">
                         <i class="bi bi-check-circle-fill"></i>
-                        <span class="fw-bold">Accepted Answer</span>
+                        <span class="fw-bold">@L["Discussions_AcceptedAnswer"]</span>
                     </div>
                 }
                 <div class="card-header bg-light d-flex align-items-center justify-content-between">
@@ -135,13 +138,13 @@
                                 @if (comment.IsAnswer)
                                 {
                                     <button class="btn btn-outline-success btn-sm" @onclick="() => UnmarkAnswer(comment.Id)">
-                                        <i class="bi bi-x-circle me-1"></i>Unmark
+                                        <i class="bi bi-x-circle me-1"></i>@L["Discussions_Unmark"]
                                     </button>
                                 }
                                 else
                                 {
                                     <button class="btn btn-outline-success btn-sm" @onclick="() => MarkAnswer(comment.Id)">
-                                        <i class="bi bi-check-circle me-1"></i>Mark as answer
+                                        <i class="bi bi-check-circle me-1"></i>@L["Discussions_MarkAsAnswer"]
                                     </button>
                                 }
                             }
@@ -191,10 +194,10 @@
                 @if (UserService.IsLoggedIn && !currentDiscussion.IsLocked && replyingToCommentId == comment.Id)
                 {
                     <div class="card-footer">
-                        <textarea class="form-control form-control-sm mb-2" rows="2" @bind="replyBody" placeholder="Write a reply..."></textarea>
+                        <textarea class="form-control form-control-sm mb-2" rows="2" @bind="replyBody" placeholder="@L["Discussions_WriteReply"]"></textarea>
                         <div class="d-flex gap-1">
-                            <button class="btn btn-primary btn-sm" @onclick="() => SubmitReply(comment.Id)" disabled="@string.IsNullOrWhiteSpace(replyBody)">Reply</button>
-                            <button class="btn btn-outline-secondary btn-sm" @onclick="() => replyingToCommentId = null">Cancel</button>
+                            <button class="btn btn-primary btn-sm" @onclick="() => SubmitReply(comment.Id)" disabled="@string.IsNullOrWhiteSpace(replyBody)">@L["Discussions_Reply"]</button>
+                            <button class="btn btn-outline-secondary btn-sm" @onclick="() => replyingToCommentId = null">@L["Discussions_Cancel"]</button>
                         </div>
                     </div>
                 }
@@ -202,7 +205,7 @@
                 {
                     <div class="card-footer bg-transparent">
                         <button class="btn btn-link btn-sm text-muted p-0" @onclick="() => replyingToCommentId = comment.Id">
-                            <i class="bi bi-reply me-1"></i>Reply
+                            <i class="bi bi-reply me-1"></i>@L["Discussions_Reply"]
                         </button>
                     </div>
                 }
@@ -214,12 +217,12 @@
         {
             <div class="card">
                 <div class="card-header bg-light">
-                    <strong>Add a comment</strong>
+                    <strong>@L["Discussions_AddComment"]</strong>
                 </div>
                 <div class="card-body">
-                    <textarea class="form-control mb-2" rows="4" @bind="newCommentBody" placeholder="Leave a comment"></textarea>
+                    <textarea class="form-control mb-2" rows="4" @bind="newCommentBody" placeholder="@L["Discussions_LeaveComment"]"></textarea>
                     <button class="btn btn-success" @onclick="AddComment" disabled="@string.IsNullOrWhiteSpace(newCommentBody)">
-                        <i class="bi bi-chat-left-text me-1"></i> Comment
+                        <i class="bi bi-chat-left-text me-1"></i> @L["Discussions_Comment"]
                     </button>
                 </div>
             </div>
@@ -227,7 +230,7 @@
         else if (currentDiscussion.IsLocked)
         {
             <div class="alert alert-secondary text-center">
-                <i class="bi bi-lock-fill me-1"></i> This discussion has been locked.
+                <i class="bi bi-lock-fill me-1"></i> @L["Discussions_LockedMessage"]
             </div>
         }
     }
@@ -240,13 +243,13 @@
         <!-- Discussion list view -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="d-flex gap-2 align-items-center">
-                <h4 class="h5 mb-0"><i class="bi bi-chat-square-text me-2"></i>Discussions</h4>
+                <h4 class="h5 mb-0"><i class="bi bi-chat-square-text me-2"></i>@L["Discussions_Title"]</h4>
                 <span class="badge bg-secondary">@discussions.Count</span>
             </div>
             @if (UserService.IsLoggedIn)
             {
                 <button class="btn btn-success btn-sm" @onclick="() => showNewModal = true">
-                    <i class="bi bi-plus-circle me-1"></i> New discussion
+                    <i class="bi bi-plus-circle me-1"></i> @L["Discussions_NewDiscussion"]
                 </button>
             }
         </div>
@@ -254,25 +257,25 @@
         <!-- Category filter -->
         <div class="d-flex flex-wrap gap-2 mb-3">
             <button class="btn btn-sm @(filterCategory == null ? "btn-dark" : "btn-outline-secondary")" @onclick="() => filterCategory = null">
-                All
+                @L["Discussions_All"]
             </button>
             <button class="btn btn-sm @(filterCategory == DiscussionCategory.General ? "btn-dark" : "btn-outline-secondary")" @onclick="() => filterCategory = DiscussionCategory.General">
-                <i class="bi bi-chat-left me-1"></i>General
+                <i class="bi bi-chat-left me-1"></i>@L["Discussions_General"]
             </button>
             <button class="btn btn-sm @(filterCategory == DiscussionCategory.QAndA ? "btn-dark" : "btn-outline-secondary")" @onclick="() => filterCategory = DiscussionCategory.QAndA">
-                <i class="bi bi-question-circle me-1"></i>Q&A
+                <i class="bi bi-question-circle me-1"></i>@L["Discussions_QAndA"]
             </button>
             <button class="btn btn-sm @(filterCategory == DiscussionCategory.Announcements ? "btn-dark" : "btn-outline-secondary")" @onclick="() => filterCategory = DiscussionCategory.Announcements">
-                <i class="bi bi-megaphone me-1"></i>Announcements
+                <i class="bi bi-megaphone me-1"></i>@L["Discussions_Announcements"]
             </button>
             <button class="btn btn-sm @(filterCategory == DiscussionCategory.Ideas ? "btn-dark" : "btn-outline-secondary")" @onclick="() => filterCategory = DiscussionCategory.Ideas">
-                <i class="bi bi-lightbulb me-1"></i>Ideas
+                <i class="bi bi-lightbulb me-1"></i>@L["Discussions_Ideas"]
             </button>
             <button class="btn btn-sm @(filterCategory == DiscussionCategory.ShowAndTell ? "btn-dark" : "btn-outline-secondary")" @onclick="() => filterCategory = DiscussionCategory.ShowAndTell">
-                <i class="bi bi-stars me-1"></i>Show & Tell
+                <i class="bi bi-stars me-1"></i>@L["Discussions_ShowAndTell"]
             </button>
             <button class="btn btn-sm @(filterCategory == DiscussionCategory.Polls ? "btn-dark" : "btn-outline-secondary")" @onclick="() => filterCategory = DiscussionCategory.Polls">
-                <i class="bi bi-bar-chart me-1"></i>Polls
+                <i class="bi bi-bar-chart me-1"></i>@L["Discussions_Polls"]
             </button>
         </div>
 
@@ -327,7 +330,7 @@
         {
             <div class="text-center py-5">
                 <i class="bi bi-chat-square-text display-4 text-muted"></i>
-                <p class="text-muted mt-3">No discussions yet. Start a conversation!</p>
+                <p class="text-muted mt-3">@L["Discussions_Empty"]</p>
             </div>
         }
     }
@@ -339,34 +342,34 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">New Discussion</h5>
+                    <h5 class="modal-title">@L["Discussions_NewDiscussion"]</h5>
                     <button type="button" class="btn-close" @onclick="() => showNewModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Category</label>
+                        <label class="form-label fw-bold">@L["Discussions_Category"]</label>
                         <select class="form-select" @bind="newCategory">
-                            <option value="@DiscussionCategory.General">General</option>
-                            <option value="@DiscussionCategory.QAndA">Q&A</option>
-                            <option value="@DiscussionCategory.Announcements">Announcements</option>
-                            <option value="@DiscussionCategory.Ideas">Ideas</option>
-                            <option value="@DiscussionCategory.ShowAndTell">Show & Tell</option>
-                            <option value="@DiscussionCategory.Polls">Polls</option>
+                            <option value="@DiscussionCategory.General">@L["Discussions_General"]</option>
+                            <option value="@DiscussionCategory.QAndA">@L["Discussions_QAndA"]</option>
+                            <option value="@DiscussionCategory.Announcements">@L["Discussions_Announcements"]</option>
+                            <option value="@DiscussionCategory.Ideas">@L["Discussions_Ideas"]</option>
+                            <option value="@DiscussionCategory.ShowAndTell">@L["Discussions_ShowAndTell"]</option>
+                            <option value="@DiscussionCategory.Polls">@L["Discussions_Polls"]</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Title</label>
-                        <input type="text" class="form-control" @bind="newTitle" placeholder="Discussion title" />
+                        <label class="form-label fw-bold">@L["Discussions_TitleLabel"]</label>
+                        <input type="text" class="form-control" @bind="newTitle" placeholder="@L["Discussions_TitlePlaceholder"]" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Body</label>
-                        <textarea class="form-control" rows="8" @bind="newBody" placeholder="Start your discussion..."></textarea>
+                        <label class="form-label fw-bold">@L["Discussions_Body"]</label>
+                        <textarea class="form-control" rows="8" @bind="newBody" placeholder="@L["Discussions_BodyPlaceholder"]"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="() => showNewModal = false">Cancel</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => showNewModal = false">@L["Discussions_Cancel"]</button>
                     <button type="button" class="btn btn-success" @onclick="CreateDiscussion" disabled="@(string.IsNullOrWhiteSpace(newTitle) || string.IsNullOrWhiteSpace(newBody))">
-                        <i class="bi bi-plus-circle me-1"></i> Start discussion
+                        <i class="bi bi-plus-circle me-1"></i> @L["Discussions_StartDiscussion"]
                     </button>
                 </div>
             </div>
