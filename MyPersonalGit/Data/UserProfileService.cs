@@ -19,7 +19,7 @@ public interface IUserProfileService
     Task<bool> AddSshKeyAsync(string username, string title, string key);
     Task<bool> DeleteSshKeyAsync(string username, int keyId);
     Task<List<PersonalAccessToken>> GetTokensAsync(string username);
-    Task<string> CreateTokenAsync(string username, string name, string[] scopes, DateTime? expiresAt = null);
+    Task<string> CreateTokenAsync(string username, string name, string[] scopes, DateTime? expiresAt = null, string[]? allowedRoutes = null);
     Task<bool> DeleteTokenAsync(string username, int tokenId);
     Task<List<ActiveUserSession>> GetSessionsAsync(string username);
     Task<bool> RevokeSessionAsync(string username, int sessionId);
@@ -432,7 +432,7 @@ public class UserProfileService : IUserProfileService
         return await db.PersonalAccessTokens.Where(t => t.Username == username).ToListAsync();
     }
 
-    public async Task<string> CreateTokenAsync(string username, string name, string[] scopes, DateTime? expiresAt = null)
+    public async Task<string> CreateTokenAsync(string username, string name, string[] scopes, DateTime? expiresAt = null, string[]? allowedRoutes = null)
     {
         using var db = _dbFactory.CreateDbContext();
 
@@ -445,7 +445,8 @@ public class UserProfileService : IUserProfileService
             Token = token,
             Scopes = scopes,
             CreatedAt = DateTime.UtcNow,
-            ExpiresAt = expiresAt
+            ExpiresAt = expiresAt,
+            AllowedRoutes = allowedRoutes ?? Array.Empty<string>()
         });
 
         await db.SaveChangesAsync();

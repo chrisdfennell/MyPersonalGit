@@ -363,6 +363,7 @@ public class AppDbContext : DbContext
         {
             e.HasIndex(t => t.Token).IsUnique();
             e.Property(t => t.Scopes).HasConversion(arrayStringConverter, arrayStringComparer);
+            e.Property(t => t.AllowedRoutes).HasConversion(arrayStringConverter, arrayStringComparer);
         });
 
         // --- Snippet ---

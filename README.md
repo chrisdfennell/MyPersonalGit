@@ -33,6 +33,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
   - [Import Repository](#14-import-repository)
   - [Forking & Upstream Sync](#15-forking--upstream-sync)
   - [CI/CD Auto-Release](#16-cicd-auto-release)
+  - [RSS/Atom Feeds](#17-rssatom-feeds)
 - [Database Configuration](#database-configuration)
   - [Using PostgreSQL](#using-postgresql)
   - [Switching from the Admin Dashboard](#switching-from-the-admin-dashboard)
@@ -122,10 +123,17 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Container Registry** — Host Docker/OCI images with `docker push` and `docker pull` (OCI Distribution Spec)
 - **NuGet Registry** — Host .NET packages with full NuGet v3 API (service index, search, push, restore)
 - **npm Registry** — Host Node.js packages with standard npm publish/install
+- **PyPI Registry** — Host Python packages with PEP 503 Simple API, JSON metadata API, and `twine upload` compatibility
+- **Maven Registry** — Host Java/JVM packages with standard Maven repository layout, `maven-metadata.xml` generation, and `mvn deploy` support
 - **Generic Packages** — Upload and download arbitrary binary artifacts via REST API
 
 ### Static Sites
 - **Pages** — Serve static websites directly from a repository branch (like GitHub Pages) at `/pages/{owner}/{repo}/`
+
+### RSS/Atom Feeds
+- **Repository Feeds** — Atom feeds for commits, releases, and tags per repository (`/api/feeds/{repo}/commits.atom`, `/api/feeds/{repo}/releases.atom`, `/api/feeds/{repo}/tags.atom`)
+- **User Activity Feed** — Per-user activity feed (`/api/feeds/users/{username}/activity.atom`)
+- **Global Activity Feed** — Site-wide activity feed (`/api/feeds/global/activity.atom`)
 
 ### Notifications
 - **In-App Notifications** — Mentions, comments, and repository activity
@@ -141,7 +149,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Admin Dashboard** — System settings (including database provider, SSH server, LDAP/AD, footer pages), user management, audit logs, and statistics
 - **Customizable Footer Pages** — Terms of Service, Privacy Policy, Documentation, and Contact pages with Markdown content editable from Admin > Settings
 - **User Profiles** — Contribution heatmap, activity feed, and stats per user
-- **Personal Access Tokens** — Token-based API authentication with configurable scopes
+- **Personal Access Tokens** — Token-based API authentication with configurable scopes and optional route-level restrictions (glob patterns like `/api/packages/**` to limit token access to specific API paths)
 - **Backup & Restore** — Export and import server data
 - **Security Scanning** — Real dependency vulnerability scanning powered by the [OSV.dev](https://osv.dev/) database. Automatically extracts dependencies from `.csproj` (NuGet), `package.json` (npm), and `requirements.txt` (PyPI), then checks each against known CVEs. Reports severity, fixed versions, and advisory links. Plus manual security advisories with draft/publish/close workflow
 - **Dark Mode** — Full dark/light mode support with a toggle in the header
@@ -294,6 +302,47 @@ dotnet nuget push MyPackage.1.0.0.nupkg --source mygit --api-key yourPAT
 ```bash
 npm config set //localhost:8080/api/packages/npm/:_authToken="yourPAT"
 npm publish --registry=http://localhost:8080/api/packages/npm
+```
+
+**PyPI (Python packages):**
+```bash
+# Install a package
+pip install mypackage --index-url http://localhost:8080/api/packages/pypi/simple/
+
+# Upload with twine
+pip install twine
+cat > ~/.pypirc << 'EOF'
+[distutils]
+index-servers = mygit
+
+[mygit]
+repository = http://localhost:8080/api/packages/pypi/upload/
+username = youruser
+password = yourPAT
+EOF
+twine upload --repository mygit dist/*
+```
+
+**Maven (Java/JVM packages):**
+```xml
+<!-- In your pom.xml, add the repository -->
+<distributionManagement>
+  <repository>
+    <id>mygit</id>
+    <url>http://localhost:8080/api/packages/maven</url>
+  </repository>
+</distributionManagement>
+```
+```xml
+<!-- In settings.xml, add credentials -->
+<server>
+  <id>mygit</id>
+  <username>youruser</username>
+  <password>yourPAT</password>
+</server>
+```
+```bash
+mvn deploy
 ```
 
 **Generic (any binary):**
@@ -673,6 +722,29 @@ Embed build status badges in your README or anywhere:
 ![Status](http://your-server/api/badge/YourRepo/status)
 ```
 Filter by workflow name: `/api/badge/YourRepo/workflow?workflow=Release%20%26%20Docker%20Push`
+
+### 17. RSS/Atom Feeds
+
+Subscribe to repository activity using standard Atom feeds in any RSS reader:
+
+```
+# Repository commits
+http://localhost:8080/api/feeds/MyRepo/commits.atom
+
+# Repository releases
+http://localhost:8080/api/feeds/MyRepo/releases.atom
+
+# Repository tags
+http://localhost:8080/api/feeds/MyRepo/tags.atom
+
+# User activity
+http://localhost:8080/api/feeds/users/admin/activity.atom
+
+# Global activity (all repositories)
+http://localhost:8080/api/feeds/global/activity.atom
+```
+
+No authentication required for public repositories. Add these URLs to any feed reader (Feedly, Miniflux, FreshRSS, etc.) to stay notified of changes.
 
 ## Database Configuration
 

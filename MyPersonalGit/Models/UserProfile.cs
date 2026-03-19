@@ -77,6 +77,13 @@ public class PersonalAccessToken
     public DateTime CreatedAt { get; set; }
     public DateTime? ExpiresAt { get; set; }
     public DateTime? LastUsed { get; set; }
+
+    /// <summary>
+    /// Route-level restrictions. If empty, all routes matching the scopes are allowed.
+    /// Glob patterns like "/api/packages/**" or "/api/v1/repos/MyRepo/**" restrict the token
+    /// to only those API paths.
+    /// </summary>
+    public string[] AllowedRoutes { get; set; } = Array.Empty<string>();
 }
 
 public class ActiveUserSession

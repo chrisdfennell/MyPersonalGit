@@ -51,6 +51,23 @@
                 {
                     <code class="d-block bg-light p-2 rounded small mb-3">npm install @SelectedPackage.Name --registry=@(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/npm</code>
                 }
+                else if (SelectedPackage.Type == "pypi")
+                {
+                    <code class="d-block bg-light p-2 rounded small mb-3">pip install @SelectedPackage.Name --index-url @(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/pypi/simple/</code>
+                }
+                else if (SelectedPackage.Type == "maven")
+                {
+                    var parts = SelectedPackage.Name.Split(':');
+                    var mavenGroupId = parts.Length > 1 ? parts[0] : SelectedPackage.Name;
+                    var mavenArtifactId = parts.Length > 1 ? parts[1] : SelectedPackage.Name;
+                    var mavenLatestVer = SelectedPackage.Versions.OrderByDescending(v => v.CreatedAt).FirstOrDefault()?.Version ?? "LATEST";
+                    <pre class="bg-light p-2 rounded small mb-3"><code>&lt;dependency&gt;
+  &lt;groupId&gt;@mavenGroupId&lt;/groupId&gt;
+  &lt;artifactId&gt;@mavenArtifactId&lt;/artifactId&gt;
+  &lt;version&gt;@mavenLatestVer&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+                    <p class="small text-muted">Repository URL: <code>@(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/maven</code></p>
+                }
                 else
                 {
                     var latest = SelectedPackage.Versions.OrderByDescending(v => v.CreatedAt).FirstOrDefault();
@@ -115,6 +132,16 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link @(Type == "pypi" ? "active" : "")" href="/packages/pypi">
+                    <i class="bi bi-box me-1"></i>PyPI
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Type == "maven" ? "active" : "")" href="/packages/maven">
+                    <i class="bi bi-box me-1"></i>Maven
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link @(Type == "generic" ? "active" : "")" href="/packages/generic">
                     <i class="bi bi-file-earmark-zip me-1"></i>Generic
                 </a>
@@ -155,7 +182,7 @@
             <div class="text-center py-5 text-muted">
                 <i class="bi bi-box-seam" style="font-size: 3rem;"></i>
                 <p class="mt-3">No packages published yet.</p>
-                <p class="small">Push packages using NuGet, npm, or the generic API.</p>
+                <p class="small">Push packages using NuGet, npm, PyPI, Maven, or the generic API.</p>
             </div>
         }
     }
