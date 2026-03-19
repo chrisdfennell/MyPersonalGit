@@ -23,6 +23,11 @@ builder.Services.AddRazorComponents()
     });
 
 builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { Title = "MyPersonalGit API", Version = "v1", Description = "REST API for MyPersonalGit — self-hosted Git server" });
+});
 
 // Rate limiting for API endpoints
 builder.Services.AddRateLimiter(options =>
@@ -329,6 +334,9 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
+
+app.UseSwagger();
+app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MyPersonalGit API v1"));
 
 app.UseHttpsRedirection();
 

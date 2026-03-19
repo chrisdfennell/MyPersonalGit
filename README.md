@@ -161,7 +161,13 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Backup & Restore** — Export and import server data
 - **Security Scanning** — Real dependency vulnerability scanning powered by the [OSV.dev](https://osv.dev/) database. Automatically extracts dependencies from `.csproj` (NuGet), `package.json` (npm), and `requirements.txt` (PyPI), then checks each against known CVEs. Reports severity, fixed versions, and advisory links. Plus manual security advisories with draft/publish/close workflow
 - **Dark Mode** — Full dark/light mode support with a toggle in the header
-- **Multi-Language / i18n** — Full localization across all 27 pages with 676 resource keys. Ships with 11 languages: English, Spanish, French, German, Japanese, Korean, Chinese (Simplified), Portuguese, Russian, Italian, and Turkish. Add more by creating `SharedResource.{locale}.resx` files
+- **Multi-Language / i18n** — Full localization across all 27 pages with 676 resource keys. Ships with 11 languages: English, Spanish, French, German, Japanese, Korean, Chinese (Simplified), Portuguese, Russian, Italian, and Turkish. Language picker in the header. Add more by creating `SharedResource.{locale}.resx` files
+- **Swagger / OpenAPI** — Interactive API documentation at `/swagger` with all REST endpoints discoverable and testable
+- **Mermaid Diagrams** — Mermaid diagram rendering in Markdown files (flowcharts, sequence diagrams, Gantt charts, etc.)
+- **Math Rendering** — LaTeX/KaTeX math expressions in Markdown (`$inline$` and `$$display$$` syntax)
+- **CSV/TSV Viewer** — CSV and TSV files render as formatted, sortable tables instead of raw text
+- **Repository Transfer** — Transfer repository ownership to another user or organization from repository Settings
+- **Default Branch Configuration** — Change the default branch per repository from the Settings tab
 
 ## Tech Stack
 

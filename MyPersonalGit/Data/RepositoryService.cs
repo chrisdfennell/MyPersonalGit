@@ -27,6 +27,8 @@ public interface IRepositoryService
     Task<bool> UnwatchRepositoryAsync(string repoName, string username);
     Task<bool> IsWatchingAsync(string repoName, string username);
     Task<List<ContributorInfo>> GetContributorsAsync(string repoPath, int maxCount = 20);
+    Task<bool> TransferRepositoryAsync(string repoName, string newOwner, string projectRoot);
+    Task<bool> SetDefaultBranchAsync(string repoName, string branchName, string projectRoot);
 }
 
 public class ContributorInfo
@@ -462,5 +464,61 @@ public class RepositoryService : IRepositoryService
         }
         catch { }
         return Task.FromResult(contributors);
+    }
+
+    public async Task<bool> TransferRepositoryAsync(string repoName, string newOwner, string projectRoot)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var repo = await db.Repositories.FirstOrDefaultAsync(r => r.Name == repoName);
+        if (repo == null) return false;
+
+        // Verify new owner exists
+        var targetUser = await db.Users.FirstOrDefaultAsync(u => u.Username == newOwner);
+        if (targetUser == null)
+        {
+            // Check if it's an organization
+            var org = await db.Organizations.FirstOrDefaultAsync(o => o.Name == newOwner);
+            if (org == null) return false;
+        }
+
+        repo.Owner = newOwner;
+        await db.SaveChangesAsync();
+        _logger.LogInformation("Repository {Repo} transferred to {NewOwner}", repoName, newOwner);
+        return true;
+    }
+
+    public async Task<bool> SetDefaultBranchAsync(string repoName, string branchName, string projectRoot)
+    {
+        var repoPath = Path.Combine(projectRoot, repoName);
+        if (!Directory.Exists(repoPath))
+            repoPath = Path.Combine(projectRoot, repoName + ".git");
+        if (!Directory.Exists(repoPath) || !LibGit2Sharp.Repository.IsValid(repoPath))
+            return false;
+
+        try
+        {
+            using var repo = new LibGit2Sharp.Repository(repoPath);
+            var branch = repo.Branches[branchName];
+            if (branch == null) return false;
+
+            repo.Refs.UpdateTarget("HEAD", $"refs/heads/{branchName}");
+
+            // Also update the DB record
+            using var db = _dbFactory.CreateDbContext();
+            var dbRepo = await db.Repositories.FirstOrDefaultAsync(r => r.Name == repoName);
+            if (dbRepo != null)
+            {
+                dbRepo.DefaultBranch = branchName;
+                await db.SaveChangesAsync();
+            }
+
+            _logger.LogInformation("Default branch for {Repo} set to {Branch}", repoName, branchName);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to set default branch for {Repo}", repoName);
+            return false;
+        }
     }
 }

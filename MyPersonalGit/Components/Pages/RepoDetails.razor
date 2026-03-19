@@ -348,6 +348,13 @@ else
                                     @ConvertMarkdownToHtml(fileContent)
                                 </div>
                             }
+                            else if ((Path?.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) == true ||
+                                      Path?.EndsWith(".tsv", StringComparison.OrdinalIgnoreCase) == true) && !showRaw)
+                            {
+                                <div class="p-3 table-responsive">
+                                    @RenderCsvTable(fileContent, Path?.EndsWith(".tsv", StringComparison.OrdinalIgnoreCase) == true ? '\t' : ',')
+                                </div>
+                            }
                             else
                             {
                                 <pre class="m-0 line-numbers" style="font-size: 13px; line-height: 1.5; overflow-x: auto; padding: 0.5em 0.5em 0.5em 3.8em;"><code class="@GetPrismLanguageClass(Path)">@fileContent</code></pre>
@@ -960,6 +967,45 @@ else
                             @if (!string.IsNullOrEmpty(settingsSaveMessage))
                             {
                                 <span class="text-success small ms-2"><i class="bi bi-check-circle me-1"></i>@settingsSaveMessage</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="card border shadow-sm mb-4">
+                        <div class="card-header bg-light-subtle py-2 small fw-bold">
+                            <i class="bi bi-signpost-split me-1"></i> Default branch
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2">
+                                <select class="form-select form-select-sm" style="max-width: 250px;" @bind="selectedDefaultBranch">
+                                    @foreach (var b in availableBranches)
+                                    {
+                                        <option value="@b">@b</option>
+                                    }
+                                </select>
+                                <button class="btn btn-gh-primary btn-sm" @onclick="ChangeDefaultBranch">Update</button>
+                                @if (!string.IsNullOrEmpty(defaultBranchMessage))
+                                {
+                                    <span class="small text-success"><i class="bi bi-check-circle me-1"></i>@defaultBranchMessage</span>
+                                }
+                            </div>
+                            <div class="form-text">The default branch is considered the "base" branch for pull requests and code display.</div>
+                        </div>
+                    </div>
+
+                    <div class="card border border-warning shadow-sm mb-4">
+                        <div class="card-header bg-warning-subtle py-2 small fw-bold text-warning-emphasis">
+                            <i class="bi bi-arrow-left-right me-1"></i> Transfer repository
+                        </div>
+                        <div class="card-body">
+                            <p class="small text-muted mb-2">Transfer this repository to another user or organization.</p>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="text" class="form-control form-control-sm" style="max-width: 250px;" @bind="transferTargetOwner" placeholder="New owner username" />
+                                <button class="btn btn-warning btn-sm" @onclick="TransferRepository" disabled="@string.IsNullOrWhiteSpace(transferTargetOwner)">Transfer</button>
+                            </div>
+                            @if (!string.IsNullOrEmpty(transferMessage))
+                            {
+                                <div class="small mt-2 @(transferSuccess ? "text-success" : "text-danger")">@transferMessage</div>
                             }
                         </div>
                     </div>
@@ -3084,6 +3130,16 @@ else
     private List<string> settingsTopics = new();
     private string newTopicInput = "";
 
+    // Default branch
+    private string selectedDefaultBranch = "";
+    private List<string> availableBranches = new();
+    private string defaultBranchMessage = "";
+
+    // Transfer
+    private string transferTargetOwner = "";
+    private string transferMessage = "";
+    private bool transferSuccess = false;
+
     // Secrets state
     private List<RepositorySecret> repoSecrets = new();
     private bool showAddSecret = false;
@@ -3232,6 +3288,15 @@ else
             settingsPagesBranch = meta.PagesBranch ?? "gh-pages";
             settingsTopics = new List<string>(meta.Topics ?? new());
 
+            // Populate branch list for default branch selector
+            try
+            {
+                using var branchRepo = new LibGit2Sharp.Repository(RepoFullPath);
+                availableBranches = branchRepo.Branches.Where(b => !b.IsRemote).Select(b => b.FriendlyName).ToList();
+                selectedDefaultBranch = meta.DefaultBranch ?? currentBranch;
+            }
+            catch { availableBranches = new() { currentBranch }; selectedDefaultBranch = currentBranch; }
+
             // Look up template source name
             repoTemplateFromName = "";
             if (meta.TemplateRepositoryId.HasValue)
@@ -3314,6 +3379,32 @@ else
         repoWebsiteUrl = settingsWebsiteUrl;
         settingsSaveMessage = "Settings saved!";
         StateHasChanged();
+    }
+
+    private async Task ChangeDefaultBranch()
+    {
+        defaultBranchMessage = "";
+        if (string.IsNullOrEmpty(selectedDefaultBranch)) return;
+        var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        var success = await RepoService.SetDefaultBranchAsync(dirName, selectedDefaultBranch, projectRoot);
+        defaultBranchMessage = success ? "Default branch updated!" : "Failed to update default branch.";
+        if (success) currentBranch = selectedDefaultBranch;
+    }
+
+    private async Task TransferRepository()
+    {
+        transferMessage = "";
+        transferSuccess = false;
+        if (string.IsNullOrWhiteSpace(transferTargetOwner)) return;
+        var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        var success = await RepoService.TransferRepositoryAsync(dirName, transferTargetOwner.Trim(), projectRoot);
+        transferSuccess = success;
+        transferMessage = success
+            ? $"Repository transferred to {transferTargetOwner.Trim()}."
+            : "Transfer failed — user or organization not found.";
+        transferTargetOwner = "";
     }
 
     private void AddTopic()
@@ -3516,6 +3607,7 @@ else
         if (isFile && !showRaw)
         {
             await JS.InvokeVoidAsync("Prism.highlightAll");
+            try { await JS.InvokeVoidAsync("renderMermaidAndMath"); } catch { }
         }
         if (activeTab == "commit-detail" || activeTab == "compare")
         {
@@ -3711,6 +3803,48 @@ else
     private static readonly MarkdownPipeline _markdownPipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
         .Build();
+
+    private MarkupString RenderCsvTable(string content, char delimiter)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return new MarkupString("<p class='text-muted'>Empty file</p>");
+        var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        if (lines.Length == 0) return new MarkupString("");
+        var sb = new System.Text.StringBuilder();
+        sb.Append("<table class=\"table table-sm table-striped table-bordered mb-0\" style=\"font-size: 13px;\">");
+        for (int i = 0; i < lines.Length && i < 1000; i++)
+        {
+            var cells = ParseCsvLine(lines[i].TrimEnd('\r'), delimiter);
+            var tag = i == 0 ? "th" : "td";
+            sb.Append(i == 0 ? "<thead><tr>" : "<tr>");
+            foreach (var cell in cells)
+                sb.Append($"<{tag} class=\"px-2 py-1\">{System.Net.WebUtility.HtmlEncode(cell)}</{tag}>");
+            sb.Append(i == 0 ? "</tr></thead><tbody>" : "</tr>");
+        }
+        sb.Append("</tbody></table>");
+        if (lines.Length > 1000) sb.Append("<p class='text-muted small mt-2'>Showing first 1,000 rows.</p>");
+        return new MarkupString(sb.ToString());
+    }
+
+    private static List<string> ParseCsvLine(string line, char delimiter)
+    {
+        var fields = new List<string>();
+        bool inQuotes = false;
+        var current = new System.Text.StringBuilder();
+        for (int i = 0; i < line.Length; i++)
+        {
+            if (inQuotes)
+            {
+                if (line[i] == '"' && i + 1 < line.Length && line[i + 1] == '"') { current.Append('"'); i++; }
+                else if (line[i] == '"') inQuotes = false;
+                else current.Append(line[i]);
+            }
+            else if (line[i] == '"') inQuotes = true;
+            else if (line[i] == delimiter) { fields.Add(current.ToString()); current.Clear(); }
+            else current.Append(line[i]);
+        }
+        fields.Add(current.ToString());
+        return fields;
+    }
 
     private MarkupString ConvertMarkdownToHtml(string markdown)
     {
