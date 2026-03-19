@@ -116,12 +116,13 @@ public sealed class BuiltInSshServer : BackgroundService
             var deployKeyService = scope.ServiceProvider.GetRequiredService<IDeployKeyService>();
             var issueAutoCloseService = scope.ServiceProvider.GetRequiredService<IIssueAutoCloseService>();
             var workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
+            var agitFlowService = scope.ServiceProvider.GetRequiredService<IAGitFlowService>();
             var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
 
             var session = new SshSession(
                 client, _hostKey!, _hostKeyBlob!, projectRoot,
                 sshAuthService, repoService, collaboratorService, deployKeyService, issueAutoCloseService,
-                workflowService, _logger);
+                workflowService, agitFlowService, _logger);
 
             await session.RunAsync(ct);
         }

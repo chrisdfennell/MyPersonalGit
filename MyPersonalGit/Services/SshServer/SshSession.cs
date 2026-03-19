@@ -58,6 +58,7 @@ public sealed class SshSession : IDisposable
     private readonly IDeployKeyService _deployKeyService;
     private readonly IIssueAutoCloseService _issueAutoCloseService;
     private readonly IWorkflowService _workflowService;
+    private readonly IAGitFlowService _agitFlowService;
     private readonly ILogger _logger;
 
     // Protocol state
@@ -86,7 +87,7 @@ public sealed class SshSession : IDisposable
         TcpClient client, ECDsa hostKey, byte[] hostKeyBlob, string projectRoot,
         ISshAuthService sshAuth, IRepositoryService repoService,
         ICollaboratorService collaboratorService, IDeployKeyService deployKeyService,
-        IIssueAutoCloseService issueAutoCloseService, IWorkflowService workflowService, ILogger logger)
+        IIssueAutoCloseService issueAutoCloseService, IWorkflowService workflowService, IAGitFlowService agitFlowService, ILogger logger)
     {
         _client = client;
         _stream = client.GetStream();
@@ -99,6 +100,7 @@ public sealed class SshSession : IDisposable
         _deployKeyService = deployKeyService;
         _issueAutoCloseService = issueAutoCloseService;
         _workflowService = workflowService;
+        _agitFlowService = agitFlowService;
         _logger = logger;
 
         _client.ReceiveTimeout = 30000;
@@ -993,6 +995,21 @@ public sealed class SshSession : IDisposable
 
         // Trigger workflows that listen for push events
         await _workflowService.TriggerPushWorkflowsAsync(repoName, repoDir, branch, sha, message, user);
+
+        // AGit Flow: detect pushes to refs/for/* and create PRs
+        try
+        {
+            foreach (var reference in repo.Refs.Where(r => r.CanonicalName.StartsWith("refs/for/")))
+            {
+                var prNumber = await _agitFlowService.ProcessAGitPushAsync(repoDir, repoName, reference.CanonicalName, user);
+                if (prNumber.HasValue)
+                    _logger.LogInformation("AGit: created/updated PR #{Number} for {Ref}", prNumber.Value, reference.CanonicalName);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to process AGit flow via SSH");
+        }
     }
 
     private async Task<bool> CheckAccess(string username, string repoName, string operation)

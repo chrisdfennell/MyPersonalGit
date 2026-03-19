@@ -1,10 +1,13 @@
 @inherits LayoutComponentBase
 @using MyPersonalGit.Data
 @using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject IAdminService AdminService
 @inject CurrentUserService UserService
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
 
 <div class="gh-app">
     <header class="gh-header">
@@ -23,17 +26,17 @@
 
             <div class="gh-search-container d-none d-md-flex flex-grow-1 mx-2" style="max-width: 300px;">
                 <div class="input-group input-group-sm bg-dark-subtle rounded-2 border border-secondary border-opacity-50">
-                    <input type="text" class="form-control bg-transparent border-0 text-white placeholder-secondary" placeholder="Search or jump to..." />
+                    <input type="text" class="form-control bg-transparent border-0 text-white placeholder-secondary" placeholder="@L["Search_Placeholder"]" />
                     <span class="input-group-text bg-transparent border-0 text-secondary">/</span>
                 </div>
             </div>
 
             <nav class="gh-nav-links d-none d-lg-flex ms-3 gap-3">
-                <a href="/search?type=pulls" class="text-white text-opacity-75 text-decoration-none small fw-semibold">Pull requests</a>
-                <a href="/search?type=issues" class="text-white text-opacity-75 text-decoration-none small fw-semibold">Issues</a>
-                <a href="/search" class="text-white text-opacity-75 text-decoration-none small fw-semibold">Search</a>
-                <a href="/snippets" class="text-white text-opacity-75 text-decoration-none small fw-semibold">Snippets</a>
-                <a href="/packages" class="text-white text-opacity-75 text-decoration-none small fw-semibold">Packages</a>
+                <a href="/search?type=pulls" class="text-white text-opacity-75 text-decoration-none small fw-semibold">@L["Nav_PullRequests"]</a>
+                <a href="/search?type=issues" class="text-white text-opacity-75 text-decoration-none small fw-semibold">@L["Nav_Issues"]</a>
+                <a href="/search" class="text-white text-opacity-75 text-decoration-none small fw-semibold">@L["Nav_Search"]</a>
+                <a href="/snippets" class="text-white text-opacity-75 text-decoration-none small fw-semibold">@L["Nav_Snippets"]</a>
+                <a href="/packages" class="text-white text-opacity-75 text-decoration-none small fw-semibold">@L["Nav_Packages"]</a>
                 @if (UserService.IsAdmin)
                 {
                     <a href="/admin" class="text-white text-opacity-75 text-decoration-none small fw-semibold">
@@ -72,16 +75,16 @@
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><span class="dropdown-item-text fw-semibold">@UserService.Username</span></li>
                             <li><hr class="dropdown-divider" /></li>
-                            <li><a class="dropdown-item" href="/profile/@UserService.Username">Your profile</a></li>
-                            <li><a class="dropdown-item" href="/settings">Settings</a></li>
+                            <li><a class="dropdown-item" href="/profile/@UserService.Username">@L["Nav_Profile"]</a></li>
+                            <li><a class="dropdown-item" href="/settings">@L["Nav_Settings"]</a></li>
                             <li><hr class="dropdown-divider" /></li>
-                            <li><button class="dropdown-item" @onclick="HandleLogout">Sign out</button></li>
+                            <li><button class="dropdown-item" @onclick="HandleLogout">@L["Nav_SignOut"]</button></li>
                         </ul>
                     </div>
                 }
                 else
                 {
-                    <a href="/login" class="btn btn-sm btn-outline-light">Sign in</a>
+                    <a href="/login" class="btn btn-sm btn-outline-light">@L["Nav_SignIn"]</a>
                 }
             </div>
         </div>
@@ -96,10 +99,10 @@
     <footer class="gh-footer border-top py-5 mt-auto">
         <div class="container-xl px-3 d-flex flex-wrap justify-content-center gap-4 small">
             <span class="text-muted">© @DateTime.Now.Year PersonalGit, Inc.</span>
-            <a href="/terms" class="text-decoration-none text-primary-emphasis">Terms</a>
-            <a href="/privacy" class="text-decoration-none text-primary-emphasis">Privacy</a>
-            <a href="/docs" class="text-decoration-none text-primary-emphasis">Docs</a>
-            <a href="/contact" class="text-decoration-none text-primary-emphasis">Contact</a>
+            <a href="/terms" class="text-decoration-none text-primary-emphasis">@L["Footer_Terms"]</a>
+            <a href="/privacy" class="text-decoration-none text-primary-emphasis">@L["Footer_Privacy"]</a>
+            <a href="/docs" class="text-decoration-none text-primary-emphasis">@L["Footer_Docs"]</a>
+            <a href="/contact" class="text-decoration-none text-primary-emphasis">@L["Footer_Contact"]</a>
         </div>
     </footer>
 </div>
