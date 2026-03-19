@@ -1,0 +1,756 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+
+  <!-- Navigation -->
+  <data name="Nav_Issues" xml:space="preserve"><value>议题</value></data>
+  <data name="Nav_Packages" xml:space="preserve"><value>软件包</value></data>
+  <data name="Nav_Profile" xml:space="preserve"><value>个人资料</value></data>
+  <data name="Nav_PullRequests" xml:space="preserve"><value>Pull requests</value></data>
+  <data name="Nav_Register" xml:space="preserve"><value>注册</value></data>
+  <data name="Nav_Repositories" xml:space="preserve"><value>仓库</value></data>
+  <data name="Nav_Search" xml:space="preserve"><value>搜索</value></data>
+  <data name="Nav_Settings" xml:space="preserve"><value>设置</value></data>
+  <data name="Nav_SignIn" xml:space="preserve"><value>登录</value></data>
+  <data name="Nav_SignOut" xml:space="preserve"><value>退出登录</value></data>
+  <data name="Nav_Snippets" xml:space="preserve"><value>代码片段</value></data>
+  <data name="Nav_Admin" xml:space="preserve"><value>管理</value></data>
+  <data name="Nav_Notifications" xml:space="preserve"><value>通知</value></data>
+
+  <!-- Common -->
+  <data name="Common_Loading" xml:space="preserve"><value>加载中...</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>删除</value></data>
+  <data name="Common_Edit" xml:space="preserve"><value>编辑</value></data>
+  <data name="Common_Create" xml:space="preserve"><value>创建</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>关闭</value></data>
+  <data name="Common_Open" xml:space="preserve"><value>打开</value></data>
+  <data name="Common_Private" xml:space="preserve"><value>私有</value></data>
+  <data name="Common_Public" xml:space="preserve"><value>公开</value></data>
+
+  <!-- Search -->
+  <data name="Search_Button" xml:space="preserve"><value>搜索</value></data>
+  <data name="Search_Heading" xml:space="preserve"><value>搜索</value></data>
+  <data name="Search_InitialHeading" xml:space="preserve"><value>在所有仓库中搜索</value></data>
+  <data name="Search_InitialSubheading" xml:space="preserve"><value>查找仓库、代码、议题和 pull requests</value></data>
+  <data name="Search_InputPlaceholder" xml:space="preserve"><value>搜索仓库、代码、议题和 pull requests...</value></data>
+  <data name="Search_NoCode" xml:space="preserve"><value>未找到与您搜索匹配的代码。</value></data>
+  <data name="Search_NoIssues" xml:space="preserve"><value>未找到与您搜索匹配的议题。</value></data>
+  <data name="Search_NoPullRequests" xml:space="preserve"><value>未找到与您搜索匹配的 pull requests。</value></data>
+  <data name="Search_NoRepositories" xml:space="preserve"><value>未找到与您搜索匹配的仓库。</value></data>
+  <data name="Search_PageTitle" xml:space="preserve"><value>搜索 · Personal Git</value></data>
+  <data name="Search_Placeholder" xml:space="preserve"><value>搜索或跳转到...</value></data>
+  <data name="Search_Searching" xml:space="preserve"><value>正在搜索所有仓库...</value></data>
+  <data name="Search_TabCode" xml:space="preserve"><value>代码</value></data>
+  <data name="Search_TabIssues" xml:space="preserve"><value>议题</value></data>
+  <data name="Search_TabPullRequests" xml:space="preserve"><value>Pull requests</value></data>
+  <data name="Search_TabRepositories" xml:space="preserve"><value>仓库</value></data>
+
+  <!-- Footer -->
+  <data name="Footer_Contact" xml:space="preserve"><value>联系我们</value></data>
+  <data name="Footer_Docs" xml:space="preserve"><value>文档</value></data>
+  <data name="Footer_Documentation" xml:space="preserve"><value>文档</value></data>
+  <data name="Footer_Page" xml:space="preserve"><value>页面</value></data>
+  <data name="Footer_PageNotFound" xml:space="preserve"><value>页面未找到</value></data>
+  <data name="Footer_Privacy" xml:space="preserve"><value>隐私</value></data>
+  <data name="Footer_PrivacyPolicy" xml:space="preserve"><value>隐私政策</value></data>
+  <data name="Footer_Terms" xml:space="preserve"><value>条款</value></data>
+  <data name="Footer_TermsOfService" xml:space="preserve"><value>服务条款</value></data>
+
+  <!-- Home -->
+  <data name="Home_Archived" xml:space="preserve"><value>已归档</value></data>
+  <data name="Home_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Home_CreateNewRepo" xml:space="preserve"><value>创建新仓库</value></data>
+  <data name="Home_CreateRepository" xml:space="preserve"><value>创建仓库</value></data>
+  <data name="Home_Creating" xml:space="preserve"><value>创建中...</value></data>
+  <data name="Home_Description" xml:space="preserve"><value>描述</value></data>
+  <data name="Home_FindRepoPlaceholder" xml:space="preserve"><value>查找仓库...</value></data>
+  <data name="Home_Import" xml:space="preserve"><value>导入</value></data>
+  <data name="Home_InitializeWithFiles" xml:space="preserve"><value>使用文件初始化</value></data>
+  <data name="Home_NewRepo" xml:space="preserve"><value>新建</value></data>
+  <data name="Home_NoMatchingResults" xml:space="preserve"><value>没有匹配的结果</value></data>
+  <data name="Home_NoReposYet" xml:space="preserve"><value>暂无仓库</value></data>
+  <data name="Home_NoRepositoriesFound" xml:space="preserve"><value>未找到仓库</value></data>
+  <data name="Home_NoTemplate" xml:space="preserve"><value>无模板</value></data>
+  <data name="Home_Optional" xml:space="preserve"><value>（可选）</value></data>
+  <data name="Home_PageTitle" xml:space="preserve"><value>仓库 · Personal Git</value></data>
+  <data name="Home_Private" xml:space="preserve"><value>私有</value></data>
+  <data name="Home_PrivateDescription" xml:space="preserve"><value>只有您（和协作者）可以查看此仓库。</value></data>
+  <data name="Home_Public" xml:space="preserve"><value>公开</value></data>
+  <data name="Home_PublicDescription" xml:space="preserve"><value>任何人都可以查看此仓库。</value></data>
+  <data name="Home_RecentActivity" xml:space="preserve"><value>近期活动</value></data>
+  <data name="Home_RecentRepositories" xml:space="preserve"><value>近期仓库</value></data>
+  <data name="Home_RepoName" xml:space="preserve"><value>仓库名称</value></data>
+  <data name="Home_RepoTemplate" xml:space="preserve"><value>仓库模板</value></data>
+  <data name="Home_Repositories" xml:space="preserve"><value>仓库</value></data>
+  <data name="Home_SearchRepos" xml:space="preserve"><value>查找仓库...</value></data>
+  <data name="Home_NoRepos" xml:space="preserve"><value>未找到仓库</value></data>
+  <data name="Home_CreateFirst" xml:space="preserve"><value>创建您的第一个仓库以开始使用。</value></data>
+  <data name="Home_StorageLocation" xml:space="preserve"><value>存储位置</value></data>
+  <data name="Home_StorageLocationHint" xml:space="preserve"><value>裸仓库将创建的完整路径。</value></data>
+  <data name="Home_Template" xml:space="preserve"><value>模板</value></data>
+  <data name="Home_UploadFolder" xml:space="preserve"><value>上传文件夹</value></data>
+  <data name="Home_UploadZip" xml:space="preserve"><value>上传 Zip</value></data>
+  <data name="Home_UseThisTemplate" xml:space="preserve"><value>使用此模板</value></data>
+
+  <!-- Login -->
+  <data name="Login_CreateAccount" xml:space="preserve"><value>创建账户</value></data>
+  <data name="Login_EnterCode" xml:space="preserve"><value>输入验证器应用中的6位数字验证码</value></data>
+  <data name="Login_OrSignInWith" xml:space="preserve"><value>或使用以下方式登录</value></data>
+  <data name="Login_Password" xml:space="preserve"><value>密码</value></data>
+  <data name="Login_SignIn" xml:space="preserve"><value>登录</value></data>
+  <data name="Login_Title" xml:space="preserve"><value>登录 MyPersonalGit</value></data>
+  <data name="Login_TwoFactor" xml:space="preserve"><value>双因素认证</value></data>
+  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>使用恢复码</value></data>
+  <data name="Login_Username" xml:space="preserve"><value>用户名或邮箱</value></data>
+  <data name="Login_Verify" xml:space="preserve"><value>验证</value></data>
+
+  <!-- Register -->
+  <data name="Register_AlreadyHaveAccount" xml:space="preserve"><value>已经有账户了？</value></data>
+  <data name="Register_ConfirmPassword" xml:space="preserve"><value>确认密码</value></data>
+  <data name="Register_ConfirmPasswordPlaceholder" xml:space="preserve"><value>确认您的密码</value></data>
+  <data name="Register_CreateAccount" xml:space="preserve"><value>创建账户</value></data>
+  <data name="Register_CreateAccountButton" xml:space="preserve"><value>创建账户</value></data>
+  <data name="Register_CreatingAccount" xml:space="preserve"><value>正在创建账户...</value></data>
+  <data name="Register_Email" xml:space="preserve"><value>邮箱</value></data>
+  <data name="Register_EmailPlaceholder" xml:space="preserve"><value>输入您的邮箱</value></data>
+  <data name="Register_FullName" xml:space="preserve"><value>全名（可选）</value></data>
+  <data name="Register_FullNamePlaceholder" xml:space="preserve"><value>输入您的全名</value></data>
+  <data name="Register_PageTitle" xml:space="preserve"><value>注册 - MyPersonalGit</value></data>
+  <data name="Register_Password" xml:space="preserve"><value>密码</value></data>
+  <data name="Register_PasswordPlaceholder" xml:space="preserve"><value>创建密码</value></data>
+  <data name="Register_SignIn" xml:space="preserve"><value>登录</value></data>
+  <data name="Register_Subtitle" xml:space="preserve"><value>立即加入 MyPersonalGit</value></data>
+  <data name="Register_Username" xml:space="preserve"><value>用户名</value></data>
+  <data name="Register_UsernamePlaceholder" xml:space="preserve"><value>选择一个用户名</value></data>
+
+  <!-- Explore -->
+  <data name="Explore_Archived" xml:space="preserve"><value>已归档</value></data>
+  <data name="Explore_ClearFilter" xml:space="preserve"><value>清除</value></data>
+  <data name="Explore_Fork" xml:space="preserve"><value>Fork</value></data>
+  <data name="Explore_Heading" xml:space="preserve"><value>探索仓库</value></data>
+  <data name="Explore_NoResults" xml:space="preserve"><value>未找到符合条件的仓库。</value></data>
+  <data name="Explore_PageTitle" xml:space="preserve"><value>探索 · Personal Git</value></data>
+  <data name="Explore_Private" xml:space="preserve"><value>私有</value></data>
+  <data name="Explore_SearchPlaceholder" xml:space="preserve"><value>搜索仓库...</value></data>
+  <data name="Explore_SortMostForks" xml:space="preserve"><value>最多 fork</value></data>
+  <data name="Explore_SortMostStars" xml:space="preserve"><value>最多星标</value></data>
+  <data name="Explore_SortName" xml:space="preserve"><value>名称</value></data>
+  <data name="Explore_SortRecentlyUpdated" xml:space="preserve"><value>最近更新</value></data>
+  <data name="Explore_Topics" xml:space="preserve"><value>主题</value></data>
+
+  <!-- Repository -->
+  <data name="Repo_About" xml:space="preserve"><value>关于</value></data>
+  <data name="Repo_Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Repo_ActiveBranches" xml:space="preserve"><value>活跃分支</value></data>
+  <data name="Repo_AddFile" xml:space="preserve"><value>添加文件</value></data>
+  <data name="Repo_AddFiles" xml:space="preserve"><value>添加文件</value></data>
+  <data name="Repo_BackToDashboard" xml:space="preserve"><value>返回仪表盘</value></data>
+  <data name="Repo_Blame" xml:space="preserve"><value>Blame</value></data>
+  <data name="Repo_Branches" xml:space="preserve"><value>分支</value></data>
+  <data name="Repo_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Repo_Clone" xml:space="preserve"><value>克隆</value></data>
+  <data name="Repo_Code" xml:space="preserve"><value>代码</value></data>
+  <data name="Repo_CommitGraph" xml:space="preserve"><value>Commit 图</value></data>
+  <data name="Repo_Commits" xml:space="preserve"><value>Commits</value></data>
+  <data name="Repo_ConfirmDeleteFile" xml:space="preserve"><value>您确定要删除此文件吗？</value></data>
+  <data name="Repo_ConfirmDeleteRepo" xml:space="preserve"><value>您确定要删除此仓库吗？</value></data>
+  <data name="Repo_ContainerImages" xml:space="preserve"><value>容器镜像</value></data>
+  <data name="Repo_ContainerImagesDescription" xml:space="preserve"><value>此仓库的容器镜像</value></data>
+  <data name="Repo_Create" xml:space="preserve"><value>创建</value></data>
+  <data name="Repo_CreateBranch" xml:space="preserve"><value>创建分支</value></data>
+  <data name="Repo_CreateNewRelease" xml:space="preserve"><value>创建新版本</value></data>
+  <data name="Repo_CreateTag" xml:space="preserve"><value>创建标签</value></data>
+  <data name="Repo_Delete" xml:space="preserve"><value>删除</value></data>
+  <data name="Repo_DeleteFile" xml:space="preserve"><value>删除文件</value></data>
+  <data name="Repo_DeleteRepository" xml:space="preserve"><value>删除仓库</value></data>
+  <data name="Repo_DescribeRelease" xml:space="preserve"><value>描述此版本</value></data>
+  <data name="Repo_Description" xml:space="preserve"><value>描述</value></data>
+  <data name="Repo_Discussions" xml:space="preserve"><value>讨论</value></data>
+  <data name="Repo_Download" xml:space="preserve"><value>下载</value></data>
+  <data name="Repo_Edit" xml:space="preserve"><value>编辑</value></data>
+  <data name="Repo_GoToFile" xml:space="preserve"><value>跳转到文件</value></data>
+  <data name="Repo_Graph" xml:space="preserve"><value>图表</value></data>
+  <data name="Repo_History" xml:space="preserve"><value>历史</value></data>
+  <data name="Repo_Insights" xml:space="preserve"><value>洞察</value></data>
+  <data name="Repo_Issues" xml:space="preserve"><value>议题</value></data>
+  <data name="Repo_Languages" xml:space="preserve"><value>语言</value></data>
+  <data name="Repo_NewBranch" xml:space="preserve"><value>新建分支</value></data>
+  <data name="Repo_NewRelease" xml:space="preserve"><value>新建版本</value></data>
+  <data name="Repo_NewTag" xml:space="preserve"><value>新建标签</value></data>
+  <data name="Repo_NoBranches" xml:space="preserve"><value>暂无分支</value></data>
+  <data name="Repo_NoCommits" xml:space="preserve"><value>暂无 commits</value></data>
+  <data name="Repo_NoContainerImages" xml:space="preserve"><value>暂无容器镜像</value></data>
+  <data name="Repo_NoReleases" xml:space="preserve"><value>暂无版本</value></data>
+  <data name="Repo_NoReleasesDescription" xml:space="preserve"><value>尚未发布任何版本。</value></data>
+  <data name="Repo_NoTags" xml:space="preserve"><value>暂无标签</value></data>
+  <data name="Repo_NotFound" xml:space="preserve"><value>仓库未找到</value></data>
+  <data name="Repo_Packages" xml:space="preserve"><value>软件包</value></data>
+  <data name="Repo_Projects" xml:space="preserve"><value>项目</value></data>
+  <data name="Repo_PublishRelease" xml:space="preserve"><value>发布版本</value></data>
+  <data name="Repo_PullRequests" xml:space="preserve"><value>Pull Requests</value></data>
+  <data name="Repo_QuickSetup" xml:space="preserve"><value>快速设置</value></data>
+  <data name="Repo_ReleaseTags" xml:space="preserve"><value>版本标签</value></data>
+  <data name="Repo_ReleaseTitle" xml:space="preserve"><value>版本标题</value></data>
+  <data name="Repo_Releases" xml:space="preserve"><value>版本</value></data>
+  <data name="Repo_Security" xml:space="preserve"><value>安全</value></data>
+  <data name="Repo_Settings" xml:space="preserve"><value>设置</value></data>
+  <data name="Repo_SettingsDescription" xml:space="preserve"><value>管理仓库设置</value></data>
+  <data name="Repo_SwitchBranches" xml:space="preserve"><value>切换分支</value></data>
+  <data name="Repo_Tags" xml:space="preserve"><value>标签</value></data>
+  <data name="Repo_Wiki" xml:space="preserve"><value>Wiki</value></data>
+
+  <!-- Issues -->
+  <data name="Issues_Add" xml:space="preserve"><value>添加</value></data>
+  <data name="Issues_AddAssignee" xml:space="preserve"><value>添加负责人</value></data>
+  <data name="Issues_AddComment" xml:space="preserve"><value>添加评论</value></data>
+  <data name="Issues_AddDependency" xml:space="preserve"><value>添加依赖</value></data>
+  <data name="Issues_AllMilestones" xml:space="preserve"><value>所有里程碑</value></data>
+  <data name="Issues_Assignees" xml:space="preserve"><value>负责人</value></data>
+  <data name="Issues_BlockedBy" xml:space="preserve"><value>被阻塞于</value></data>
+  <data name="Issues_Blocks" xml:space="preserve"><value>阻塞</value></data>
+  <data name="Issues_BlocksOther" xml:space="preserve"><value>阻塞其他议题</value></data>
+  <data name="Issues_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Issues_Close" xml:space="preserve"><value>关闭</value></data>
+  <data name="Issues_CloseIssue" xml:space="preserve"><value>关闭议题</value></data>
+  <data name="Issues_Closed" xml:space="preserve"><value>已关闭</value></data>
+  <data name="Issues_Comment" xml:space="preserve"><value>评论</value></data>
+  <data name="Issues_ConvertToIssue" xml:space="preserve"><value>转换为议题</value></data>
+  <data name="Issues_CreateAsDraft" xml:space="preserve"><value>创建为草稿</value></data>
+  <data name="Issues_CreateDraft" xml:space="preserve"><value>创建草稿</value></data>
+  <data name="Issues_CreateIssue" xml:space="preserve"><value>创建议题</value></data>
+  <data name="Issues_CreateMilestone" xml:space="preserve"><value>创建里程碑</value></data>
+  <data name="Issues_CreateTemplate" xml:space="preserve"><value>创建模板</value></data>
+  <data name="Issues_DefaultLabels" xml:space="preserve"><value>默认标签</value></data>
+  <data name="Issues_Dependencies" xml:space="preserve"><value>依赖</value></data>
+  <data name="Issues_DescribeMilestone" xml:space="preserve"><value>描述里程碑</value></data>
+  <data name="Issues_Description" xml:space="preserve"><value>描述</value></data>
+  <data name="Issues_Draft" xml:space="preserve"><value>草稿</value></data>
+  <data name="Issues_DraftDescription" xml:space="preserve"><value>草稿议题在发布之前对其他人不可见。</value></data>
+  <data name="Issues_DueDate" xml:space="preserve"><value>截止日期</value></data>
+  <data name="Issues_IsBlockedBy" xml:space="preserve"><value>被阻塞于</value></data>
+  <data name="Issues_IssueTemplates" xml:space="preserve"><value>议题模板</value></data>
+  <data name="Issues_IssueTitlePlaceholder" xml:space="preserve"><value>议题标题</value></data>
+  <data name="Issues_LabelsLabel" xml:space="preserve"><value>标签</value></data>
+  <data name="Issues_LeaveComment" xml:space="preserve"><value>留下评论</value></data>
+  <data name="Issues_LockedMessage" xml:space="preserve"><value>此议题已锁定。</value></data>
+  <data name="Issues_Milestone" xml:space="preserve"><value>里程碑</value></data>
+  <data name="Issues_Milestones" xml:space="preserve"><value>里程碑</value></data>
+  <data name="Issues_NewIssue" xml:space="preserve"><value>新建议题</value></data>
+  <data name="Issues_NewIssueTemplate" xml:space="preserve"><value>新建议题模板</value></data>
+  <data name="Issues_NewMilestone" xml:space="preserve"><value>新建里程碑</value></data>
+  <data name="Issues_NewTemplate" xml:space="preserve"><value>新建模板</value></data>
+  <data name="Issues_NoDescription" xml:space="preserve"><value>未提供描述。</value></data>
+  <data name="Issues_NoMilestone" xml:space="preserve"><value>无里程碑</value></data>
+  <data name="Issues_NoTemplate" xml:space="preserve"><value>无模板</value></data>
+  <data name="Issues_NoTemplates" xml:space="preserve"><value>暂无模板</value></data>
+  <data name="Issues_Open" xml:space="preserve"><value>打开</value></data>
+  <data name="Issues_Pinned" xml:space="preserve"><value>已置顶</value></data>
+  <data name="Issues_Reopen" xml:space="preserve"><value>重新打开</value></data>
+  <data name="Issues_ReopenIssue" xml:space="preserve"><value>重新打开议题</value></data>
+  <data name="Issues_Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Issues_StartTimer" xml:space="preserve"><value>开始计时</value></data>
+  <data name="Issues_Template" xml:space="preserve"><value>模板</value></data>
+  <data name="Issues_TemplateBody" xml:space="preserve"><value>模板正文</value></data>
+  <data name="Issues_TemplateDescPlaceholder" xml:space="preserve"><value>描述此模板</value></data>
+  <data name="Issues_TemplateName" xml:space="preserve"><value>模板名称</value></data>
+  <data name="Issues_Templates" xml:space="preserve"><value>模板</value></data>
+  <data name="Issues_TimeTracking" xml:space="preserve"><value>时间追踪</value></data>
+  <data name="Issues_Title" xml:space="preserve"><value>议题</value></data>
+  <data name="Issues_TitleLabel" xml:space="preserve"><value>标题</value></data>
+
+  <!-- Pull Requests -->
+  <data name="PR_Approve" xml:space="preserve"><value>批准</value></data>
+  <data name="PR_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="PR_Close" xml:space="preserve"><value>关闭</value></data>
+  <data name="PR_Closed" xml:space="preserve"><value>已关闭</value></data>
+  <data name="PR_Comment" xml:space="preserve"><value>评论</value></data>
+  <data name="PR_Commits" xml:space="preserve"><value>Commits</value></data>
+  <data name="PR_Conversation" xml:space="preserve"><value>对话</value></data>
+  <data name="PR_ConvertToDraft" xml:space="preserve"><value>转换为草稿</value></data>
+  <data name="PR_CreateAsDraft" xml:space="preserve"><value>创建为草稿</value></data>
+  <data name="PR_CreatePullRequest" xml:space="preserve"><value>创建 pull request</value></data>
+  <data name="PR_DescribePlaceholder" xml:space="preserve"><value>描述您的更改...</value></data>
+  <data name="PR_Description" xml:space="preserve"><value>描述</value></data>
+  <data name="PR_DisableAutoMerge" xml:space="preserve"><value>禁用自动合并</value></data>
+  <data name="PR_Draft" xml:space="preserve"><value>草稿</value></data>
+  <data name="PR_EnableAutoMerge" xml:space="preserve"><value>启用自动合并</value></data>
+  <data name="PR_FilesChanged" xml:space="preserve"><value>更改的文件</value></data>
+  <data name="PR_Labels" xml:space="preserve"><value>标签</value></data>
+  <data name="PR_LeaveReviewComment" xml:space="preserve"><value>留下审查评论</value></data>
+  <data name="PR_MarkAsResolved" xml:space="preserve"><value>标记为已解决</value></data>
+  <data name="PR_MergeCommit" xml:space="preserve"><value>Merge commit</value></data>
+  <data name="PR_MergePullRequest" xml:space="preserve"><value>合并 pull request</value></data>
+  <data name="PR_Merged" xml:space="preserve"><value>已合并</value></data>
+  <data name="PR_NewPullRequest" xml:space="preserve"><value>新建 pull request</value></data>
+  <data name="PR_NoDescription" xml:space="preserve"><value>未提供描述。</value></data>
+  <data name="PR_NoLabels" xml:space="preserve"><value>无标签</value></data>
+  <data name="PR_NoReviewers" xml:space="preserve"><value>无审查者</value></data>
+  <data name="PR_Open" xml:space="preserve"><value>打开</value></data>
+  <data name="PR_ReadyForReview" xml:space="preserve"><value>准备审查</value></data>
+  <data name="PR_RebaseAndMerge" xml:space="preserve"><value>Rebase 并合并</value></data>
+  <data name="PR_RequestChanges" xml:space="preserve"><value>请求更改</value></data>
+  <data name="PR_ResolveConflicts" xml:space="preserve"><value>解决冲突</value></data>
+  <data name="PR_ResolveMergeConflicts" xml:space="preserve"><value>解决合并冲突</value></data>
+  <data name="PR_ReviewChanges" xml:space="preserve"><value>审查更改</value></data>
+  <data name="PR_Reviewers" xml:space="preserve"><value>审查者</value></data>
+  <data name="PR_SelectBranch" xml:space="preserve"><value>选择分支</value></data>
+  <data name="PR_SourceBranch" xml:space="preserve"><value>源分支</value></data>
+  <data name="PR_Split" xml:space="preserve"><value>分栏</value></data>
+  <data name="PR_SquashAndMerge" xml:space="preserve"><value>Squash 并合并</value></data>
+  <data name="PR_TargetBranch" xml:space="preserve"><value>目标分支</value></data>
+  <data name="PR_Title" xml:space="preserve"><value>Pull Requests</value></data>
+  <data name="PR_TitleLabel" xml:space="preserve"><value>标题</value></data>
+  <data name="PR_TitlePlaceholder" xml:space="preserve"><value>Pull request 标题</value></data>
+  <data name="PR_Unified" xml:space="preserve"><value>统一</value></data>
+  <data name="PR_ViewComparison" xml:space="preserve"><value>查看对比</value></data>
+
+  <!-- Compare -->
+  <data name="Compare_Base" xml:space="preserve"><value>基准</value></data>
+  <data name="Compare_BranchesIdentical" xml:space="preserve"><value>这些分支完全相同。</value></data>
+  <data name="Compare_ChooseBranches" xml:space="preserve"><value>选择分支</value></data>
+  <data name="Compare_Commits" xml:space="preserve"><value>Commits</value></data>
+  <data name="Compare_Compare" xml:space="preserve"><value>对比</value></data>
+  <data name="Compare_CompareButton" xml:space="preserve"><value>对比</value></data>
+  <data name="Compare_ComparingChanges" xml:space="preserve"><value>正在对比更改</value></data>
+  <data name="Compare_CreatePullRequest" xml:space="preserve"><value>创建 pull request</value></data>
+  <data name="Compare_FilesChanged" xml:space="preserve"><value>更改的文件</value></data>
+  <data name="Compare_Split" xml:space="preserve"><value>分栏</value></data>
+  <data name="Compare_Title" xml:space="preserve"><value>对比</value></data>
+  <data name="Compare_Unified" xml:space="preserve"><value>统一</value></data>
+
+  <!-- Actions -->
+  <data name="Actions_AddWebhook" xml:space="preserve"><value>添加 Webhook</value></data>
+  <data name="Actions_Artifacts" xml:space="preserve"><value>制品</value></data>
+  <data name="Actions_Back" xml:space="preserve"><value>返回</value></data>
+  <data name="Actions_BackToRuns" xml:space="preserve"><value>返回运行列表</value></data>
+  <data name="Actions_BackToWebhooks" xml:space="preserve"><value>返回 Webhooks</value></data>
+  <data name="Actions_Branch" xml:space="preserve"><value>分支</value></data>
+  <data name="Actions_BranchPlaceholder" xml:space="preserve"><value>分支名称</value></data>
+  <data name="Actions_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Actions_CommitMessage" xml:space="preserve"><value>Commit 消息</value></data>
+  <data name="Actions_CommitMessagePlaceholder" xml:space="preserve"><value>输入 commit 消息</value></data>
+  <data name="Actions_CommitSHA" xml:space="preserve"><value>Commit SHA</value></data>
+  <data name="Actions_CommitSHAPlaceholder" xml:space="preserve"><value>输入 commit SHA</value></data>
+  <data name="Actions_Create" xml:space="preserve"><value>创建</value></data>
+  <data name="Actions_CreateWorkflowRun" xml:space="preserve"><value>创建工作流运行</value></data>
+  <data name="Actions_Download" xml:space="preserve"><value>下载</value></data>
+  <data name="Actions_Events" xml:space="preserve"><value>事件</value></data>
+  <data name="Actions_NoDeliveries" xml:space="preserve"><value>暂无投递记录</value></data>
+  <data name="Actions_NoRunsYet" xml:space="preserve"><value>暂无运行记录</value></data>
+  <data name="Actions_NoWebhooks" xml:space="preserve"><value>暂无 Webhooks</value></data>
+  <data name="Actions_NoWebhooksDescription" xml:space="preserve"><value>尚未配置任何 Webhooks。</value></data>
+  <data name="Actions_PayloadURL" xml:space="preserve"><value>负载 URL</value></data>
+  <data name="Actions_RecentDeliveries" xml:space="preserve"><value>最近投递记录</value></data>
+  <data name="Actions_Repositories" xml:space="preserve"><value>仓库</value></data>
+  <data name="Actions_RequestPayload" xml:space="preserve"><value>请求负载</value></data>
+  <data name="Actions_Rerun" xml:space="preserve"><value>重新运行</value></data>
+  <data name="Actions_Response" xml:space="preserve"><value>响应</value></data>
+  <data name="Actions_Run" xml:space="preserve"><value>运行</value></data>
+  <data name="Actions_RunNotFound" xml:space="preserve"><value>运行未找到</value></data>
+  <data name="Actions_RunWorkflow" xml:space="preserve"><value>运行工作流</value></data>
+  <data name="Actions_SaveChanges" xml:space="preserve"><value>保存更改</value></data>
+  <data name="Actions_SelectWorkflow" xml:space="preserve"><value>选择工作流</value></data>
+  <data name="Actions_Title" xml:space="preserve"><value>Actions</value></data>
+  <data name="Actions_WebhookDetails" xml:space="preserve"><value>Webhook 详情</value></data>
+  <data name="Actions_Webhooks" xml:space="preserve"><value>Webhooks</value></data>
+  <data name="Actions_WorkflowName" xml:space="preserve"><value>工作流名称</value></data>
+  <data name="Actions_WorkflowNamePlaceholder" xml:space="preserve"><value>输入工作流名称</value></data>
+  <data name="Actions_WorkflowRuns" xml:space="preserve"><value>工作流运行</value></data>
+
+  <!-- Blame -->
+  <data name="Blame_BackToFile" xml:space="preserve"><value>返回文件</value></data>
+  <data name="Blame_FileNotFound" xml:space="preserve"><value>文件未找到</value></data>
+  <data name="Blame_Loading" xml:space="preserve"><value>加载中...</value></data>
+  <data name="Blame_Repository" xml:space="preserve"><value>仓库</value></data>
+  <data name="Blame_Title" xml:space="preserve"><value>Blame</value></data>
+  <data name="Blame_UnableToLoad" xml:space="preserve"><value>无法加载 blame 数据</value></data>
+
+  <!-- Discussions -->
+  <data name="Discussions_AcceptedAnswer" xml:space="preserve"><value>已采纳的回答</value></data>
+  <data name="Discussions_AddComment" xml:space="preserve"><value>添加评论</value></data>
+  <data name="Discussions_All" xml:space="preserve"><value>全部</value></data>
+  <data name="Discussions_Announcements" xml:space="preserve"><value>公告</value></data>
+  <data name="Discussions_Answered" xml:space="preserve"><value>已回答</value></data>
+  <data name="Discussions_BackToList" xml:space="preserve"><value>返回列表</value></data>
+  <data name="Discussions_Body" xml:space="preserve"><value>正文</value></data>
+  <data name="Discussions_BodyPlaceholder" xml:space="preserve"><value>撰写讨论正文...</value></data>
+  <data name="Discussions_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Discussions_Category" xml:space="preserve"><value>分类</value></data>
+  <data name="Discussions_Comment" xml:space="preserve"><value>评论</value></data>
+  <data name="Discussions_Delete" xml:space="preserve"><value>删除</value></data>
+  <data name="Discussions_Empty" xml:space="preserve"><value>暂无讨论</value></data>
+  <data name="Discussions_General" xml:space="preserve"><value>综合</value></data>
+  <data name="Discussions_Ideas" xml:space="preserve"><value>想法</value></data>
+  <data name="Discussions_LeaveComment" xml:space="preserve"><value>留下评论</value></data>
+  <data name="Discussions_Lock" xml:space="preserve"><value>锁定</value></data>
+  <data name="Discussions_Locked" xml:space="preserve"><value>已锁定</value></data>
+  <data name="Discussions_LockedMessage" xml:space="preserve"><value>此讨论已锁定。</value></data>
+  <data name="Discussions_MarkAsAnswer" xml:space="preserve"><value>标记为回答</value></data>
+  <data name="Discussions_NewDiscussion" xml:space="preserve"><value>新建讨论</value></data>
+  <data name="Discussions_Pin" xml:space="preserve"><value>置顶</value></data>
+  <data name="Discussions_Pinned" xml:space="preserve"><value>已置顶</value></data>
+  <data name="Discussions_Polls" xml:space="preserve"><value>投票</value></data>
+  <data name="Discussions_QAndA" xml:space="preserve"><value>问答</value></data>
+  <data name="Discussions_Reply" xml:space="preserve"><value>回复</value></data>
+  <data name="Discussions_ShowAndTell" xml:space="preserve"><value>展示与分享</value></data>
+  <data name="Discussions_StartDiscussion" xml:space="preserve"><value>发起讨论</value></data>
+  <data name="Discussions_Title" xml:space="preserve"><value>讨论</value></data>
+  <data name="Discussions_TitleLabel" xml:space="preserve"><value>标题</value></data>
+  <data name="Discussions_TitlePlaceholder" xml:space="preserve"><value>讨论标题</value></data>
+  <data name="Discussions_Unlock" xml:space="preserve"><value>解锁</value></data>
+  <data name="Discussions_Unmark" xml:space="preserve"><value>取消标记</value></data>
+  <data name="Discussions_Unpin" xml:space="preserve"><value>取消置顶</value></data>
+  <data name="Discussions_WriteReply" xml:space="preserve"><value>撰写回复...</value></data>
+
+  <!-- Insights -->
+  <data name="Insights_ActiveBranches" xml:space="preserve"><value>活跃分支</value></data>
+  <data name="Insights_Additions" xml:space="preserve"><value>新增</value></data>
+  <data name="Insights_Branches" xml:space="preserve"><value>分支</value></data>
+  <data name="Insights_CodeFrequency" xml:space="preserve"><value>代码频率</value></data>
+  <data name="Insights_CodeFrequencyDescription" xml:space="preserve"><value>随时间推移的新增和删除</value></data>
+  <data name="Insights_CommitActivity" xml:space="preserve"><value>Commit 活动</value></data>
+  <data name="Insights_Commits" xml:space="preserve"><value>Commits</value></data>
+  <data name="Insights_CommitsPerWeek" xml:space="preserve"><value>每周 commits</value></data>
+  <data name="Insights_Contributors" xml:space="preserve"><value>贡献者</value></data>
+  <data name="Insights_Deletions" xml:space="preserve"><value>删除</value></data>
+  <data name="Insights_LinesAdded" xml:space="preserve"><value>新增行数</value></data>
+  <data name="Insights_LinesDeleted" xml:space="preserve"><value>删除行数</value></data>
+  <data name="Insights_Network" xml:space="preserve"><value>网络</value></data>
+  <data name="Insights_NetworkDescription" xml:space="preserve"><value>Fork 和分支的网络图</value></data>
+  <data name="Insights_NetworkGraph" xml:space="preserve"><value>网络图</value></data>
+  <data name="Insights_NetworkInfo" xml:space="preserve"><value>网络信息</value></data>
+  <data name="Insights_NoCodeFrequency" xml:space="preserve"><value>暂无代码频率数据。</value></data>
+  <data name="Insights_NoCommitActivity" xml:space="preserve"><value>暂无 commit 活动数据。</value></data>
+  <data name="Insights_NoContributors" xml:space="preserve"><value>暂无贡献者数据。</value></data>
+  <data name="Insights_Repositories" xml:space="preserve"><value>仓库</value></data>
+  <data name="Insights_Title" xml:space="preserve"><value>洞察</value></data>
+  <data name="Insights_TotalCommits" xml:space="preserve"><value>总 commits</value></data>
+
+  <!-- Wiki -->
+  <data name="Wiki_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Wiki_CommitMessage" xml:space="preserve"><value>Commit 消息</value></data>
+  <data name="Wiki_CommitMessagePlaceholder" xml:space="preserve"><value>输入 commit 消息</value></data>
+  <data name="Wiki_ContentMarkdown" xml:space="preserve"><value>内容（Markdown）</value></data>
+  <data name="Wiki_CreateFirstPage" xml:space="preserve"><value>创建第一个页面</value></data>
+  <data name="Wiki_CreateFirstPrompt" xml:space="preserve"><value>从创建第一个 wiki 页面开始。</value></data>
+  <data name="Wiki_CreateNewPage" xml:space="preserve"><value>创建新页面</value></data>
+  <data name="Wiki_CreatePage" xml:space="preserve"><value>创建页面</value></data>
+  <data name="Wiki_Delete" xml:space="preserve"><value>删除</value></data>
+  <data name="Wiki_Edit" xml:space="preserve"><value>编辑</value></data>
+  <data name="Wiki_History" xml:space="preserve"><value>历史</value></data>
+  <data name="Wiki_NoPagesYet" xml:space="preserve"><value>暂无页面</value></data>
+  <data name="Wiki_PageNotFound" xml:space="preserve"><value>页面未找到</value></data>
+  <data name="Wiki_PageTitle" xml:space="preserve"><value>页面标题</value></data>
+  <data name="Wiki_PageTitlePlaceholder" xml:space="preserve"><value>输入页面标题</value></data>
+  <data name="Wiki_Pages" xml:space="preserve"><value>页面</value></data>
+  <data name="Wiki_RevisionHistory" xml:space="preserve"><value>修订历史</value></data>
+  <data name="Wiki_SaveChanges" xml:space="preserve"><value>保存更改</value></data>
+  <data name="Wiki_Title" xml:space="preserve"><value>Wiki</value></data>
+  <data name="Wiki_View" xml:space="preserve"><value>查看</value></data>
+  <data name="Wiki_ViewCurrentVersion" xml:space="preserve"><value>查看当前版本</value></data>
+  <data name="Wiki_Welcome" xml:space="preserve"><value>欢迎来到 wiki</value></data>
+
+  <!-- Projects -->
+  <data name="Projects_AddCard" xml:space="preserve"><value>添加卡片</value></data>
+  <data name="Projects_AddColumn" xml:space="preserve"><value>添加列</value></data>
+  <data name="Projects_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Projects_CardTitle" xml:space="preserve"><value>卡片标题</value></data>
+  <data name="Projects_CardTitlePlaceholder" xml:space="preserve"><value>输入卡片标题</value></data>
+  <data name="Projects_CardType" xml:space="preserve"><value>卡片类型</value></data>
+  <data name="Projects_CloseProject" xml:space="preserve"><value>关闭项目</value></data>
+  <data name="Projects_Closed" xml:space="preserve"><value>已关闭</value></data>
+  <data name="Projects_ClosedProjects" xml:space="preserve"><value>已关闭的项目</value></data>
+  <data name="Projects_Column" xml:space="preserve"><value>列</value></data>
+  <data name="Projects_ColumnName" xml:space="preserve"><value>列名称</value></data>
+  <data name="Projects_ColumnNamePlaceholder" xml:space="preserve"><value>输入列名称</value></data>
+  <data name="Projects_CreateFirstProject" xml:space="preserve"><value>创建第一个项目</value></data>
+  <data name="Projects_CreateNewProject" xml:space="preserve"><value>创建新项目</value></data>
+  <data name="Projects_CreateProject" xml:space="preserve"><value>创建项目</value></data>
+  <data name="Projects_Description" xml:space="preserve"><value>描述</value></data>
+  <data name="Projects_DescriptionPlaceholder" xml:space="preserve"><value>输入项目描述</value></data>
+  <data name="Projects_DropHere" xml:space="preserve"><value>拖放到此处</value></data>
+  <data name="Projects_IssueNumber" xml:space="preserve"><value>议题编号</value></data>
+  <data name="Projects_NewProject" xml:space="preserve"><value>新建项目</value></data>
+  <data name="Projects_NoProjectsDescription" xml:space="preserve"><value>项目帮助您组织和追踪工作。</value></data>
+  <data name="Projects_NoProjectsYet" xml:space="preserve"><value>暂无项目</value></data>
+  <data name="Projects_Note" xml:space="preserve"><value>备注</value></data>
+  <data name="Projects_NotePlaceholder" xml:space="preserve"><value>输入备注</value></data>
+  <data name="Projects_Open" xml:space="preserve"><value>打开</value></data>
+  <data name="Projects_Project" xml:space="preserve"><value>项目</value></data>
+  <data name="Projects_ProjectName" xml:space="preserve"><value>项目名称</value></data>
+  <data name="Projects_ProjectNamePlaceholder" xml:space="preserve"><value>输入项目名称</value></data>
+  <data name="Projects_ReopenProject" xml:space="preserve"><value>重新打开项目</value></data>
+  <data name="Projects_Repositories" xml:space="preserve"><value>仓库</value></data>
+  <data name="Projects_Title" xml:space="preserve"><value>项目</value></data>
+
+  <!-- Security -->
+  <data name="Security_Advisories" xml:space="preserve"><value>安全公告</value></data>
+  <data name="Security_AdvisoryDescription" xml:space="preserve"><value>公告描述</value></data>
+  <data name="Security_AdvisoryDescriptionPlaceholder" xml:space="preserve"><value>描述安全公告</value></data>
+  <data name="Security_AdvisoryTitle" xml:space="preserve"><value>公告标题</value></data>
+  <data name="Security_AdvisoryTitlePlaceholder" xml:space="preserve"><value>输入公告标题</value></data>
+  <data name="Security_AffectedVersions" xml:space="preserve"><value>受影响的版本</value></data>
+  <data name="Security_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Security_Close" xml:space="preserve"><value>关闭</value></data>
+  <data name="Security_Closed" xml:space="preserve"><value>已关闭</value></data>
+  <data name="Security_Create" xml:space="preserve"><value>创建</value></data>
+  <data name="Security_CreateAdvisory" xml:space="preserve"><value>创建公告</value></data>
+  <data name="Security_CreateSecurityAdvisory" xml:space="preserve"><value>创建安全公告</value></data>
+  <data name="Security_Critical" xml:space="preserve"><value>严重</value></data>
+  <data name="Security_Dependencies" xml:space="preserve"><value>依赖</value></data>
+  <data name="Security_Draft" xml:space="preserve"><value>草稿</value></data>
+  <data name="Security_High" xml:space="preserve"><value>高</value></data>
+  <data name="Security_Low" xml:space="preserve"><value>低</value></data>
+  <data name="Security_Medium" xml:space="preserve"><value>中</value></data>
+  <data name="Security_NoAdvisories" xml:space="preserve"><value>暂无公告</value></data>
+  <data name="Security_NoAdvisoriesDescription" xml:space="preserve"><value>尚未发布任何安全公告。</value></data>
+  <data name="Security_NoDependenciesDescription" xml:space="preserve"><value>暂无可用的依赖信息。</value></data>
+  <data name="Security_NoDependenciesScanned" xml:space="preserve"><value>未扫描依赖</value></data>
+  <data name="Security_NoKnownVulnerabilities" xml:space="preserve"><value>无已知漏洞</value></data>
+  <data name="Security_NoScansYet" xml:space="preserve"><value>暂无扫描记录</value></data>
+  <data name="Security_Overview" xml:space="preserve"><value>概览</value></data>
+  <data name="Security_Publish" xml:space="preserve"><value>发布</value></data>
+  <data name="Security_Published" xml:space="preserve"><value>已发布</value></data>
+  <data name="Security_Repositories" xml:space="preserve"><value>仓库</value></data>
+  <data name="Security_RunSecurityScan" xml:space="preserve"><value>运行安全扫描</value></data>
+  <data name="Security_SecurityAdvisories" xml:space="preserve"><value>安全公告</value></data>
+  <data name="Security_SecurityOverview" xml:space="preserve"><value>安全概览</value></data>
+  <data name="Security_Severity" xml:space="preserve"><value>严重程度</value></data>
+  <data name="Security_Title" xml:space="preserve"><value>安全</value></data>
+  <data name="Security_TotalVulnerabilities" xml:space="preserve"><value>漏洞总数</value></data>
+
+  <!-- Packages -->
+  <data name="Packages_All" xml:space="preserve"><value>全部</value></data>
+  <data name="Packages_Install" xml:space="preserve"><value>安装</value></data>
+  <data name="Packages_NoPackages" xml:space="preserve"><value>暂无软件包</value></data>
+  <data name="Packages_NoPackagesDescription" xml:space="preserve"><value>尚未发布任何软件包。</value></data>
+  <data name="Packages_SearchPlaceholder" xml:space="preserve"><value>搜索软件包...</value></data>
+  <data name="Packages_Title" xml:space="preserve"><value>软件包</value></data>
+  <data name="Packages_Versions" xml:space="preserve"><value>版本</value></data>
+
+  <!-- Snippets -->
+  <data name="Snippets_AddFile" xml:space="preserve"><value>添加文件</value></data>
+  <data name="Snippets_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Snippets_CreateSnippet" xml:space="preserve"><value>创建代码片段</value></data>
+  <data name="Snippets_Delete" xml:space="preserve"><value>删除</value></data>
+  <data name="Snippets_DescriptionPlaceholder" xml:space="preserve"><value>描述您的代码片段...</value></data>
+  <data name="Snippets_Edit" xml:space="preserve"><value>编辑</value></data>
+  <data name="Snippets_EditSnippet" xml:space="preserve"><value>编辑代码片段</value></data>
+  <data name="Snippets_Files" xml:space="preserve"><value>文件</value></data>
+  <data name="Snippets_FormDescription" xml:space="preserve"><value>描述</value></data>
+  <data name="Snippets_FormTitle" xml:space="preserve"><value>标题</value></data>
+  <data name="Snippets_NewSnippet" xml:space="preserve"><value>新建代码片段</value></data>
+  <data name="Snippets_NoSnippetsDescription" xml:space="preserve"><value>尚未创建任何代码片段。</value></data>
+  <data name="Snippets_NoSnippetsYet" xml:space="preserve"><value>暂无代码片段</value></data>
+  <data name="Snippets_Optional" xml:space="preserve"><value>（可选）</value></data>
+  <data name="Snippets_Private" xml:space="preserve"><value>私有</value></data>
+  <data name="Snippets_Public" xml:space="preserve"><value>公开</value></data>
+  <data name="Snippets_PublicSnippet" xml:space="preserve"><value>公开代码片段</value></data>
+  <data name="Snippets_Title" xml:space="preserve"><value>代码片段</value></data>
+  <data name="Snippets_TitlePlaceholder" xml:space="preserve"><value>输入代码片段标题</value></data>
+  <data name="Snippets_UpdateSnippet" xml:space="preserve"><value>更新代码片段</value></data>
+
+  <!-- Notifications -->
+  <data name="Notif_All" xml:space="preserve"><value>全部</value></data>
+  <data name="Notif_AuthRequired" xml:space="preserve"><value>需要身份验证</value></data>
+  <data name="Notif_AuthRequiredMessage" xml:space="preserve"><value>您必须登录才能查看通知。</value></data>
+  <data name="Notif_MarkAllRead" xml:space="preserve"><value>全部标记为已读</value></data>
+  <data name="Notif_New" xml:space="preserve"><value>新</value></data>
+  <data name="Notif_NoNotifications" xml:space="preserve"><value>暂无通知</value></data>
+  <data name="Notif_SignIn" xml:space="preserve"><value>登录</value></data>
+  <data name="Notif_Title" xml:space="preserve"><value>通知</value></data>
+  <data name="Notif_Unread" xml:space="preserve"><value>未读</value></data>
+
+  <!-- Import -->
+  <data name="Import_About" xml:space="preserve"><value>关于</value></data>
+  <data name="Import_AuthRequired" xml:space="preserve"><value>需要身份验证</value></data>
+  <data name="Import_AuthRequiredMessage" xml:space="preserve"><value>您必须登录才能导入仓库。</value></data>
+  <data name="Import_AuthToken" xml:space="preserve"><value>认证令牌</value></data>
+  <data name="Import_BeginImport" xml:space="preserve"><value>开始导入</value></data>
+  <data name="Import_FromExternalSource" xml:space="preserve"><value>从外部来源</value></data>
+  <data name="Import_History" xml:space="preserve"><value>历史</value></data>
+  <data name="Import_ImportIssues" xml:space="preserve"><value>导入议题</value></data>
+  <data name="Import_ImportPullRequests" xml:space="preserve"><value>导入 pull requests</value></data>
+  <data name="Import_MakePrivate" xml:space="preserve"><value>设为私有</value></data>
+  <data name="Import_Optional" xml:space="preserve"><value>（可选）</value></data>
+  <data name="Import_Options" xml:space="preserve"><value>选项</value></data>
+  <data name="Import_Progress" xml:space="preserve"><value>进度</value></data>
+  <data name="Import_Repository" xml:space="preserve"><value>仓库</value></data>
+  <data name="Import_RepositoryName" xml:space="preserve"><value>仓库名称</value></data>
+  <data name="Import_RepositoryUrl" xml:space="preserve"><value>仓库 URL</value></data>
+  <data name="Import_SignIn" xml:space="preserve"><value>登录</value></data>
+  <data name="Import_Source" xml:space="preserve"><value>来源</value></data>
+  <data name="Import_SourceType" xml:space="preserve"><value>来源类型</value></data>
+  <data name="Import_Started" xml:space="preserve"><value>已开始</value></data>
+  <data name="Import_StartingImport" xml:space="preserve"><value>正在开始导入...</value></data>
+  <data name="Import_Status" xml:space="preserve"><value>状态</value></data>
+  <data name="Import_Title" xml:space="preserve"><value>导入</value></data>
+
+  <!-- Profile -->
+  <data name="Profile_Activity" xml:space="preserve"><value>活动</value></data>
+  <data name="Profile_AllActivity" xml:space="preserve"><value>全部活动</value></data>
+  <data name="Profile_Commits" xml:space="preserve"><value>Commits</value></data>
+  <data name="Profile_EditProfile" xml:space="preserve"><value>编辑个人资料</value></data>
+  <data name="Profile_Issues" xml:space="preserve"><value>议题</value></data>
+  <data name="Profile_Less" xml:space="preserve"><value>少</value></data>
+  <data name="Profile_More" xml:space="preserve"><value>多</value></data>
+  <data name="Profile_NoActivity" xml:space="preserve"><value>暂无活动</value></data>
+  <data name="Profile_NoRecentActivity" xml:space="preserve"><value>暂无近期活动</value></data>
+  <data name="Profile_NoRepositories" xml:space="preserve"><value>暂无仓库</value></data>
+  <data name="Profile_Overview" xml:space="preserve"><value>概览</value></data>
+  <data name="Profile_PullRequests" xml:space="preserve"><value>Pull requests</value></data>
+  <data name="Profile_RecentActivity" xml:space="preserve"><value>近期活动</value></data>
+  <data name="Profile_Repositories" xml:space="preserve"><value>仓库</value></data>
+
+  <!-- Organizations -->
+  <data name="Org_Add" xml:space="preserve"><value>添加</value></data>
+  <data name="Org_AddMemberPlaceholder" xml:space="preserve"><value>添加成员...</value></data>
+  <data name="Org_AddRepoPlaceholder" xml:space="preserve"><value>添加仓库...</value></data>
+  <data name="Org_BackToOrganizations" xml:space="preserve"><value>返回组织列表</value></data>
+  <data name="Org_BackToTeams" xml:space="preserve"><value>返回团队列表</value></data>
+  <data name="Org_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Org_Create" xml:space="preserve"><value>创建</value></data>
+  <data name="Org_CreateOrganization" xml:space="preserve"><value>创建组织</value></data>
+  <data name="Org_CreateTeam" xml:space="preserve"><value>创建团队</value></data>
+  <data name="Org_DangerZone" xml:space="preserve"><value>危险区域</value></data>
+  <data name="Org_DeleteOrganization" xml:space="preserve"><value>删除组织</value></data>
+  <data name="Org_Description" xml:space="preserve"><value>描述</value></data>
+  <data name="Org_DisplayName" xml:space="preserve"><value>显示名称</value></data>
+  <data name="Org_DisplayNamePlaceholder" xml:space="preserve"><value>输入显示名称</value></data>
+  <data name="Org_Members" xml:space="preserve"><value>成员</value></data>
+  <data name="Org_Name" xml:space="preserve"><value>名称</value></data>
+  <data name="Org_NameHint" xml:space="preserve"><value>组织名称（用于 URL）</value></data>
+  <data name="Org_NewOrganization" xml:space="preserve"><value>新建组织</value></data>
+  <data name="Org_NewTeam" xml:space="preserve"><value>新建团队</value></data>
+  <data name="Org_NoOrganizations" xml:space="preserve"><value>暂无组织</value></data>
+  <data name="Org_NoTeams" xml:space="preserve"><value>暂无团队</value></data>
+  <data name="Org_NotFound" xml:space="preserve"><value>组织未找到</value></data>
+  <data name="Org_Permission" xml:space="preserve"><value>权限</value></data>
+  <data name="Org_SaveChanges" xml:space="preserve"><value>保存更改</value></data>
+  <data name="Org_Settings" xml:space="preserve"><value>设置</value></data>
+  <data name="Org_SettingsHeader" xml:space="preserve"><value>组织设置</value></data>
+  <data name="Org_TeamName" xml:space="preserve"><value>团队名称</value></data>
+  <data name="Org_Teams" xml:space="preserve"><value>团队</value></data>
+  <data name="Org_Title" xml:space="preserve"><value>组织</value></data>
+
+  <!-- Settings -->
+  <data name="Settings_AccessTokens" xml:space="preserve"><value>访问令牌</value></data>
+  <data name="Settings_AccountSecurity" xml:space="preserve"><value>账户安全</value></data>
+  <data name="Settings_AuthRequired" xml:space="preserve"><value>需要身份验证</value></data>
+  <data name="Settings_AuthRequiredMessage" xml:space="preserve"><value>您必须登录才能访问设置。</value></data>
+  <data name="Settings_AvatarUrl" xml:space="preserve"><value>头像 URL</value></data>
+  <data name="Settings_Bio" xml:space="preserve"><value>个人简介</value></data>
+  <data name="Settings_ChangePassword" xml:space="preserve"><value>更改密码</value></data>
+  <data name="Settings_Company" xml:space="preserve"><value>公司</value></data>
+  <data name="Settings_ConfirmNewPassword" xml:space="preserve"><value>确认新密码</value></data>
+  <data name="Settings_CurrentPassword" xml:space="preserve"><value>当前密码</value></data>
+  <data name="Settings_FullName" xml:space="preserve"><value>全名</value></data>
+  <data name="Settings_GPGKeys" xml:space="preserve"><value>GPG 密钥</value></data>
+  <data name="Settings_LinkedAccounts" xml:space="preserve"><value>关联账户</value></data>
+  <data name="Settings_Location" xml:space="preserve"><value>所在地</value></data>
+  <data name="Settings_MakeProfilePublic" xml:space="preserve"><value>公开个人资料</value></data>
+  <data name="Settings_NewPassword" xml:space="preserve"><value>新密码</value></data>
+  <data name="Settings_Notifications" xml:space="preserve"><value>通知</value></data>
+  <data name="Settings_Passkeys" xml:space="preserve"><value>通行密钥</value></data>
+  <data name="Settings_Profile" xml:space="preserve"><value>个人资料</value></data>
+  <data name="Settings_PublicProfile" xml:space="preserve"><value>公开个人资料</value></data>
+  <data name="Settings_SSHKeys" xml:space="preserve"><value>SSH 密钥</value></data>
+  <data name="Settings_SaveProfile" xml:space="preserve"><value>保存个人资料</value></data>
+  <data name="Settings_Sessions" xml:space="preserve"><value>会话</value></data>
+  <data name="Settings_SignIn" xml:space="preserve"><value>登录</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>设置</value></data>
+  <data name="Settings_TwitterUsername" xml:space="preserve"><value>Twitter 用户名</value></data>
+  <data name="Settings_TwoFactorAuth" xml:space="preserve"><value>双因素认证</value></data>
+  <data name="Settings_UpdatePassword" xml:space="preserve"><value>更新密码</value></data>
+  <data name="Settings_Website" xml:space="preserve"><value>网站</value></data>
+
+  <!-- Admin -->
+  <data name="Admin_AccessDenied" xml:space="preserve"><value>访问被拒绝</value></data>
+  <data name="Admin_AccessDeniedMessage" xml:space="preserve"><value>您没有访问管理面板的权限。</value></data>
+  <data name="Admin_Action" xml:space="preserve"><value>操作</value></data>
+  <data name="Admin_Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Admin_Active24h" xml:space="preserve"><value>活跃（24小时）</value></data>
+  <data name="Admin_AddNewUser" xml:space="preserve"><value>添加新用户</value></data>
+  <data name="Admin_AddSecret" xml:space="preserve"><value>添加密钥</value></data>
+  <data name="Admin_AddUser" xml:space="preserve"><value>添加用户</value></data>
+  <data name="Admin_AuditLogs" xml:space="preserve"><value>审计日志</value></data>
+  <data name="Admin_AuthRequired" xml:space="preserve"><value>需要身份验证</value></data>
+  <data name="Admin_AuthRequiredMessage" xml:space="preserve"><value>您必须登录才能访问管理面板。</value></data>
+  <data name="Admin_BackToHome" xml:space="preserve"><value>返回首页</value></data>
+  <data name="Admin_Backups" xml:space="preserve"><value>备份</value></data>
+  <data name="Admin_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Admin_Created" xml:space="preserve"><value>创建时间</value></data>
+  <data name="Admin_Database" xml:space="preserve"><value>数据库</value></data>
+  <data name="Admin_Details" xml:space="preserve"><value>详情</value></data>
+  <data name="Admin_DownloadBackup" xml:space="preserve"><value>下载备份</value></data>
+  <data name="Admin_Email" xml:space="preserve"><value>邮箱</value></data>
+  <data name="Admin_EmailNotifications" xml:space="preserve"><value>邮件通知</value></data>
+  <data name="Admin_FeatureToggles" xml:space="preserve"><value>功能开关</value></data>
+  <data name="Admin_GlobalSecrets" xml:space="preserve"><value>全局密钥</value></data>
+  <data name="Admin_IPAddress" xml:space="preserve"><value>IP 地址</value></data>
+  <data name="Admin_LDAPAuth" xml:space="preserve"><value>LDAP 认证</value></data>
+  <data name="Admin_MergeCommitSigning" xml:space="preserve"><value>Merge commit 签名</value></data>
+  <data name="Admin_NoRecentActivity" xml:space="preserve"><value>暂无近期活动</value></data>
+  <data name="Admin_OAuthSSO" xml:space="preserve"><value>OAuth SSO</value></data>
+  <data name="Admin_OAuthSSOProviders" xml:space="preserve"><value>OAuth SSO 提供商</value></data>
+  <data name="Admin_Overview" xml:space="preserve"><value>概览</value></data>
+  <data name="Admin_PushNotifications" xml:space="preserve"><value>推送通知</value></data>
+  <data name="Admin_RecentActivity" xml:space="preserve"><value>近期活动</value></data>
+  <data name="Admin_Repositories" xml:space="preserve"><value>仓库</value></data>
+  <data name="Admin_RestoreBackup" xml:space="preserve"><value>恢复备份</value></data>
+  <data name="Admin_Role" xml:space="preserve"><value>角色</value></data>
+  <data name="Admin_SSHServer" xml:space="preserve"><value>SSH 服务器</value></data>
+  <data name="Admin_SignIn" xml:space="preserve"><value>登录</value></data>
+  <data name="Admin_SiteBranding" xml:space="preserve"><value>站点品牌</value></data>
+  <data name="Admin_Status" xml:space="preserve"><value>状态</value></data>
+  <data name="Admin_StorageUsed" xml:space="preserve"><value>已用存储</value></data>
+  <data name="Admin_SystemInformation" xml:space="preserve"><value>系统信息</value></data>
+  <data name="Admin_SystemSettings" xml:space="preserve"><value>系统设置</value></data>
+  <data name="Admin_Timestamp" xml:space="preserve"><value>时间戳</value></data>
+  <data name="Admin_Title" xml:space="preserve"><value>管理</value></data>
+  <data name="Admin_TotalUsers" xml:space="preserve"><value>用户总数</value></data>
+  <data name="Admin_User" xml:space="preserve"><value>用户</value></data>
+  <data name="Admin_UserManagement" xml:space="preserve"><value>用户管理</value></data>
+  <data name="Admin_Username" xml:space="preserve"><value>用户名</value></data>
+
+  <!-- Error -->
+  <data name="Error_DevModeDescription" xml:space="preserve"><value>切换到开发环境将显示有关所发生错误的更详细信息。</value></data>
+  <data name="Error_DevModeTitle" xml:space="preserve"><value>开发模式</value></data>
+  <data name="Error_DevModeWarning" xml:space="preserve"><value>不应为已部署的应用程序启用开发环境。这可能会导致向最终用户显示异常中的敏感信息。对于本地调试，请将 ASPNETCORE_ENVIRONMENT 环境变量设置为 Development 并重新启动应用程序以启用开发环境。</value></data>
+  <data name="Error_Heading" xml:space="preserve"><value>错误。</value></data>
+  <data name="Error_RequestId" xml:space="preserve"><value>请求 ID：</value></data>
+  <data name="Error_Subheading" xml:space="preserve"><value>处理您的请求时发生错误。</value></data>
+  <data name="Error_Title" xml:space="preserve"><value>错误</value></data>
+
+  <!-- Not Found -->
+  <data name="NotFound_Message" xml:space="preserve"><value>抱歉，您查找的内容不存在。</value></data>
+  <data name="NotFound_Title" xml:space="preserve"><value>未找到</value></data>
+
+  <!-- Language names (for the language picker) -->
+  <data name="Language_en" xml:space="preserve"><value>English</value></data>
+  <data name="Language_es" xml:space="preserve"><value>Español</value></data>
+  <data name="Language_fr" xml:space="preserve"><value>Français</value></data>
+  <data name="Language_de" xml:space="preserve"><value>Deutsch</value></data>
+  <data name="Language_ja" xml:space="preserve"><value>日本語</value></data>
+  <data name="Language_zh" xml:space="preserve"><value>中文</value></data>
+  <data name="Language_pt" xml:space="preserve"><value>Português</value></data>
+  <data name="Language_ko" xml:space="preserve"><value>한국어</value></data>
+</root>
