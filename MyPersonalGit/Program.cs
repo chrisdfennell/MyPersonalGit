@@ -130,6 +130,10 @@ builder.Services.AddSingleton<ITagProtectionService, TagProtectionService>();
 builder.Services.AddSingleton<IAutoMergeService, AutoMergeService>();
 builder.Services.AddSingleton<ICodeSearchService, CodeSearchService>();
 builder.Services.AddSingleton<ITimeTrackingService, TimeTrackingService>();
+builder.Services.AddSingleton<IAGitFlowService, AGitFlowService>();
+builder.Services.AddSingleton<IWebAuthnService, WebAuthnService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.AddScoped<CurrentUserService>();
 
 var app = builder.Build();
@@ -212,6 +216,65 @@ using (var scope = app.Services.CreateScope())
     // From 20260318210000: Route-level scoped access tokens
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""PersonalAccessTokens"" ADD COLUMN ""AllowedRoutes"" TEXT NOT NULL DEFAULT '[]';"); } catch { }
 
+    // From 20260318220000: OAuth2 Provider, WebAuthn, SSPI, AGit Flow
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""OAuth2Apps"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""ClientId"" TEXT NOT NULL,
+            ""ClientSecret"" TEXT NOT NULL,
+            ""Name"" TEXT NOT NULL,
+            ""Description"" TEXT NULL,
+            ""RedirectUri"" TEXT NOT NULL,
+            ""Owner"" TEXT NOT NULL,
+            ""IsConfidential"" INTEGER NOT NULL DEFAULT 1,
+            ""CreatedAt"" TEXT NOT NULL,
+            ""UpdatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_OAuth2Apps_ClientId"" ON ""OAuth2Apps"" (""ClientId"");");
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""OAuth2AuthCodes"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""Code"" TEXT NOT NULL,
+            ""ClientId"" TEXT NOT NULL,
+            ""Username"" TEXT NOT NULL,
+            ""RedirectUri"" TEXT NOT NULL,
+            ""Scope"" TEXT NULL,
+            ""CodeChallenge"" TEXT NULL,
+            ""CodeChallengeMethod"" TEXT NULL,
+            ""ExpiresAt"" TEXT NOT NULL,
+            ""Used"" INTEGER NOT NULL DEFAULT 0,
+            ""CreatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_OAuth2AuthCodes_Code"" ON ""OAuth2AuthCodes"" (""Code"");");
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""OAuth2Tokens"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""AccessToken"" TEXT NOT NULL,
+            ""RefreshToken"" TEXT NULL,
+            ""ClientId"" TEXT NOT NULL,
+            ""Username"" TEXT NOT NULL,
+            ""Scope"" TEXT NULL,
+            ""ExpiresAt"" TEXT NOT NULL,
+            ""CreatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_OAuth2Tokens_AccessToken"" ON ""OAuth2Tokens"" (""AccessToken"");");
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""WebAuthnCredentials"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""Username"" TEXT NOT NULL,
+            ""Name"" TEXT NOT NULL,
+            ""CredentialId"" TEXT NOT NULL,
+            ""PublicKey"" TEXT NOT NULL,
+            ""SignCount"" INTEGER NOT NULL DEFAULT 0,
+            ""AaGuid"" TEXT NULL,
+            ""IsPlatform"" INTEGER NOT NULL DEFAULT 0,
+            ""CreatedAt"" TEXT NOT NULL,
+            ""LastUsedAt"" TEXT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_WebAuthnCredentials_Username_CredentialId"" ON ""WebAuthnCredentials"" (""Username"", ""CredentialId"");");
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""SspiEnabled"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""AGitFlowEnabled"" INTEGER NOT NULL DEFAULT 1;"); } catch { }
+
     if (!db.Users.Any())
     {
         db.Users.Add(new User
@@ -269,6 +332,16 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Localization — supported cultures for i18n
+var supportedCultures = new[] { "en", "es", "fr", "de", "ja", "zh", "pt", "ko" };
+app.UseRequestLocalization(options =>
+{
+    options.SetDefaultCulture("en");
+    options.AddSupportedCultures(supportedCultures);
+    options.AddSupportedUICultures(supportedCultures);
+    options.ApplyCurrentCultureToResponseHeaders = true;
+});
+
 // Use standard .NET 8 static file middleware
 app.UseStaticFiles();
 app.UseAntiforgery();
@@ -278,6 +351,9 @@ app.UsePages();
 
 // Rate limiting (before auth so rejected requests don't waste auth work)
 app.UseRateLimiter();
+
+// SSPI / Windows Integrated Authentication
+app.UseSspiAuth();
 
 // Container Registry authentication (OCI /v2/*)
 app.UseRegistryAuth();
