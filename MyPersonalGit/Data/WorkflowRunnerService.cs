@@ -490,6 +490,24 @@ public class WorkflowRunnerService : BackgroundService
                         if (cloneProc != null)
                             await cloneProc.WaitForExitAsync(ct);
 
+                        // Checkout the exact commit that triggered the workflow
+                        // (plain git clone only gets HEAD, which may be stale)
+                        if (Directory.Exists(tempClone) && !string.IsNullOrEmpty(run.CommitSha))
+                        {
+                            var checkoutProc = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = "git",
+                                Arguments = $"checkout {run.CommitSha}",
+                                WorkingDirectory = tempClone,
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true,
+                                UseShellExecute = false,
+                                CreateNoWindow = true
+                            });
+                            if (checkoutProc != null)
+                                await checkoutProc.WaitForExitAsync(ct);
+                        }
+
                         if (Directory.Exists(tempClone))
                         {
                             using var tarStream = new MemoryStream();
