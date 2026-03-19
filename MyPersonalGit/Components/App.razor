@@ -31,13 +31,22 @@
     <script>
         mermaid.initialize({ startOnLoad: false, theme: 'default' });
         window.renderMermaidAndMath = function() {
-            // Render Mermaid diagrams in <pre><code class="language-mermaid"> blocks
+            // Markdig outputs <pre class="mermaid"> for ```mermaid blocks
+            // Mermaid.js needs them as <div class="mermaid"> or just runs on .mermaid elements
+            // Also handle <pre><code class="language-mermaid"> from other renderers
             document.querySelectorAll('pre code.language-mermaid').forEach(function(el) {
                 var pre = el.parentElement;
                 var div = document.createElement('div');
                 div.className = 'mermaid';
                 div.textContent = el.textContent;
                 pre.replaceWith(div);
+            });
+            // Convert Markdig's <pre class="mermaid"> to <div class="mermaid"> for mermaid.run()
+            document.querySelectorAll('pre.mermaid').forEach(function(el) {
+                var div = document.createElement('div');
+                div.className = 'mermaid';
+                div.textContent = el.textContent;
+                el.replaceWith(div);
             });
             try { mermaid.run(); } catch(e) {}
             // Render KaTeX math: $...$ and $$...$$
