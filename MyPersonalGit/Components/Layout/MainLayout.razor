@@ -46,6 +46,21 @@
             </nav>
 
             <div class="ms-auto d-flex align-items-center gap-3">
+                <div class="dropdown">
+                    <button class="btn btn-link text-white text-opacity-75 p-0" type="button" data-bs-toggle="dropdown" title="Language">
+                        <i class="bi bi-translate"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" style="min-width: 140px;">
+                        @foreach (var (code, name) in supportedLanguages)
+                        {
+                            <li>
+                                <button class="dropdown-item small @(currentCulture == code ? "active" : "")" @onclick="() => SetLanguage(code)">
+                                    @name
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                </div>
                 <button class="btn btn-link text-white text-opacity-75 p-0" @onclick="ToggleTheme" title="Toggle dark mode">
                     <i class="bi @(currentTheme == "dark" ? "bi-sun-fill" : "bi-moon-fill")"></i>
                 </button>
@@ -306,6 +321,14 @@
 
 @code {
     private string currentTheme = "light";
+    private string currentCulture = "en";
+
+    private static readonly (string Code, string Name)[] supportedLanguages = new[]
+    {
+        ("en", "English"), ("es", "Español"), ("fr", "Français"), ("de", "Deutsch"),
+        ("ja", "日本語"), ("ko", "한국어"), ("zh", "中文"), ("pt", "Português"),
+        ("ru", "Русский"), ("it", "Italiano"), ("tr", "Türkçe")
+    };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -314,6 +337,7 @@
             try
             {
                 currentTheme = await JS.InvokeAsync<string>("themeHelper.init");
+                currentCulture = await JS.InvokeAsync<string>("eval", "document.cookie.match(/\\.AspNetCore\\.Culture=c%3D([^|&;]+)/)?.[1] || navigator.language?.substring(0,2) || 'en'") ?? "en";
                 var sessionId = await JS.InvokeAsync<string>("sessionHelper.get", "sessionId");
                 if (!string.IsNullOrEmpty(sessionId))
                 {
@@ -323,6 +347,13 @@
             }
             catch { }
         }
+    }
+
+    private async Task SetLanguage(string culture)
+    {
+        currentCulture = culture;
+        await JS.InvokeVoidAsync("eval", $"document.cookie = '.AspNetCore.Culture=c%3D{culture}|uic%3D{culture};path=/;max-age=31536000'");
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
     }
 
     private async Task ToggleTheme()
