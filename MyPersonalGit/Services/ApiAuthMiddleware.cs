@@ -92,6 +92,21 @@ public sealed class ApiAuthMiddleware
             return;
         }
 
+        // Enforce route-level restrictions if configured
+        var allowedRoutes = matchedToken.AllowedRoutes ?? Array.Empty<string>();
+        if (allowedRoutes.Length > 0)
+        {
+            var requestPath = context.Request.Path.Value ?? "/";
+            var routeAllowed = allowedRoutes.Any(pattern => MatchRoute(requestPath, pattern));
+            if (!routeAllowed)
+            {
+                context.Response.StatusCode = 403;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(new { error = "Token is not authorized for this route" }));
+                return;
+            }
+        }
+
         // Set the user identity from the token
         var claims = new List<Claim>
         {
@@ -133,6 +148,40 @@ public sealed class ApiAuthMiddleware
         }
 
         await _next(context);
+    }
+
+    /// <summary>
+    /// Match a request path against a glob-style route pattern.
+    /// Supports ** (any path segments) and * (single segment).
+    /// </summary>
+    private static bool MatchRoute(string path, string pattern)
+    {
+        // Exact match
+        if (path.Equals(pattern, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Prefix match with ** wildcard (e.g. "/api/packages/**" matches "/api/packages/pypi/upload")
+        if (pattern.EndsWith("/**"))
+        {
+            var prefix = pattern[..^3]; // remove /**
+            return path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Prefix match with trailing * (e.g. "/api/packages/*")
+        if (pattern.EndsWith("/*"))
+        {
+            var prefix = pattern[..^2]; // remove /*
+            if (!path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                return false;
+            var remainder = path[prefix.Length..].TrimStart('/');
+            return !remainder.Contains('/'); // single segment only
+        }
+
+        // StartsWith for patterns without wildcards but with trailing /
+        if (pattern.EndsWith("/"))
+            return path.StartsWith(pattern, StringComparison.OrdinalIgnoreCase);
+
+        return false;
     }
 }
 

@@ -389,6 +389,12 @@ else
                                                 <h6 class="mb-1">@token.Name</h6>
                                                 <p class="mb-1">
                                                     <span class="badge bg-secondary">@string.Join(", ", token.Scopes)</span>
+                                                    @if (token.AllowedRoutes?.Length > 0)
+                                                    {
+                                                        <span class="badge bg-info ms-1" title="@string.Join(", ", token.AllowedRoutes)">
+                                                            <i class="bi bi-shield-lock"></i> @token.AllowedRoutes.Length route(s)
+                                                        </span>
+                                                    }
                                                 </p>
                                                 <small class="text-muted">
                                                     Created @token.CreatedAt.ToString("MMM d, yyyy")
@@ -643,6 +649,15 @@ else
                         <label class="form-label">Expiration (days)</label>
                         <input type="number" class="form-control" @bind="TokenExpirationDays" placeholder="30" />
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Route Restrictions <span class="badge bg-secondary">Optional</span></label>
+                        <textarea class="form-control font-monospace" rows="3" @bind="TokenAllowedRoutes"
+                                  placeholder="/api/packages/**&#10;/api/v1/repos/MyRepo/**"></textarea>
+                        <div class="form-text">
+                            One glob pattern per line. If empty, the token can access all routes matching its scopes.
+                            Use <code>**</code> to match any sub-path (e.g. <code>/api/packages/**</code>).
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick='() => ShowAddToken = false'>Cancel</button>
@@ -730,6 +745,7 @@ else
     private bool TokenScopeUser = false;
     private bool TokenScopeAdmin = false;
     private int TokenExpirationDays = 30;
+    private string TokenAllowedRoutes = "";
 
     // Linked accounts
     private List<ExternalLogin> externalLogins = new();
@@ -943,13 +959,19 @@ else
         if (TokenScopeUser) scopes.Add("user");
         if (TokenScopeAdmin) scopes.Add("admin");
 
+        var allowedRoutes = TokenAllowedRoutes
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(r => !string.IsNullOrWhiteSpace(r))
+            .ToArray();
+
         DateTime? expiresAt = TokenExpirationDays > 0 ? DateTime.UtcNow.AddDays(TokenExpirationDays) : null;
-        lastGeneratedToken = await ProfileService.CreateTokenAsync(UserService.Username, NewTokenName, scopes.ToArray(), expiresAt);
+        lastGeneratedToken = await ProfileService.CreateTokenAsync(UserService.Username, NewTokenName, scopes.ToArray(), expiresAt, allowedRoutes);
         ShowAddToken = false;
         NewTokenName = "";
         TokenScopeRepo = false;
         TokenScopeUser = false;
         TokenScopeAdmin = false;
+        TokenAllowedRoutes = "";
         await LoadData();
     }
 
