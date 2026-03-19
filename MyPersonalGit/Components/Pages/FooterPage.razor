@@ -4,9 +4,12 @@
 @page "/contact"
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject IAdminService AdminService
 @inject IMarkdownService MarkdownService
 @inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
 <PageTitle>@pageTitle - MyPersonalGit</PageTitle>
@@ -53,11 +56,11 @@
 
         var (title, markdown) = path switch
         {
-            "terms" => ("Terms of Service", settings.FooterTerms),
-            "privacy" => ("Privacy Policy", settings.FooterPrivacy),
-            "docs" => ("Documentation", settings.FooterDocs),
-            "contact" => ("Contact", settings.FooterContact),
-            _ => ("Page", "Page not found.")
+            "terms" => ((string)L["Footer_TermsOfService"], settings.FooterTerms),
+            "privacy" => ((string)L["Footer_PrivacyPolicy"], settings.FooterPrivacy),
+            "docs" => ((string)L["Footer_Documentation"], settings.FooterDocs),
+            "contact" => ((string)L["Footer_Contact"], settings.FooterContact),
+            _ => ((string)L["Footer_Page"], (string?)L["Footer_PageNotFound"])
         };
 
         pageTitle = title;

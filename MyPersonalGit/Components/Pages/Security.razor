@@ -2,10 +2,13 @@
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject ISecurityService SecurityService
 @inject IConfiguration Config
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
 <PageTitle>Security - @RepoName</PageTitle>
@@ -15,29 +18,29 @@
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/">Repositories</a></li>
+                    <li class="breadcrumb-item"><a href="/">@L["Security_Repositories"]</a></li>
                     <li class="breadcrumb-item"><a href="/repo/@RepoName">@RepoName</a></li>
-                    <li class="breadcrumb-item active">Security</li>
+                    <li class="breadcrumb-item active">@L["Security_Title"]</li>
                 </ol>
             </nav>
-            <h2 class="mt-2">Security</h2>
+            <h2 class="mt-2">@L["Security_Title"]</h2>
         </div>
     </div>
 
     <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
             <button class="nav-link @(ActiveTab == "overview" ? "active" : "")" @onclick='() => ActiveTab = "overview"'>
-                <i class="bi bi-shield-check me-1"></i> Overview
+                <i class="bi bi-shield-check me-1"></i> @L["Security_Overview"]
             </button>
         </li>
         <li class="nav-item">
             <button class="nav-link @(ActiveTab == "advisories" ? "active" : "")" @onclick='() => ActiveTab = "advisories"'>
-                <i class="bi bi-exclamation-triangle me-1"></i> Advisories
+                <i class="bi bi-exclamation-triangle me-1"></i> @L["Security_Advisories"]
             </button>
         </li>
         <li class="nav-item">
             <button class="nav-link @(ActiveTab == "dependencies" ? "active" : "")" @onclick='() => ActiveTab = "dependencies"'>
-                <i class="bi bi-box-seam me-1"></i> Dependencies
+                <i class="bi bi-box-seam me-1"></i> @L["Security_Dependencies"]
             </button>
         </li>
     </ul>
@@ -49,41 +52,41 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">
-                            <i class="bi bi-shield-check me-2"></i>Security Overview
+                            <i class="bi bi-shield-check me-2"></i>@L["Security_SecurityOverview"]
                         </h5>
                         @if (LatestScan != null)
                         {
                             <div class="mt-3">
                                 <p class="text-muted mb-2">Last scanned: @FormatDate(LatestScan.ScannedAt)</p>
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span>Total Vulnerabilities</span>
+                                    <span>@L["Security_TotalVulnerabilities"]</span>
                                     <span class="badge bg-secondary">@LatestScan.VulnerabilitiesFound</span>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span>Critical</span>
+                                    <span>@L["Security_Critical"]</span>
                                     <span class="badge bg-danger">@LatestScan.CriticalCount</span>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span>High</span>
+                                    <span>@L["Security_High"]</span>
                                     <span class="badge bg-warning">@LatestScan.HighCount</span>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span>Medium</span>
+                                    <span>@L["Security_Medium"]</span>
                                     <span class="badge bg-info">@LatestScan.MediumCount</span>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <span>Low</span>
+                                    <span>@L["Security_Low"]</span>
                                     <span class="badge bg-secondary">@LatestScan.LowCount</span>
                                 </div>
                             </div>
                         }
                         else
                         {
-                            <p class="text-muted mt-3">No security scans performed yet</p>
+                            <p class="text-muted mt-3">@L["Security_NoScansYet"]</p>
                         }
                         <button class="btn btn-primary mt-3 w-100" @onclick="RunSecurityScan" disabled="@isScanning">
                             @if (isScanning) { <span class="spinner-border spinner-border-sm me-2"></span> <text>Scanning...</text> }
-                            else { <i class="bi bi-shield-check me-2"></i> <text>Run Security Scan</text> }
+                            else { <i class="bi bi-shield-check me-2"></i> <text>@L["Security_RunSecurityScan"]</text> }
                         </button>
                         @if (!string.IsNullOrEmpty(scanError)) { <div class="alert alert-danger mt-2 small">@scanError</div> }
                     </div>
@@ -94,24 +97,24 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">
-                            <i class="bi bi-exclamation-triangle me-2"></i>Security Advisories
+                            <i class="bi bi-exclamation-triangle me-2"></i>@L["Security_SecurityAdvisories"]
                         </h5>
                         <div class="mt-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Published</span>
+                                <span>@L["Security_Published"]</span>
                                 <span class="badge bg-danger">@Advisories.Count(a => a.State == SecurityAdvisoryState.Published)</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Draft</span>
+                                <span>@L["Security_Draft"]</span>
                                 <span class="badge bg-secondary">@Advisories.Count(a => a.State == SecurityAdvisoryState.Draft)</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
-                                <span>Closed</span>
+                                <span>@L["Security_Closed"]</span>
                                 <span class="badge bg-success">@Advisories.Count(a => a.State == SecurityAdvisoryState.Closed)</span>
                             </div>
                         </div>
                         <button class="btn btn-primary mt-3 w-100" @onclick="ShowCreateAdvisoryModal">
-                            <i class="bi bi-plus-circle me-2"></i>Create Advisory
+                            <i class="bi bi-plus-circle me-2"></i>@L["Security_CreateAdvisory"]
                         </button>
                     </div>
                 </div>
@@ -122,7 +125,7 @@
     {
         <div class="d-flex justify-content-end mb-3">
             <button class="btn btn-primary" @onclick="ShowCreateAdvisoryModal">
-                <i class="bi bi-plus-circle me-2"></i>Create Advisory
+                <i class="bi bi-plus-circle me-2"></i>@L["Security_CreateAdvisory"]
             </button>
         </div>
 
@@ -131,8 +134,8 @@
             <div class="card">
                 <div class="card-body text-center py-5">
                     <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #6c757d;"></i>
-                    <h3 class="mt-3">No security advisories</h3>
-                    <p class="text-muted">Create security advisories to inform users about vulnerabilities</p>
+                    <h3 class="mt-3">@L["Security_NoAdvisories"]</h3>
+                    <p class="text-muted">@L["Security_NoAdvisoriesDescription"]</p>
                 </div>
             </div>
         }
@@ -167,13 +170,13 @@
                                 @if (advisory.State == SecurityAdvisoryState.Draft)
                                 {
                                     <button class="btn btn-sm btn-outline-primary" @onclick="() => PublishAdvisory(advisory.Id)">
-                                        <i class="bi bi-send"></i> Publish
+                                        <i class="bi bi-send"></i> @L["Security_Publish"]
                                     </button>
                                 }
                                 @if (advisory.State == SecurityAdvisoryState.Published)
                                 {
                                     <button class="btn btn-sm btn-outline-success" @onclick="() => CloseAdvisory(advisory.Id)">
-                                        <i class="bi bi-check-circle"></i> Close
+                                        <i class="bi bi-check-circle"></i> @L["Security_Close"]
                                     </button>
                                 }
                             </div>
@@ -190,11 +193,11 @@
             <div class="card">
                 <div class="card-body text-center py-5">
                     <i class="bi bi-box-seam" style="font-size: 4rem; color: #6c757d;"></i>
-                    <h3 class="mt-3">No dependencies scanned</h3>
-                    <p class="text-muted">Run a security scan to view dependency information</p>
+                    <h3 class="mt-3">@L["Security_NoDependenciesScanned"]</h3>
+                    <p class="text-muted">@L["Security_NoDependenciesDescription"]</p>
                     <button class="btn btn-primary" @onclick="RunSecurityScan" disabled="@isScanning">
                         @if (isScanning) { <span class="spinner-border spinner-border-sm me-2"></span> <text>Scanning...</text> }
-                        else { <i class="bi bi-shield-check me-2"></i> <text>Run Security Scan</text> }
+                        else { <i class="bi bi-shield-check me-2"></i> <text>@L["Security_RunSecurityScan"]</text> }
                     </button>
                 </div>
             </div>
@@ -239,7 +242,7 @@
                                 else
                                 {
                                     <div class="mt-2">
-                                        <span class="badge bg-success">No known vulnerabilities</span>
+                                        <span class="badge bg-success">@L["Security_NoKnownVulnerabilities"]</span>
                                     </div>
                                 }
                             </div>
@@ -257,20 +260,20 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Create Security Advisory</h5>
+                    <h5 class="modal-title">@L["Security_CreateSecurityAdvisory"]</h5>
                     <button type="button" class="btn-close" @onclick="() => ShowAdvisoryModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Title</label>
-                        <input type="text" class="form-control" @bind="NewAdvisoryTitle" placeholder="Brief description of the vulnerability" />
+                        <label class="form-label">@L["Security_AdvisoryTitle"]</label>
+                        <input type="text" class="form-control" @bind="NewAdvisoryTitle" placeholder="@L["Security_AdvisoryTitlePlaceholder"]" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" rows="3" @bind="NewAdvisoryDescription" placeholder="Detailed description"></textarea>
+                        <label class="form-label">@L["Security_AdvisoryDescription"]</label>
+                        <textarea class="form-control" rows="3" @bind="NewAdvisoryDescription" placeholder="@L["Security_AdvisoryDescriptionPlaceholder"]"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Severity</label>
+                        <label class="form-label">@L["Security_Severity"]</label>
                         <select class="form-select" @bind="NewAdvisorySeverity">
                             <option value="@SecuritySeverity.Low">Low</option>
                             <option value="@SecuritySeverity.Medium">Medium</option>
@@ -279,13 +282,13 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Affected Versions</label>
+                        <label class="form-label">@L["Security_AffectedVersions"]</label>
                         <input type="text" class="form-control" @bind="NewAdvisoryAffectedVersions" placeholder="e.g., < 1.2.3" />
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="() => ShowAdvisoryModal = false">Cancel</button>
-                    <button type="button" class="btn btn-primary" @onclick="CreateAdvisory">Create</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => ShowAdvisoryModal = false">@L["Security_Cancel"]</button>
+                    <button type="button" class="btn btn-primary" @onclick="CreateAdvisory">@L["Security_Create"]</button>
                 </div>
             </div>
         </div>

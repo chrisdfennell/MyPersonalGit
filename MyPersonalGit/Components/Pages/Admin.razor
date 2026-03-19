@@ -2,6 +2,8 @@
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject IAdminService AdminService
 @inject IEmailService EmailService
 @inject ISecretsService SecretsService
@@ -11,26 +13,27 @@
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>Admin Dashboard - MyPersonalGit</PageTitle>
+<PageTitle>@L["Admin_Title"] - MyPersonalGit</PageTitle>
 
 @if (!UserService.IsLoggedIn)
 {
     <div class="container py-5 text-center">
         <i class="bi bi-shield-lock" style="font-size: 4rem; color: #6c757d;"></i>
-        <h3 class="mt-3">Authentication Required</h3>
-        <p class="text-muted">Please sign in to access this page.</p>
-        <a href="/login" class="btn btn-primary">Sign in</a>
+        <h3 class="mt-3">@L["Admin_AuthRequired"]</h3>
+        <p class="text-muted">@L["Admin_AuthRequiredMessage"]</p>
+        <a href="/login" class="btn btn-primary">@L["Admin_SignIn"]</a>
     </div>
 }
 else if (!UserService.IsAdmin)
 {
     <div class="container py-5 text-center">
         <i class="bi bi-shield-exclamation" style="font-size: 4rem; color: #dc3545;"></i>
-        <h3 class="mt-3">Access Denied</h3>
-        <p class="text-muted">You do not have administrator privileges.</p>
-        <a href="/" class="btn btn-primary">Back to Home</a>
+        <h3 class="mt-3">@L["Admin_AccessDenied"]</h3>
+        <p class="text-muted">@L["Admin_AccessDeniedMessage"]</p>
+        <a href="/" class="btn btn-primary">@L["Admin_BackToHome"]</a>
     </div>
 }
 else
@@ -38,44 +41,44 @@ else
 <div class="container-fluid mt-4">
     <div class="row mb-4">
         <div class="col-12">
-            <h2><i class="bi bi-shield-lock"></i> Admin Dashboard</h2>
+            <h2><i class="bi bi-shield-lock"></i> @L["Admin_Title"]</h2>
         </div>
     </div>
 
     <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
             <a class="nav-link @(ActiveTab == "overview" ? "active" : "")" @onclick='() => ActiveTab = "overview"' style="cursor: pointer;">
-                <i class="bi bi-speedometer2"></i> Overview
+                <i class="bi bi-speedometer2"></i> @L["Admin_Overview"]
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link @(ActiveTab == "settings" ? "active" : "")" @onclick='() => ActiveTab = "settings"' style="cursor: pointer;">
-                <i class="bi bi-gear"></i> System Settings
+                <i class="bi bi-gear"></i> @L["Admin_SystemSettings"]
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link @(ActiveTab == "users" ? "active" : "")" @onclick='() => ActiveTab = "users"' style="cursor: pointer;">
-                <i class="bi bi-people"></i> User Management
+                <i class="bi bi-people"></i> @L["Admin_UserManagement"]
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link @(ActiveTab == "audit" ? "active" : "")" @onclick='() => ActiveTab = "audit"' style="cursor: pointer;">
-                <i class="bi bi-journal-text"></i> Audit Logs
+                <i class="bi bi-journal-text"></i> @L["Admin_AuditLogs"]
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link @(ActiveTab == "secrets" ? "active" : "")" @onclick='() => ActiveTab = "secrets"' style="cursor: pointer;">
-                <i class="bi bi-key"></i> Global Secrets
+                <i class="bi bi-key"></i> @L["Admin_GlobalSecrets"]
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link @(ActiveTab == "backups" ? "active" : "")" @onclick='() => ActiveTab = "backups"' style="cursor: pointer;">
-                <i class="bi bi-cloud-download"></i> Backups
+                <i class="bi bi-cloud-download"></i> @L["Admin_Backups"]
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link @(ActiveTab == "oauth" ? "active" : "")" @onclick='() => ActiveTab = "oauth"' style="cursor: pointer;">
-                <i class="bi bi-shield-check"></i> OAuth / SSO
+                <i class="bi bi-shield-check"></i> @L["Admin_OAuthSSO"]
             </a>
         </li>
     </ul>
@@ -86,7 +89,7 @@ else
             <div class="col-md-3 mb-4">
                 <div class="card text-white bg-primary">
                     <div class="card-body">
-                        <h5 class="card-title"><i class="bi bi-people"></i> Total Users</h5>
+                        <h5 class="card-title"><i class="bi bi-people"></i> @L["Admin_TotalUsers"]</h5>
                         <h2 class="mb-0">@Statistics.TotalUsers</h2>
                     </div>
                 </div>
@@ -94,7 +97,7 @@ else
             <div class="col-md-3 mb-4">
                 <div class="card text-white bg-success">
                     <div class="card-body">
-                        <h5 class="card-title"><i class="bi bi-folder"></i> Repositories</h5>
+                        <h5 class="card-title"><i class="bi bi-folder"></i> @L["Admin_Repositories"]</h5>
                         <h2 class="mb-0">@Statistics.TotalRepositories</h2>
                     </div>
                 </div>
@@ -102,7 +105,7 @@ else
             <div class="col-md-3 mb-4">
                 <div class="card text-white bg-info">
                     <div class="card-body">
-                        <h5 class="card-title"><i class="bi bi-hdd"></i> Storage Used</h5>
+                        <h5 class="card-title"><i class="bi bi-hdd"></i> @L["Admin_StorageUsed"]</h5>
                         <h2 class="mb-0">@FormatBytes(Statistics.TotalStorageUsed)</h2>
                     </div>
                 </div>
@@ -110,7 +113,7 @@ else
             <div class="col-md-3 mb-4">
                 <div class="card text-white bg-warning">
                     <div class="card-body">
-                        <h5 class="card-title"><i class="bi bi-activity"></i> Active (24h)</h5>
+                        <h5 class="card-title"><i class="bi bi-activity"></i> @L["Admin_Active24h"]</h5>
                         <h2 class="mb-0">@Statistics.ActiveUsers24h</h2>
                     </div>
                 </div>
@@ -121,7 +124,7 @@ else
             <div class="col-md-6 mb-4">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">System Information</h5>
+                        <h5 class="mb-0">@L["Admin_SystemInformation"]</h5>
                     </div>
                     <div class="card-body">
                         <table class="table table-sm">
@@ -154,12 +157,12 @@ else
             <div class="col-md-6 mb-4">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Recent Activity</h5>
+                        <h5 class="mb-0">@L["Admin_RecentActivity"]</h5>
                     </div>
                     <div class="card-body">
                         @if (AuditLogs.Count == 0)
                         {
-                            <p class="text-muted">No recent activity</p>
+                            <p class="text-muted">@L["Admin_NoRecentActivity"]</p>
                         }
                         else
                         {
@@ -187,10 +190,10 @@ else
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">System Settings</h5>
+                        <h5 class="mb-0">@L["Admin_SystemSettings"]</h5>
                     </div>
                     <div class="card-body">
-                        <h6 class="mb-3">Database</h6>
+                        <h6 class="mb-3">@L["Admin_Database"]</h6>
                         <div class="card mb-4 @(DbConfig.Provider != "sqlite" ? "border-primary" : "")">
                             <div class="card-body">
                                 <div class="d-flex align-items-center mb-2">
@@ -277,7 +280,7 @@ else
                                 <small class="form-text text-muted">Current: @FormatBytes(Settings.MaxRepositorySize)</small>
                             </div>
 
-                            <h6 class="mt-4 mb-3">Feature Toggles</h6>
+                            <h6 class="mt-4 mb-3">@L["Admin_FeatureToggles"]</h6>
 
                             <div class="mb-3">
                                 <div class="form-check">
@@ -315,7 +318,7 @@ else
                                 </div>
                             </div>
 
-                            <h6 class="mt-4 mb-3">Email Notifications (SMTP)</h6>
+                            <h6 class="mt-4 mb-3">@L["Admin_EmailNotifications"]</h6>
 
                             <div class="mb-3">
                                 <div class="form-check">
@@ -383,7 +386,7 @@ else
                                 }
                             </div>
 
-                            <h6 class="mt-4 mb-3">Push Notifications (ntfy / Gotify)</h6>
+                            <h6 class="mt-4 mb-3">@L["Admin_PushNotifications"]</h6>
 
                             <div class="mb-3">
                                 <div class="form-check">
@@ -419,7 +422,7 @@ else
                                 <InputText type="password" class="form-control" @bind-Value="Settings.GotifyAppToken" />
                             </div>
 
-                            <h6 class="mt-4 mb-3">Site Branding & Footer Pages</h6>
+                            <h6 class="mt-4 mb-3">@L["Admin_SiteBranding"]</h6>
                             <p class="text-muted small">Customize the site name and footer page content. Uses Markdown.</p>
 
                             <div class="mb-3">
@@ -447,7 +450,7 @@ else
                                 <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterContact" rows="4" />
                             </div>
 
-                            <h6 class="mt-4 mb-3">Built-in SSH Server</h6>
+                            <h6 class="mt-4 mb-3">@L["Admin_SSHServer"]</h6>
                             <p class="text-muted small">Run a native SSH server for Git operations without requiring system OpenSSH. Users can clone/push via <code>git clone ssh://user@host:port/repo.git</code></p>
 
                             <div class="mb-3">
@@ -465,7 +468,7 @@ else
                                 <small class="form-text text-muted">Default: 2222. Use 22 if not running system SSH. Requires restart.</small>
                             </div>
 
-                            <h6 class="mt-4 mb-3">Merge Commit Signing</h6>
+                            <h6 class="mt-4 mb-3">@L["Admin_MergeCommitSigning"]</h6>
                             <p class="text-muted small">GPG-sign merge, squash, and rebase commits created through the web UI. The GPG key must be imported into the server's keyring (<code>gpg --import</code>).</p>
 
                             <div class="mb-3">
@@ -483,7 +486,7 @@ else
                                 <small class="form-text text-muted">The long or short key ID of the GPG key to use for signing</small>
                             </div>
 
-                            <h6 class="mt-4 mb-3">LDAP / Active Directory Authentication</h6>
+                            <h6 class="mt-4 mb-3">@L["Admin_LDAPAuth"]</h6>
                             <p class="text-muted small">Enable LDAP/AD authentication to let users sign in with their domain credentials. Users are auto-provisioned on first login.</p>
 
                             <div class="mb-3">
@@ -610,22 +613,22 @@ else
             <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">User Management</h5>
+                        <h5 class="mb-0">@L["Admin_UserManagement"]</h5>
                         <button class="btn btn-primary btn-sm" @onclick="ShowAddUserModal">
-                            <i class="bi bi-plus"></i> Add User
+                            <i class="bi bi-plus"></i> @L["Admin_AddUser"]
                         </button>
                     </div>
                     <div class="card-body">
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th>Created</th>
-                                    <th>Repositories</th>
-                                    <th>Actions</th>
+                                    <th>@L["Admin_Username"]</th>
+                                    <th>@L["Admin_Email"]</th>
+                                    <th>@L["Admin_Role"]</th>
+                                    <th>@L["Admin_Status"]</th>
+                                    <th>@L["Admin_Created"]</th>
+                                    <th>@L["Admin_Repositories"]</th>
+                                    <th>@L["Admin_Actions"]</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -679,17 +682,17 @@ else
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Audit Logs</h5>
+                        <h5 class="mb-0">@L["Admin_AuditLogs"]</h5>
                     </div>
                     <div class="card-body">
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Timestamp</th>
-                                    <th>User</th>
-                                    <th>Action</th>
-                                    <th>Details</th>
-                                    <th>IP Address</th>
+                                    <th>@L["Admin_Timestamp"]</th>
+                                    <th>@L["Admin_User"]</th>
+                                    <th>@L["Admin_Action"]</th>
+                                    <th>@L["Admin_Details"]</th>
+                                    <th>@L["Admin_IPAddress"]</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -716,9 +719,9 @@ else
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="bi bi-key"></i> Global Secrets</h5>
+                        <h5 class="mb-0"><i class="bi bi-key"></i> @L["Admin_GlobalSecrets"]</h5>
                         <button class="btn btn-sm btn-primary" @onclick="() => showAddGlobalSecret = true">
-                            <i class="bi bi-plus-circle me-1"></i> Add secret
+                            <i class="bi bi-plus-circle me-1"></i> @L["Admin_AddSecret"]
                         </button>
                     </div>
                     <div class="card-body">
@@ -787,7 +790,7 @@ else
             <div class="col-md-8">
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-cloud-download"></i> Download Backup</h5>
+                        <h5 class="mb-0"><i class="bi bi-cloud-download"></i> @L["Admin_DownloadBackup"]</h5>
                     </div>
                     <div class="card-body">
                         <p>Download a complete backup of all repositories and the database as a <code>.tar.gz</code> archive.</p>
@@ -800,14 +803,14 @@ else
                             {
                                 <span class="spinner-border spinner-border-sm me-1"></span>
                             }
-                            <i class="bi bi-download"></i> Download Backup
+                            <i class="bi bi-download"></i> @L["Admin_DownloadBackup"]
                         </button>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-cloud-upload"></i> Restore Backup</h5>
+                        <h5 class="mb-0"><i class="bi bi-cloud-upload"></i> @L["Admin_RestoreBackup"]</h5>
                     </div>
                     <div class="card-body">
                         <div class="alert alert-warning">
@@ -829,7 +832,7 @@ else
             <div class="col-md-10">
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-shield-check"></i> OAuth / SSO Providers</h5>
+                        <h5 class="mb-0"><i class="bi bi-shield-check"></i> @L["Admin_OAuthSSOProviders"]</h5>
                     </div>
                     <div class="card-body">
                         <p class="text-muted">Configure external authentication providers. Only providers with both Client ID and Client Secret filled in will appear on the login page.</p>
@@ -913,7 +916,7 @@ else
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add New User</h5>
+                    <h5 class="modal-title">@L["Admin_AddNewUser"]</h5>
                     <button type="button" class="btn-close" @onclick="() => ShowAddUser = false"></button>
                 </div>
                 <div class="modal-body">
@@ -943,8 +946,8 @@ else
                             <div class="alert alert-info">@UserMessage</div>
                         }
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @onclick="() => ShowAddUser = false">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Add User</button>
+                            <button type="button" class="btn btn-secondary" @onclick="() => ShowAddUser = false">@L["Admin_Cancel"]</button>
+                            <button type="submit" class="btn btn-primary">@L["Admin_AddUser"]</button>
                         </div>
                     </EditForm>
                 </div>

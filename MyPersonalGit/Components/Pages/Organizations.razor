@@ -4,24 +4,27 @@
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject IOrganizationService OrgService
 @inject IRepositoryService RepoService
 @inject CurrentUserService UserService
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>@(string.IsNullOrEmpty(OrgName) ? "Organizations" : OrgName) · Personal Git</PageTitle>
+<PageTitle>@(string.IsNullOrEmpty(OrgName) ? L["Org_Title"] : OrgName) · Personal Git</PageTitle>
 
 <div class="container-xl px-3 py-4">
     @if (string.IsNullOrEmpty(OrgName))
     {
         <!-- Organizations List -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="h4 mb-0">Organizations</h2>
+            <h2 class="h4 mb-0">@L["Org_Title"]</h2>
             @if (UserService.IsLoggedIn)
             {
                 <button class="btn btn-gh-primary btn-sm" @onclick="() => showCreateModal = true">
-                    <i class="bi bi-plus-lg me-1"></i> New organization
+                    <i class="bi bi-plus-lg me-1"></i> @L["Org_NewOrganization"]
                 </button>
             }
         </div>
@@ -52,15 +55,15 @@
         {
             <div class="text-center py-5">
                 <i class="bi bi-people display-4 text-muted"></i>
-                <p class="text-muted mt-3">No organizations yet.</p>
+                <p class="text-muted mt-3">@L["Org_NoOrganizations"]</p>
             </div>
         }
     }
     else if (currentOrg == null)
     {
         <div class="text-center py-5">
-            <h3 class="text-muted">Organization not found</h3>
-            <a href="/orgs" class="btn btn-primary mt-3">Back to organizations</a>
+            <h3 class="text-muted">@L["Org_NotFound"]</h3>
+            <a href="/orgs" class="btn btn-primary mt-3">@L["Org_BackToOrganizations"]</a>
         </div>
     }
     else
@@ -82,13 +85,13 @@
         <ul class="nav nav-tabs mb-4">
             <li class="nav-item">
                 <button class="nav-link @(orgTab == "members" ? "active" : "")" @onclick='() => orgTab = "members"'>
-                    <i class="bi bi-people me-1"></i> Members
+                    <i class="bi bi-people me-1"></i> @L["Org_Members"]
                     <span class="badge bg-secondary ms-1">@orgMembers.Count</span>
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link @(orgTab == "teams" ? "active" : "")" @onclick='() => orgTab = "teams"'>
-                    <i class="bi bi-diagram-3 me-1"></i> Teams
+                    <i class="bi bi-diagram-3 me-1"></i> @L["Org_Teams"]
                     <span class="badge bg-secondary ms-1">@orgTeams.Count</span>
                 </button>
             </li>
@@ -96,7 +99,7 @@
             {
                 <li class="nav-item">
                     <button class="nav-link @(orgTab == "settings" ? "active" : "")" @onclick='() => orgTab = "settings"'>
-                        <i class="bi bi-gear me-1"></i> Settings
+                        <i class="bi bi-gear me-1"></i> @L["Org_Settings"]
                     </button>
                 </li>
             }
@@ -113,7 +116,7 @@
                             <option value="@OrgRole.Member">Member</option>
                             <option value="@OrgRole.Owner">Owner</option>
                         </select>
-                        <button class="btn btn-gh-primary btn-sm" @onclick="AddMember">Add</button>
+                        <button class="btn btn-gh-primary btn-sm" @onclick="AddMember">@L["Org_Add"]</button>
                     </div>
                     @if (!string.IsNullOrEmpty(memberMessage))
                     {
@@ -148,7 +151,7 @@
             @if (isOrgOwner)
             {
                 <button class="btn btn-gh-primary btn-sm mb-3" @onclick="() => showCreateTeamModal = true">
-                    <i class="bi bi-plus-lg me-1"></i> New team
+                    <i class="bi bi-plus-lg me-1"></i> @L["Org_NewTeam"]
                 </button>
             }
 
@@ -164,15 +167,15 @@
                                 <small class="text-muted">@currentTeam.Description</small>
                             }
                         </div>
-                        <span class="badge bg-info">@currentTeam.Permission permission</span>
+                        <span class="badge bg-info">@currentTeam.Permission @L["Org_Permission"]</span>
                     </div>
                     <div class="card-body">
                         <h6 class="fw-bold small text-uppercase text-muted mb-2">Members (@currentTeam.Members.Count)</h6>
                         @if (isOrgOwner)
                         {
                             <div class="input-group mb-3" style="max-width: 350px;">
-                                <input type="text" class="form-control form-control-sm" @bind="newTeamMemberUsername" placeholder="Add member..." />
-                                <button class="btn btn-outline-primary btn-sm" @onclick="AddTeamMember">Add</button>
+                                <input type="text" class="form-control form-control-sm" @bind="newTeamMemberUsername" placeholder="@L["Org_AddMemberPlaceholder"]" />
+                                <button class="btn btn-outline-primary btn-sm" @onclick="AddTeamMember">@L["Org_Add"]</button>
                             </div>
                         }
                         <div class="list-group list-group-flush mb-4">
@@ -196,8 +199,8 @@
                         @if (isOrgOwner)
                         {
                             <div class="input-group mb-3" style="max-width: 350px;">
-                                <input type="text" class="form-control form-control-sm" @bind="newTeamRepoName" placeholder="Add repository..." />
-                                <button class="btn btn-outline-primary btn-sm" @onclick="AddTeamRepo">Add</button>
+                                <input type="text" class="form-control form-control-sm" @bind="newTeamRepoName" placeholder="@L["Org_AddRepoPlaceholder"]" />
+                                <button class="btn btn-outline-primary btn-sm" @onclick="AddTeamRepo">@L["Org_Add"]</button>
                             </div>
                         }
                         <div class="list-group list-group-flush">
@@ -217,7 +220,7 @@
                     </div>
                 </div>
                 <button class="btn btn-link btn-sm text-decoration-none" @onclick="BackToTeams">
-                    <i class="bi bi-arrow-left me-1"></i> Back to teams
+                    <i class="bi bi-arrow-left me-1"></i> @L["Org_BackToTeams"]
                 </button>
             }
             else
@@ -248,24 +251,24 @@
                 }
                 else
                 {
-                    <p class="text-muted">No teams yet.</p>
+                    <p class="text-muted">@L["Org_NoTeams"]</p>
                 }
             }
         }
         else if (orgTab == "settings" && isOrgOwner)
         {
             <div class="card shadow-sm" style="max-width: 600px;">
-                <div class="card-header bg-light-subtle py-2 fw-bold small">Organization Settings</div>
+                <div class="card-header bg-light-subtle py-2 fw-bold small">@L["Org_SettingsHeader"]</div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Display Name</label>
+                        <label class="form-label small fw-bold">@L["Org_DisplayName"]</label>
                         <input type="text" class="form-control form-control-sm" @bind="settingsDisplayName" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Description</label>
+                        <label class="form-label small fw-bold">@L["Org_Description"]</label>
                         <textarea class="form-control form-control-sm" rows="3" @bind="settingsDescription"></textarea>
                     </div>
-                    <button class="btn btn-gh-primary btn-sm" @onclick="SaveOrgSettings">Save changes</button>
+                    <button class="btn btn-gh-primary btn-sm" @onclick="SaveOrgSettings">@L["Org_SaveChanges"]</button>
                     @if (!string.IsNullOrEmpty(settingsMessage))
                     {
                         <span class="text-success small ms-2">@settingsMessage</span>
@@ -274,9 +277,9 @@
             </div>
 
             <div class="card border-danger mt-4" style="max-width: 600px;">
-                <div class="card-header bg-danger bg-opacity-10 py-2 fw-bold small text-danger">Danger Zone</div>
+                <div class="card-header bg-danger bg-opacity-10 py-2 fw-bold small text-danger">@L["Org_DangerZone"]</div>
                 <div class="card-body">
-                    <button class="btn btn-outline-danger btn-sm" @onclick="DeleteOrganization">Delete organization</button>
+                    <button class="btn btn-outline-danger btn-sm" @onclick="DeleteOrganization">@L["Org_DeleteOrganization"]</button>
                 </div>
             </div>
         }
@@ -290,27 +293,27 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title fw-bold">Create organization</h5>
+                    <h5 class="modal-title fw-bold">@L["Org_CreateOrganization"]</h5>
                     <button type="button" class="btn-close" @onclick="() => showCreateModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Name</label>
+                        <label class="form-label small fw-bold">@L["Org_Name"]</label>
                         <input type="text" class="form-control" @bind="newOrgName" placeholder="my-org" />
-                        <div class="form-text">Lowercase letters, numbers, and hyphens only.</div>
+                        <div class="form-text">@L["Org_NameHint"]</div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Display Name</label>
-                        <input type="text" class="form-control" @bind="newOrgDisplayName" placeholder="My Organization" />
+                        <label class="form-label small fw-bold">@L["Org_DisplayName"]</label>
+                        <input type="text" class="form-control" @bind="newOrgDisplayName" placeholder="@L["Org_DisplayNamePlaceholder"]" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Description</label>
+                        <label class="form-label small fw-bold">@L["Org_Description"]</label>
                         <textarea class="form-control" rows="2" @bind="newOrgDescription"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0">
-                    <button class="btn btn-light border" @onclick="() => showCreateModal = false">Cancel</button>
-                    <button class="btn btn-gh-primary" @onclick="CreateOrganization" disabled="@string.IsNullOrWhiteSpace(newOrgName)">Create</button>
+                    <button class="btn btn-light border" @onclick="() => showCreateModal = false">@L["Org_Cancel"]</button>
+                    <button class="btn btn-gh-primary" @onclick="CreateOrganization" disabled="@string.IsNullOrWhiteSpace(newOrgName)">@L["Org_Create"]</button>
                 </div>
             </div>
         </div>
@@ -324,20 +327,20 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title fw-bold">Create team</h5>
+                    <h5 class="modal-title fw-bold">@L["Org_CreateTeam"]</h5>
                     <button type="button" class="btn-close" @onclick="() => showCreateTeamModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Team name</label>
+                        <label class="form-label small fw-bold">@L["Org_TeamName"]</label>
                         <input type="text" class="form-control" @bind="newTeamName" placeholder="developers" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Description</label>
+                        <label class="form-label small fw-bold">@L["Org_Description"]</label>
                         <textarea class="form-control" rows="2" @bind="newTeamDescription"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Permission</label>
+                        <label class="form-label small fw-bold">@L["Org_Permission"]</label>
                         <select class="form-select" @bind="newTeamPermission">
                             <option value="@TeamPermission.Read">Read</option>
                             <option value="@TeamPermission.Write">Write</option>
@@ -346,8 +349,8 @@
                     </div>
                 </div>
                 <div class="modal-footer border-top-0">
-                    <button class="btn btn-light border" @onclick="() => showCreateTeamModal = false">Cancel</button>
-                    <button class="btn btn-gh-primary" @onclick="CreateTeam" disabled="@string.IsNullOrWhiteSpace(newTeamName)">Create</button>
+                    <button class="btn btn-light border" @onclick="() => showCreateTeamModal = false">@L["Org_Cancel"]</button>
+                    <button class="btn btn-gh-primary" @onclick="CreateTeam" disabled="@string.IsNullOrWhiteSpace(newTeamName)">@L["Org_Create"]</button>
                 </div>
             </div>
         </div>

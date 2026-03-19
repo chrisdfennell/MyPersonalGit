@@ -4,6 +4,8 @@
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
 @using LibGit2Sharp
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject IWorkflowService WorkflowService
 @inject IArtifactService ArtifactService
 @inject WorkflowYamlParser YamlParser
@@ -11,6 +13,7 @@
 @inject IConfiguration Config
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 @implements IDisposable
 
@@ -21,12 +24,12 @@
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/">Repositories</a></li>
+                    <li class="breadcrumb-item"><a href="/">@L["Actions_Repositories"]</a></li>
                     <li class="breadcrumb-item"><a href="/repo/@RepoName">@RepoName</a></li>
-                    <li class="breadcrumb-item active">Actions</li>
+                    <li class="breadcrumb-item active">@L["Actions_Title"]</li>
                 </ol>
             </nav>
-            <h2 class="mt-2">Actions</h2>
+            <h2 class="mt-2">@L["Actions_Title"]</h2>
         </div>
         @if (UserService.IsLoggedIn && !RunId.HasValue)
         {
@@ -34,14 +37,14 @@
             {
                 <div class="dropdown">
                     <button class="btn btn-primary dropdown-toggle" type="button" @onclick="() => showRunDropdown = !showRunDropdown">
-                        <i class="bi bi-play-circle me-1"></i> Run workflow
+                        <i class="bi bi-play-circle me-1"></i> @L["Actions_RunWorkflow"]
                     </button>
                     @if (showRunDropdown)
                     {
                         <div class="dropdown-menu show shadow p-3" style="min-width: 350px; display: block; position: absolute; right: 0; z-index: 1000;">
                             @if (selectedDispatchWorkflow == null)
                             {
-                                <h6 class="fw-bold small mb-2">Select workflow</h6>
+                                <h6 class="fw-bold small mb-2">@L["Actions_SelectWorkflow"]</h6>
                                 @foreach (var wf in detectedWorkflows)
                                 {
                                     <button class="dropdown-item py-2" @onclick="() => SelectWorkflowForDispatch(wf)">
@@ -93,9 +96,9 @@
                                     }
                                 }
                                 <div class="d-flex gap-2 mt-3">
-                                    <button class="btn btn-sm btn-secondary" @onclick="() => selectedDispatchWorkflow = null">Back</button>
+                                    <button class="btn btn-sm btn-secondary" @onclick="() => selectedDispatchWorkflow = null">@L["Actions_Back"]</button>
                                     <button class="btn btn-sm btn-primary" @onclick="() => TriggerWorkflowWithInputs()">
-                                        <i class="bi bi-play-fill me-1"></i>Run
+                                        <i class="bi bi-play-fill me-1"></i>@L["Actions_Run"]
                                     </button>
                                 </div>
                             }
@@ -106,7 +109,7 @@
             else
             {
                 <button class="btn btn-primary" @onclick="ShowCreateWorkflowModal">
-                    <i class="bi bi-plus-circle me-2"></i>Create workflow run
+                    <i class="bi bi-plus-circle me-2"></i>@L["Actions_CreateWorkflowRun"]
                 </button>
             }
         }
@@ -119,7 +122,7 @@
         {
             <div class="mb-3">
                 <a href="/repo/@RepoName/actions" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1"></i> Back to runs
+                    <i class="bi bi-arrow-left me-1"></i> @L["Actions_BackToRuns"]
                 </a>
             </div>
 
@@ -158,13 +161,13 @@
                             @if (selectedRun.Status == WorkflowStatus.Queued || selectedRun.Status == WorkflowStatus.InProgress)
                             {
                                 <button class="btn btn-outline-danger btn-sm" @onclick="CancelRun">
-                                    <i class="bi bi-x-circle me-1"></i>Cancel
+                                    <i class="bi bi-x-circle me-1"></i>@L["Actions_Cancel"]
                                 </button>
                             }
                             @if (selectedRun.Status == WorkflowStatus.Failure || selectedRun.Status == WorkflowStatus.Success || selectedRun.Status == WorkflowStatus.Cancelled)
                             {
                                 <button class="btn btn-outline-primary btn-sm" @onclick="RerunWorkflow">
-                                    <i class="bi bi-arrow-clockwise me-1"></i>Re-run
+                                    <i class="bi bi-arrow-clockwise me-1"></i>@L["Actions_Rerun"]
                                 </button>
                             }
                         </div>
@@ -220,7 +223,7 @@
             {
                 <div class="card mb-3">
                     <div class="card-header">
-                        <h6 class="mb-0"><i class="bi bi-archive me-2"></i>Artifacts</h6>
+                        <h6 class="mb-0"><i class="bi bi-archive me-2"></i>@L["Actions_Artifacts"]</h6>
                     </div>
                     <div class="card-body p-0">
                         <div class="list-group list-group-flush">
@@ -234,7 +237,7 @@
                                     </div>
                                     <div class="btn-group btn-group-sm">
                                         <a href="/api/artifacts/@artifact.Id/download" class="btn btn-outline-primary" target="_blank">
-                                            <i class="bi bi-download me-1"></i> Download
+                                            <i class="bi bi-download me-1"></i> @L["Actions_Download"]
                                         </a>
                                         @if (UserService.IsLoggedIn)
                                         {
@@ -252,7 +255,7 @@
         }
         else
         {
-            <div class="alert alert-warning">Workflow run #@RunId not found.</div>
+            <div class="alert alert-warning">@L["Actions_RunNotFound"]</div>
         }
     }
     else
@@ -261,12 +264,12 @@
         <ul class="nav nav-tabs mb-4">
             <li class="nav-item">
                 <button class="nav-link @(ActiveTab == "runs" ? "active" : "")" @onclick='() => ActiveTab = "runs"'>
-                    <i class="bi bi-play-circle me-1"></i> Workflow Runs
+                    <i class="bi bi-play-circle me-1"></i> @L["Actions_WorkflowRuns"]
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link @(ActiveTab == "webhooks" ? "active" : "")" @onclick='() => ActiveTab = "webhooks"'>
-                    <i class="bi bi-webhook me-1"></i> Webhooks
+                    <i class="bi bi-webhook me-1"></i> @L["Actions_Webhooks"]
                 </button>
             </li>
         </ul>
@@ -287,7 +290,7 @@
                 <div class="card">
                     <div class="card-body text-center py-5">
                         <i class="bi bi-play-circle" style="font-size: 4rem; color: #6c757d;"></i>
-                        <h3 class="mt-3">No workflow runs yet</h3>
+                        <h3 class="mt-3">@L["Actions_NoRunsYet"]</h3>
                         <p class="text-muted">
                             @if (detectedWorkflows.Any())
                             {
@@ -347,7 +350,7 @@
                 {
                     <div class="d-flex justify-content-end mb-3">
                         <button class="btn btn-primary" @onclick="ShowCreateWebhookModal">
-                            <i class="bi bi-plus-circle me-2"></i>Add webhook
+                            <i class="bi bi-plus-circle me-2"></i>@L["Actions_AddWebhook"]
                         </button>
                     </div>
                 }
@@ -357,8 +360,8 @@
                     <div class="card">
                         <div class="card-body text-center py-5">
                             <i class="bi bi-webhook" style="font-size: 4rem; color: #6c757d;"></i>
-                            <h3 class="mt-3">No webhooks configured</h3>
-                            <p class="text-muted">Add webhooks to receive notifications about repository events</p>
+                            <h3 class="mt-3">@L["Actions_NoWebhooks"]</h3>
+                            <p class="text-muted">@L["Actions_NoWebhooksDescription"]</p>
                         </div>
                     </div>
                 }
@@ -416,13 +419,13 @@
                 @* Webhook detail view with delivery history *@
                 <div class="mb-3">
                     <button class="btn btn-outline-secondary btn-sm" @onclick="() => { selectedWebhook = null; webhookDeliveries.Clear(); }">
-                        <i class="bi bi-arrow-left me-1"></i>Back to webhooks
+                        <i class="bi bi-arrow-left me-1"></i>@L["Actions_BackToWebhooks"]
                     </button>
                 </div>
 
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Webhook Details</h5>
+                        <h5 class="mb-0">@L["Actions_WebhookDetails"]</h5>
                         <span class="badge @(selectedWebhook.IsActive ? "bg-success" : "bg-secondary")">
                             @(selectedWebhook.IsActive ? "Active" : "Inactive")
                         </span>
@@ -447,10 +450,10 @@
                     </div>
                 </div>
 
-                <h5>Recent Deliveries</h5>
+                <h5>@L["Actions_RecentDeliveries"]</h5>
                 @if (webhookDeliveries.Count == 0)
                 {
-                    <div class="text-muted py-3">No deliveries yet.</div>
+                    <div class="text-muted py-3">@L["Actions_NoDeliveries"]</div>
                 }
                 else
                 {
@@ -471,13 +474,13 @@
                                         {
                                             <div class="mt-2">
                                                 <div class="mb-2">
-                                                    <strong class="small">Request Payload:</strong>
+                                                    <strong class="small">@L["Actions_RequestPayload"]:</strong>
                                                     <pre class="bg-dark text-light p-2 rounded mt-1" style="max-height: 200px; overflow-y: auto; font-size: 12px;">@delivery.Payload</pre>
                                                 </div>
                                                 @if (!string.IsNullOrEmpty(delivery.Response))
                                                 {
                                                     <div>
-                                                        <strong class="small">Response:</strong>
+                                                        <strong class="small">@L["Actions_Response"]:</strong>
                                                         <pre class="bg-dark text-light p-2 rounded mt-1" style="max-height: 200px; overflow-y: auto; font-size: 12px;">@delivery.Response</pre>
                                                     </div>
                                                 }
@@ -511,30 +514,30 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Create Workflow Run</h5>
+                    <h5 class="modal-title">@L["Actions_CreateWorkflowRun"]</h5>
                     <button type="button" class="btn-close" @onclick="() => ShowWorkflowModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Workflow Name</label>
-                        <input type="text" class="form-control" @bind="NewWorkflowName" placeholder="e.g., Build and Test" />
+                        <label class="form-label">@L["Actions_WorkflowName"]</label>
+                        <input type="text" class="form-control" @bind="NewWorkflowName" placeholder="@L["Actions_WorkflowNamePlaceholder"]" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Branch</label>
-                        <input type="text" class="form-control" @bind="NewWorkflowBranch" placeholder="e.g., main" />
+                        <label class="form-label">@L["Actions_Branch"]</label>
+                        <input type="text" class="form-control" @bind="NewWorkflowBranch" placeholder="@L["Actions_BranchPlaceholder"]" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Commit SHA</label>
-                        <input type="text" class="form-control" @bind="NewWorkflowCommitSha" placeholder="e.g., abc123" />
+                        <label class="form-label">@L["Actions_CommitSHA"]</label>
+                        <input type="text" class="form-control" @bind="NewWorkflowCommitSha" placeholder="@L["Actions_CommitSHAPlaceholder"]" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Commit Message</label>
-                        <input type="text" class="form-control" @bind="NewWorkflowCommitMessage" placeholder="e.g., Fix bug" />
+                        <label class="form-label">@L["Actions_CommitMessage"]</label>
+                        <input type="text" class="form-control" @bind="NewWorkflowCommitMessage" placeholder="@L["Actions_CommitMessagePlaceholder"]" />
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="() => ShowWorkflowModal = false">Cancel</button>
-                    <button type="button" class="btn btn-primary" @onclick="CreateWorkflowRun">Create</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => ShowWorkflowModal = false">@L["Actions_Cancel"]</button>
+                    <button type="button" class="btn btn-primary" @onclick="CreateWorkflowRun">@L["Actions_Create"]</button>
                 </div>
             </div>
         </div>
@@ -552,7 +555,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Payload URL</label>
+                        <label class="form-label">@L["Actions_PayloadURL"]</label>
                         <input type="url" class="form-control" @bind="NewWebhookUrl" placeholder="https://example.com/webhook" />
                     </div>
                     <div class="mb-3">
@@ -560,7 +563,7 @@
                         <input type="password" class="form-control" @bind="NewWebhookSecret" placeholder="@(editingWebhookId.HasValue ? "Leave blank to keep current" : "Enter webhook secret")" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Events</label>
+                        <label class="form-label fw-bold">@L["Actions_Events"]</label>
                         <div class="row">
                             <div class="col-6">
                                 <div class="form-check">
@@ -602,8 +605,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="() => ShowWebhookModal = false">Cancel</button>
-                    <button type="button" class="btn btn-primary" @onclick="SaveWebhook">@(editingWebhookId.HasValue ? "Save changes" : "Add webhook")</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => ShowWebhookModal = false">@L["Actions_Cancel"]</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveWebhook">@(editingWebhookId.HasValue ? L["Actions_SaveChanges"] : L["Actions_AddWebhook"])</button>
                 </div>
             </div>
         </div>

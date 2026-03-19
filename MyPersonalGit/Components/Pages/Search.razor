@@ -3,6 +3,8 @@
 @using System.IO
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject IConfiguration Config
 @inject NavigationManager Nav
 @inject IIssueService IssueService
@@ -12,22 +14,23 @@
 @inject ICollaboratorService CollaboratorService
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>Search · Personal Git</PageTitle>
+<PageTitle>@L["Search_PageTitle"]</PageTitle>
 
 <div class="container-xl px-3 py-4">
     <div class="mb-4">
-        <h2 class="h4 mb-3">Search</h2>
+        <h2 class="h4 mb-3">@L["Search_Heading"]</h2>
         <div class="input-group input-group-lg shadow-sm">
             <input type="text" 
                    class="form-control" 
-                   placeholder="Search repositories, code, issues, and pull requests..." 
+                   placeholder="@L["Search_InputPlaceholder"]" 
                    @bind="searchQuery"
                    @bind:event="oninput"
                    @onkeyup="HandleKeyPress" />
             <button class="btn btn-primary" @onclick="PerformSearch">
-                <i class="bi bi-search"></i> Search
+                <i class="bi bi-search"></i> @L["Search_Button"]
             </button>
         </div>
     </div>
@@ -36,7 +39,7 @@
     {
         <div class="text-center py-5">
             <div class="spinner-border text-primary mb-3" role="status"></div>
-            <p class="text-muted">Searching across all repositories...</p>
+            <p class="text-muted">@L["Search_Searching"]</p>
         </div>
     }
     else if (!string.IsNullOrWhiteSpace(searchQuery) && hasSearched)
@@ -44,25 +47,25 @@
         <ul class="nav nav-tabs mb-4">
             <li class="nav-item">
                 <button class="nav-link @(activeTab == "repositories" ? "active" : "")" @onclick='() => activeTab = "repositories"'>
-                    <i class="bi bi-journal-bookmark me-1"></i> Repositories
+                    <i class="bi bi-journal-bookmark me-1"></i> @L["Search_TabRepositories"]
                     <span class="badge bg-secondary ms-1">@repositoryResults.Count</span>
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link @(activeTab == "code" ? "active" : "")" @onclick='() => activeTab = "code"'>
-                    <i class="bi bi-code-slash me-1"></i> Code
+                    <i class="bi bi-code-slash me-1"></i> @L["Search_TabCode"]
                     <span class="badge bg-secondary ms-1">@codeResults.Count</span>
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link @(activeTab == "issues" ? "active" : "")" @onclick='() => activeTab = "issues"'>
-                    <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> Issues
+                    <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> @L["Search_TabIssues"]
                     <span class="badge bg-secondary ms-1">@issueResults.Count</span>
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link @(activeTab == "pulls" ? "active" : "")" @onclick='() => activeTab = "pulls"'>
-                    <i class="bi bi-git me-1"></i> Pull requests
+                    <i class="bi bi-git me-1"></i> @L["Search_TabPullRequests"]
                     <span class="badge bg-secondary ms-1">@prResults.Count</span>
                 </button>
             </li>
@@ -100,7 +103,7 @@
                 {
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle me-2"></i>
-                        No repositories found matching "@searchQuery"
+                        @L["Search_NoRepositories"]
                     </div>
                 }
             }
@@ -132,7 +135,7 @@
                 {
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle me-2"></i>
-                        No code found matching "@searchQuery"
+                        @L["Search_NoCode"]
                     </div>
                 }
             }
@@ -167,7 +170,7 @@
                 {
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle me-2"></i>
-                        No issues found matching "@searchQuery"
+                        @L["Search_NoIssues"]
                     </div>
                 }
             }
@@ -206,7 +209,7 @@
                 {
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle me-2"></i>
-                        No pull requests found matching "@searchQuery"
+                        @L["Search_NoPullRequests"]
                     </div>
                 }
             }
@@ -216,8 +219,8 @@
     {
         <div class="text-center py-5">
             <i class="bi bi-search display-1 text-muted mb-3"></i>
-            <h3 class="h5 text-muted">Search across all repositories</h3>
-            <p class="text-muted">Find repositories, code, issues, and pull requests</p>
+            <h3 class="h5 text-muted">@L["Search_InitialHeading"]</h3>
+            <p class="text-muted">@L["Search_InitialSubheading"]</p>
         </div>
     }
 </div>
