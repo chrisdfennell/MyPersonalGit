@@ -161,7 +161,13 @@ Um servidor Git auto-hospedado com interface web semelhante ao GitHub, construí
 - **Backup e Restauração** — Exporte e importe dados do servidor
 - **Varredura de Segurança** — Varredura real de vulnerabilidades de dependências alimentada pelo banco de dados [OSV.dev](https://osv.dev/). Extrai automaticamente dependências de `.csproj` (NuGet), `package.json` (npm) e `requirements.txt` (PyPI), verificando cada uma contra CVEs conhecidos. Reporta severidade, versões corrigidas e links de consultoria. Além de consultoria de segurança manual com fluxo de trabalho rascunho/publicar/fechar
 - **Modo Escuro** — Suporte completo a modo escuro/claro com alternador no cabeçalho
-- **Multi-idioma / i18n** — Localização completa em todas as 27 páginas com 676 chaves de recurso. Inclui 11 idiomas: inglês, espanhol, francês, alemão, japonês, coreano, chinês (simplificado), português, russo, italiano e turco. Adicione mais criando arquivos `SharedResource.{locale}.resx`
+- **Multi-idioma / i18n** — Localização completa em todas as 27 páginas com 676 chaves de recurso. Inclui 11 idiomas: inglês, espanhol, francês, alemão, japonês, coreano, chinês (simplificado), português, russo, italiano e turco. Seletor de idioma no cabeçalho. Adicione mais criando arquivos `SharedResource.{locale}.resx`
+- **Swagger / OpenAPI** — Documentação interativa da API em `/swagger` com todos os endpoints REST descobríveis e testáveis
+- **Mermaid Diagrams** — Renderização de diagramas Mermaid em arquivos Markdown (fluxogramas, diagramas de sequência, gráficos de Gantt, etc.)
+- **Math Rendering** — Expressões matemáticas LaTeX/KaTeX em Markdown (sintaxe `$inline$` e `$$display$$`)
+- **CSV/TSV Viewer** — Arquivos CSV e TSV são renderizados como tabelas formatadas e ordenáveis em vez de texto bruto
+- **Repository Transfer** — Transfira a propriedade do repositório para outro usuário ou organização nas Configurações do repositório
+- **Default Branch Configuration** — Altere a branch padrão por repositório na aba Configurações
 
 ## Stack Tecnológica
 

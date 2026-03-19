@@ -161,7 +161,13 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Yedekleme ve Geri Yükleme** — Sunucu verilerini dışa ve içe aktarma
 - **Güvenlik Taraması** — [OSV.dev](https://osv.dev/) veritabanı destekli gerçek bağımlılık güvenlik açığı taraması. `.csproj` (NuGet), `package.json` (npm) ve `requirements.txt` (PyPI) dosyalarından bağımlılıkları otomatik çıkarır, ardından her birini bilinen CVE'lere karşı kontrol eder. Önem derecesi, düzeltilmiş sürümler ve danışma bağlantıları raporlar. Ayrıca taslak/yayınla/kapat iş akışıyla manuel güvenlik danışmaları
 - **Karanlık Mod** — Başlıkta bir geçiş düğmesiyle tam karanlık/aydınlık mod desteği
-- **Çoklu Dil / i18n** — 676 kaynak anahtarı ile tüm 27 sayfada tam yerelleştirme. 11 dil ile birlikte gelir: İngilizce, İspanyolca, Fransızca, Almanca, Japonca, Korece, Çince (Basitleştirilmiş), Portekizce, Rusça, İtalyanca ve Türkçe. `SharedResource.{locale}.resx` dosyaları oluşturarak daha fazla dil ekleyin
+- **Çoklu Dil / i18n** — 676 kaynak anahtarı ile tüm 27 sayfada tam yerelleştirme. 11 dil ile birlikte gelir: İngilizce, İspanyolca, Fransızca, Almanca, Japonca, Korece, Çince (Basitleştirilmiş), Portekizce, Rusça, İtalyanca ve Türkçe. `SharedResource.{locale}.resx` dosyaları oluşturarak daha fazla dil ekleyin. Başlıktaki dil seçici ile geçiş yapın
+- **Swagger / OpenAPI** — `/swagger` adresinde etkileşimli API belgeleri; tüm REST uç noktaları keşfedilebilir ve test edilebilir
+- **Mermaid Diyagramları** — Markdown dosyalarında Mermaid diyagram oluşturma (akış şemaları, sıralama diyagramları, Gantt grafikleri vb.)
+- **Matematik Oluşturma** — Markdown'da LaTeX/KaTeX matematik ifadeleri (`$inline$` ve `$$display$$` söz dizimi)
+- **CSV/TSV Görüntüleyici** — CSV ve TSV dosyaları düz metin yerine biçimlendirilmiş, sıralanabilir tablolar olarak görüntülenir
+- **Depo Transferi** — Depo ayarlarından depo sahipliğini başka bir kullanıcıya veya kuruluşa aktarma
+- **Varsayılan Dal Yapılandırması** — Ayarlar sekmesinden depo başına varsayılan dalı değiştirme
 
 ## Teknoloji Yığını
 
