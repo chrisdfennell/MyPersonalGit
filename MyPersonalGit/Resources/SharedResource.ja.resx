@@ -216,6 +216,26 @@
   <data name="Repo_SwitchBranches" xml:space="preserve"><value>ブランチを切り替え</value></data>
   <data name="Repo_Tags" xml:space="preserve"><value>タグ</value></data>
   <data name="Repo_Wiki" xml:space="preserve"><value>Wiki</value></data>
+  <data name="Repo_General" xml:space="preserve"><value>全般</value></data>
+  <data name="Repo_Website" xml:space="preserve"><value>ウェブサイト</value></data>
+  <data name="Repo_Visibility" xml:space="preserve"><value>公開設定</value></data>
+  <data name="Repo_PublicDesc" xml:space="preserve"><value>パブリック — 誰でもこのリポジトリを閲覧できます</value></data>
+  <data name="Repo_PrivateDesc" xml:space="preserve"><value>プライベート — あなただけがこのリポジトリを閲覧できます</value></data>
+  <data name="Repo_Topics" xml:space="preserve"><value>トピック</value></data>
+  <data name="Repo_AddTopic" xml:space="preserve"><value>追加</value></data>
+  <data name="Repo_AddTopicPlaceholder" xml:space="preserve"><value>トピックを追加...</value></data>
+  <data name="Repo_TopicsHelp" xml:space="preserve"><value>トピックを設定すると、ユーザーがリポジトリを見つけやすくなります。</value></data>
+  <data name="Repo_TemplateRepo" xml:space="preserve"><value>テンプレートリポジトリ</value></data>
+  <data name="Repo_TemplateRepoDesc" xml:space="preserve"><value>このリポジトリをテンプレートとして使用できるようにする</value></data>
+  <data name="Repo_SaveChanges" xml:space="preserve"><value>変更を保存</value></data>
+  <data name="Repo_DescriptionPlaceholder" xml:space="preserve"><value>リポジトリの簡単な説明</value></data>
+  <data name="Repo_DefaultBranch" xml:space="preserve"><value>デフォルトブランチ</value></data>
+  <data name="Repo_DefaultBranchHelp" xml:space="preserve"><value>デフォルトブランチは、pull requestやコード表示の「ベース」ブランチとみなされます。</value></data>
+  <data name="Repo_Update" xml:space="preserve"><value>更新</value></data>
+  <data name="Repo_TransferRepo" xml:space="preserve"><value>リポジトリの移譲</value></data>
+  <data name="Repo_TransferDesc" xml:space="preserve"><value>このリポジトリを別のユーザーまたは組織に移譲します。</value></data>
+  <data name="Repo_TransferPlaceholder" xml:space="preserve"><value>新しいオーナーのユーザー名</value></data>
+  <data name="Repo_Transfer" xml:space="preserve"><value>移譲</value></data>
 
   <!-- Issues -->
   <data name="Issues_Add" xml:space="preserve"><value>追加</value></data>

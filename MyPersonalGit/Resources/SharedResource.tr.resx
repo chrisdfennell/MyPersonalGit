@@ -216,6 +216,26 @@
   <data name="Repo_SwitchBranches" xml:space="preserve"><value>Dal değiştir</value></data>
   <data name="Repo_Tags" xml:space="preserve"><value>Etiketler</value></data>
   <data name="Repo_Wiki" xml:space="preserve"><value>Wiki</value></data>
+  <data name="Repo_General" xml:space="preserve"><value>Genel</value></data>
+  <data name="Repo_Website" xml:space="preserve"><value>Web sitesi</value></data>
+  <data name="Repo_Visibility" xml:space="preserve"><value>Görünürlük</value></data>
+  <data name="Repo_PublicDesc" xml:space="preserve"><value>Herkese açık — herkes bu depoyu görebilir</value></data>
+  <data name="Repo_PrivateDesc" xml:space="preserve"><value>Özel — yalnızca siz bu depoyu görebilirsiniz</value></data>
+  <data name="Repo_Topics" xml:space="preserve"><value>Konular</value></data>
+  <data name="Repo_AddTopic" xml:space="preserve"><value>Ekle</value></data>
+  <data name="Repo_AddTopicPlaceholder" xml:space="preserve"><value>Konu ekle...</value></data>
+  <data name="Repo_TopicsHelp" xml:space="preserve"><value>Konular, kullanıcıların deponuzu keşfetmesine yardımcı olur.</value></data>
+  <data name="Repo_TemplateRepo" xml:space="preserve"><value>Şablon depo</value></data>
+  <data name="Repo_TemplateRepoDesc" xml:space="preserve"><value>bu deponun şablon olarak kullanılmasına izin ver</value></data>
+  <data name="Repo_SaveChanges" xml:space="preserve"><value>Değişiklikleri kaydet</value></data>
+  <data name="Repo_DescriptionPlaceholder" xml:space="preserve"><value>Deponuzun kısa açıklaması</value></data>
+  <data name="Repo_DefaultBranch" xml:space="preserve"><value>Varsayılan dal</value></data>
+  <data name="Repo_DefaultBranchHelp" xml:space="preserve"><value>Varsayılan dal, pull request ve kod görüntüleme için "temel" dal olarak kabul edilir.</value></data>
+  <data name="Repo_Update" xml:space="preserve"><value>Güncelle</value></data>
+  <data name="Repo_TransferRepo" xml:space="preserve"><value>Depoyu aktar</value></data>
+  <data name="Repo_TransferDesc" xml:space="preserve"><value>Bu depoyu başka bir kullanıcıya veya kuruluşa aktarın.</value></data>
+  <data name="Repo_TransferPlaceholder" xml:space="preserve"><value>Yeni sahip kullanıcı adı</value></data>
+  <data name="Repo_Transfer" xml:space="preserve"><value>Aktar</value></data>
 
   <!-- Issues -->
   <data name="Issues_Add" xml:space="preserve"><value>Ekle</value></data>

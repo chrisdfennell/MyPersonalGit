@@ -216,6 +216,26 @@
   <data name="Repo_SwitchBranches" xml:space="preserve"><value>Cambiar ramas</value></data>
   <data name="Repo_Tags" xml:space="preserve"><value>Etiquetas</value></data>
   <data name="Repo_Wiki" xml:space="preserve"><value>Wiki</value></data>
+  <data name="Repo_General" xml:space="preserve"><value>General</value></data>
+  <data name="Repo_Website" xml:space="preserve"><value>Sitio web</value></data>
+  <data name="Repo_Visibility" xml:space="preserve"><value>Visibilidad</value></data>
+  <data name="Repo_PublicDesc" xml:space="preserve"><value>Público — cualquiera puede ver este repositorio</value></data>
+  <data name="Repo_PrivateDesc" xml:space="preserve"><value>Privado — solo tú puedes ver este repositorio</value></data>
+  <data name="Repo_Topics" xml:space="preserve"><value>Temas</value></data>
+  <data name="Repo_AddTopic" xml:space="preserve"><value>Agregar</value></data>
+  <data name="Repo_AddTopicPlaceholder" xml:space="preserve"><value>Agregar un tema...</value></data>
+  <data name="Repo_TopicsHelp" xml:space="preserve"><value>Los temas ayudan a los usuarios a descubrir tu repositorio.</value></data>
+  <data name="Repo_TemplateRepo" xml:space="preserve"><value>Repositorio plantilla</value></data>
+  <data name="Repo_TemplateRepoDesc" xml:space="preserve"><value>permitir que este repositorio se use como plantilla</value></data>
+  <data name="Repo_SaveChanges" xml:space="preserve"><value>Guardar cambios</value></data>
+  <data name="Repo_DescriptionPlaceholder" xml:space="preserve"><value>Descripción breve de tu repositorio</value></data>
+  <data name="Repo_DefaultBranch" xml:space="preserve"><value>Rama predeterminada</value></data>
+  <data name="Repo_DefaultBranchHelp" xml:space="preserve"><value>La rama predeterminada se considera la rama "base" para las solicitudes de extracción y la visualización de código.</value></data>
+  <data name="Repo_Update" xml:space="preserve"><value>Actualizar</value></data>
+  <data name="Repo_TransferRepo" xml:space="preserve"><value>Transferir repositorio</value></data>
+  <data name="Repo_TransferDesc" xml:space="preserve"><value>Transferir este repositorio a otro usuario u organización.</value></data>
+  <data name="Repo_TransferPlaceholder" xml:space="preserve"><value>Nombre de usuario del nuevo propietario</value></data>
+  <data name="Repo_Transfer" xml:space="preserve"><value>Transferir</value></data>
 
   <!-- Issues -->
   <data name="Issues_Add" xml:space="preserve"><value>Agregar</value></data>

@@ -216,6 +216,26 @@
   <data name="Repo_SwitchBranches" xml:space="preserve"><value>Переключить ветку</value></data>
   <data name="Repo_Tags" xml:space="preserve"><value>Теги</value></data>
   <data name="Repo_Wiki" xml:space="preserve"><value>Wiki</value></data>
+  <data name="Repo_General" xml:space="preserve"><value>Общие</value></data>
+  <data name="Repo_Website" xml:space="preserve"><value>Веб-сайт</value></data>
+  <data name="Repo_Visibility" xml:space="preserve"><value>Видимость</value></data>
+  <data name="Repo_PublicDesc" xml:space="preserve"><value>Публичный — любой может видеть этот репозиторий</value></data>
+  <data name="Repo_PrivateDesc" xml:space="preserve"><value>Приватный — только вы можете видеть этот репозиторий</value></data>
+  <data name="Repo_Topics" xml:space="preserve"><value>Темы</value></data>
+  <data name="Repo_AddTopic" xml:space="preserve"><value>Добавить</value></data>
+  <data name="Repo_AddTopicPlaceholder" xml:space="preserve"><value>Добавить тему...</value></data>
+  <data name="Repo_TopicsHelp" xml:space="preserve"><value>Темы помогают пользователям находить ваш репозиторий.</value></data>
+  <data name="Repo_TemplateRepo" xml:space="preserve"><value>Шаблонный репозиторий</value></data>
+  <data name="Repo_TemplateRepoDesc" xml:space="preserve"><value>разрешить использование этого репозитория в качестве шаблона</value></data>
+  <data name="Repo_SaveChanges" xml:space="preserve"><value>Сохранить изменения</value></data>
+  <data name="Repo_DescriptionPlaceholder" xml:space="preserve"><value>Краткое описание вашего репозитория</value></data>
+  <data name="Repo_DefaultBranch" xml:space="preserve"><value>Ветка по умолчанию</value></data>
+  <data name="Repo_DefaultBranchHelp" xml:space="preserve"><value>Ветка по умолчанию считается «базовой» веткой для pull request и отображения кода.</value></data>
+  <data name="Repo_Update" xml:space="preserve"><value>Обновить</value></data>
+  <data name="Repo_TransferRepo" xml:space="preserve"><value>Передать репозиторий</value></data>
+  <data name="Repo_TransferDesc" xml:space="preserve"><value>Передать этот репозиторий другому пользователю или организации.</value></data>
+  <data name="Repo_TransferPlaceholder" xml:space="preserve"><value>Имя пользователя нового владельца</value></data>
+  <data name="Repo_Transfer" xml:space="preserve"><value>Передать</value></data>
 
   <!-- Issues -->
   <data name="Issues_Add" xml:space="preserve"><value>Добавить</value></data>

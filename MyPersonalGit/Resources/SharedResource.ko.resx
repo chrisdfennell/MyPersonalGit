@@ -216,6 +216,26 @@
   <data name="Repo_SwitchBranches" xml:space="preserve"><value>브랜치 전환</value></data>
   <data name="Repo_Tags" xml:space="preserve"><value>태그</value></data>
   <data name="Repo_Wiki" xml:space="preserve"><value>Wiki</value></data>
+  <data name="Repo_General" xml:space="preserve"><value>일반</value></data>
+  <data name="Repo_Website" xml:space="preserve"><value>웹사이트</value></data>
+  <data name="Repo_Visibility" xml:space="preserve"><value>공개 설정</value></data>
+  <data name="Repo_PublicDesc" xml:space="preserve"><value>공개 — 누구나 이 저장소를 볼 수 있습니다</value></data>
+  <data name="Repo_PrivateDesc" xml:space="preserve"><value>비공개 — 본인만 이 저장소를 볼 수 있습니다</value></data>
+  <data name="Repo_Topics" xml:space="preserve"><value>토픽</value></data>
+  <data name="Repo_AddTopic" xml:space="preserve"><value>추가</value></data>
+  <data name="Repo_AddTopicPlaceholder" xml:space="preserve"><value>토픽 추가...</value></data>
+  <data name="Repo_TopicsHelp" xml:space="preserve"><value>토픽을 설정하면 사용자가 저장소를 쉽게 찾을 수 있습니다.</value></data>
+  <data name="Repo_TemplateRepo" xml:space="preserve"><value>템플릿 저장소</value></data>
+  <data name="Repo_TemplateRepoDesc" xml:space="preserve"><value>이 저장소를 템플릿으로 사용할 수 있도록 허용</value></data>
+  <data name="Repo_SaveChanges" xml:space="preserve"><value>변경 사항 저장</value></data>
+  <data name="Repo_DescriptionPlaceholder" xml:space="preserve"><value>저장소에 대한 간단한 설명</value></data>
+  <data name="Repo_DefaultBranch" xml:space="preserve"><value>기본 브랜치</value></data>
+  <data name="Repo_DefaultBranchHelp" xml:space="preserve"><value>기본 브랜치는 pull request 및 코드 표시의 "베이스" 브랜치로 간주됩니다.</value></data>
+  <data name="Repo_Update" xml:space="preserve"><value>업데이트</value></data>
+  <data name="Repo_TransferRepo" xml:space="preserve"><value>저장소 이전</value></data>
+  <data name="Repo_TransferDesc" xml:space="preserve"><value>이 저장소를 다른 사용자 또는 조직으로 이전합니다.</value></data>
+  <data name="Repo_TransferPlaceholder" xml:space="preserve"><value>새 소유자 사용자 이름</value></data>
+  <data name="Repo_Transfer" xml:space="preserve"><value>이전</value></data>
 
   <!-- Issues -->
   <data name="Issues_Add" xml:space="preserve"><value>추가</value></data>
