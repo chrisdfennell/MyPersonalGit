@@ -216,6 +216,26 @@
   <data name="Repo_SwitchBranches" xml:space="preserve"><value>切换分支</value></data>
   <data name="Repo_Tags" xml:space="preserve"><value>标签</value></data>
   <data name="Repo_Wiki" xml:space="preserve"><value>Wiki</value></data>
+  <data name="Repo_General" xml:space="preserve"><value>常规</value></data>
+  <data name="Repo_Website" xml:space="preserve"><value>网站</value></data>
+  <data name="Repo_Visibility" xml:space="preserve"><value>可见性</value></data>
+  <data name="Repo_PublicDesc" xml:space="preserve"><value>公开 — 任何人都可以查看此仓库</value></data>
+  <data name="Repo_PrivateDesc" xml:space="preserve"><value>私有 — 只有您可以查看此仓库</value></data>
+  <data name="Repo_Topics" xml:space="preserve"><value>主题</value></data>
+  <data name="Repo_AddTopic" xml:space="preserve"><value>添加</value></data>
+  <data name="Repo_AddTopicPlaceholder" xml:space="preserve"><value>添加主题...</value></data>
+  <data name="Repo_TopicsHelp" xml:space="preserve"><value>主题可以帮助用户发现您的仓库。</value></data>
+  <data name="Repo_TemplateRepo" xml:space="preserve"><value>模板仓库</value></data>
+  <data name="Repo_TemplateRepoDesc" xml:space="preserve"><value>允许此仓库用作模板</value></data>
+  <data name="Repo_SaveChanges" xml:space="preserve"><value>保存更改</value></data>
+  <data name="Repo_DescriptionPlaceholder" xml:space="preserve"><value>仓库的简短描述</value></data>
+  <data name="Repo_DefaultBranch" xml:space="preserve"><value>默认分支</value></data>
+  <data name="Repo_DefaultBranchHelp" xml:space="preserve"><value>默认分支被视为 pull request 和代码显示的"基础"分支。</value></data>
+  <data name="Repo_Update" xml:space="preserve"><value>更新</value></data>
+  <data name="Repo_TransferRepo" xml:space="preserve"><value>转让仓库</value></data>
+  <data name="Repo_TransferDesc" xml:space="preserve"><value>将此仓库转让给其他用户或组织。</value></data>
+  <data name="Repo_TransferPlaceholder" xml:space="preserve"><value>新所有者用户名</value></data>
+  <data name="Repo_Transfer" xml:space="preserve"><value>转让</value></data>
 
   <!-- Issues -->
   <data name="Issues_Add" xml:space="preserve"><value>添加</value></data>

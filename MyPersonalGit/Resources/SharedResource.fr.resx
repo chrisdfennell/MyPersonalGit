@@ -216,6 +216,26 @@
   <data name="Repo_SwitchBranches" xml:space="preserve"><value>Changer de branche</value></data>
   <data name="Repo_Tags" xml:space="preserve"><value>Tags</value></data>
   <data name="Repo_Wiki" xml:space="preserve"><value>Wiki</value></data>
+  <data name="Repo_General" xml:space="preserve"><value>Général</value></data>
+  <data name="Repo_Website" xml:space="preserve"><value>Site web</value></data>
+  <data name="Repo_Visibility" xml:space="preserve"><value>Visibilité</value></data>
+  <data name="Repo_PublicDesc" xml:space="preserve"><value>Public — tout le monde peut voir ce dépôt</value></data>
+  <data name="Repo_PrivateDesc" xml:space="preserve"><value>Privé — vous seul pouvez voir ce dépôt</value></data>
+  <data name="Repo_Topics" xml:space="preserve"><value>Sujets</value></data>
+  <data name="Repo_AddTopic" xml:space="preserve"><value>Ajouter</value></data>
+  <data name="Repo_AddTopicPlaceholder" xml:space="preserve"><value>Ajouter un sujet...</value></data>
+  <data name="Repo_TopicsHelp" xml:space="preserve"><value>Les sujets aident les utilisateurs à découvrir votre dépôt.</value></data>
+  <data name="Repo_TemplateRepo" xml:space="preserve"><value>Dépôt modèle</value></data>
+  <data name="Repo_TemplateRepoDesc" xml:space="preserve"><value>permettre à ce dépôt d'être utilisé comme modèle</value></data>
+  <data name="Repo_SaveChanges" xml:space="preserve"><value>Enregistrer les modifications</value></data>
+  <data name="Repo_DescriptionPlaceholder" xml:space="preserve"><value>Brève description de votre dépôt</value></data>
+  <data name="Repo_DefaultBranch" xml:space="preserve"><value>Branche par défaut</value></data>
+  <data name="Repo_DefaultBranchHelp" xml:space="preserve"><value>La branche par défaut est considérée comme la branche « de base » pour les demandes de tirage et l'affichage du code.</value></data>
+  <data name="Repo_Update" xml:space="preserve"><value>Mettre à jour</value></data>
+  <data name="Repo_TransferRepo" xml:space="preserve"><value>Transférer le dépôt</value></data>
+  <data name="Repo_TransferDesc" xml:space="preserve"><value>Transférer ce dépôt à un autre utilisateur ou organisation.</value></data>
+  <data name="Repo_TransferPlaceholder" xml:space="preserve"><value>Nom d'utilisateur du nouveau propriétaire</value></data>
+  <data name="Repo_Transfer" xml:space="preserve"><value>Transférer</value></data>
 
   <!-- Issues -->
   <data name="Issues_Add" xml:space="preserve"><value>Ajouter</value></data>
