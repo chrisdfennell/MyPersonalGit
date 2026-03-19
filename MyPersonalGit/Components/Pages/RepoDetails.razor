@@ -3607,8 +3607,9 @@ else
         if (isFile && !showRaw)
         {
             await JS.InvokeVoidAsync("Prism.highlightAll");
-            try { await JS.InvokeVoidAsync("renderMermaidAndMath"); } catch { }
         }
+        // Render Mermaid diagrams and KaTeX math in any markdown content (file view or README)
+        try { await JS.InvokeVoidAsync("renderMermaidAndMath"); } catch { }
         if (activeTab == "commit-detail" || activeTab == "compare")
         {
             try { await JS.InvokeVoidAsync("diffHighlight.apply"); } catch { }
