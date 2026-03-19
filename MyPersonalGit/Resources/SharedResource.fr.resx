@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="Nav_PullRequests" xml:space="preserve"><value>Demandes de tirage</value></data>
+  <data name="Nav_Issues" xml:space="preserve"><value>Problèmes</value></data>
+  <data name="Nav_Search" xml:space="preserve"><value>Rechercher</value></data>
+  <data name="Nav_Snippets" xml:space="preserve"><value>Extraits</value></data>
+  <data name="Nav_Packages" xml:space="preserve"><value>Paquets</value></data>
+  <data name="Nav_Admin" xml:space="preserve"><value>Administration</value></data>
+  <data name="Nav_Profile" xml:space="preserve"><value>Votre profil</value></data>
+  <data name="Nav_Settings" xml:space="preserve"><value>Paramètres</value></data>
+  <data name="Nav_SignOut" xml:space="preserve"><value>Déconnexion</value></data>
+  <data name="Nav_SignIn" xml:space="preserve"><value>Connexion</value></data>
+  <data name="Nav_Register" xml:space="preserve"><value>S'inscrire</value></data>
+  <data name="Nav_Notifications" xml:space="preserve"><value>Notifications</value></data>
+  <data name="Search_Placeholder" xml:space="preserve"><value>Rechercher ou aller à...</value></data>
+  <data name="Home_NewRepo" xml:space="preserve"><value>Nouveau</value></data>
+  <data name="Home_Import" xml:space="preserve"><value>Importer</value></data>
+  <data name="Home_Repositories" xml:space="preserve"><value>Dépôts</value></data>
+  <data name="Home_RecentActivity" xml:space="preserve"><value>Activité récente</value></data>
+  <data name="Home_NoRepos" xml:space="preserve"><value>Aucun dépôt trouvé</value></data>
+  <data name="Home_CreateFirst" xml:space="preserve"><value>Créez votre premier dépôt pour commencer.</value></data>
+  <data name="Home_SearchRepos" xml:space="preserve"><value>Trouver un dépôt...</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Annuler</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Supprimer</value></data>
+  <data name="Common_Edit" xml:space="preserve"><value>Modifier</value></data>
+  <data name="Common_Create" xml:space="preserve"><value>Créer</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>Fermer</value></data>
+  <data name="Common_Open" xml:space="preserve"><value>Ouvrir</value></data>
+  <data name="Common_Loading" xml:space="preserve"><value>Chargement...</value></data>
+  <data name="Common_Private" xml:space="preserve"><value>Privé</value></data>
+  <data name="Common_Public" xml:space="preserve"><value>Public</value></data>
+  <data name="Footer_Terms" xml:space="preserve"><value>Conditions</value></data>
+  <data name="Footer_Privacy" xml:space="preserve"><value>Confidentialité</value></data>
+  <data name="Footer_Docs" xml:space="preserve"><value>Documentation</value></data>
+  <data name="Footer_Contact" xml:space="preserve"><value>Contact</value></data>
+  <data name="Login_Title" xml:space="preserve"><value>Se connecter à MyPersonalGit</value></data>
+  <data name="Login_Username" xml:space="preserve"><value>Nom d'utilisateur ou e-mail</value></data>
+  <data name="Login_Password" xml:space="preserve"><value>Mot de passe</value></data>
+  <data name="Login_SignIn" xml:space="preserve"><value>Se connecter</value></data>
+  <data name="Login_CreateAccount" xml:space="preserve"><value>Créer un compte</value></data>
+  <data name="Login_OrSignInWith" xml:space="preserve"><value>Ou se connecter avec</value></data>
+  <data name="Login_TwoFactor" xml:space="preserve"><value>Authentification à deux facteurs</value></data>
+  <data name="Login_EnterCode" xml:space="preserve"><value>Entrez le code à 6 chiffres de votre application d'authentification</value></data>
+  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>Utiliser un code de récupération</value></data>
+  <data name="Login_Verify" xml:space="preserve"><value>Vérifier</value></data>
+</root>

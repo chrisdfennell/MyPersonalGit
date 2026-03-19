@@ -158,6 +158,14 @@ public class AppDbContext : DbContext
     // Migration Tasks
     public DbSet<MigrationTask> MigrationTasks => Set<MigrationTask>();
 
+    // OAuth2 Provider (authorization server)
+    public DbSet<OAuth2App> OAuth2Apps => Set<OAuth2App>();
+    public DbSet<OAuth2AuthCode> OAuth2AuthCodes => Set<OAuth2AuthCode>();
+    public DbSet<OAuth2Token> OAuth2Tokens => Set<OAuth2Token>();
+
+    // WebAuthn / Passkeys
+    public DbSet<WebAuthnCredential> WebAuthnCredentials => Set<WebAuthnCredential>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Shared JSON value converters + comparers for List<string> and string[]
@@ -574,6 +582,28 @@ public class AppDbContext : DbContext
         {
             e.HasIndex(t => new { t.RepoName, t.IssueNumber });
             e.HasIndex(t => new { t.Username, t.IsRunning });
+        });
+
+        // --- OAuth2 Provider ---
+        modelBuilder.Entity<OAuth2App>(e =>
+        {
+            e.HasIndex(a => a.ClientId).IsUnique();
+        });
+
+        modelBuilder.Entity<OAuth2AuthCode>(e =>
+        {
+            e.HasIndex(c => c.Code).IsUnique();
+        });
+
+        modelBuilder.Entity<OAuth2Token>(e =>
+        {
+            e.HasIndex(t => t.AccessToken).IsUnique();
+        });
+
+        // --- WebAuthn ---
+        modelBuilder.Entity<WebAuthnCredential>(e =>
+        {
+            e.HasIndex(c => new { c.Username, c.CredentialId }).IsUnique();
         });
     }
 }

@@ -64,6 +64,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Tag Protection** — Protect tags from deletion, force updates, and unauthorized creation with glob pattern matching and per-user allow lists
 - **Commit Signature Verification** — GPG signature verification on commits and annotated tags with "Verified" / "Signed" badges in the UI
 - **Repository Labels** — Manage labels with custom colors per repository; labels are automatically copied when creating repos from templates
+- **AGit Flow** — Push-to-review workflow: `git push origin HEAD:refs/for/main` creates a pull request without forking or creating remote branches. Updates existing open PRs on subsequent pushes
 - **Explore** — Browse all accessible repositories with search, sort, and topic filtering
 - **Search** — Full-text search across repositories, issues, PRs, and code
 
@@ -141,8 +142,11 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 
 ### Authentication
 - **OAuth2 / SSO** — Sign in with GitHub, Google, Microsoft, GitLab, Bitbucket, Facebook, Discord, or Twitter/X. Admins configure Client ID and Secret per provider in the Admin dashboard — only providers with credentials filled in are shown to users
+- **OAuth2 Provider** — Act as an identity provider so other apps can use "Sign in with MyPersonalGit". Implements Authorization Code flow with PKCE, token refresh, userinfo endpoint, and OpenID Connect discovery (`.well-known/openid-configuration`)
 - **LDAP / Active Directory** — Authenticate users against an LDAP directory or Active Directory domain. Users are auto-provisioned on first login with synced attributes (email, display name). Supports group-based admin promotion, SSL/TLS, and StartTLS
+- **SSPI / Windows Integrated Auth** — Transparent Single Sign-On for Windows domain users via Negotiate/NTLM. Users on a domain are authenticated automatically without entering credentials. Enable in Admin > Settings (Windows only)
 - **Two-Factor Authentication** — TOTP-based 2FA with authenticator app support and recovery codes
+- **WebAuthn / Passkeys** — FIDO2 hardware security key and passkey support as a second factor. Register YubiKeys, platform authenticators (Face ID, Windows Hello, Touch ID), and other FIDO2 devices. Sign count verification for cloned key detection
 - **Linked Accounts** — Users can link multiple OAuth providers to their account from Settings
 
 ### Administration
@@ -153,6 +157,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Backup & Restore** — Export and import server data
 - **Security Scanning** — Real dependency vulnerability scanning powered by the [OSV.dev](https://osv.dev/) database. Automatically extracts dependencies from `.csproj` (NuGet), `package.json` (npm), and `requirements.txt` (PyPI), then checks each against known CVEs. Reports severity, fixed versions, and advisory links. Plus manual security advisories with draft/publish/close workflow
 - **Dark Mode** — Full dark/light mode support with a toggle in the header
+- **Multi-Language / i18n** — Localization infrastructure with `.resx` resource files. Ships with English, Spanish (Español), and French (Français). Add more languages by creating `SharedResource.{locale}.resx` files
 
 ## Tech Stack
 
@@ -162,7 +167,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 | Frontend | Blazor Server (interactive server-side rendering) |
 | Database | SQLite (default) or PostgreSQL via Entity Framework Core 10 |
 | Git Engine | LibGit2Sharp |
-| Auth | BCrypt password hashing, session-based auth, PAT tokens, OAuth2 (8 providers), TOTP 2FA, LDAP/AD |
+| Auth | BCrypt password hashing, session-based auth, PAT tokens, OAuth2 (8 providers + provider mode), TOTP 2FA, WebAuthn/Passkeys, LDAP/AD, SSPI |
 | SSH Server | Built-in SSH2 protocol implementation (ECDH, AES-CTR, HMAC-SHA2) |
 | Markdown | Markdig |
 | CI/CD | Docker.DotNet, YamlDotNet |
