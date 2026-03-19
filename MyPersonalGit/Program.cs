@@ -133,7 +133,7 @@ builder.Services.AddSingleton<ITimeTrackingService, TimeTrackingService>();
 builder.Services.AddSingleton<IAGitFlowService, AGitFlowService>();
 builder.Services.AddSingleton<IWebAuthnService, WebAuthnService>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+builder.Services.AddLocalization();
 builder.Services.AddScoped<CurrentUserService>();
 
 var app = builder.Build();
