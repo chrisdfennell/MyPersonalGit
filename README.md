@@ -891,3 +891,21 @@ dotnet test
 ## License
 
 MIT
+
+## Mermaid Test
+
+```mermaid
+graph TD
+    A[Push Code] --> B[CI/CD Runs]
+    B --> C{Tests Pass?}
+    C -->|Yes| D[Deploy]
+    C -->|No| E[Fix]
+```
+
+## Math Test
+
+Inline: $E = mc^2$
+
+Display:
+
+$$\sum_{i=1}^{n} i = \frac{n(n+1)}{2}$$
