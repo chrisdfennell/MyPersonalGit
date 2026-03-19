@@ -7,6 +7,8 @@
 @inject IUserProfileService ProfileService
 @inject IGpgKeyService GpgKeyService
 @inject ITwoFactorService TwoFactorService
+@inject IWebAuthnService WebAuthnService
+@inject IJSRuntime JS
 @inject IAuthService AuthService
 @inject IOAuthService OAuthService
 @inject CurrentUserService UserService
@@ -53,6 +55,10 @@ else
                 <a class="list-group-item list-group-item-action @(ActiveTab == "sessions" ? "active" : "")" 
                    @onclick='() => SetTab("sessions")' style="cursor: pointer;">
                     <i class="bi bi-laptop"></i> Sessions
+                </a>
+                <a class="list-group-item list-group-item-action @(ActiveTab == "passkeys" ? "active" : "")"
+                   @onclick='() => SetTab("passkeys")' style="cursor: pointer;">
+                    <i class="bi bi-fingerprint"></i> Passkeys & Security Keys
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "notifications" ? "active" : "")"
                    @onclick='() => SetTab("notifications")' style="cursor: pointer;">
@@ -460,6 +466,76 @@ else
                     </div>
                 </div>
             }
+            else if (ActiveTab == "passkeys")
+            {
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Passkeys & Security Keys</h5>
+                        <button class="btn btn-primary btn-sm" @onclick="RegisterPasskey" disabled="@(!webAuthnSupported)">
+                            <i class="bi bi-plus-lg"></i> Register New Key
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        @if (!webAuthnSupported)
+                        {
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i>Your browser does not support WebAuthn/Passkeys.
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(webAuthnMessage))
+                        {
+                            <div class="alert @(webAuthnMessageIsError ? "alert-danger" : "alert-success") alert-dismissible">
+                                @webAuthnMessage
+                                <button type="button" class="btn-close" @onclick='() => webAuthnMessage = ""'></button>
+                            </div>
+                        }
+                        @if (showPasskeyNameInput)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Key Name</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" @bind="newPasskeyName" placeholder="e.g. YubiKey 5, iPhone" />
+                                    <button class="btn btn-primary" @onclick="CompletePasskeyRegistration">Register</button>
+                                    <button class="btn btn-secondary" @onclick='() => showPasskeyNameInput = false'>Cancel</button>
+                                </div>
+                            </div>
+                        }
+                        @if (webAuthnCredentials.Count == 0)
+                        {
+                            <p class="text-muted">No passkeys or security keys registered.</p>
+                            <p class="small text-muted">Add a passkey (Face ID, Windows Hello, Touch ID) or hardware security key (YubiKey) for secure two-factor authentication.</p>
+                        }
+                        else
+                        {
+                            <div class="list-group">
+                                @foreach (var cred in webAuthnCredentials)
+                                {
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <i class="bi @(cred.IsPlatform ? "bi-fingerprint" : "bi-key") me-1"></i>
+                                                    @cred.Name
+                                                </h6>
+                                                <small class="text-muted">
+                                                    Registered @cred.CreatedAt.ToString("MMM d, yyyy")
+                                                    @if (cred.LastUsedAt.HasValue)
+                                                    {
+                                                        <span> • Last used @cred.LastUsedAt.Value.ToString("MMM d, yyyy")</span>
+                                                    }
+                                                </small>
+                                            </div>
+                                            <button class="btn btn-danger btn-sm" @onclick="() => DeletePasskey(cred.Id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
             else if (ActiveTab == "notifications")
             {
                 <div class="card">
@@ -728,6 +804,14 @@ else
     private string TwoFactorMessage = "";
     private bool TwoFactorMessageIsError = false;
 
+    // WebAuthn / Passkeys
+    private List<WebAuthnCredential> webAuthnCredentials = new();
+    private bool webAuthnSupported = false;
+    private string webAuthnMessage = "";
+    private bool webAuthnMessageIsError = false;
+    private bool showPasskeyNameInput = false;
+    private string newPasskeyName = "";
+
     // Notification preferences now stored in UserProfileData
 
     private bool ShowAddSshKey = false;
@@ -792,6 +876,8 @@ else
             externalLogins = await OAuthService.GetExternalLoginsAsync(user.Id);
         }
         enabledOAuthProviders = await OAuthService.GetEnabledProvidersAsync();
+        webAuthnCredentials = await WebAuthnService.GetCredentialsAsync(UserService.Username);
+        try { webAuthnSupported = await JS.InvokeAsync<bool>("webAuthn.isSupported"); } catch { }
     }
 
     private async Task SaveProfile()
@@ -1015,4 +1101,56 @@ else
         "twitter" => "X (Twitter)",
         _ => provider
     };
+
+    // --- WebAuthn / Passkey methods ---
+    private async Task RegisterPasskey()
+    {
+        webAuthnMessage = "";
+        showPasskeyNameInput = true;
+        newPasskeyName = "";
+    }
+
+    private async Task CompletePasskeyRegistration()
+    {
+        if (string.IsNullOrWhiteSpace(newPasskeyName))
+        {
+            webAuthnMessage = "Please enter a name for this key.";
+            webAuthnMessageIsError = true;
+            return;
+        }
+
+        try
+        {
+            var options = await WebAuthnService.GenerateRegistrationOptionsAsync(UserService.Username);
+            var optionsJson = System.Text.Json.JsonSerializer.Serialize(options);
+            var attestationJson = await JS.InvokeAsync<string>("webAuthn.register", options);
+
+            var credential = await WebAuthnService.VerifyRegistrationAsync(UserService.Username, newPasskeyName, attestationJson);
+            if (credential != null)
+            {
+                webAuthnMessage = $"Passkey \"{newPasskeyName}\" registered successfully.";
+                webAuthnMessageIsError = false;
+                showPasskeyNameInput = false;
+                webAuthnCredentials = await WebAuthnService.GetCredentialsAsync(UserService.Username);
+            }
+            else
+            {
+                webAuthnMessage = "Registration verification failed. Please try again.";
+                webAuthnMessageIsError = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            webAuthnMessage = $"Registration failed: {ex.Message}";
+            webAuthnMessageIsError = true;
+        }
+    }
+
+    private async Task DeletePasskey(int id)
+    {
+        await WebAuthnService.DeleteCredentialAsync(UserService.Username, id);
+        webAuthnCredentials = await WebAuthnService.GetCredentialsAsync(UserService.Username);
+        webAuthnMessage = "Passkey removed.";
+        webAuthnMessageIsError = false;
+    }
 }

@@ -2,10 +2,14 @@
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject CurrentUserService UserService
 @inject IOAuthService OAuthService
+@inject IWebAuthnService WebAuthnService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
 <PageTitle>Login - MyPersonalGit</PageTitle>
@@ -20,11 +24,11 @@
                         <p class="text-muted">
                             @if (ShowTwoFactorStep)
                             {
-                                <span>Two-factor authentication</span>
+                                <span>@L["Login_TwoFactor"]</span>
                             }
                             else
                             {
-                                <span>Sign in to your account</span>
+                                <span>@L["Login_Title"]</span>
                             }
                         </p>
                     </div>
@@ -42,13 +46,13 @@
                             <DataAnnotationsValidator />
 
                             <div class="mb-3">
-                                <label for="usernameOrEmail" class="form-label">Username or Email</label>
+                                <label for="usernameOrEmail" class="form-label">@L["Login_Username"]</label>
                                 <InputText id="usernameOrEmail" class="form-control" @bind-Value="loginModel.UsernameOrEmail" placeholder="Enter username or email" />
                                 <ValidationMessage For="@(() => loginModel.UsernameOrEmail)" />
                             </div>
 
                             <div class="mb-3">
-                                <label for="password" class="form-label">Password</label>
+                                <label for="password" class="form-label">@L["Login_Password"]</label>
                                 <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" placeholder="Enter password" />
                                 <ValidationMessage For="@(() => loginModel.Password)" />
                             </div>
@@ -57,11 +61,11 @@
                                 @if (IsLoading)
                                 {
                                     <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>Signing in...</span>
+                                    <span>@L["Common_Loading"]</span>
                                 }
                                 else
                                 {
-                                    <span>Sign in</span>
+                                    <span>@L["Login_SignIn"]</span>
                                 }
                             </button>
                         </EditForm>
@@ -70,7 +74,7 @@
                         {
                             <div class="d-flex align-items-center my-3">
                                 <hr class="flex-grow-1" />
-                                <span class="px-3 text-muted small">or continue with</span>
+                                <span class="px-3 text-muted small">@L["Login_OrSignInWith"]</span>
                                 <hr class="flex-grow-1" />
                             </div>
 
@@ -108,13 +112,20 @@
                             @if (IsLoading)
                             {
                                 <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                <span>Verifying...</span>
+                                <span>@L["Common_Loading"]</span>
                             }
                             else
                             {
-                                <span>Verify</span>
+                                <span>@L["Login_Verify"]</span>
                             }
                         </button>
+
+                        @if (hasPasskeys)
+                        {
+                            <button class="btn btn-outline-secondary w-100 mb-3" @onclick="HandlePasskeyLogin" disabled="@IsLoading">
+                                <i class="bi bi-fingerprint me-2"></i>Use a passkey
+                            </button>
+                        }
 
                         <div class="text-center mb-2">
                             @if (UseRecoveryCode)
@@ -142,7 +153,7 @@
                     {
                         <div class="text-center mt-3">
                             <p class="text-muted mb-0">
-                                Don't have an account? <a href="/register" class="text-decoration-none">Sign up</a>
+                                Don't have an account? <a href="/register" class="text-decoration-none">@L["Nav_Register"]</a>
                             </p>
                         </div>
                     }
@@ -160,6 +171,7 @@
     private bool UseRecoveryCode { get; set; }
     private string TwoFactorCode { get; set; } = "";
     private User? _pendingUser;
+    private bool hasPasskeys = false;
     private List<OAuthProviderConfig> oauthProviders = new();
 
     protected override async Task OnInitializedAsync()
@@ -195,6 +207,9 @@
                 ShowTwoFactorStep = true;
                 TwoFactorCode = "";
                 UseRecoveryCode = false;
+                // Check if user has passkeys registered
+                var creds = await WebAuthnService.GetCredentialsAsync(user.Username);
+                hasPasskeys = creds.Count > 0;
                 return;
             }
 
@@ -271,6 +286,35 @@
         TwoFactorCode = "";
         _pendingUser = null;
         ErrorMessage = null;
+    }
+
+    private async Task HandlePasskeyLogin()
+    {
+        if (_pendingUser == null) { BackToLogin(); return; }
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            var options = await WebAuthnService.GenerateAssertionOptionsAsync(_pendingUser.Username);
+            var assertionJson = await JS.InvokeAsync<string>("webAuthn.authenticate", options);
+            var verified = await WebAuthnService.VerifyAssertionAsync(_pendingUser.Username, assertionJson);
+            if (verified)
+            {
+                var sessionId = await UserService.CreateSessionForUserAsync(_pendingUser);
+                if (sessionId != null)
+                {
+                    await JS.InvokeVoidAsync("sessionHelper.set", "sessionId", sessionId);
+                    Navigation.NavigateTo("/", forceLoad: true);
+                }
+                else { ErrorMessage = "Failed to create session."; }
+            }
+            else { ErrorMessage = "Passkey verification failed. Please try again."; }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Passkey authentication failed: {ex.Message}";
+        }
+        finally { IsLoading = false; }
     }
 
     private class LoginModel

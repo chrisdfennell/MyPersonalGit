@@ -32,7 +32,7 @@ public sealed class GitHttpBackendMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, IIssueAutoCloseService issueAutoCloseService, IWorkflowService workflowService)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, IIssueAutoCloseService issueAutoCloseService, IWorkflowService workflowService, IAGitFlowService agitFlowService)
     {
         // Only handle /git/* paths; let everything else pass through.
         if (!context.Request.Path.StartsWithSegments("/git", out var remaining))
@@ -319,6 +319,25 @@ public sealed class GitHttpBackendMiddleware
                     catch (Exception ex)
                     {
                         _logger.LogWarning(ex, "Failed to trigger push workflows.");
+                    }
+
+                    // AGit Flow: detect pushes to refs/for/* and create PRs
+                    try
+                    {
+                        if (Repository.IsValid(repoDir))
+                        {
+                            using var agitRepo = new Repository(repoDir);
+                            foreach (var reference in agitRepo.Refs.Where(r => r.CanonicalName.StartsWith("refs/for/")))
+                            {
+                                var prNumber = await agitFlowService.ProcessAGitPushAsync(repoDir, repoName, reference.CanonicalName, remoteUser);
+                                if (prNumber.HasValue)
+                                    _logger.LogInformation("AGit: created/updated PR #{Number} for {Ref}", prNumber.Value, reference.CanonicalName);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to process AGit flow.");
                     }
                 }
             }

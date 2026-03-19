@@ -128,6 +128,63 @@
             }
         };
     </script>
+    <script>
+        // WebAuthn / Passkey helpers for Blazor interop
+        window.webAuthn = {
+            isSupported: function() {
+                return !!window.PublicKeyCredential;
+            },
+            register: async function(options) {
+                const publicKey = {
+                    challenge: Uint8Array.from(atob(options.challenge.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0)),
+                    rp: { id: options.rpId, name: options.rpName },
+                    user: {
+                        id: Uint8Array.from(atob(options.userId.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0)),
+                        name: options.userName,
+                        displayName: options.userDisplayName
+                    },
+                    pubKeyCredParams: [
+                        { type: "public-key", alg: -7 },   // ES256
+                        { type: "public-key", alg: -257 }  // RS256
+                    ],
+                    timeout: 60000,
+                    attestation: "none",
+                    excludeCredentials: (options.excludeCredentials || []).map(id => ({
+                        type: "public-key",
+                        id: Uint8Array.from(atob(id.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0))
+                    }))
+                };
+                const credential = await navigator.credentials.create({ publicKey });
+                const b64url = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+                return JSON.stringify({
+                    credentialId: b64url(credential.rawId),
+                    clientDataJSON: b64url(credential.response.clientDataJSON),
+                    attestationObject: b64url(credential.response.attestationObject),
+                    publicKey: credential.response.getPublicKey ? b64url(credential.response.getPublicKey()) : "",
+                    isPlatform: credential.authenticatorAttachment === "platform"
+                });
+            },
+            authenticate: async function(options) {
+                const publicKey = {
+                    challenge: Uint8Array.from(atob(options.challenge.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0)),
+                    rpId: options.rpId,
+                    timeout: 60000,
+                    allowCredentials: (options.allowCredentials || []).map(id => ({
+                        type: "public-key",
+                        id: Uint8Array.from(atob(id.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0))
+                    }))
+                };
+                const assertion = await navigator.credentials.get({ publicKey });
+                const b64url = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+                return JSON.stringify({
+                    credentialId: b64url(assertion.rawId),
+                    clientDataJSON: b64url(assertion.response.clientDataJSON),
+                    authenticatorData: b64url(assertion.response.authenticatorData),
+                    signature: b64url(assertion.response.signature)
+                });
+            }
+        };
+    </script>
 </body>
 
 </html>
