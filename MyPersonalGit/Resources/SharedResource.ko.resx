@@ -1,0 +1,756 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+
+  <!-- Navigation -->
+  <data name="Nav_Issues" xml:space="preserve"><value>이슈</value></data>
+  <data name="Nav_Packages" xml:space="preserve"><value>패키지</value></data>
+  <data name="Nav_Profile" xml:space="preserve"><value>내 프로필</value></data>
+  <data name="Nav_PullRequests" xml:space="preserve"><value>Pull request</value></data>
+  <data name="Nav_Register" xml:space="preserve"><value>가입</value></data>
+  <data name="Nav_Repositories" xml:space="preserve"><value>저장소</value></data>
+  <data name="Nav_Search" xml:space="preserve"><value>검색</value></data>
+  <data name="Nav_Settings" xml:space="preserve"><value>설정</value></data>
+  <data name="Nav_SignIn" xml:space="preserve"><value>로그인</value></data>
+  <data name="Nav_SignOut" xml:space="preserve"><value>로그아웃</value></data>
+  <data name="Nav_Snippets" xml:space="preserve"><value>스니펫</value></data>
+  <data name="Nav_Admin" xml:space="preserve"><value>관리</value></data>
+  <data name="Nav_Notifications" xml:space="preserve"><value>알림</value></data>
+
+  <!-- Common -->
+  <data name="Common_Loading" xml:space="preserve"><value>로딩 중...</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>저장</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>삭제</value></data>
+  <data name="Common_Edit" xml:space="preserve"><value>편집</value></data>
+  <data name="Common_Create" xml:space="preserve"><value>생성</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>닫기</value></data>
+  <data name="Common_Open" xml:space="preserve"><value>열기</value></data>
+  <data name="Common_Private" xml:space="preserve"><value>비공개</value></data>
+  <data name="Common_Public" xml:space="preserve"><value>공개</value></data>
+
+  <!-- Search -->
+  <data name="Search_Button" xml:space="preserve"><value>검색</value></data>
+  <data name="Search_Heading" xml:space="preserve"><value>검색</value></data>
+  <data name="Search_InitialHeading" xml:space="preserve"><value>모든 저장소에서 검색</value></data>
+  <data name="Search_InitialSubheading" xml:space="preserve"><value>저장소, 코드, 이슈, Pull request 검색</value></data>
+  <data name="Search_InputPlaceholder" xml:space="preserve"><value>저장소, 코드, 이슈, Pull request 검색...</value></data>
+  <data name="Search_NoCode" xml:space="preserve"><value>검색과 일치하는 코드가 없습니다.</value></data>
+  <data name="Search_NoIssues" xml:space="preserve"><value>검색과 일치하는 이슈가 없습니다.</value></data>
+  <data name="Search_NoPullRequests" xml:space="preserve"><value>검색과 일치하는 Pull request가 없습니다.</value></data>
+  <data name="Search_NoRepositories" xml:space="preserve"><value>검색과 일치하는 저장소가 없습니다.</value></data>
+  <data name="Search_PageTitle" xml:space="preserve"><value>검색 · Personal Git</value></data>
+  <data name="Search_Placeholder" xml:space="preserve"><value>검색 또는 이동...</value></data>
+  <data name="Search_Searching" xml:space="preserve"><value>모든 저장소에서 검색 중...</value></data>
+  <data name="Search_TabCode" xml:space="preserve"><value>코드</value></data>
+  <data name="Search_TabIssues" xml:space="preserve"><value>이슈</value></data>
+  <data name="Search_TabPullRequests" xml:space="preserve"><value>Pull request</value></data>
+  <data name="Search_TabRepositories" xml:space="preserve"><value>저장소</value></data>
+
+  <!-- Footer -->
+  <data name="Footer_Contact" xml:space="preserve"><value>문의</value></data>
+  <data name="Footer_Docs" xml:space="preserve"><value>문서</value></data>
+  <data name="Footer_Documentation" xml:space="preserve"><value>문서</value></data>
+  <data name="Footer_Page" xml:space="preserve"><value>페이지</value></data>
+  <data name="Footer_PageNotFound" xml:space="preserve"><value>페이지를 찾을 수 없습니다</value></data>
+  <data name="Footer_Privacy" xml:space="preserve"><value>개인정보</value></data>
+  <data name="Footer_PrivacyPolicy" xml:space="preserve"><value>개인정보 처리방침</value></data>
+  <data name="Footer_Terms" xml:space="preserve"><value>이용약관</value></data>
+  <data name="Footer_TermsOfService" xml:space="preserve"><value>서비스 이용약관</value></data>
+
+  <!-- Home -->
+  <data name="Home_Archived" xml:space="preserve"><value>보관됨</value></data>
+  <data name="Home_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Home_CreateNewRepo" xml:space="preserve"><value>새 저장소 만들기</value></data>
+  <data name="Home_CreateRepository" xml:space="preserve"><value>저장소 만들기</value></data>
+  <data name="Home_Creating" xml:space="preserve"><value>생성 중...</value></data>
+  <data name="Home_Description" xml:space="preserve"><value>설명</value></data>
+  <data name="Home_FindRepoPlaceholder" xml:space="preserve"><value>저장소 검색...</value></data>
+  <data name="Home_Import" xml:space="preserve"><value>가져오기</value></data>
+  <data name="Home_InitializeWithFiles" xml:space="preserve"><value>파일로 초기화</value></data>
+  <data name="Home_NewRepo" xml:space="preserve"><value>새로 만들기</value></data>
+  <data name="Home_NoMatchingResults" xml:space="preserve"><value>일치하는 결과 없음</value></data>
+  <data name="Home_NoReposYet" xml:space="preserve"><value>저장소가 아직 없습니다</value></data>
+  <data name="Home_NoRepositoriesFound" xml:space="preserve"><value>저장소를 찾을 수 없습니다</value></data>
+  <data name="Home_NoTemplate" xml:space="preserve"><value>템플릿 없음</value></data>
+  <data name="Home_Optional" xml:space="preserve"><value>(선택 사항)</value></data>
+  <data name="Home_PageTitle" xml:space="preserve"><value>저장소 · Personal Git</value></data>
+  <data name="Home_Private" xml:space="preserve"><value>비공개</value></data>
+  <data name="Home_PrivateDescription" xml:space="preserve"><value>본인(및 협업자)만 이 저장소를 볼 수 있습니다.</value></data>
+  <data name="Home_Public" xml:space="preserve"><value>공개</value></data>
+  <data name="Home_PublicDescription" xml:space="preserve"><value>누구나 이 저장소를 볼 수 있습니다.</value></data>
+  <data name="Home_RecentActivity" xml:space="preserve"><value>최근 활동</value></data>
+  <data name="Home_RecentRepositories" xml:space="preserve"><value>최근 저장소</value></data>
+  <data name="Home_RepoName" xml:space="preserve"><value>저장소 이름</value></data>
+  <data name="Home_RepoTemplate" xml:space="preserve"><value>저장소 템플릿</value></data>
+  <data name="Home_Repositories" xml:space="preserve"><value>저장소</value></data>
+  <data name="Home_SearchRepos" xml:space="preserve"><value>저장소 검색...</value></data>
+  <data name="Home_NoRepos" xml:space="preserve"><value>저장소를 찾을 수 없습니다</value></data>
+  <data name="Home_CreateFirst" xml:space="preserve"><value>첫 번째 저장소를 만들어 시작하세요.</value></data>
+  <data name="Home_StorageLocation" xml:space="preserve"><value>저장 위치</value></data>
+  <data name="Home_StorageLocationHint" xml:space="preserve"><value>베어 저장소가 생성될 전체 경로입니다.</value></data>
+  <data name="Home_Template" xml:space="preserve"><value>템플릿</value></data>
+  <data name="Home_UploadFolder" xml:space="preserve"><value>폴더 업로드</value></data>
+  <data name="Home_UploadZip" xml:space="preserve"><value>Zip 업로드</value></data>
+  <data name="Home_UseThisTemplate" xml:space="preserve"><value>이 템플릿 사용</value></data>
+
+  <!-- Login -->
+  <data name="Login_CreateAccount" xml:space="preserve"><value>계정 만들기</value></data>
+  <data name="Login_EnterCode" xml:space="preserve"><value>인증 앱의 6자리 코드를 입력하세요</value></data>
+  <data name="Login_OrSignInWith" xml:space="preserve"><value>또는 다음으로 로그인</value></data>
+  <data name="Login_Password" xml:space="preserve"><value>비밀번호</value></data>
+  <data name="Login_SignIn" xml:space="preserve"><value>로그인</value></data>
+  <data name="Login_Title" xml:space="preserve"><value>MyPersonalGit에 로그인</value></data>
+  <data name="Login_TwoFactor" xml:space="preserve"><value>이중 인증</value></data>
+  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>복구 코드 사용</value></data>
+  <data name="Login_Username" xml:space="preserve"><value>사용자 이름 또는 이메일</value></data>
+  <data name="Login_Verify" xml:space="preserve"><value>확인</value></data>
+
+  <!-- Register -->
+  <data name="Register_AlreadyHaveAccount" xml:space="preserve"><value>이미 계정이 있으신가요?</value></data>
+  <data name="Register_ConfirmPassword" xml:space="preserve"><value>비밀번호 확인</value></data>
+  <data name="Register_ConfirmPasswordPlaceholder" xml:space="preserve"><value>비밀번호를 다시 입력</value></data>
+  <data name="Register_CreateAccount" xml:space="preserve"><value>계정 만들기</value></data>
+  <data name="Register_CreateAccountButton" xml:space="preserve"><value>계정 만들기</value></data>
+  <data name="Register_CreatingAccount" xml:space="preserve"><value>계정 생성 중...</value></data>
+  <data name="Register_Email" xml:space="preserve"><value>이메일</value></data>
+  <data name="Register_EmailPlaceholder" xml:space="preserve"><value>이메일 입력</value></data>
+  <data name="Register_FullName" xml:space="preserve"><value>이름 (선택 사항)</value></data>
+  <data name="Register_FullNamePlaceholder" xml:space="preserve"><value>이름 입력</value></data>
+  <data name="Register_PageTitle" xml:space="preserve"><value>가입 - MyPersonalGit</value></data>
+  <data name="Register_Password" xml:space="preserve"><value>비밀번호</value></data>
+  <data name="Register_PasswordPlaceholder" xml:space="preserve"><value>비밀번호 만들기</value></data>
+  <data name="Register_SignIn" xml:space="preserve"><value>로그인</value></data>
+  <data name="Register_Subtitle" xml:space="preserve"><value>지금 MyPersonalGit에 가입하세요</value></data>
+  <data name="Register_Username" xml:space="preserve"><value>사용자 이름</value></data>
+  <data name="Register_UsernamePlaceholder" xml:space="preserve"><value>사용자 이름 선택</value></data>
+
+  <!-- Explore -->
+  <data name="Explore_Archived" xml:space="preserve"><value>보관됨</value></data>
+  <data name="Explore_ClearFilter" xml:space="preserve"><value>초기화</value></data>
+  <data name="Explore_Fork" xml:space="preserve"><value>Fork</value></data>
+  <data name="Explore_Heading" xml:space="preserve"><value>저장소 탐색</value></data>
+  <data name="Explore_NoResults" xml:space="preserve"><value>조건에 맞는 저장소를 찾을 수 없습니다.</value></data>
+  <data name="Explore_PageTitle" xml:space="preserve"><value>탐색 · Personal Git</value></data>
+  <data name="Explore_Private" xml:space="preserve"><value>비공개</value></data>
+  <data name="Explore_SearchPlaceholder" xml:space="preserve"><value>저장소 검색...</value></data>
+  <data name="Explore_SortMostForks" xml:space="preserve"><value>Fork 많은 순</value></data>
+  <data name="Explore_SortMostStars" xml:space="preserve"><value>스타 많은 순</value></data>
+  <data name="Explore_SortName" xml:space="preserve"><value>이름순</value></data>
+  <data name="Explore_SortRecentlyUpdated" xml:space="preserve"><value>최근 업데이트순</value></data>
+  <data name="Explore_Topics" xml:space="preserve"><value>토픽</value></data>
+
+  <!-- Repository -->
+  <data name="Repo_About" xml:space="preserve"><value>소개</value></data>
+  <data name="Repo_Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Repo_ActiveBranches" xml:space="preserve"><value>활성 브랜치</value></data>
+  <data name="Repo_AddFile" xml:space="preserve"><value>파일 추가</value></data>
+  <data name="Repo_AddFiles" xml:space="preserve"><value>파일 추가</value></data>
+  <data name="Repo_BackToDashboard" xml:space="preserve"><value>대시보드로 돌아가기</value></data>
+  <data name="Repo_Blame" xml:space="preserve"><value>Blame</value></data>
+  <data name="Repo_Branches" xml:space="preserve"><value>브랜치</value></data>
+  <data name="Repo_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Repo_Clone" xml:space="preserve"><value>클론</value></data>
+  <data name="Repo_Code" xml:space="preserve"><value>코드</value></data>
+  <data name="Repo_CommitGraph" xml:space="preserve"><value>커밋 그래프</value></data>
+  <data name="Repo_Commits" xml:space="preserve"><value>커밋</value></data>
+  <data name="Repo_ConfirmDeleteFile" xml:space="preserve"><value>이 파일을 삭제하시겠습니까?</value></data>
+  <data name="Repo_ConfirmDeleteRepo" xml:space="preserve"><value>이 저장소를 삭제하시겠습니까?</value></data>
+  <data name="Repo_ContainerImages" xml:space="preserve"><value>컨테이너 이미지</value></data>
+  <data name="Repo_ContainerImagesDescription" xml:space="preserve"><value>이 저장소의 컨테이너 이미지</value></data>
+  <data name="Repo_Create" xml:space="preserve"><value>생성</value></data>
+  <data name="Repo_CreateBranch" xml:space="preserve"><value>브랜치 생성</value></data>
+  <data name="Repo_CreateNewRelease" xml:space="preserve"><value>새 릴리스 만들기</value></data>
+  <data name="Repo_CreateTag" xml:space="preserve"><value>태그 생성</value></data>
+  <data name="Repo_Delete" xml:space="preserve"><value>삭제</value></data>
+  <data name="Repo_DeleteFile" xml:space="preserve"><value>파일 삭제</value></data>
+  <data name="Repo_DeleteRepository" xml:space="preserve"><value>저장소 삭제</value></data>
+  <data name="Repo_DescribeRelease" xml:space="preserve"><value>이 릴리스에 대한 설명</value></data>
+  <data name="Repo_Description" xml:space="preserve"><value>설명</value></data>
+  <data name="Repo_Discussions" xml:space="preserve"><value>토론</value></data>
+  <data name="Repo_Download" xml:space="preserve"><value>다운로드</value></data>
+  <data name="Repo_Edit" xml:space="preserve"><value>편집</value></data>
+  <data name="Repo_GoToFile" xml:space="preserve"><value>파일로 이동</value></data>
+  <data name="Repo_Graph" xml:space="preserve"><value>그래프</value></data>
+  <data name="Repo_History" xml:space="preserve"><value>히스토리</value></data>
+  <data name="Repo_Insights" xml:space="preserve"><value>인사이트</value></data>
+  <data name="Repo_Issues" xml:space="preserve"><value>이슈</value></data>
+  <data name="Repo_Languages" xml:space="preserve"><value>언어</value></data>
+  <data name="Repo_NewBranch" xml:space="preserve"><value>새 브랜치</value></data>
+  <data name="Repo_NewRelease" xml:space="preserve"><value>새 릴리스</value></data>
+  <data name="Repo_NewTag" xml:space="preserve"><value>새 태그</value></data>
+  <data name="Repo_NoBranches" xml:space="preserve"><value>브랜치 없음</value></data>
+  <data name="Repo_NoCommits" xml:space="preserve"><value>커밋 없음</value></data>
+  <data name="Repo_NoContainerImages" xml:space="preserve"><value>컨테이너 이미지 없음</value></data>
+  <data name="Repo_NoReleases" xml:space="preserve"><value>릴리스 없음</value></data>
+  <data name="Repo_NoReleasesDescription" xml:space="preserve"><value>아직 게시된 릴리스가 없습니다.</value></data>
+  <data name="Repo_NoTags" xml:space="preserve"><value>태그 없음</value></data>
+  <data name="Repo_NotFound" xml:space="preserve"><value>저장소를 찾을 수 없습니다</value></data>
+  <data name="Repo_Packages" xml:space="preserve"><value>패키지</value></data>
+  <data name="Repo_Projects" xml:space="preserve"><value>프로젝트</value></data>
+  <data name="Repo_PublishRelease" xml:space="preserve"><value>릴리스 게시</value></data>
+  <data name="Repo_PullRequests" xml:space="preserve"><value>Pull Request</value></data>
+  <data name="Repo_QuickSetup" xml:space="preserve"><value>빠른 설정</value></data>
+  <data name="Repo_ReleaseTags" xml:space="preserve"><value>릴리스 태그</value></data>
+  <data name="Repo_ReleaseTitle" xml:space="preserve"><value>릴리스 제목</value></data>
+  <data name="Repo_Releases" xml:space="preserve"><value>릴리스</value></data>
+  <data name="Repo_Security" xml:space="preserve"><value>보안</value></data>
+  <data name="Repo_Settings" xml:space="preserve"><value>설정</value></data>
+  <data name="Repo_SettingsDescription" xml:space="preserve"><value>저장소 설정 관리</value></data>
+  <data name="Repo_SwitchBranches" xml:space="preserve"><value>브랜치 전환</value></data>
+  <data name="Repo_Tags" xml:space="preserve"><value>태그</value></data>
+  <data name="Repo_Wiki" xml:space="preserve"><value>Wiki</value></data>
+
+  <!-- Issues -->
+  <data name="Issues_Add" xml:space="preserve"><value>추가</value></data>
+  <data name="Issues_AddAssignee" xml:space="preserve"><value>담당자 추가</value></data>
+  <data name="Issues_AddComment" xml:space="preserve"><value>댓글 추가</value></data>
+  <data name="Issues_AddDependency" xml:space="preserve"><value>의존성 추가</value></data>
+  <data name="Issues_AllMilestones" xml:space="preserve"><value>모든 마일스톤</value></data>
+  <data name="Issues_Assignees" xml:space="preserve"><value>담당자</value></data>
+  <data name="Issues_BlockedBy" xml:space="preserve"><value>차단 대상</value></data>
+  <data name="Issues_Blocks" xml:space="preserve"><value>차단 중</value></data>
+  <data name="Issues_BlocksOther" xml:space="preserve"><value>다른 이슈를 차단 중</value></data>
+  <data name="Issues_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Issues_Close" xml:space="preserve"><value>닫기</value></data>
+  <data name="Issues_CloseIssue" xml:space="preserve"><value>이슈 닫기</value></data>
+  <data name="Issues_Closed" xml:space="preserve"><value>닫힘</value></data>
+  <data name="Issues_Comment" xml:space="preserve"><value>댓글</value></data>
+  <data name="Issues_ConvertToIssue" xml:space="preserve"><value>이슈로 변환</value></data>
+  <data name="Issues_CreateAsDraft" xml:space="preserve"><value>초안으로 만들기</value></data>
+  <data name="Issues_CreateDraft" xml:space="preserve"><value>초안 만들기</value></data>
+  <data name="Issues_CreateIssue" xml:space="preserve"><value>이슈 만들기</value></data>
+  <data name="Issues_CreateMilestone" xml:space="preserve"><value>마일스톤 만들기</value></data>
+  <data name="Issues_CreateTemplate" xml:space="preserve"><value>템플릿 만들기</value></data>
+  <data name="Issues_DefaultLabels" xml:space="preserve"><value>기본 레이블</value></data>
+  <data name="Issues_Dependencies" xml:space="preserve"><value>의존성</value></data>
+  <data name="Issues_DescribeMilestone" xml:space="preserve"><value>마일스톤 설명</value></data>
+  <data name="Issues_Description" xml:space="preserve"><value>설명</value></data>
+  <data name="Issues_Draft" xml:space="preserve"><value>초안</value></data>
+  <data name="Issues_DraftDescription" xml:space="preserve"><value>초안 이슈는 게시하기 전까지 다른 사용자에게 표시되지 않습니다.</value></data>
+  <data name="Issues_DueDate" xml:space="preserve"><value>마감일</value></data>
+  <data name="Issues_IsBlockedBy" xml:space="preserve"><value>다음에 의해 차단됨</value></data>
+  <data name="Issues_IssueTemplates" xml:space="preserve"><value>이슈 템플릿</value></data>
+  <data name="Issues_IssueTitlePlaceholder" xml:space="preserve"><value>이슈 제목</value></data>
+  <data name="Issues_LabelsLabel" xml:space="preserve"><value>레이블</value></data>
+  <data name="Issues_LeaveComment" xml:space="preserve"><value>댓글 남기기</value></data>
+  <data name="Issues_LockedMessage" xml:space="preserve"><value>이 이슈는 잠겨 있습니다.</value></data>
+  <data name="Issues_Milestone" xml:space="preserve"><value>마일스톤</value></data>
+  <data name="Issues_Milestones" xml:space="preserve"><value>마일스톤</value></data>
+  <data name="Issues_NewIssue" xml:space="preserve"><value>새 이슈</value></data>
+  <data name="Issues_NewIssueTemplate" xml:space="preserve"><value>새 이슈 템플릿</value></data>
+  <data name="Issues_NewMilestone" xml:space="preserve"><value>새 마일스톤</value></data>
+  <data name="Issues_NewTemplate" xml:space="preserve"><value>새 템플릿</value></data>
+  <data name="Issues_NoDescription" xml:space="preserve"><value>설명이 없습니다.</value></data>
+  <data name="Issues_NoMilestone" xml:space="preserve"><value>마일스톤 없음</value></data>
+  <data name="Issues_NoTemplate" xml:space="preserve"><value>템플릿 없음</value></data>
+  <data name="Issues_NoTemplates" xml:space="preserve"><value>템플릿 없음</value></data>
+  <data name="Issues_Open" xml:space="preserve"><value>열림</value></data>
+  <data name="Issues_Pinned" xml:space="preserve"><value>고정됨</value></data>
+  <data name="Issues_Reopen" xml:space="preserve"><value>다시 열기</value></data>
+  <data name="Issues_ReopenIssue" xml:space="preserve"><value>이슈 다시 열기</value></data>
+  <data name="Issues_Save" xml:space="preserve"><value>저장</value></data>
+  <data name="Issues_StartTimer" xml:space="preserve"><value>타이머 시작</value></data>
+  <data name="Issues_Template" xml:space="preserve"><value>템플릿</value></data>
+  <data name="Issues_TemplateBody" xml:space="preserve"><value>템플릿 본문</value></data>
+  <data name="Issues_TemplateDescPlaceholder" xml:space="preserve"><value>템플릿 설명</value></data>
+  <data name="Issues_TemplateName" xml:space="preserve"><value>템플릿 이름</value></data>
+  <data name="Issues_Templates" xml:space="preserve"><value>템플릿</value></data>
+  <data name="Issues_TimeTracking" xml:space="preserve"><value>시간 추적</value></data>
+  <data name="Issues_Title" xml:space="preserve"><value>이슈</value></data>
+  <data name="Issues_TitleLabel" xml:space="preserve"><value>제목</value></data>
+
+  <!-- Pull Requests -->
+  <data name="PR_Approve" xml:space="preserve"><value>승인</value></data>
+  <data name="PR_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="PR_Close" xml:space="preserve"><value>닫기</value></data>
+  <data name="PR_Closed" xml:space="preserve"><value>닫힘</value></data>
+  <data name="PR_Comment" xml:space="preserve"><value>댓글</value></data>
+  <data name="PR_Commits" xml:space="preserve"><value>커밋</value></data>
+  <data name="PR_Conversation" xml:space="preserve"><value>대화</value></data>
+  <data name="PR_ConvertToDraft" xml:space="preserve"><value>초안으로 변환</value></data>
+  <data name="PR_CreateAsDraft" xml:space="preserve"><value>초안으로 만들기</value></data>
+  <data name="PR_CreatePullRequest" xml:space="preserve"><value>Pull request 만들기</value></data>
+  <data name="PR_DescribePlaceholder" xml:space="preserve"><value>변경 사항을 설명하세요...</value></data>
+  <data name="PR_Description" xml:space="preserve"><value>설명</value></data>
+  <data name="PR_DisableAutoMerge" xml:space="preserve"><value>자동 머지 비활성화</value></data>
+  <data name="PR_Draft" xml:space="preserve"><value>초안</value></data>
+  <data name="PR_EnableAutoMerge" xml:space="preserve"><value>자동 머지 활성화</value></data>
+  <data name="PR_FilesChanged" xml:space="preserve"><value>변경된 파일</value></data>
+  <data name="PR_Labels" xml:space="preserve"><value>레이블</value></data>
+  <data name="PR_LeaveReviewComment" xml:space="preserve"><value>리뷰 댓글 남기기</value></data>
+  <data name="PR_MarkAsResolved" xml:space="preserve"><value>해결됨으로 표시</value></data>
+  <data name="PR_MergeCommit" xml:space="preserve"><value>Merge commit</value></data>
+  <data name="PR_MergePullRequest" xml:space="preserve"><value>Pull request 머지</value></data>
+  <data name="PR_Merged" xml:space="preserve"><value>머지됨</value></data>
+  <data name="PR_NewPullRequest" xml:space="preserve"><value>새 Pull request</value></data>
+  <data name="PR_NoDescription" xml:space="preserve"><value>설명이 없습니다.</value></data>
+  <data name="PR_NoLabels" xml:space="preserve"><value>레이블 없음</value></data>
+  <data name="PR_NoReviewers" xml:space="preserve"><value>리뷰어 없음</value></data>
+  <data name="PR_Open" xml:space="preserve"><value>열림</value></data>
+  <data name="PR_ReadyForReview" xml:space="preserve"><value>리뷰 준비 완료</value></data>
+  <data name="PR_RebaseAndMerge" xml:space="preserve"><value>Rebase 후 머지</value></data>
+  <data name="PR_RequestChanges" xml:space="preserve"><value>변경 요청</value></data>
+  <data name="PR_ResolveConflicts" xml:space="preserve"><value>충돌 해결</value></data>
+  <data name="PR_ResolveMergeConflicts" xml:space="preserve"><value>머지 충돌 해결</value></data>
+  <data name="PR_ReviewChanges" xml:space="preserve"><value>변경 사항 리뷰</value></data>
+  <data name="PR_Reviewers" xml:space="preserve"><value>리뷰어</value></data>
+  <data name="PR_SelectBranch" xml:space="preserve"><value>브랜치 선택</value></data>
+  <data name="PR_SourceBranch" xml:space="preserve"><value>소스 브랜치</value></data>
+  <data name="PR_Split" xml:space="preserve"><value>분할</value></data>
+  <data name="PR_SquashAndMerge" xml:space="preserve"><value>Squash 후 머지</value></data>
+  <data name="PR_TargetBranch" xml:space="preserve"><value>대상 브랜치</value></data>
+  <data name="PR_Title" xml:space="preserve"><value>Pull Request</value></data>
+  <data name="PR_TitleLabel" xml:space="preserve"><value>제목</value></data>
+  <data name="PR_TitlePlaceholder" xml:space="preserve"><value>Pull request 제목</value></data>
+  <data name="PR_Unified" xml:space="preserve"><value>통합</value></data>
+  <data name="PR_ViewComparison" xml:space="preserve"><value>비교 보기</value></data>
+
+  <!-- Compare -->
+  <data name="Compare_Base" xml:space="preserve"><value>베이스</value></data>
+  <data name="Compare_BranchesIdentical" xml:space="preserve"><value>이 브랜치들은 동일합니다.</value></data>
+  <data name="Compare_ChooseBranches" xml:space="preserve"><value>브랜치 선택</value></data>
+  <data name="Compare_Commits" xml:space="preserve"><value>커밋</value></data>
+  <data name="Compare_Compare" xml:space="preserve"><value>비교</value></data>
+  <data name="Compare_CompareButton" xml:space="preserve"><value>비교</value></data>
+  <data name="Compare_ComparingChanges" xml:space="preserve"><value>변경 사항 비교 중</value></data>
+  <data name="Compare_CreatePullRequest" xml:space="preserve"><value>Pull request 만들기</value></data>
+  <data name="Compare_FilesChanged" xml:space="preserve"><value>변경된 파일</value></data>
+  <data name="Compare_Split" xml:space="preserve"><value>분할</value></data>
+  <data name="Compare_Title" xml:space="preserve"><value>비교</value></data>
+  <data name="Compare_Unified" xml:space="preserve"><value>통합</value></data>
+
+  <!-- Actions -->
+  <data name="Actions_AddWebhook" xml:space="preserve"><value>Webhook 추가</value></data>
+  <data name="Actions_Artifacts" xml:space="preserve"><value>아티팩트</value></data>
+  <data name="Actions_Back" xml:space="preserve"><value>뒤로</value></data>
+  <data name="Actions_BackToRuns" xml:space="preserve"><value>실행 목록으로 돌아가기</value></data>
+  <data name="Actions_BackToWebhooks" xml:space="preserve"><value>Webhook 목록으로 돌아가기</value></data>
+  <data name="Actions_Branch" xml:space="preserve"><value>브랜치</value></data>
+  <data name="Actions_BranchPlaceholder" xml:space="preserve"><value>브랜치 이름</value></data>
+  <data name="Actions_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Actions_CommitMessage" xml:space="preserve"><value>커밋 메시지</value></data>
+  <data name="Actions_CommitMessagePlaceholder" xml:space="preserve"><value>커밋 메시지 입력</value></data>
+  <data name="Actions_CommitSHA" xml:space="preserve"><value>커밋 SHA</value></data>
+  <data name="Actions_CommitSHAPlaceholder" xml:space="preserve"><value>커밋 SHA 입력</value></data>
+  <data name="Actions_Create" xml:space="preserve"><value>생성</value></data>
+  <data name="Actions_CreateWorkflowRun" xml:space="preserve"><value>워크플로 실행 만들기</value></data>
+  <data name="Actions_Download" xml:space="preserve"><value>다운로드</value></data>
+  <data name="Actions_Events" xml:space="preserve"><value>이벤트</value></data>
+  <data name="Actions_NoDeliveries" xml:space="preserve"><value>전달 내역 없음</value></data>
+  <data name="Actions_NoRunsYet" xml:space="preserve"><value>아직 실행 내역이 없습니다</value></data>
+  <data name="Actions_NoWebhooks" xml:space="preserve"><value>Webhook 없음</value></data>
+  <data name="Actions_NoWebhooksDescription" xml:space="preserve"><value>아직 Webhook이 설정되지 않았습니다.</value></data>
+  <data name="Actions_PayloadURL" xml:space="preserve"><value>페이로드 URL</value></data>
+  <data name="Actions_RecentDeliveries" xml:space="preserve"><value>최근 전달 내역</value></data>
+  <data name="Actions_Repositories" xml:space="preserve"><value>저장소</value></data>
+  <data name="Actions_RequestPayload" xml:space="preserve"><value>요청 페이로드</value></data>
+  <data name="Actions_Rerun" xml:space="preserve"><value>재실행</value></data>
+  <data name="Actions_Response" xml:space="preserve"><value>응답</value></data>
+  <data name="Actions_Run" xml:space="preserve"><value>실행</value></data>
+  <data name="Actions_RunNotFound" xml:space="preserve"><value>실행을 찾을 수 없습니다</value></data>
+  <data name="Actions_RunWorkflow" xml:space="preserve"><value>워크플로 실행</value></data>
+  <data name="Actions_SaveChanges" xml:space="preserve"><value>변경 사항 저장</value></data>
+  <data name="Actions_SelectWorkflow" xml:space="preserve"><value>워크플로 선택</value></data>
+  <data name="Actions_Title" xml:space="preserve"><value>Actions</value></data>
+  <data name="Actions_WebhookDetails" xml:space="preserve"><value>Webhook 상세</value></data>
+  <data name="Actions_Webhooks" xml:space="preserve"><value>Webhook</value></data>
+  <data name="Actions_WorkflowName" xml:space="preserve"><value>워크플로 이름</value></data>
+  <data name="Actions_WorkflowNamePlaceholder" xml:space="preserve"><value>워크플로 이름 입력</value></data>
+  <data name="Actions_WorkflowRuns" xml:space="preserve"><value>워크플로 실행</value></data>
+
+  <!-- Blame -->
+  <data name="Blame_BackToFile" xml:space="preserve"><value>파일로 돌아가기</value></data>
+  <data name="Blame_FileNotFound" xml:space="preserve"><value>파일을 찾을 수 없습니다</value></data>
+  <data name="Blame_Loading" xml:space="preserve"><value>로딩 중...</value></data>
+  <data name="Blame_Repository" xml:space="preserve"><value>저장소</value></data>
+  <data name="Blame_Title" xml:space="preserve"><value>Blame</value></data>
+  <data name="Blame_UnableToLoad" xml:space="preserve"><value>Blame 데이터를 불러올 수 없습니다</value></data>
+
+  <!-- Discussions -->
+  <data name="Discussions_AcceptedAnswer" xml:space="preserve"><value>채택된 답변</value></data>
+  <data name="Discussions_AddComment" xml:space="preserve"><value>댓글 추가</value></data>
+  <data name="Discussions_All" xml:space="preserve"><value>전체</value></data>
+  <data name="Discussions_Announcements" xml:space="preserve"><value>공지사항</value></data>
+  <data name="Discussions_Answered" xml:space="preserve"><value>답변됨</value></data>
+  <data name="Discussions_BackToList" xml:space="preserve"><value>목록으로 돌아가기</value></data>
+  <data name="Discussions_Body" xml:space="preserve"><value>본문</value></data>
+  <data name="Discussions_BodyPlaceholder" xml:space="preserve"><value>토론 본문을 작성하세요...</value></data>
+  <data name="Discussions_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Discussions_Category" xml:space="preserve"><value>카테고리</value></data>
+  <data name="Discussions_Comment" xml:space="preserve"><value>댓글</value></data>
+  <data name="Discussions_Delete" xml:space="preserve"><value>삭제</value></data>
+  <data name="Discussions_Empty" xml:space="preserve"><value>아직 토론이 없습니다</value></data>
+  <data name="Discussions_General" xml:space="preserve"><value>일반</value></data>
+  <data name="Discussions_Ideas" xml:space="preserve"><value>아이디어</value></data>
+  <data name="Discussions_LeaveComment" xml:space="preserve"><value>댓글 남기기</value></data>
+  <data name="Discussions_Lock" xml:space="preserve"><value>잠금</value></data>
+  <data name="Discussions_Locked" xml:space="preserve"><value>잠김</value></data>
+  <data name="Discussions_LockedMessage" xml:space="preserve"><value>이 토론은 잠겨 있습니다.</value></data>
+  <data name="Discussions_MarkAsAnswer" xml:space="preserve"><value>답변으로 채택</value></data>
+  <data name="Discussions_NewDiscussion" xml:space="preserve"><value>새 토론</value></data>
+  <data name="Discussions_Pin" xml:space="preserve"><value>고정</value></data>
+  <data name="Discussions_Pinned" xml:space="preserve"><value>고정됨</value></data>
+  <data name="Discussions_Polls" xml:space="preserve"><value>투표</value></data>
+  <data name="Discussions_QAndA" xml:space="preserve"><value>Q&amp;A</value></data>
+  <data name="Discussions_Reply" xml:space="preserve"><value>답글</value></data>
+  <data name="Discussions_ShowAndTell" xml:space="preserve"><value>발표 및 공유</value></data>
+  <data name="Discussions_StartDiscussion" xml:space="preserve"><value>토론 시작</value></data>
+  <data name="Discussions_Title" xml:space="preserve"><value>토론</value></data>
+  <data name="Discussions_TitleLabel" xml:space="preserve"><value>제목</value></data>
+  <data name="Discussions_TitlePlaceholder" xml:space="preserve"><value>토론 제목</value></data>
+  <data name="Discussions_Unlock" xml:space="preserve"><value>잠금 해제</value></data>
+  <data name="Discussions_Unmark" xml:space="preserve"><value>채택 해제</value></data>
+  <data name="Discussions_Unpin" xml:space="preserve"><value>고정 해제</value></data>
+  <data name="Discussions_WriteReply" xml:space="preserve"><value>답글을 작성하세요...</value></data>
+
+  <!-- Insights -->
+  <data name="Insights_ActiveBranches" xml:space="preserve"><value>활성 브랜치</value></data>
+  <data name="Insights_Additions" xml:space="preserve"><value>추가</value></data>
+  <data name="Insights_Branches" xml:space="preserve"><value>브랜치</value></data>
+  <data name="Insights_CodeFrequency" xml:space="preserve"><value>코드 빈도</value></data>
+  <data name="Insights_CodeFrequencyDescription" xml:space="preserve"><value>시간에 따른 코드 추가 및 삭제</value></data>
+  <data name="Insights_CommitActivity" xml:space="preserve"><value>커밋 활동</value></data>
+  <data name="Insights_Commits" xml:space="preserve"><value>커밋</value></data>
+  <data name="Insights_CommitsPerWeek" xml:space="preserve"><value>주간 커밋 수</value></data>
+  <data name="Insights_Contributors" xml:space="preserve"><value>기여자</value></data>
+  <data name="Insights_Deletions" xml:space="preserve"><value>삭제</value></data>
+  <data name="Insights_LinesAdded" xml:space="preserve"><value>추가된 줄 수</value></data>
+  <data name="Insights_LinesDeleted" xml:space="preserve"><value>삭제된 줄 수</value></data>
+  <data name="Insights_Network" xml:space="preserve"><value>네트워크</value></data>
+  <data name="Insights_NetworkDescription" xml:space="preserve"><value>Fork 및 브랜치의 네트워크 그래프</value></data>
+  <data name="Insights_NetworkGraph" xml:space="preserve"><value>네트워크 그래프</value></data>
+  <data name="Insights_NetworkInfo" xml:space="preserve"><value>네트워크 정보</value></data>
+  <data name="Insights_NoCodeFrequency" xml:space="preserve"><value>코드 빈도 데이터가 없습니다.</value></data>
+  <data name="Insights_NoCommitActivity" xml:space="preserve"><value>커밋 활동 데이터가 없습니다.</value></data>
+  <data name="Insights_NoContributors" xml:space="preserve"><value>기여자 데이터가 없습니다.</value></data>
+  <data name="Insights_Repositories" xml:space="preserve"><value>저장소</value></data>
+  <data name="Insights_Title" xml:space="preserve"><value>인사이트</value></data>
+  <data name="Insights_TotalCommits" xml:space="preserve"><value>총 커밋 수</value></data>
+
+  <!-- Wiki -->
+  <data name="Wiki_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Wiki_CommitMessage" xml:space="preserve"><value>커밋 메시지</value></data>
+  <data name="Wiki_CommitMessagePlaceholder" xml:space="preserve"><value>커밋 메시지 입력</value></data>
+  <data name="Wiki_ContentMarkdown" xml:space="preserve"><value>내용 (Markdown)</value></data>
+  <data name="Wiki_CreateFirstPage" xml:space="preserve"><value>첫 페이지 만들기</value></data>
+  <data name="Wiki_CreateFirstPrompt" xml:space="preserve"><value>첫 번째 Wiki 페이지를 만들어 시작하세요.</value></data>
+  <data name="Wiki_CreateNewPage" xml:space="preserve"><value>새 페이지 만들기</value></data>
+  <data name="Wiki_CreatePage" xml:space="preserve"><value>페이지 만들기</value></data>
+  <data name="Wiki_Delete" xml:space="preserve"><value>삭제</value></data>
+  <data name="Wiki_Edit" xml:space="preserve"><value>편집</value></data>
+  <data name="Wiki_History" xml:space="preserve"><value>히스토리</value></data>
+  <data name="Wiki_NoPagesYet" xml:space="preserve"><value>아직 페이지가 없습니다</value></data>
+  <data name="Wiki_PageNotFound" xml:space="preserve"><value>페이지를 찾을 수 없습니다</value></data>
+  <data name="Wiki_PageTitle" xml:space="preserve"><value>페이지 제목</value></data>
+  <data name="Wiki_PageTitlePlaceholder" xml:space="preserve"><value>페이지 제목 입력</value></data>
+  <data name="Wiki_Pages" xml:space="preserve"><value>페이지</value></data>
+  <data name="Wiki_RevisionHistory" xml:space="preserve"><value>수정 이력</value></data>
+  <data name="Wiki_SaveChanges" xml:space="preserve"><value>변경 사항 저장</value></data>
+  <data name="Wiki_Title" xml:space="preserve"><value>Wiki</value></data>
+  <data name="Wiki_View" xml:space="preserve"><value>보기</value></data>
+  <data name="Wiki_ViewCurrentVersion" xml:space="preserve"><value>현재 버전 보기</value></data>
+  <data name="Wiki_Welcome" xml:space="preserve"><value>Wiki에 오신 것을 환영합니다</value></data>
+
+  <!-- Projects -->
+  <data name="Projects_AddCard" xml:space="preserve"><value>카드 추가</value></data>
+  <data name="Projects_AddColumn" xml:space="preserve"><value>열 추가</value></data>
+  <data name="Projects_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Projects_CardTitle" xml:space="preserve"><value>카드 제목</value></data>
+  <data name="Projects_CardTitlePlaceholder" xml:space="preserve"><value>카드 제목 입력</value></data>
+  <data name="Projects_CardType" xml:space="preserve"><value>카드 유형</value></data>
+  <data name="Projects_CloseProject" xml:space="preserve"><value>프로젝트 닫기</value></data>
+  <data name="Projects_Closed" xml:space="preserve"><value>닫힘</value></data>
+  <data name="Projects_ClosedProjects" xml:space="preserve"><value>닫힌 프로젝트</value></data>
+  <data name="Projects_Column" xml:space="preserve"><value>열</value></data>
+  <data name="Projects_ColumnName" xml:space="preserve"><value>열 이름</value></data>
+  <data name="Projects_ColumnNamePlaceholder" xml:space="preserve"><value>열 이름 입력</value></data>
+  <data name="Projects_CreateFirstProject" xml:space="preserve"><value>첫 프로젝트 만들기</value></data>
+  <data name="Projects_CreateNewProject" xml:space="preserve"><value>새 프로젝트 만들기</value></data>
+  <data name="Projects_CreateProject" xml:space="preserve"><value>프로젝트 만들기</value></data>
+  <data name="Projects_Description" xml:space="preserve"><value>설명</value></data>
+  <data name="Projects_DescriptionPlaceholder" xml:space="preserve"><value>프로젝트 설명 입력</value></data>
+  <data name="Projects_DropHere" xml:space="preserve"><value>여기에 놓기</value></data>
+  <data name="Projects_IssueNumber" xml:space="preserve"><value>이슈 번호</value></data>
+  <data name="Projects_NewProject" xml:space="preserve"><value>새 프로젝트</value></data>
+  <data name="Projects_NoProjectsDescription" xml:space="preserve"><value>프로젝트를 사용하여 작업을 정리하고 추적할 수 있습니다.</value></data>
+  <data name="Projects_NoProjectsYet" xml:space="preserve"><value>아직 프로젝트가 없습니다</value></data>
+  <data name="Projects_Note" xml:space="preserve"><value>메모</value></data>
+  <data name="Projects_NotePlaceholder" xml:space="preserve"><value>메모 입력</value></data>
+  <data name="Projects_Open" xml:space="preserve"><value>열림</value></data>
+  <data name="Projects_Project" xml:space="preserve"><value>프로젝트</value></data>
+  <data name="Projects_ProjectName" xml:space="preserve"><value>프로젝트 이름</value></data>
+  <data name="Projects_ProjectNamePlaceholder" xml:space="preserve"><value>프로젝트 이름 입력</value></data>
+  <data name="Projects_ReopenProject" xml:space="preserve"><value>프로젝트 다시 열기</value></data>
+  <data name="Projects_Repositories" xml:space="preserve"><value>저장소</value></data>
+  <data name="Projects_Title" xml:space="preserve"><value>프로젝트</value></data>
+
+  <!-- Security -->
+  <data name="Security_Advisories" xml:space="preserve"><value>권고</value></data>
+  <data name="Security_AdvisoryDescription" xml:space="preserve"><value>권고 설명</value></data>
+  <data name="Security_AdvisoryDescriptionPlaceholder" xml:space="preserve"><value>보안 권고 내용을 작성하세요</value></data>
+  <data name="Security_AdvisoryTitle" xml:space="preserve"><value>권고 제목</value></data>
+  <data name="Security_AdvisoryTitlePlaceholder" xml:space="preserve"><value>권고 제목 입력</value></data>
+  <data name="Security_AffectedVersions" xml:space="preserve"><value>영향받는 버전</value></data>
+  <data name="Security_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Security_Close" xml:space="preserve"><value>닫기</value></data>
+  <data name="Security_Closed" xml:space="preserve"><value>닫힘</value></data>
+  <data name="Security_Create" xml:space="preserve"><value>생성</value></data>
+  <data name="Security_CreateAdvisory" xml:space="preserve"><value>권고 만들기</value></data>
+  <data name="Security_CreateSecurityAdvisory" xml:space="preserve"><value>보안 권고 만들기</value></data>
+  <data name="Security_Critical" xml:space="preserve"><value>심각</value></data>
+  <data name="Security_Dependencies" xml:space="preserve"><value>의존성</value></data>
+  <data name="Security_Draft" xml:space="preserve"><value>초안</value></data>
+  <data name="Security_High" xml:space="preserve"><value>높음</value></data>
+  <data name="Security_Low" xml:space="preserve"><value>낮음</value></data>
+  <data name="Security_Medium" xml:space="preserve"><value>보통</value></data>
+  <data name="Security_NoAdvisories" xml:space="preserve"><value>권고 없음</value></data>
+  <data name="Security_NoAdvisoriesDescription" xml:space="preserve"><value>게시된 보안 권고가 없습니다.</value></data>
+  <data name="Security_NoDependenciesDescription" xml:space="preserve"><value>의존성 정보가 없습니다.</value></data>
+  <data name="Security_NoDependenciesScanned" xml:space="preserve"><value>스캔된 의존성 없음</value></data>
+  <data name="Security_NoKnownVulnerabilities" xml:space="preserve"><value>알려진 취약점 없음</value></data>
+  <data name="Security_NoScansYet" xml:space="preserve"><value>아직 스캔 내역이 없습니다</value></data>
+  <data name="Security_Overview" xml:space="preserve"><value>개요</value></data>
+  <data name="Security_Publish" xml:space="preserve"><value>게시</value></data>
+  <data name="Security_Published" xml:space="preserve"><value>게시됨</value></data>
+  <data name="Security_Repositories" xml:space="preserve"><value>저장소</value></data>
+  <data name="Security_RunSecurityScan" xml:space="preserve"><value>보안 스캔 실행</value></data>
+  <data name="Security_SecurityAdvisories" xml:space="preserve"><value>보안 권고</value></data>
+  <data name="Security_SecurityOverview" xml:space="preserve"><value>보안 개요</value></data>
+  <data name="Security_Severity" xml:space="preserve"><value>심각도</value></data>
+  <data name="Security_Title" xml:space="preserve"><value>보안</value></data>
+  <data name="Security_TotalVulnerabilities" xml:space="preserve"><value>총 취약점 수</value></data>
+
+  <!-- Packages -->
+  <data name="Packages_All" xml:space="preserve"><value>전체</value></data>
+  <data name="Packages_Install" xml:space="preserve"><value>설치</value></data>
+  <data name="Packages_NoPackages" xml:space="preserve"><value>패키지 없음</value></data>
+  <data name="Packages_NoPackagesDescription" xml:space="preserve"><value>아직 게시된 패키지가 없습니다.</value></data>
+  <data name="Packages_SearchPlaceholder" xml:space="preserve"><value>패키지 검색...</value></data>
+  <data name="Packages_Title" xml:space="preserve"><value>패키지</value></data>
+  <data name="Packages_Versions" xml:space="preserve"><value>버전</value></data>
+
+  <!-- Snippets -->
+  <data name="Snippets_AddFile" xml:space="preserve"><value>파일 추가</value></data>
+  <data name="Snippets_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Snippets_CreateSnippet" xml:space="preserve"><value>스니펫 만들기</value></data>
+  <data name="Snippets_Delete" xml:space="preserve"><value>삭제</value></data>
+  <data name="Snippets_DescriptionPlaceholder" xml:space="preserve"><value>스니펫 설명...</value></data>
+  <data name="Snippets_Edit" xml:space="preserve"><value>편집</value></data>
+  <data name="Snippets_EditSnippet" xml:space="preserve"><value>스니펫 편집</value></data>
+  <data name="Snippets_Files" xml:space="preserve"><value>파일</value></data>
+  <data name="Snippets_FormDescription" xml:space="preserve"><value>설명</value></data>
+  <data name="Snippets_FormTitle" xml:space="preserve"><value>제목</value></data>
+  <data name="Snippets_NewSnippet" xml:space="preserve"><value>새 스니펫</value></data>
+  <data name="Snippets_NoSnippetsDescription" xml:space="preserve"><value>아직 만들어진 스니펫이 없습니다.</value></data>
+  <data name="Snippets_NoSnippetsYet" xml:space="preserve"><value>아직 스니펫이 없습니다</value></data>
+  <data name="Snippets_Optional" xml:space="preserve"><value>(선택 사항)</value></data>
+  <data name="Snippets_Private" xml:space="preserve"><value>비공개</value></data>
+  <data name="Snippets_Public" xml:space="preserve"><value>공개</value></data>
+  <data name="Snippets_PublicSnippet" xml:space="preserve"><value>공개 스니펫</value></data>
+  <data name="Snippets_Title" xml:space="preserve"><value>스니펫</value></data>
+  <data name="Snippets_TitlePlaceholder" xml:space="preserve"><value>스니펫 제목 입력</value></data>
+  <data name="Snippets_UpdateSnippet" xml:space="preserve"><value>스니펫 업데이트</value></data>
+
+  <!-- Notifications -->
+  <data name="Notif_All" xml:space="preserve"><value>전체</value></data>
+  <data name="Notif_AuthRequired" xml:space="preserve"><value>인증 필요</value></data>
+  <data name="Notif_AuthRequiredMessage" xml:space="preserve"><value>알림을 보려면 로그인해야 합니다.</value></data>
+  <data name="Notif_MarkAllRead" xml:space="preserve"><value>모두 읽음으로 표시</value></data>
+  <data name="Notif_New" xml:space="preserve"><value>새 알림</value></data>
+  <data name="Notif_NoNotifications" xml:space="preserve"><value>알림 없음</value></data>
+  <data name="Notif_SignIn" xml:space="preserve"><value>로그인</value></data>
+  <data name="Notif_Title" xml:space="preserve"><value>알림</value></data>
+  <data name="Notif_Unread" xml:space="preserve"><value>읽지 않음</value></data>
+
+  <!-- Import -->
+  <data name="Import_About" xml:space="preserve"><value>소개</value></data>
+  <data name="Import_AuthRequired" xml:space="preserve"><value>인증 필요</value></data>
+  <data name="Import_AuthRequiredMessage" xml:space="preserve"><value>저장소를 가져오려면 로그인해야 합니다.</value></data>
+  <data name="Import_AuthToken" xml:space="preserve"><value>인증 토큰</value></data>
+  <data name="Import_BeginImport" xml:space="preserve"><value>가져오기 시작</value></data>
+  <data name="Import_FromExternalSource" xml:space="preserve"><value>외부 소스에서</value></data>
+  <data name="Import_History" xml:space="preserve"><value>히스토리</value></data>
+  <data name="Import_ImportIssues" xml:space="preserve"><value>이슈 가져오기</value></data>
+  <data name="Import_ImportPullRequests" xml:space="preserve"><value>Pull request 가져오기</value></data>
+  <data name="Import_MakePrivate" xml:space="preserve"><value>비공개로 설정</value></data>
+  <data name="Import_Optional" xml:space="preserve"><value>(선택 사항)</value></data>
+  <data name="Import_Options" xml:space="preserve"><value>옵션</value></data>
+  <data name="Import_Progress" xml:space="preserve"><value>진행 상황</value></data>
+  <data name="Import_Repository" xml:space="preserve"><value>저장소</value></data>
+  <data name="Import_RepositoryName" xml:space="preserve"><value>저장소 이름</value></data>
+  <data name="Import_RepositoryUrl" xml:space="preserve"><value>저장소 URL</value></data>
+  <data name="Import_SignIn" xml:space="preserve"><value>로그인</value></data>
+  <data name="Import_Source" xml:space="preserve"><value>소스</value></data>
+  <data name="Import_SourceType" xml:space="preserve"><value>소스 유형</value></data>
+  <data name="Import_Started" xml:space="preserve"><value>시작됨</value></data>
+  <data name="Import_StartingImport" xml:space="preserve"><value>가져오기 시작 중...</value></data>
+  <data name="Import_Status" xml:space="preserve"><value>상태</value></data>
+  <data name="Import_Title" xml:space="preserve"><value>가져오기</value></data>
+
+  <!-- Profile -->
+  <data name="Profile_Activity" xml:space="preserve"><value>활동</value></data>
+  <data name="Profile_AllActivity" xml:space="preserve"><value>모든 활동</value></data>
+  <data name="Profile_Commits" xml:space="preserve"><value>커밋</value></data>
+  <data name="Profile_EditProfile" xml:space="preserve"><value>프로필 편집</value></data>
+  <data name="Profile_Issues" xml:space="preserve"><value>이슈</value></data>
+  <data name="Profile_Less" xml:space="preserve"><value>적음</value></data>
+  <data name="Profile_More" xml:space="preserve"><value>많음</value></data>
+  <data name="Profile_NoActivity" xml:space="preserve"><value>활동 없음</value></data>
+  <data name="Profile_NoRecentActivity" xml:space="preserve"><value>최근 활동 없음</value></data>
+  <data name="Profile_NoRepositories" xml:space="preserve"><value>저장소 없음</value></data>
+  <data name="Profile_Overview" xml:space="preserve"><value>개요</value></data>
+  <data name="Profile_PullRequests" xml:space="preserve"><value>Pull request</value></data>
+  <data name="Profile_RecentActivity" xml:space="preserve"><value>최근 활동</value></data>
+  <data name="Profile_Repositories" xml:space="preserve"><value>저장소</value></data>
+
+  <!-- Organizations -->
+  <data name="Org_Add" xml:space="preserve"><value>추가</value></data>
+  <data name="Org_AddMemberPlaceholder" xml:space="preserve"><value>멤버 추가...</value></data>
+  <data name="Org_AddRepoPlaceholder" xml:space="preserve"><value>저장소 추가...</value></data>
+  <data name="Org_BackToOrganizations" xml:space="preserve"><value>조직 목록으로 돌아가기</value></data>
+  <data name="Org_BackToTeams" xml:space="preserve"><value>팀 목록으로 돌아가기</value></data>
+  <data name="Org_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Org_Create" xml:space="preserve"><value>생성</value></data>
+  <data name="Org_CreateOrganization" xml:space="preserve"><value>조직 만들기</value></data>
+  <data name="Org_CreateTeam" xml:space="preserve"><value>팀 만들기</value></data>
+  <data name="Org_DangerZone" xml:space="preserve"><value>위험 구역</value></data>
+  <data name="Org_DeleteOrganization" xml:space="preserve"><value>조직 삭제</value></data>
+  <data name="Org_Description" xml:space="preserve"><value>설명</value></data>
+  <data name="Org_DisplayName" xml:space="preserve"><value>표시 이름</value></data>
+  <data name="Org_DisplayNamePlaceholder" xml:space="preserve"><value>표시 이름 입력</value></data>
+  <data name="Org_Members" xml:space="preserve"><value>멤버</value></data>
+  <data name="Org_Name" xml:space="preserve"><value>이름</value></data>
+  <data name="Org_NameHint" xml:space="preserve"><value>조직 이름 (URL에 사용됩니다)</value></data>
+  <data name="Org_NewOrganization" xml:space="preserve"><value>새 조직</value></data>
+  <data name="Org_NewTeam" xml:space="preserve"><value>새 팀</value></data>
+  <data name="Org_NoOrganizations" xml:space="preserve"><value>조직 없음</value></data>
+  <data name="Org_NoTeams" xml:space="preserve"><value>팀 없음</value></data>
+  <data name="Org_NotFound" xml:space="preserve"><value>조직을 찾을 수 없습니다</value></data>
+  <data name="Org_Permission" xml:space="preserve"><value>권한</value></data>
+  <data name="Org_SaveChanges" xml:space="preserve"><value>변경 사항 저장</value></data>
+  <data name="Org_Settings" xml:space="preserve"><value>설정</value></data>
+  <data name="Org_SettingsHeader" xml:space="preserve"><value>조직 설정</value></data>
+  <data name="Org_TeamName" xml:space="preserve"><value>팀 이름</value></data>
+  <data name="Org_Teams" xml:space="preserve"><value>팀</value></data>
+  <data name="Org_Title" xml:space="preserve"><value>조직</value></data>
+
+  <!-- Settings -->
+  <data name="Settings_AccessTokens" xml:space="preserve"><value>액세스 토큰</value></data>
+  <data name="Settings_AccountSecurity" xml:space="preserve"><value>계정 보안</value></data>
+  <data name="Settings_AuthRequired" xml:space="preserve"><value>인증 필요</value></data>
+  <data name="Settings_AuthRequiredMessage" xml:space="preserve"><value>설정에 접근하려면 로그인해야 합니다.</value></data>
+  <data name="Settings_AvatarUrl" xml:space="preserve"><value>아바타 URL</value></data>
+  <data name="Settings_Bio" xml:space="preserve"><value>자기소개</value></data>
+  <data name="Settings_ChangePassword" xml:space="preserve"><value>비밀번호 변경</value></data>
+  <data name="Settings_Company" xml:space="preserve"><value>회사</value></data>
+  <data name="Settings_ConfirmNewPassword" xml:space="preserve"><value>새 비밀번호 확인</value></data>
+  <data name="Settings_CurrentPassword" xml:space="preserve"><value>현재 비밀번호</value></data>
+  <data name="Settings_FullName" xml:space="preserve"><value>이름</value></data>
+  <data name="Settings_GPGKeys" xml:space="preserve"><value>GPG 키</value></data>
+  <data name="Settings_LinkedAccounts" xml:space="preserve"><value>연결된 계정</value></data>
+  <data name="Settings_Location" xml:space="preserve"><value>위치</value></data>
+  <data name="Settings_MakeProfilePublic" xml:space="preserve"><value>프로필 공개하기</value></data>
+  <data name="Settings_NewPassword" xml:space="preserve"><value>새 비밀번호</value></data>
+  <data name="Settings_Notifications" xml:space="preserve"><value>알림</value></data>
+  <data name="Settings_Passkeys" xml:space="preserve"><value>패스키</value></data>
+  <data name="Settings_Profile" xml:space="preserve"><value>프로필</value></data>
+  <data name="Settings_PublicProfile" xml:space="preserve"><value>공개 프로필</value></data>
+  <data name="Settings_SSHKeys" xml:space="preserve"><value>SSH 키</value></data>
+  <data name="Settings_SaveProfile" xml:space="preserve"><value>프로필 저장</value></data>
+  <data name="Settings_Sessions" xml:space="preserve"><value>세션</value></data>
+  <data name="Settings_SignIn" xml:space="preserve"><value>로그인</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>설정</value></data>
+  <data name="Settings_TwitterUsername" xml:space="preserve"><value>Twitter 사용자 이름</value></data>
+  <data name="Settings_TwoFactorAuth" xml:space="preserve"><value>이중 인증</value></data>
+  <data name="Settings_UpdatePassword" xml:space="preserve"><value>비밀번호 업데이트</value></data>
+  <data name="Settings_Website" xml:space="preserve"><value>웹사이트</value></data>
+
+  <!-- Admin -->
+  <data name="Admin_AccessDenied" xml:space="preserve"><value>접근 거부</value></data>
+  <data name="Admin_AccessDeniedMessage" xml:space="preserve"><value>관리 패널에 접근할 권한이 없습니다.</value></data>
+  <data name="Admin_Action" xml:space="preserve"><value>작업</value></data>
+  <data name="Admin_Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Admin_Active24h" xml:space="preserve"><value>활성 (24시간)</value></data>
+  <data name="Admin_AddNewUser" xml:space="preserve"><value>새 사용자 추가</value></data>
+  <data name="Admin_AddSecret" xml:space="preserve"><value>시크릿 추가</value></data>
+  <data name="Admin_AddUser" xml:space="preserve"><value>사용자 추가</value></data>
+  <data name="Admin_AuditLogs" xml:space="preserve"><value>감사 로그</value></data>
+  <data name="Admin_AuthRequired" xml:space="preserve"><value>인증 필요</value></data>
+  <data name="Admin_AuthRequiredMessage" xml:space="preserve"><value>관리 패널에 접근하려면 로그인해야 합니다.</value></data>
+  <data name="Admin_BackToHome" xml:space="preserve"><value>홈으로 돌아가기</value></data>
+  <data name="Admin_Backups" xml:space="preserve"><value>백업</value></data>
+  <data name="Admin_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Admin_Created" xml:space="preserve"><value>생성일</value></data>
+  <data name="Admin_Database" xml:space="preserve"><value>데이터베이스</value></data>
+  <data name="Admin_Details" xml:space="preserve"><value>상세</value></data>
+  <data name="Admin_DownloadBackup" xml:space="preserve"><value>백업 다운로드</value></data>
+  <data name="Admin_Email" xml:space="preserve"><value>이메일</value></data>
+  <data name="Admin_EmailNotifications" xml:space="preserve"><value>이메일 알림</value></data>
+  <data name="Admin_FeatureToggles" xml:space="preserve"><value>기능 토글</value></data>
+  <data name="Admin_GlobalSecrets" xml:space="preserve"><value>글로벌 시크릿</value></data>
+  <data name="Admin_IPAddress" xml:space="preserve"><value>IP 주소</value></data>
+  <data name="Admin_LDAPAuth" xml:space="preserve"><value>LDAP 인증</value></data>
+  <data name="Admin_MergeCommitSigning" xml:space="preserve"><value>Merge commit 서명</value></data>
+  <data name="Admin_NoRecentActivity" xml:space="preserve"><value>최근 활동 없음</value></data>
+  <data name="Admin_OAuthSSO" xml:space="preserve"><value>OAuth SSO</value></data>
+  <data name="Admin_OAuthSSOProviders" xml:space="preserve"><value>OAuth SSO 제공자</value></data>
+  <data name="Admin_Overview" xml:space="preserve"><value>개요</value></data>
+  <data name="Admin_PushNotifications" xml:space="preserve"><value>푸시 알림</value></data>
+  <data name="Admin_RecentActivity" xml:space="preserve"><value>최근 활동</value></data>
+  <data name="Admin_Repositories" xml:space="preserve"><value>저장소</value></data>
+  <data name="Admin_RestoreBackup" xml:space="preserve"><value>백업 복원</value></data>
+  <data name="Admin_Role" xml:space="preserve"><value>역할</value></data>
+  <data name="Admin_SSHServer" xml:space="preserve"><value>SSH 서버</value></data>
+  <data name="Admin_SignIn" xml:space="preserve"><value>로그인</value></data>
+  <data name="Admin_SiteBranding" xml:space="preserve"><value>사이트 브랜딩</value></data>
+  <data name="Admin_Status" xml:space="preserve"><value>상태</value></data>
+  <data name="Admin_StorageUsed" xml:space="preserve"><value>사용된 저장 공간</value></data>
+  <data name="Admin_SystemInformation" xml:space="preserve"><value>시스템 정보</value></data>
+  <data name="Admin_SystemSettings" xml:space="preserve"><value>시스템 설정</value></data>
+  <data name="Admin_Timestamp" xml:space="preserve"><value>타임스탬프</value></data>
+  <data name="Admin_Title" xml:space="preserve"><value>관리</value></data>
+  <data name="Admin_TotalUsers" xml:space="preserve"><value>총 사용자 수</value></data>
+  <data name="Admin_User" xml:space="preserve"><value>사용자</value></data>
+  <data name="Admin_UserManagement" xml:space="preserve"><value>사용자 관리</value></data>
+  <data name="Admin_Username" xml:space="preserve"><value>사용자 이름</value></data>
+
+  <!-- Error -->
+  <data name="Error_DevModeDescription" xml:space="preserve"><value>Development 환경으로 전환하면 발생한 오류에 대한 자세한 정보가 표시됩니다.</value></data>
+  <data name="Error_DevModeTitle" xml:space="preserve"><value>개발 모드</value></data>
+  <data name="Error_DevModeWarning" xml:space="preserve"><value>배포된 애플리케이션에서는 Development 환경을 활성화하지 마세요. 예외의 민감한 정보가 최종 사용자에게 표시될 수 있습니다. 로컬 디버깅의 경우 ASPNETCORE_ENVIRONMENT 환경 변수를 Development로 설정하고 앱을 다시 시작하여 Development 환경을 활성화할 수 있습니다.</value></data>
+  <data name="Error_Heading" xml:space="preserve"><value>오류</value></data>
+  <data name="Error_RequestId" xml:space="preserve"><value>요청 ID:</value></data>
+  <data name="Error_Subheading" xml:space="preserve"><value>요청을 처리하는 중 오류가 발생했습니다.</value></data>
+  <data name="Error_Title" xml:space="preserve"><value>오류</value></data>
+
+  <!-- Not Found -->
+  <data name="NotFound_Message" xml:space="preserve"><value>찾으시는 콘텐츠가 존재하지 않습니다.</value></data>
+  <data name="NotFound_Title" xml:space="preserve"><value>찾을 수 없음</value></data>
+
+  <!-- Language names (for the language picker) -->
+  <data name="Language_en" xml:space="preserve"><value>English</value></data>
+  <data name="Language_es" xml:space="preserve"><value>Español</value></data>
+  <data name="Language_fr" xml:space="preserve"><value>Français</value></data>
+  <data name="Language_de" xml:space="preserve"><value>Deutsch</value></data>
+  <data name="Language_ja" xml:space="preserve"><value>日本語</value></data>
+  <data name="Language_zh" xml:space="preserve"><value>中文</value></data>
+  <data name="Language_pt" xml:space="preserve"><value>Português</value></data>
+  <data name="Language_ko" xml:space="preserve"><value>한국어</value></data>
+</root>

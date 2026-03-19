@@ -333,7 +333,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // Localization — supported cultures for i18n
-var supportedCultures = new[] { "en", "es", "fr", "de", "ja", "zh", "pt", "ko" };
+var supportedCultures = new[] { "en", "es", "fr", "de", "ja", "zh", "pt", "ko", "ru", "it", "tr" };
 app.UseRequestLocalization(options =>
 {
     options.SetDefaultCulture("en");
