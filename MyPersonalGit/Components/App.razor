@@ -14,6 +14,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.css" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <meta property="og:site_name" content="Personal Git" />
+    <meta property="og:type" content="website" />
+    <meta name="description" content="Self-hosted Git server with GitHub-like web interface" />
     <HeadOutlet @rendermode="InteractiveServer" />
 </head>
 
@@ -153,6 +156,22 @@
                 });
             }
         };
+
+        window.lineLink = {
+            scrollToHash: function() {
+                var hash = window.location.hash;
+                if (hash && hash.match(/^#L\d+$/)) {
+                    var el = document.getElementById(hash.substring(1));
+                    if (el) {
+                        el.scrollIntoView({ block: 'center' });
+                        // Highlight the line
+                        document.querySelectorAll('.line-highlight').forEach(function(e) { e.classList.remove('line-highlight'); });
+                        el.classList.add('line-highlight');
+                    }
+                }
+            }
+        };
+        window.addEventListener('hashchange', function() { window.lineLink.scrollToHash(); });
 
         window.folderUpload = {
             setWebkitDirectory: function (elementId) {
