@@ -320,6 +320,28 @@ using (var scope = app.Services.CreateScope())
         );");
     db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Runners_Token"" ON ""Runners"" (""Token"");");
 
+    // From 20260320220000: UserSecrets and OrganizationSecrets tables
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""UserSecrets"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""Username"" TEXT NOT NULL,
+            ""Name"" TEXT NOT NULL,
+            ""EncryptedValue"" TEXT NOT NULL,
+            ""CreatedAt"" TEXT NOT NULL,
+            ""UpdatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_UserSecrets_Username_Name"" ON ""UserSecrets"" (""Username"", ""Name"");");
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""OrganizationSecrets"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""OrganizationName"" TEXT NOT NULL,
+            ""Name"" TEXT NOT NULL,
+            ""EncryptedValue"" TEXT NOT NULL,
+            ""CreatedAt"" TEXT NOT NULL,
+            ""UpdatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_OrganizationSecrets_OrganizationName_Name"" ON ""OrganizationSecrets"" (""OrganizationName"", ""Name"");");
+
     if (!db.Users.Any())
     {
         db.Users.Add(new User

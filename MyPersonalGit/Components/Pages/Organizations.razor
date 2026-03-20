@@ -8,6 +8,7 @@
 @using MyPersonalGit.Resources
 @inject IOrganizationService OrgService
 @inject IRepositoryService RepoService
+@inject ISecretsService SecretsService
 @inject CurrentUserService UserService
 @inject NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
@@ -97,6 +98,11 @@
             </li>
             @if (isOrgOwner)
             {
+                <li class="nav-item">
+                    <button class="nav-link @(orgTab == "secrets" ? "active" : "")" @onclick="SwitchToSecretsTab">
+                        <i class="bi bi-key-fill me-1"></i> Secrets
+                    </button>
+                </li>
                 <li class="nav-item">
                     <button class="nav-link @(orgTab == "settings" ? "active" : "")" @onclick='() => orgTab = "settings"'>
                         <i class="bi bi-gear me-1"></i> @L["Org_Settings"]
@@ -255,6 +261,69 @@
                 }
             }
         }
+        else if (orgTab == "secrets" && isOrgOwner)
+        {
+            <div class="card shadow-sm" style="max-width: 600px;">
+                <div class="card-header bg-light-subtle py-2 fw-bold small">
+                    <i class="bi bi-key-fill me-1"></i> Organization Secrets
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">Organization secrets are available in workflow runs for all repositories owned by this organization. User and repo-level secrets override these.</p>
+
+                    @if (orgSecrets.Any())
+                    {
+                        <div class="list-group mb-3">
+                            @foreach (var secret in orgSecrets)
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                    <div>
+                                        <code class="fw-bold">@secret.Name</code>
+                                        <br /><small class="text-muted">Updated @secret.UpdatedAt.ToString("MMM d, yyyy")</small>
+                                    </div>
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-outline-primary btn-sm" @onclick="() => BeginEditOrgSecret(secret.Name)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteOrgSecret(secret.Name)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No organization secrets configured.</p>
+                    }
+
+                    <div class="border rounded p-3 bg-light-subtle">
+                        <h6 class="small fw-bold mb-2">@(editingOrgSecretName != null ? "Update Secret" : "Add Secret")</h6>
+                        <div class="mb-2">
+                            <input type="text" class="form-control form-control-sm" @bind="newOrgSecretName"
+                                   placeholder="SECRET_NAME" disabled="@(editingOrgSecretName != null)" />
+                        </div>
+                        <div class="mb-2">
+                            <input type="password" class="form-control form-control-sm" @bind="newOrgSecretValue" placeholder="Secret value" />
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-gh-primary btn-sm" @onclick="SaveOrgSecret"
+                                    disabled="@(string.IsNullOrWhiteSpace(newOrgSecretName) || string.IsNullOrWhiteSpace(newOrgSecretValue))">
+                                @(editingOrgSecretName != null ? "Update" : "Add Secret")
+                            </button>
+                            @if (editingOrgSecretName != null)
+                            {
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="CancelEditOrgSecret">Cancel</button>
+                            }
+                        </div>
+                        @if (!string.IsNullOrEmpty(orgSecretMessage))
+                        {
+                            <small class="@(orgSecretMessageSuccess ? "text-success" : "text-danger") mt-1 d-block">@orgSecretMessage</small>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
         else if (orgTab == "settings" && isOrgOwner)
         {
             <div class="card shadow-sm" style="max-width: 600px;">
@@ -396,6 +465,14 @@
     private string settingsDescription = "";
     private string settingsMessage = "";
 
+    // Org secrets
+    private List<OrganizationSecret> orgSecrets = new();
+    private string newOrgSecretName = "";
+    private string newOrgSecretValue = "";
+    private string? editingOrgSecretName = null;
+    private string orgSecretMessage = "";
+    private bool orgSecretMessageSuccess = false;
+
     protected override async Task OnParametersSetAsync()
     {
         if (string.IsNullOrEmpty(OrgName))
@@ -512,5 +589,66 @@
     {
         await OrgService.DeleteOrganizationAsync(OrgName!);
         Nav.NavigateTo("/orgs", true);
+    }
+
+    // --- Org secrets methods ---
+    private void SwitchToSecretsTab()
+    {
+        orgTab = "secrets";
+        LoadOrgSecrets();
+    }
+
+    private async void LoadOrgSecrets()
+    {
+        if (string.IsNullOrEmpty(OrgName)) return;
+        try { orgSecrets = await SecretsService.GetOrgSecretsAsync(OrgName); } catch { orgSecrets = new(); }
+        StateHasChanged();
+    }
+
+    private async Task SaveOrgSecret()
+    {
+        orgSecretMessage = "";
+        if (string.IsNullOrWhiteSpace(newOrgSecretName) || string.IsNullOrWhiteSpace(newOrgSecretValue) || string.IsNullOrEmpty(OrgName)) return;
+        var result = await SecretsService.SetOrgSecretAsync(OrgName, newOrgSecretName.Trim(), newOrgSecretValue);
+        if (result)
+        {
+            orgSecretMessage = editingOrgSecretName != null ? "Secret updated." : "Secret added.";
+            orgSecretMessageSuccess = true;
+            newOrgSecretName = "";
+            newOrgSecretValue = "";
+            editingOrgSecretName = null;
+            orgSecrets = await SecretsService.GetOrgSecretsAsync(OrgName);
+        }
+        else
+        {
+            orgSecretMessage = "Failed to save secret. Name must start with a letter or underscore, and contain only A-Z, 0-9, _.";
+            orgSecretMessageSuccess = false;
+        }
+    }
+
+    private async Task DeleteOrgSecret(string name)
+    {
+        orgSecretMessage = "";
+        if (string.IsNullOrEmpty(OrgName)) return;
+        await SecretsService.DeleteOrgSecretAsync(OrgName, name);
+        orgSecrets = await SecretsService.GetOrgSecretsAsync(OrgName);
+        orgSecretMessage = $"Secret '{name}' deleted.";
+        orgSecretMessageSuccess = true;
+    }
+
+    private void BeginEditOrgSecret(string name)
+    {
+        editingOrgSecretName = name;
+        newOrgSecretName = name;
+        newOrgSecretValue = "";
+        orgSecretMessage = "";
+    }
+
+    private void CancelEditOrgSecret()
+    {
+        editingOrgSecretName = null;
+        newOrgSecretName = "";
+        newOrgSecretValue = "";
+        orgSecretMessage = "";
     }
 }

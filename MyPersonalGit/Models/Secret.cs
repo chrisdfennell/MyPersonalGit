@@ -9,3 +9,23 @@ public class RepositorySecret
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
+
+public class UserSecret
+{
+    public int Id { get; set; }
+    public required string Username { get; set; }
+    public required string Name { get; set; }
+    public required string EncryptedValue { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}
+
+public class OrganizationSecret
+{
+    public int Id { get; set; }
+    public required string OrganizationName { get; set; }
+    public required string Name { get; set; }
+    public required string EncryptedValue { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}

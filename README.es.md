@@ -178,6 +178,9 @@ Un servidor Git autoalojado con una interfaz web similar a GitHub, construido co
 - **Jupyter Notebook Rendering** — Los archivos `.ipynb` se renderizan como notebooks formateados con celdas de codigo, Markdown, salidas e imagenes en linea
 - **Repository Transfer** — Transfiere la propiedad del repositorio a otro usuario u organizacion desde la Configuracion del repositorio
 - **Default Branch Configuration** — Cambia la rama predeterminada por repositorio desde la pestana de Configuracion
+- **Rename Repository** — Renombra un repositorio desde Settings con actualización automática de todas las referencias (issues, PRs, estrellas, webhooks, secrets, etc.)
+- **User-Level Secrets** — Secrets cifrados compartidos entre todos los repositorios de un usuario, gestionados desde Settings > Secrets
+- **Organization-Level Secrets** — Secrets cifrados compartidos entre todos los repositorios de una organización, gestionados desde la pestaña Secrets de la organización
 - **Repository Pinning** — Fija hasta 6 repositorios favoritos en tu pagina de perfil de usuario para acceso rapido
 - **Git Hooks Management** — Interfaz web para ver, editar y gestionar Git hooks del lado del servidor (pre-receive, update, post-receive, post-update, pre-push) por repositorio
 - **Protected File Patterns** — Regla de proteccion de rama con patrones glob para requerir aprobacion de revision en cambios a archivos especificos (por ejemplo, `*.lock`, `migrations/**`, `.github/workflows/*`)

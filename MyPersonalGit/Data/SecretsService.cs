@@ -15,6 +15,12 @@ public interface ISecretsService
     Task<bool> SetGlobalSecretAsync(string name, string value);
     Task<bool> DeleteGlobalSecretAsync(string name);
     Task<Dictionary<string, string>> GetAllSecretsForRunAsync(string repoName);
+    Task<List<UserSecret>> GetUserSecretsAsync(string username);
+    Task<bool> SetUserSecretAsync(string username, string name, string value);
+    Task<bool> DeleteUserSecretAsync(string username, string name);
+    Task<List<OrganizationSecret>> GetOrgSecretsAsync(string orgName);
+    Task<bool> SetOrgSecretAsync(string orgName, string name, string value);
+    Task<bool> DeleteOrgSecretAsync(string orgName, string name);
 }
 
 public class SecretsService : ISecretsService
@@ -226,14 +232,15 @@ public class SecretsService : ISecretsService
     }
 
     /// <summary>
-    /// Get all secrets for a workflow run: global secrets first, then repo secrets (repo overrides global).
+    /// Get all secrets for a workflow run: Global -> Org -> User -> Repo (each level overrides the previous).
     /// </summary>
     public async Task<Dictionary<string, string>> GetAllSecretsForRunAsync(string repoName)
     {
         var result = new Dictionary<string, string>();
 
-        // Load global secrets first
         using var db = _dbFactory.CreateDbContext();
+
+        // 1. Global secrets (lowest priority)
         var globalSecrets = await db.GlobalSecrets.ToListAsync();
         foreach (var secret in globalSecrets)
         {
@@ -241,9 +248,42 @@ public class SecretsService : ISecretsService
             catch { }
         }
 
-        // Repo secrets override global — check both with and without .git suffix
+        // Look up the repo owner
         var repoNameAlt = repoName.EndsWith(".git", StringComparison.OrdinalIgnoreCase)
             ? repoName[..^4] : repoName + ".git";
+        var repo = await db.Repositories
+            .FirstOrDefaultAsync(r => r.Name == repoName || r.Name == repoNameAlt);
+
+        if (repo != null)
+        {
+            var owner = repo.Owner;
+
+            // 2. Org secrets — check if owner is an organization
+            var isOrg = await db.Organizations.AnyAsync(o => o.Name == owner);
+            if (isOrg)
+            {
+                var orgSecrets = await db.OrganizationSecrets
+                    .Where(s => s.OrganizationName == owner)
+                    .ToListAsync();
+                foreach (var secret in orgSecrets)
+                {
+                    try { result[secret.Name] = Decrypt(secret.EncryptedValue); }
+                    catch { }
+                }
+            }
+
+            // 3. User secrets — if owner is a user (or org owner)
+            var userSecrets = await db.UserSecrets
+                .Where(s => s.Username == owner)
+                .ToListAsync();
+            foreach (var secret in userSecrets)
+            {
+                try { result[secret.Name] = Decrypt(secret.EncryptedValue); }
+                catch { }
+            }
+        }
+
+        // 4. Repo secrets (highest priority) — check both with and without .git suffix
         var repoSecrets = await db.RepositorySecrets
             .Where(s => s.RepoName == repoName || s.RepoName == repoNameAlt)
             .ToListAsync();
@@ -254,5 +294,127 @@ public class SecretsService : ISecretsService
         }
 
         return result;
+    }
+
+    // --- User secrets ---
+
+    public async Task<List<UserSecret>> GetUserSecretsAsync(string username)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        return await db.UserSecrets
+            .Where(s => s.Username == username)
+            .OrderBy(s => s.Name)
+            .ToListAsync();
+    }
+
+    public async Task<bool> SetUserSecretAsync(string username, string name, string value)
+    {
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(value))
+            return false;
+
+        var trimmedName = name.Trim().ToUpperInvariant();
+        if (!System.Text.RegularExpressions.Regex.IsMatch(trimmedName, @"^[A-Z_][A-Z0-9_]*$"))
+            return false;
+
+        using var db = _dbFactory.CreateDbContext();
+        var encrypted = Encrypt(value);
+
+        var existing = await db.UserSecrets
+            .FirstOrDefaultAsync(s => s.Username == username && s.Name == trimmedName);
+
+        if (existing != null)
+        {
+            existing.EncryptedValue = encrypted;
+            existing.UpdatedAt = DateTime.UtcNow;
+        }
+        else
+        {
+            db.UserSecrets.Add(new UserSecret
+            {
+                Username = username,
+                Name = trimmedName,
+                EncryptedValue = encrypted,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+        }
+
+        await db.SaveChangesAsync();
+        _logger.LogInformation("User secret '{Name}' set for user {Username}", trimmedName, username);
+        return true;
+    }
+
+    public async Task<bool> DeleteUserSecretAsync(string username, string name)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var secret = await db.UserSecrets
+            .FirstOrDefaultAsync(s => s.Username == username && s.Name == name);
+        if (secret == null) return false;
+
+        db.UserSecrets.Remove(secret);
+        await db.SaveChangesAsync();
+        _logger.LogInformation("User secret '{Name}' deleted for user {Username}", name, username);
+        return true;
+    }
+
+    // --- Organization secrets ---
+
+    public async Task<List<OrganizationSecret>> GetOrgSecretsAsync(string orgName)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        return await db.OrganizationSecrets
+            .Where(s => s.OrganizationName == orgName)
+            .OrderBy(s => s.Name)
+            .ToListAsync();
+    }
+
+    public async Task<bool> SetOrgSecretAsync(string orgName, string name, string value)
+    {
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(value))
+            return false;
+
+        var trimmedName = name.Trim().ToUpperInvariant();
+        if (!System.Text.RegularExpressions.Regex.IsMatch(trimmedName, @"^[A-Z_][A-Z0-9_]*$"))
+            return false;
+
+        using var db = _dbFactory.CreateDbContext();
+        var encrypted = Encrypt(value);
+
+        var existing = await db.OrganizationSecrets
+            .FirstOrDefaultAsync(s => s.OrganizationName == orgName && s.Name == trimmedName);
+
+        if (existing != null)
+        {
+            existing.EncryptedValue = encrypted;
+            existing.UpdatedAt = DateTime.UtcNow;
+        }
+        else
+        {
+            db.OrganizationSecrets.Add(new OrganizationSecret
+            {
+                OrganizationName = orgName,
+                Name = trimmedName,
+                EncryptedValue = encrypted,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+        }
+
+        await db.SaveChangesAsync();
+        _logger.LogInformation("Org secret '{Name}' set for org {OrgName}", trimmedName, orgName);
+        return true;
+    }
+
+    public async Task<bool> DeleteOrgSecretAsync(string orgName, string name)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var secret = await db.OrganizationSecrets
+            .FirstOrDefaultAsync(s => s.OrganizationName == orgName && s.Name == name);
+        if (secret == null) return false;
+
+        db.OrganizationSecrets.Remove(secret);
+        await db.SaveChangesAsync();
+        _logger.LogInformation("Org secret '{Name}' deleted for org {OrgName}", name, orgName);
+        return true;
     }
 }
