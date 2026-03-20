@@ -257,6 +257,11 @@ else
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/environments">
+                        <i class="bi bi-server me-1"></i> @L["Env_Title"]
+                    </a>
+                </li>
+                <li class="nav-item">
                     <button class="nav-link @(activeTab == "packages" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("packages")'>
                         <i class="bi bi-box me-1"></i> @L["Repo_Packages"]
                     </button>
