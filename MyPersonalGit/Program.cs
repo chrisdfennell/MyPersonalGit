@@ -493,16 +493,22 @@ using (var scope = app.Services.CreateScope())
         var repos = db.Repositories.Select(r => r.Name).ToList();
         foreach (var repo in repos)
         {
-            var stripped = repo.EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? repo[..^4] : null;
-            if (stripped != null)
+            if (!repo.EndsWith(".git", StringComparison.OrdinalIgnoreCase)) continue;
+            var stripped = repo[..^4];
+            var orphanedRuns = db.WorkflowRuns.Where(r => r.RepoName == stripped).ToList();
+            if (orphanedRuns.Any())
             {
-                var fixed_ = db.Database.ExecuteSqlRaw(
-                    @"UPDATE ""WorkflowRuns"" SET ""RepoName"" = {0} WHERE ""RepoName"" = {1}", repo, stripped);
-                if (fixed_ > 0) Console.WriteLine($"==> Fixed {fixed_} workflow run(s): '{stripped}' -> '{repo}'");
+                foreach (var run in orphanedRuns)
+                    run.RepoName = repo;
+                db.SaveChanges();
+                Console.WriteLine($"==> Fixed {orphanedRuns.Count} workflow run(s): '{stripped}' -> '{repo}'");
             }
         }
     }
-    catch { }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Warning: Workflow run fixup failed: {ex.Message}");
+    }
 
     // Seed built-in secret scan patterns
     try
