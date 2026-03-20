@@ -105,6 +105,27 @@ index = "sparse+@(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/pa
 sudo apt update
 sudo apt install @SelectedPackage.Name</code></pre>
                 }
+                else if (SelectedPackage.Type == "alpine")
+                {
+                    <pre class="bg-light p-2 rounded small mb-3"><code># Add repository
+echo "@(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/alpine/main" >> /etc/apk/repositories
+# Install package
+apk add @SelectedPackage.Name</code></pre>
+                }
+                else if (SelectedPackage.Type == "rpm")
+                {
+                    <pre class="bg-light p-2 rounded small mb-3"><code># Add repo file to /etc/yum.repos.d/mygit.repo
+[mygit]
+name=MyPersonalGit RPM Repository
+baseurl=@(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/rpm/main
+enabled=1
+gpgcheck=0</code></pre>
+                    <code class="d-block bg-light p-2 rounded small mb-3">dnf install @SelectedPackage.Name</code>
+                }
+                else if (SelectedPackage.Type == "chef")
+                {
+                    <code class="d-block bg-light p-2 rounded small mb-3">knife cookbook download @SelectedPackage.Name -s @(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/chef</code>
+                }
                 else if (SelectedPackage.Type == "cran")
                 {
                     <code class="d-block bg-light p-2 rounded small mb-3">install.packages("@SelectedPackage.Name", repos = "@(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/cran")</code>
@@ -223,6 +244,21 @@ sudo apt install @SelectedPackage.Name</code></pre>
             <li class="nav-item">
                 <a class="nav-link @(Type == "conan" ? "active" : "")" href="/packages/conan">
                     <i class="bi bi-box me-1"></i>Conan
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Type == "alpine" ? "active" : "")" href="/packages/alpine">
+                    <i class="bi bi-box me-1"></i>Alpine
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Type == "rpm" ? "active" : "")" href="/packages/rpm">
+                    <i class="bi bi-box me-1"></i>RPM
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Type == "chef" ? "active" : "")" href="/packages/chef">
+                    <i class="bi bi-box me-1"></i>Chef
                 </a>
             </li>
             <li class="nav-item">

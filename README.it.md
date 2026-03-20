@@ -54,7 +54,7 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 
 ### Codice e Repository
 - **Gestione Repository** — Crea, sfoglia ed elimina repository Git con un browser del codice completo, editor di file, cronologia dei commit, branch e tag
-- **Import/Migrazione Repository** — Importa repository da GitHub, GitLab, Bitbucket o qualsiasi URL Git con importazione opzionale di issue e PR. Elaborazione in background con monitoraggio del progresso
+- **Import/Migrazione Repository** — Importa repository da GitHub, GitLab, Bitbucket, Gitea/Forgejo/Gogs o qualsiasi URL Git con importazione opzionale di issue e PR. Elaborazione in background con monitoraggio del progresso
 - **Archiviazione Repository** — Contrassegna i repository come di sola lettura con badge visivi; i push vengono bloccati per i repository archiviati
 - **Git Smart HTTP** — Clona, fetch e push tramite HTTP con Basic Auth
 - **Server SSH Integrato** — Server SSH nativo per operazioni Git — nessun OpenSSH esterno richiesto. Supporta scambio chiavi ECDH, crittografia AES-CTR e autenticazione a chiave pubblica (RSA, ECDSA, Ed25519)
@@ -71,6 +71,7 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **Label dei Repository** — Gestisci label con colori personalizzati per repository; le label vengono copiate automaticamente quando si creano repo da template
 - **AGit Flow** — Workflow push-to-review: `git push origin HEAD:refs/for/main` crea una pull request senza forkare o creare branch remoti. Aggiorna PR aperte esistenti nei push successivi
 - **Esplora** — Sfoglia tutti i repository accessibili con ricerca, ordinamento e filtro per topic
+- **Autolink References** — Conversione automatica di `#123` in link alle issue, più pattern personalizzati configurabili (es. `JIRA-456` → URL esterni) per repository
 - **Ricerca** — Ricerca full-text su repository, issue, PR e codice
 
 ### Collaborazione
@@ -129,12 +130,15 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **Webhooks** — Attiva servizi esterni su eventi del repository
 - **Metriche Prometheus** — Endpoint `/metrics` integrato per il monitoraggio
 
-### Hosting di Package e Container
+### Hosting di Package e Container (20 registries)
 - **Container Registry** — Ospita immagini Docker/OCI con `docker push` e `docker pull` (OCI Distribution Spec)
 - **NuGet Registry** — Ospita pacchetti .NET con API NuGet v3 completa (service index, ricerca, push, restore)
 - **npm Registry** — Ospita pacchetti Node.js con npm publish/install standard
 - **PyPI Registry** — Ospita pacchetti Python con PEP 503 Simple API, JSON Metadata API e compatibilità `twine upload`
 - **Maven Registry** — Ospita pacchetti Java/JVM con layout standard del repository Maven, generazione `maven-metadata.xml` e supporto `mvn deploy`
+- **Alpine Registry** — Ospita pacchetti Alpine Linux `.apk` con generazione APKINDEX
+- **RPM Registry** — Ospita pacchetti RPM con metadati `repomd.xml` per `dnf`/`yum`
+- **Chef Registry** — Ospita cookbook Chef con API compatibile con Chef Supermarket
 - **Pacchetti Generici** — Carica e scarica artefatti binari arbitrari tramite REST API
 
 ### Siti Statici
@@ -177,6 +181,9 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **Repository Pinning** — Fissa fino a 6 repository preferiti nella tua pagina del profilo utente per un accesso rapido
 - **Git Hooks Management** — Interfaccia web per visualizzare, modificare e gestire i Git hooks lato server (pre-receive, update, post-receive, post-update, pre-push) per repository
 - **Protected File Patterns** — Regola di protezione del branch con pattern glob per richiedere l'approvazione della revisione per le modifiche a file specifici (ad es. `*.lock`, `migrations/**`, `.github/workflows/*`)
+- **External Issue Tracker** — Configura i repository per collegarsi a un issue tracker esterno (Jira, Linear, ecc.) con pattern URL personalizzati
+- **Federation (NodeInfo/WebFinger)** — Scoperta NodeInfo 2.0, WebFinger e host-meta per la scopribilità tra istanze
+- **Distributed CI Runners** — I runner esterni possono registrarsi tramite API, interrogare i job in coda e riportare i risultati
 
 ## Stack Tecnologico
 

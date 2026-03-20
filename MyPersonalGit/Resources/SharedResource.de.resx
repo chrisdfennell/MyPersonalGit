@@ -856,9 +856,11 @@
   <data name="Import_GitHub" xml:space="preserve"><value>GitHub (mit optionalen Issues/PRs)</value></data>
   <data name="Import_GitLab" xml:space="preserve"><value>GitLab (mit optionalen Issues/PRs)</value></data>
   <data name="Import_Bitbucket" xml:space="preserve"><value>Bitbucket (mit optionalen Issues)</value></data>
+  <data name="Import_Gitea" xml:space="preserve"><value>Gitea / Forgejo / Gogs (mit optionalen Issues/PRs)</value></data>
   <data name="Import_GitHubExample" xml:space="preserve"><value>z.B., https://github.com/owner/repo</value></data>
   <data name="Import_GitLabExample" xml:space="preserve"><value>z.B., https://gitlab.com/owner/repo</value></data>
   <data name="Import_BitbucketExample" xml:space="preserve"><value>z.B., https://bitbucket.org/owner/repo</value></data>
+  <data name="Import_GiteaExample" xml:space="preserve"><value>z.B., https://gitea.example.com/owner/repo</value></data>
   <data name="Import_GitUrlExample" xml:space="preserve"><value>Jede gültige Git-URL (HTTPS oder SSH)</value></data>
   <data name="Import_RepoNameHelp" xml:space="preserve"><value>Der Name für das neue lokale Repository</value></data>
   <data name="Import_AuthTokenHelp" xml:space="preserve"><value>Erforderlich für private Repositories. Verwenden Sie einen persönlichen Zugriffstoken mit Lesezugriff.</value></data>

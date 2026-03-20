@@ -54,7 +54,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 
 ### Kod ve Depolar
 - **Depo Yönetimi** — Tam kod tarayıcısı, dosya düzenleyicisi, commit geçmişi, dallar ve etiketlerle Git depolarını oluşturun, görüntüleyin ve silin
-- **Depo İçe Aktarma/Taşıma** — GitHub, GitLab, Bitbucket veya herhangi bir Git URL'sinden isteğe bağlı sorun ve PR aktarımı ile depoları içe aktarın. İlerleme takibiyle arka plan işleme
+- **Depo İçe Aktarma/Taşıma** — GitHub, GitLab, Bitbucket, Gitea/Forgejo/Gogs veya herhangi bir Git URL'sinden isteğe bağlı sorun ve PR aktarımı ile depoları içe aktarın. İlerleme takibiyle arka plan işleme
 - **Depo Arşivleme** — Depoları görsel rozetlerle salt okunur olarak işaretleyin; arşivlenmiş depolar için push işlemleri engellenir
 - **Git Smart HTTP** — Basic Auth ile HTTP üzerinden klonlama, alma ve gönderme
 - **Yerleşik SSH Sunucusu** — Git işlemleri için yerel SSH sunucusu — harici OpenSSH gerekmez. ECDH anahtar değişimi, AES-CTR şifreleme ve açık anahtar kimlik doğrulaması (RSA, ECDSA, Ed25519) desteği
@@ -71,6 +71,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Depo Etiketleri** — Depo başına özel renklerle etiket yönetimi; şablonlardan depo oluştururken etiketler otomatik olarak kopyalanır
 - **AGit Flow** — Push-to-review iş akışı: `git push origin HEAD:refs/for/main` fork yapmadan veya uzak dal oluşturmadan bir pull request oluşturur. Sonraki push'larda mevcut açık PR'ları günceller
 - **Keşfet** — Arama, sıralama ve konu filtreleme ile erişilebilir tüm depoları görüntüleyin
+- **Autolink References** — `#123` ifadesini otomatik olarak sorun bağlantılarına dönüştürün, ayrıca depo başına yapılandırılabilir özel kalıplar (örn. `JIRA-456` → harici URL'ler) desteği
 - **Arama** — Depolar, sorunlar, PR'lar ve kod genelinde tam metin arama
 
 ### İş Birliği
@@ -129,12 +130,15 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Webhook'lar** — Depo olaylarında harici hizmetleri tetikleyin
 - **Prometheus Metrikleri** — İzleme için yerleşik `/metrics` uç noktası
 
-### Paket ve Container Barındırma
+### Paket ve Container Barındırma (20 registries)
 - **Container Registry** — `docker push` ve `docker pull` ile Docker/OCI imajlarını barındırın (OCI Distribution Spec)
 - **NuGet Registry** — Tam NuGet v3 API (service index, arama, push, geri yükleme) ile .NET paketlerini barındırın
 - **npm Registry** — Standart npm publish/install ile Node.js paketlerini barındırın
 - **PyPI Registry** — PEP 503 Simple API, JSON metadata API ve `twine upload` uyumluluğu ile Python paketlerini barındırın
 - **Maven Registry** — Standart Maven depo düzeni, `maven-metadata.xml` oluşturma ve `mvn deploy` desteği ile Java/JVM paketlerini barındırın
+- **Alpine Registry** — APKINDEX oluşturma ile Alpine Linux `.apk` paketlerini barındırın
+- **RPM Registry** — `dnf`/`yum` için `repomd.xml` meta verileriyle RPM paketlerini barındırın
+- **Chef Registry** — Chef Supermarket uyumlu API ile Chef cookbook'larını barındırın
 - **Genel Paketler** — REST API aracılığıyla isteğe bağlı ikili yapıtları yükleyin ve indirin
 
 ### Statik Siteler
@@ -177,6 +181,9 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Repository Pinning** — Hızlı erişim için kullanıcı profil sayfanıza en fazla 6 favori depoyu sabitleyin
 - **Git Hooks Management** — Depo başına sunucu tarafı Git Hooks'ları (pre-receive, update, post-receive, post-update, pre-push) görüntüleme, düzenleme ve yönetme için Web UI
 - **Protected File Patterns** — Belirli dosyalardaki değişiklikler için inceleme onayı gerektiren glob kalıplı dal koruma kuralı (örn. `*.lock`, `migrations/**`, `.github/workflows/*`)
+- **External Issue Tracker** — Depoları harici bir sorun takipçisine (Jira, Linear, vb.) özel URL kalıplarıyla bağlanacak şekilde yapılandırın
+- **Federation (NodeInfo/WebFinger)** — Örnekler arası keşfedilebilirlik için NodeInfo 2.0 keşfi, WebFinger ve host-meta
+- **Distributed CI Runners** — Harici runner'lar API aracılığıyla kaydolabilir, kuyruktaki işleri sorgulayabilir ve sonuçları raporlayabilir
 
 ## Teknoloji Yığını
 

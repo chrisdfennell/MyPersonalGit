@@ -41,6 +41,7 @@
 @inject IRepositoryLabelService LabelService
 @inject IStringLocalizer<SharedResource> L
 @inject IGitHooksService GitHooksService
+@inject IAutolinkService AutolinkService
 @using TagProtectionRule = MyPersonalGit.Models.TagProtectionRule
 @using RepositoryLabel = MyPersonalGit.Models.RepositoryLabel
 @rendermode InteractiveServer
@@ -949,6 +950,12 @@ else
                                 <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "pages" ? "active" : "")" @onclick='() => settingsSection = "pages"'>
                                     <i class="bi bi-globe me-2"></i>Pages
                                 </a>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "autolinks" ? "active" : "")" @onclick='() => settingsSection = "autolinks"'>
+                                    <i class="bi bi-link-45deg me-2"></i>Autolinks
+                                </a>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "external-tracker" ? "active" : "")" @onclick='() => settingsSection = "external-tracker"'>
+                                    <i class="bi bi-box-arrow-up-right me-2"></i>External Tracker
+                                </a>
                                 <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "mirrors" ? "active" : "")" @onclick='() => settingsSection = "mirrors"'>
                                     <i class="bi bi-arrow-repeat me-2"></i>Mirrors
                                 </a>
@@ -1476,6 +1483,92 @@ else
                                 </div>
                             }
                             <button class="btn btn-gh-primary btn-sm" @onclick="SavePagesSettings">Save</button>
+                        </div>
+                    </div>
+                }
+
+                @if (UserService.IsLoggedIn && settingsSection == "autolinks")
+                {
+                    <div class="card border shadow-sm mb-4">
+                        <div class="card-header bg-light-subtle py-2 small fw-bold">
+                            <i class="bi bi-link-45deg me-1"></i> Autolink References
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">Autolink references automatically turn text like <code>JIRA-123</code> into links. Issue references like <code>#123</code> are always linked automatically.</p>
+                            @if (autolinkPatterns.Any())
+                            {
+                                <div class="list-group list-group-flush mb-3">
+                                    @foreach (var pattern in autolinkPatterns)
+                                    {
+                                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                            <div>
+                                                <span class="fw-bold font-monospace">@pattern.Prefix</span><span class="text-muted">&lt;number&gt;</span>
+                                                <span class="text-muted small ms-2">→ @pattern.UrlTemplate</span>
+                                            </div>
+                                            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteAutolinkPattern(pattern.Id)" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted small mb-3">No custom autolink patterns configured.</p>
+                            }
+                            <div class="row g-2 align-items-end">
+                                <div class="col-auto">
+                                    <label class="form-label small fw-bold mb-1">Prefix</label>
+                                    <input type="text" class="form-control form-control-sm" @bind="newAutolinkPrefix" placeholder="JIRA-" style="max-width:140px;" />
+                                </div>
+                                <div class="col">
+                                    <label class="form-label small fw-bold mb-1">URL template (use <code>{0}</code> for number)</label>
+                                    <input type="text" class="form-control form-control-sm" @bind="newAutolinkUrlTemplate" placeholder="https://jira.example.com/browse/JIRA-{0}" />
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-gh-primary btn-sm" @onclick="AddAutolinkPattern">Add</button>
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(autolinkErrorMessage))
+                            {
+                                <div class="text-danger small mt-2">@autolinkErrorMessage</div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (UserService.IsLoggedIn && settingsSection == "external-tracker")
+                {
+                    <div class="card border shadow-sm mb-4">
+                        <div class="card-header bg-light-subtle py-2 small fw-bold">
+                            <i class="bi bi-box-arrow-up-right me-1"></i> External Issue Tracker
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">Redirect issue links to an external issue tracker instead of the built-in issue system.</p>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" @bind="settingsUseExternalTracker" id="useExternalTracker" />
+                                <label class="form-check-label small" for="useExternalTracker">
+                                    Enable external issue tracker
+                                </label>
+                            </div>
+                            @if (settingsUseExternalTracker)
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Tracker URL</label>
+                                    <input type="text" class="form-control form-control-sm" @bind="settingsExternalTrackerUrl" placeholder="https://jira.example.com/browse/" />
+                                    <div class="form-text small">Base URL for your external issue tracker.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Issue pattern</label>
+                                    <input type="text" class="form-control form-control-sm" @bind="settingsExternalTrackerPattern" placeholder="PROJ-{id}" />
+                                    <div class="form-text small">Pattern for issue references. Use <code>{id}</code> as the placeholder for the issue number.</div>
+                                </div>
+                            }
+                            <button class="btn btn-gh-primary btn-sm" @onclick="SaveExternalTrackerSettings">Save</button>
+                            @if (!string.IsNullOrEmpty(externalTrackerSaveMessage))
+                            {
+                                <span class="text-success small ms-2">@externalTrackerSaveMessage</span>
+                            }
                         </div>
                     </div>
                 }
@@ -3329,6 +3422,18 @@ else
     private int newMirrorInterval = 60;
     private string? newMirrorToken;
 
+    // Autolink patterns state
+    private List<MyPersonalGit.Models.AutolinkPattern> autolinkPatterns = new();
+    private string newAutolinkPrefix = "";
+    private string newAutolinkUrlTemplate = "";
+    private string autolinkErrorMessage = "";
+
+    // External issue tracker state
+    private bool settingsUseExternalTracker = false;
+    private string settingsExternalTrackerUrl = "";
+    private string settingsExternalTrackerPattern = "";
+    private string externalTrackerSaveMessage = "";
+
     // Releases state
     private List<MyPersonalGit.Models.Release> releases = new();
     private bool showCreateRelease = false;
@@ -3451,6 +3556,9 @@ else
             settingsHasPages = meta.HasPages;
             settingsPagesBranch = meta.PagesBranch ?? "gh-pages";
             settingsTopics = new List<string>(meta.Topics ?? new());
+            settingsUseExternalTracker = meta.UseExternalIssueTracker;
+            settingsExternalTrackerUrl = meta.ExternalIssueTrackerUrl ?? "";
+            settingsExternalTrackerPattern = meta.ExternalIssueTrackerPattern ?? "";
 
             // Populate branch list for default branch selector
             try
@@ -3633,6 +3741,60 @@ else
         StateHasChanged();
     }
 
+    private async Task LoadAutolinkPatterns()
+    {
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        autolinkPatterns = await AutolinkService.GetPatternsAsync(dirName);
+    }
+
+    private async Task AddAutolinkPattern()
+    {
+        autolinkErrorMessage = "";
+        if (string.IsNullOrWhiteSpace(newAutolinkPrefix))
+        {
+            autolinkErrorMessage = "Prefix is required.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(newAutolinkUrlTemplate) || !newAutolinkUrlTemplate.Contains("{0}"))
+        {
+            autolinkErrorMessage = "URL template is required and must contain {0}.";
+            return;
+        }
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        try
+        {
+            await AutolinkService.AddPatternAsync(dirName, newAutolinkPrefix, newAutolinkUrlTemplate);
+            newAutolinkPrefix = "";
+            newAutolinkUrlTemplate = "";
+            await LoadAutolinkPatterns();
+        }
+        catch (Exception ex)
+        {
+            autolinkErrorMessage = ex.Message;
+        }
+    }
+
+    private async Task DeleteAutolinkPattern(int id)
+    {
+        await AutolinkService.DeletePatternAsync(id);
+        await LoadAutolinkPatterns();
+    }
+
+    private async Task SaveExternalTrackerSettings()
+    {
+        externalTrackerSaveMessage = "";
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        await RepoService.EnsureRepositoryRecordAsync(dirName, UserService.Username);
+        await RepoService.UpdateRepositoryAsync(dirName, repo =>
+        {
+            repo.UseExternalIssueTracker = settingsUseExternalTracker;
+            repo.ExternalIssueTrackerUrl = string.IsNullOrWhiteSpace(settingsExternalTrackerUrl) ? null : settingsExternalTrackerUrl;
+            repo.ExternalIssueTrackerPattern = string.IsNullOrWhiteSpace(settingsExternalTrackerPattern) ? null : settingsExternalTrackerPattern;
+        });
+        externalTrackerSaveMessage = "Settings saved!";
+        StateHasChanged();
+    }
+
     private async Task LoadCollaborators()
     {
         var dirName = System.IO.Path.GetFileName(RepoFullPath);
@@ -3804,7 +3966,7 @@ else
         if (tab == "code" && string.IsNullOrEmpty(Path)) Nav.NavigateTo($"/repo/{RepoName}");
         else LoadRepoData();
         if (tab == "settings" || tab == "branches") await LoadBranchProtectionRules();
-        if (tab == "settings") { await LoadCollaborators(); await LoadMirrors(); await LoadDeployKeys(); await LoadTagProtectionRules(); await LoadRepoLabels(); await LoadGitHooks(); }
+        if (tab == "settings") { await LoadCollaborators(); await LoadMirrors(); await LoadDeployKeys(); await LoadTagProtectionRules(); await LoadRepoLabels(); await LoadGitHooks(); await LoadAutolinkPatterns(); }
         if (tab == "releases") await LoadReleases();
         if (tab == "packages") await LoadContainerTags();
         if (tab == "graph") LoadGraph();

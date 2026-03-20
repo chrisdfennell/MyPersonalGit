@@ -856,9 +856,11 @@
   <data name="Import_GitHub" xml:space="preserve"><value>GitHub (с опциональными issues/PR)</value></data>
   <data name="Import_GitLab" xml:space="preserve"><value>GitLab (с опциональными issues/PR)</value></data>
   <data name="Import_Bitbucket" xml:space="preserve"><value>Bitbucket (с опциональными issues)</value></data>
+  <data name="Import_Gitea" xml:space="preserve"><value>Gitea / Forgejo / Gogs (с опциональными issues/PR)</value></data>
   <data name="Import_GitHubExample" xml:space="preserve"><value>напр., https://github.com/owner/repo</value></data>
   <data name="Import_GitLabExample" xml:space="preserve"><value>напр., https://gitlab.com/owner/repo</value></data>
   <data name="Import_BitbucketExample" xml:space="preserve"><value>напр., https://bitbucket.org/owner/repo</value></data>
+  <data name="Import_GiteaExample" xml:space="preserve"><value>напр., https://gitea.example.com/owner/repo</value></data>
   <data name="Import_GitUrlExample" xml:space="preserve"><value>Любой действительный Git URL (HTTPS или SSH)</value></data>
   <data name="Import_RepoNameHelp" xml:space="preserve"><value>Имя для нового локального репозитория</value></data>
   <data name="Import_AuthTokenHelp" xml:space="preserve"><value>Требуется для приватных репозиториев. Используйте персональный токен доступа с правами на чтение.</value></data>

@@ -856,9 +856,11 @@
   <data name="Import_GitHub" xml:space="preserve"><value>GitHub (avec issues/PRs optionnels)</value></data>
   <data name="Import_GitLab" xml:space="preserve"><value>GitLab (avec issues/PRs optionnels)</value></data>
   <data name="Import_Bitbucket" xml:space="preserve"><value>Bitbucket (avec issues optionnels)</value></data>
+  <data name="Import_Gitea" xml:space="preserve"><value>Gitea / Forgejo / Gogs (avec issues/PRs optionnels)</value></data>
   <data name="Import_GitHubExample" xml:space="preserve"><value>ex., https://github.com/owner/repo</value></data>
   <data name="Import_GitLabExample" xml:space="preserve"><value>ex., https://gitlab.com/owner/repo</value></data>
   <data name="Import_BitbucketExample" xml:space="preserve"><value>ex., https://bitbucket.org/owner/repo</value></data>
+  <data name="Import_GiteaExample" xml:space="preserve"><value>ex., https://gitea.example.com/owner/repo</value></data>
   <data name="Import_GitUrlExample" xml:space="preserve"><value>Toute URL Git valide (HTTPS ou SSH)</value></data>
   <data name="Import_RepoNameHelp" xml:space="preserve"><value>Le nom du nouveau dépôt local</value></data>
   <data name="Import_AuthTokenHelp" xml:space="preserve"><value>Requis pour les dépôts privés. Utilisez un token d'accès personnel avec accès en lecture.</value></data>

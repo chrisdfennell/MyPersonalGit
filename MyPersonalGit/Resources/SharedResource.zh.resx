@@ -856,9 +856,11 @@
   <data name="Import_GitHub" xml:space="preserve"><value>GitHub（可选 issues/PR）</value></data>
   <data name="Import_GitLab" xml:space="preserve"><value>GitLab（可选 issues/PR）</value></data>
   <data name="Import_Bitbucket" xml:space="preserve"><value>Bitbucket（可选 issues）</value></data>
+  <data name="Import_Gitea" xml:space="preserve"><value>Gitea / Forgejo / Gogs（可选 issues/PR）</value></data>
   <data name="Import_GitHubExample" xml:space="preserve"><value>例如：https://github.com/owner/repo</value></data>
   <data name="Import_GitLabExample" xml:space="preserve"><value>例如：https://gitlab.com/owner/repo</value></data>
   <data name="Import_BitbucketExample" xml:space="preserve"><value>例如：https://bitbucket.org/owner/repo</value></data>
+  <data name="Import_GiteaExample" xml:space="preserve"><value>例如：https://gitea.example.com/owner/repo</value></data>
   <data name="Import_GitUrlExample" xml:space="preserve"><value>任何有效的 Git URL（HTTPS 或 SSH）</value></data>
   <data name="Import_RepoNameHelp" xml:space="preserve"><value>新本地仓库的名称</value></data>
   <data name="Import_AuthTokenHelp" xml:space="preserve"><value>私有仓库需要此项。请使用具有读取权限的个人访问令牌。</value></data>

@@ -54,7 +54,7 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 
 ### Code et dépôts
 - **Gestion des dépôts** — Créez, parcourez et supprimez des dépôts Git avec un navigateur de code complet, un éditeur de fichiers, un historique des commits, des branches et des tags
-- **Import/Migration de dépôts** — Importez des dépôts depuis GitHub, GitLab, Bitbucket ou toute URL Git avec import optionnel des issues et PRs. Traitement en arrière-plan avec suivi de progression
+- **Import/Migration de dépôts** — Importez des dépôts depuis GitHub, GitLab, Bitbucket, Gitea/Forgejo/Gogs ou toute URL Git avec import optionnel des issues et PRs. Traitement en arrière-plan avec suivi de progression
 - **Archivage de dépôts** — Marquez des dépôts en lecture seule avec des badges visuels ; les push sont bloqués pour les dépôts archivés
 - **Git Smart HTTP** — Clonez, récupérez et poussez via HTTP avec Basic Auth
 - **Serveur SSH intégré** — Serveur SSH natif pour les opérations Git — aucun OpenSSH externe requis. Supporte l'échange de clés ECDH, le chiffrement AES-CTR et l'authentification par clé publique (RSA, ECDSA, Ed25519)
@@ -71,6 +71,7 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Labels de dépôt** — Gérez les labels avec des couleurs personnalisées par dépôt ; les labels sont automatiquement copiés lors de la création de dépôts à partir de modèles
 - **AGit Flow** — Workflow push-to-review : `git push origin HEAD:refs/for/main` crée une pull request sans forker ni créer de branches distantes. Met à jour les PRs ouvertes existantes lors des push suivants
 - **Explorer** — Parcourez tous les dépôts accessibles avec recherche, tri et filtrage par sujet
+- **Autolink References** — Conversion automatique de `#123` en liens vers les issues, ainsi que des motifs personnalisés configurables (par ex., `JIRA-456` → URLs externes) par dépôt
 - **Recherche** — Recherche plein texte dans les dépôts, issues, PRs et le code
 
 ### Collaboration
@@ -129,12 +130,15 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Webhooks** — Déclenchez des services externes sur les événements de dépôt
 - **Métriques Prometheus** — Endpoint `/metrics` intégré pour la surveillance
 
-### Hébergement de paquets et conteneurs
+### Hébergement de paquets et conteneurs (20 registries)
 - **Registre de conteneurs** — Hébergez des images Docker/OCI avec `docker push` et `docker pull` (OCI Distribution Spec)
 - **Registre NuGet** — Hébergez des paquets .NET avec l'API NuGet v3 complète (index de service, recherche, push, restore)
 - **Registre npm** — Hébergez des paquets Node.js avec les commandes npm standard publish/install
 - **Registre PyPI** — Hébergez des paquets Python avec l'API Simple PEP 503, l'API de métadonnées JSON et la compatibilité `twine upload`
 - **Registre Maven** — Hébergez des paquets Java/JVM avec la disposition standard de dépôt Maven, génération de `maven-metadata.xml` et support de `mvn deploy`
+- **Alpine Registry** — Hébergez des paquets Alpine Linux `.apk` avec génération d'APKINDEX
+- **RPM Registry** — Hébergez des paquets RPM avec métadonnées `repomd.xml` pour `dnf`/`yum`
+- **Chef Registry** — Hébergez des cookbooks Chef avec une API compatible Chef Supermarket
 - **Paquets génériques** — Téléchargez et téléversez des artefacts binaires arbitraires via l'API REST
 
 ### Sites statiques
@@ -177,6 +181,9 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Repository Pinning** — Épinglez jusqu'à 6 dépôts favoris sur votre page de profil utilisateur pour un accès rapide
 - **Git Hooks Management** — Interface web pour visualiser, modifier et gérer les Git hooks côté serveur (pre-receive, update, post-receive, post-update, pre-push) par dépôt
 - **Protected File Patterns** — Règle de protection de branche avec des patrons glob pour exiger une approbation de révision pour les modifications de fichiers spécifiques (par exemple, `*.lock`, `migrations/**`, `.github/workflows/*`)
+- **External Issue Tracker** — Configurez les dépôts pour renvoyer vers un suivi d'issues externe (Jira, Linear, etc.) avec des motifs d'URL personnalisés
+- **Federation (NodeInfo/WebFinger)** — Découverte NodeInfo 2.0, WebFinger et host-meta pour la découvrabilité inter-instances
+- **Distributed CI Runners** — Les runners externes peuvent s'enregistrer via API, interroger les jobs en file d'attente et rapporter les résultats
 
 ## Stack technique
 
