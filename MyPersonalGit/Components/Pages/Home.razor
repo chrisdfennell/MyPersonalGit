@@ -107,8 +107,8 @@
                 <h3 class="h5 fw-bold">@(string.IsNullOrEmpty(searchTerm) ? L["Home_NoRepositoriesFound"] : L["Home_NoMatchingResults"])</h3>
                 <p class="text-muted mb-4 small">
                     @(string.IsNullOrEmpty(searchTerm)
-                                    ? $"Initialize a repository in {RootPath} to get started."
-                                    : $"We couldn't find any repositories matching '{searchTerm}'")
+                                    ? L["Home_InitializePrompt", RootPath]
+                                    : L["Home_NoMatchingSearch", searchTerm])
                 </p>
 
                 @if (string.IsNullOrEmpty(searchTerm))
@@ -132,7 +132,7 @@
                                 <div class="d-flex align-items-center mb-1">
                                     <a href="/repo/@repo.DisplayName" class="h5 text-decoration-none fw-bold text-primary mb-0 me-2">@repo.DisplayName</a>
                                     <span class="badge rounded-pill border @(repo.IsPrivate ? "bg-warning bg-opacity-10 text-warning border-warning-subtle" : "text-muted") fw-normal px-2" style="font-size: 12px;">
-                                        @(repo.IsPrivate ? "Private" : "Public")
+                                        @(repo.IsPrivate ? L["Common_Private"] : L["Common_Public"])
                                     </span>
                                     @if (repo.IsTemplate)
                                     {
@@ -496,7 +496,7 @@
                         {
                             Name = repoName,
                             FullPath = dir,
-                            LastCommitMessage = latestCommit?.MessageShort ?? "No description provided.",
+                            LastCommitMessage = latestCommit?.MessageShort ?? L["Home_NoDescription"],
                             LastCommitDate = latestCommit?.Author.When.UtcDateTime,
                             Stars = repoMeta?.Stars ?? 0,
                             IsStarred = isStarred,

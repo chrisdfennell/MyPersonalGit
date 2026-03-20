@@ -47,13 +47,13 @@
 
                             <div class="mb-3">
                                 <label for="usernameOrEmail" class="form-label">@L["Login_Username"]</label>
-                                <InputText id="usernameOrEmail" class="form-control" @bind-Value="loginModel.UsernameOrEmail" placeholder="Enter username or email" />
+                                <InputText id="usernameOrEmail" class="form-control" @bind-Value="loginModel.UsernameOrEmail" placeholder="@L["Login_UsernamePlaceholder"]" />
                                 <ValidationMessage For="@(() => loginModel.UsernameOrEmail)" />
                             </div>
 
                             <div class="mb-3">
                                 <label for="password" class="form-label">@L["Login_Password"]</label>
-                                <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" placeholder="Enter password" />
+                                <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" placeholder="@L["Login_PasswordPlaceholder"]" />
                                 <ValidationMessage For="@(() => loginModel.Password)" />
                             </div>
 
@@ -84,7 +84,7 @@
                                     <a href="/oauth/login/@provider.ProviderName" class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
                                        style="border-color: @MyPersonalGit.Data.OAuthService.GetProviderColor(provider.ProviderName); color: @MyPersonalGit.Data.OAuthService.GetProviderColor(provider.ProviderName);">
                                         <i class="bi @MyPersonalGit.Data.OAuthService.GetProviderIcon(provider.ProviderName) me-2"></i>
-                                        Sign in with @(provider.DisplayName ?? provider.ProviderName)
+                                        @L["Login_SignInWith", provider.DisplayName ?? provider.ProviderName]
                                     </a>
                                 }
                             </div>
@@ -95,16 +95,16 @@
                         <div class="mb-3">
                             @if (UseRecoveryCode)
                             {
-                                <label for="recoveryCode" class="form-label">Recovery Code</label>
-                                <input id="recoveryCode" type="text" class="form-control font-monospace" @bind="TwoFactorCode" placeholder="Enter 8-digit recovery code" />
-                                <div class="form-text">Enter one of your recovery codes.</div>
+                                <label for="recoveryCode" class="form-label">@L["Login_RecoveryCode"]</label>
+                                <input id="recoveryCode" type="text" class="form-control font-monospace" @bind="TwoFactorCode" placeholder="@L["Login_RecoveryCodePlaceholder"]" />
+                                <div class="form-text">@L["Login_RecoveryCodeHelp"]</div>
                             }
                             else
                             {
-                                <label for="totpCode" class="form-label">Authentication Code</label>
+                                <label for="totpCode" class="form-label">@L["Login_AuthenticationCode"]</label>
                                 <input id="totpCode" type="text" class="form-control font-monospace text-center" @bind="TwoFactorCode"
                                        placeholder="000000" maxlength="6" inputmode="numeric" />
-                                <div class="form-text">Enter the 6-digit code from your authenticator app.</div>
+                                <div class="form-text">@L["Login_AuthCodeHelp"]</div>
                             }
                         </div>
 
@@ -123,7 +123,7 @@
                         @if (hasPasskeys)
                         {
                             <button class="btn btn-outline-secondary w-100 mb-3" @onclick="HandlePasskeyLogin" disabled="@IsLoading">
-                                <i class="bi bi-fingerprint me-2"></i>Use a passkey
+                                <i class="bi bi-fingerprint me-2"></i>@L["Login_UsePasskey"]
                             </button>
                         }
 
@@ -131,20 +131,20 @@
                             @if (UseRecoveryCode)
                             {
                                 <a href="javascript:void(0)" class="text-decoration-none" @onclick="ToggleRecoveryCode">
-                                    Use authenticator code instead
+                                    @L["Login_UseAuthenticatorInstead"]
                                 </a>
                             }
                             else
                             {
                                 <a href="javascript:void(0)" class="text-decoration-none" @onclick="ToggleRecoveryCode">
-                                    Use a recovery code
+                                    @L["Login_UseRecoveryCode"]
                                 </a>
                             }
                         </div>
 
                         <div class="text-center">
                             <a href="javascript:void(0)" class="text-decoration-none text-muted" @onclick="BackToLogin">
-                                <i class="bi bi-arrow-left me-1"></i>Back to login
+                                <i class="bi bi-arrow-left me-1"></i>@L["Login_BackToLogin"]
                             </a>
                         </div>
                     }
@@ -153,7 +153,7 @@
                     {
                         <div class="text-center mt-3">
                             <p class="text-muted mb-0">
-                                Don't have an account? <a href="/register" class="text-decoration-none">@L["Nav_Register"]</a>
+                                @L["Login_NoAccount"] <a href="/register" class="text-decoration-none">@L["Nav_Register"]</a>
                             </p>
                         </div>
                     }
@@ -197,7 +197,7 @@
 
             if (user == null)
             {
-                ErrorMessage = "Invalid username/email or password";
+                ErrorMessage = L["Login_InvalidCredentials"];
                 return;
             }
 
@@ -222,12 +222,12 @@
             }
             else
             {
-                ErrorMessage = "An error occurred during login. Please try again.";
+                ErrorMessage = L["Login_Error"];
             }
         }
         catch
         {
-            ErrorMessage = "An error occurred during login. Please try again.";
+            ErrorMessage = L["Login_Error"];
         }
         finally
         {
@@ -258,13 +258,13 @@
             else
             {
                 ErrorMessage = UseRecoveryCode
-                    ? "Invalid recovery code. Please try again."
-                    : "Invalid authentication code. Please try again.";
+                    ? L["Login_InvalidRecoveryCode"]
+                    : L["Login_InvalidAuthCode"];
             }
         }
         catch
         {
-            ErrorMessage = "An error occurred during verification. Please try again.";
+            ErrorMessage = L["Login_VerificationError"];
         }
         finally
         {
@@ -306,13 +306,13 @@
                     await JS.InvokeVoidAsync("sessionHelper.set", "sessionId", sessionId);
                     Navigation.NavigateTo("/", forceLoad: true);
                 }
-                else { ErrorMessage = "Failed to create session."; }
+                else { ErrorMessage = L["Login_SessionError"]; }
             }
-            else { ErrorMessage = "Passkey verification failed. Please try again."; }
+            else { ErrorMessage = L["Login_PasskeyFailed"]; }
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Passkey authentication failed: {ex.Message}";
+            ErrorMessage = L["Login_PasskeyAuthFailed", ex.Message];
         }
         finally { IsLoading = false; }
     }

@@ -347,6 +347,10 @@
   <data name="PR_Before" xml:space="preserve"><value>Before</value></data>
   <data name="PR_After" xml:space="preserve"><value>After</value></data>
   <data name="PR_ImageDiff" xml:space="preserve"><value>Image comparison</value></data>
+  <data name="PR_Showing" xml:space="preserve"><value>Showing</value></data>
+  <data name="PR_ChangedFiles" xml:space="preserve"><value>changed file</value></data>
+  <data name="PR_Additions" xml:space="preserve"><value>additions</value></data>
+  <data name="PR_Deletions" xml:space="preserve"><value>deletions</value></data>
   <data name="Repo_RequireSignedCommits" xml:space="preserve"><value>Require signed commits — all commits must be GPG-signed</value></data>
   <data name="Repo_SignedCommits" xml:space="preserve"><value>Signed commits</value></data>
   <data name="Repo_ProtectedFilePatterns" xml:space="preserve"><value>Protected file patterns</value></data>
@@ -373,8 +377,12 @@
   <data name="Compare_Split" xml:space="preserve"><value>Split</value></data>
   <data name="Compare_Title" xml:space="preserve"><value>Compare</value></data>
   <data name="Compare_Unified" xml:space="preserve"><value>Unified</value></data>
+  <data name="Compare_SelectBothBranches" xml:space="preserve"><value>Please select both branches.</value></data>
+  <data name="Compare_RepoNotFound" xml:space="preserve"><value>Repository not found.</value></data>
+  <data name="Compare_NoCommits" xml:space="preserve"><value>One or both branches have no commits.</value></data>
 
   <!-- Actions -->
+  <data name="Actions_Active" xml:space="preserve"><value>Active</value></data>
   <data name="Actions_AddWebhook" xml:space="preserve"><value>Add webhook</value></data>
   <data name="Actions_Artifacts" xml:space="preserve"><value>Artifacts</value></data>
   <data name="Actions_Back" xml:space="preserve"><value>Back</value></data>
@@ -383,6 +391,7 @@
   <data name="Actions_Branch" xml:space="preserve"><value>Branch</value></data>
   <data name="Actions_BranchPlaceholder" xml:space="preserve"><value>Branch name</value></data>
   <data name="Actions_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Actions_ClickRunWorkflow" xml:space="preserve"><value>Click "Run workflow" to trigger a workflow from .github/workflows/</value></data>
   <data name="Actions_CommitMessage" xml:space="preserve"><value>Commit message</value></data>
   <data name="Actions_CommitMessagePlaceholder" xml:space="preserve"><value>Enter commit message</value></data>
   <data name="Actions_CommitSHA" xml:space="preserve"><value>Commit SHA</value></data>
@@ -391,6 +400,7 @@
   <data name="Actions_CreateWorkflowRun" xml:space="preserve"><value>Create workflow run</value></data>
   <data name="Actions_Download" xml:space="preserve"><value>Download</value></data>
   <data name="Actions_Events" xml:space="preserve"><value>Events</value></data>
+  <data name="Actions_Inactive" xml:space="preserve"><value>Inactive</value></data>
   <data name="Actions_NoDeliveries" xml:space="preserve"><value>No deliveries</value></data>
   <data name="Actions_NoRunsYet" xml:space="preserve"><value>No runs yet</value></data>
   <data name="Actions_NoWebhooks" xml:space="preserve"><value>No webhooks</value></data>
@@ -661,6 +671,7 @@
   <!-- Organizations -->
   <data name="Org_Add" xml:space="preserve"><value>Add</value></data>
   <data name="Org_AddMemberPlaceholder" xml:space="preserve"><value>Add member...</value></data>
+  <data name="Org_AlreadyMember" xml:space="preserve"><value>User is already a member.</value></data>
   <data name="Org_AddRepoPlaceholder" xml:space="preserve"><value>Add repository...</value></data>
   <data name="Org_BackToOrganizations" xml:space="preserve"><value>Back to organizations</value></data>
   <data name="Org_BackToTeams" xml:space="preserve"><value>Back to teams</value></data>
@@ -673,6 +684,7 @@
   <data name="Org_Description" xml:space="preserve"><value>Description</value></data>
   <data name="Org_DisplayName" xml:space="preserve"><value>Display name</value></data>
   <data name="Org_DisplayNamePlaceholder" xml:space="preserve"><value>Enter display name</value></data>
+  <data name="Org_MemberAdded" xml:space="preserve"><value>Member added.</value></data>
   <data name="Org_Members" xml:space="preserve"><value>Members</value></data>
   <data name="Org_Name" xml:space="preserve"><value>Name</value></data>
   <data name="Org_NameHint" xml:space="preserve"><value>Organization name (used in URLs)</value></data>
@@ -685,6 +697,7 @@
   <data name="Org_SaveChanges" xml:space="preserve"><value>Save changes</value></data>
   <data name="Org_Settings" xml:space="preserve"><value>Settings</value></data>
   <data name="Org_SettingsHeader" xml:space="preserve"><value>Organization settings</value></data>
+  <data name="Org_SettingsSaved" xml:space="preserve"><value>Settings saved.</value></data>
   <data name="Org_TeamName" xml:space="preserve"><value>Team name</value></data>
   <data name="Org_Teams" xml:space="preserve"><value>Teams</value></data>
   <data name="Org_Title" xml:space="preserve"><value>Organizations</value></data>
@@ -738,9 +751,13 @@
   <data name="Admin_Created" xml:space="preserve"><value>Created</value></data>
   <data name="Admin_Database" xml:space="preserve"><value>Database</value></data>
   <data name="Admin_Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Admin_Disabled" xml:space="preserve"><value>Disabled</value></data>
   <data name="Admin_DownloadBackup" xml:space="preserve"><value>Download backup</value></data>
   <data name="Admin_Email" xml:space="preserve"><value>Email</value></data>
   <data name="Admin_EmailNotifications" xml:space="preserve"><value>Email notifications</value></data>
+  <data name="Admin_Enabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="Admin_EnterClientId" xml:space="preserve"><value>Enter Client ID</value></data>
+  <data name="Admin_EnterClientSecret" xml:space="preserve"><value>Enter Client Secret</value></data>
   <data name="Admin_FeatureToggles" xml:space="preserve"><value>Feature toggles</value></data>
   <data name="Admin_GlobalSecrets" xml:space="preserve"><value>Global secrets</value></data>
   <data name="Admin_IPAddress" xml:space="preserve"><value>IP address</value></data>
@@ -756,6 +773,7 @@
   <data name="Admin_RestoreBackup" xml:space="preserve"><value>Restore backup</value></data>
   <data name="Admin_Role" xml:space="preserve"><value>Role</value></data>
   <data name="Admin_SSHServer" xml:space="preserve"><value>SSH server</value></data>
+  <data name="Admin_SettingsSaved" xml:space="preserve"><value>Settings saved successfully!</value></data>
   <data name="Admin_SignIn" xml:space="preserve"><value>Sign in</value></data>
   <data name="Admin_SiteBranding" xml:space="preserve"><value>Site branding</value></data>
   <data name="Admin_Status" xml:space="preserve"><value>Status</value></data>
@@ -794,4 +812,59 @@
   <data name="Language_ru" xml:space="preserve"><value>Русский</value></data>
   <data name="Language_it" xml:space="preserve"><value>Italiano</value></data>
   <data name="Language_tr" xml:space="preserve"><value>Türkçe</value></data>
+
+  <!-- Home page -->
+  <data name="Home_InitializePrompt" xml:space="preserve"><value>Initialize a repository in {0} to get started.</value></data>
+  <data name="Home_NoMatchingSearch" xml:space="preserve"><value>We couldn't find any repositories matching '{0}'</value></data>
+  <data name="Home_NoDescription" xml:space="preserve"><value>No description provided.</value></data>
+
+  <!-- Login page -->
+  <data name="Login_InvalidCredentials" xml:space="preserve"><value>Invalid username/email or password</value></data>
+  <data name="Login_Error" xml:space="preserve"><value>An error occurred during login. Please try again.</value></data>
+  <data name="Login_InvalidRecoveryCode" xml:space="preserve"><value>Invalid recovery code. Please try again.</value></data>
+  <data name="Login_InvalidAuthCode" xml:space="preserve"><value>Invalid authentication code. Please try again.</value></data>
+  <data name="Login_VerificationError" xml:space="preserve"><value>An error occurred during verification. Please try again.</value></data>
+  <data name="Login_SessionError" xml:space="preserve"><value>Failed to create session.</value></data>
+  <data name="Login_PasskeyFailed" xml:space="preserve"><value>Passkey verification failed. Please try again.</value></data>
+  <data name="Login_PasskeyAuthFailed" xml:space="preserve"><value>Passkey authentication failed: {0}</value></data>
+  <data name="Login_SignInWith" xml:space="preserve"><value>Sign in with {0}</value></data>
+  <data name="Login_RecoveryCode" xml:space="preserve"><value>Recovery Code</value></data>
+  <data name="Login_RecoveryCodePlaceholder" xml:space="preserve"><value>Enter 8-digit recovery code</value></data>
+  <data name="Login_RecoveryCodeHelp" xml:space="preserve"><value>Enter one of your recovery codes.</value></data>
+  <data name="Login_AuthenticationCode" xml:space="preserve"><value>Authentication Code</value></data>
+  <data name="Login_AuthCodeHelp" xml:space="preserve"><value>Enter the 6-digit code from your authenticator app.</value></data>
+  <data name="Login_UsePasskey" xml:space="preserve"><value>Use a passkey</value></data>
+  <data name="Login_UseAuthenticatorInstead" xml:space="preserve"><value>Use authenticator code instead</value></data>
+  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>Use a recovery code</value></data>
+  <data name="Login_BackToLogin" xml:space="preserve"><value>Back to login</value></data>
+  <data name="Login_NoAccount" xml:space="preserve"><value>Don't have an account?</value></data>
+  <data name="Login_UsernamePlaceholder" xml:space="preserve"><value>Enter username or email</value></data>
+  <data name="Login_PasswordPlaceholder" xml:space="preserve"><value>Enter password</value></data>
+
+  <!-- Import page -->
+  <data name="Import_GitUrl" xml:space="preserve"><value>Git URL (code only)</value></data>
+  <data name="Import_GitHub" xml:space="preserve"><value>GitHub (with optional issues/PRs)</value></data>
+  <data name="Import_GitLab" xml:space="preserve"><value>GitLab (with optional issues/PRs)</value></data>
+  <data name="Import_Bitbucket" xml:space="preserve"><value>Bitbucket (with optional issues)</value></data>
+  <data name="Import_GitHubExample" xml:space="preserve"><value>e.g., https://github.com/owner/repo</value></data>
+  <data name="Import_GitLabExample" xml:space="preserve"><value>e.g., https://gitlab.com/owner/repo</value></data>
+  <data name="Import_BitbucketExample" xml:space="preserve"><value>e.g., https://bitbucket.org/owner/repo</value></data>
+  <data name="Import_GitUrlExample" xml:space="preserve"><value>Any valid Git URL (HTTPS or SSH)</value></data>
+  <data name="Import_RepoNameHelp" xml:space="preserve"><value>The name for the new local repository</value></data>
+  <data name="Import_AuthTokenHelp" xml:space="preserve"><value>Required for private repositories. Use a personal access token with read access.</value></data>
+  <data name="Import_AuthTokenPlaceholder" xml:space="preserve"><value>Personal access token for private repos</value></data>
+  <data name="Import_EnterUrl" xml:space="preserve"><value>Please enter a repository URL.</value></data>
+  <data name="Import_EnterName" xml:space="preserve"><value>Please enter a repository name.</value></data>
+  <data name="Import_FailedToStart" xml:space="preserve"><value>Failed to start import: {0}</value></data>
+  <data name="Import_StatusPending" xml:space="preserve"><value>Pending</value></data>
+  <data name="Import_StatusCloning" xml:space="preserve"><value>Cloning</value></data>
+  <data name="Import_StatusImportingIssues" xml:space="preserve"><value>Importing Issues</value></data>
+  <data name="Import_StatusImportingPRs" xml:space="preserve"><value>Importing PRs</value></data>
+  <data name="Import_StatusCompleted" xml:space="preserve"><value>Completed</value></data>
+  <data name="Import_StatusFailed" xml:space="preserve"><value>Failed</value></data>
+  <data name="Import_AboutDescription" xml:space="preserve"><value>Import repositories from GitHub, GitLab, Bitbucket, or any Git URL. The repository will be cloned with its full history.</value></data>
+  <data name="Import_AboutInclude" xml:space="preserve"><value>GitHub / GitLab imports can also include:</value></data>
+  <data name="Import_AboutIssues" xml:space="preserve"><value>Issues with their descriptions and state</value></data>
+  <data name="Import_AboutPRs" xml:space="preserve"><value>Pull requests / merge requests (imported as issues)</value></data>
+  <data name="Import_AboutPrivate" xml:space="preserve"><value>For private repositories, provide a personal access token with the appropriate read permissions.</value></data>
 </root>

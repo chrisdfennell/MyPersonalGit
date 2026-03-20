@@ -791,4 +791,90 @@
   <data name="Language_zh" xml:space="preserve"><value>中文</value></data>
   <data name="Language_pt" xml:space="preserve"><value>Português</value></data>
   <data name="Language_ko" xml:space="preserve"><value>한국어</value></data>
+  <data name="Language_ru" xml:space="preserve"><value>Русский</value></data>
+  <data name="Language_it" xml:space="preserve"><value>Italiano</value></data>
+  <data name="Language_tr" xml:space="preserve"><value>Türkçe</value></data>
+
+  <!-- PR (new keys) -->
+  <data name="PR_Showing" xml:space="preserve"><value>Gösterilen</value></data>
+  <data name="PR_ChangedFiles" xml:space="preserve"><value>değişen dosya</value></data>
+  <data name="PR_Additions" xml:space="preserve"><value>ekleme</value></data>
+  <data name="PR_Deletions" xml:space="preserve"><value>silme</value></data>
+
+  <!-- Compare (new keys) -->
+  <data name="Compare_SelectBothBranches" xml:space="preserve"><value>Lütfen her iki dalı da seçin.</value></data>
+  <data name="Compare_RepoNotFound" xml:space="preserve"><value>Depo bulunamadı.</value></data>
+  <data name="Compare_NoCommits" xml:space="preserve"><value>Bir veya her iki dalda commit bulunmuyor.</value></data>
+
+  <!-- Actions (new keys) -->
+  <data name="Actions_Active" xml:space="preserve"><value>Aktif</value></data>
+  <data name="Actions_Inactive" xml:space="preserve"><value>Pasif</value></data>
+  <data name="Actions_ClickRunWorkflow" xml:space="preserve"><value>.github/workflows/ dizininden bir iş akışı çalıştırmak için "Run workflow"a tıklayın</value></data>
+
+  <!-- Admin (new keys) -->
+  <data name="Admin_Disabled" xml:space="preserve"><value>Devre dışı</value></data>
+  <data name="Admin_Enabled" xml:space="preserve"><value>Etkin</value></data>
+  <data name="Admin_EnterClientId" xml:space="preserve"><value>Client ID girin</value></data>
+  <data name="Admin_EnterClientSecret" xml:space="preserve"><value>Client Secret girin</value></data>
+  <data name="Admin_SettingsSaved" xml:space="preserve"><value>Ayarlar başarıyla kaydedildi!</value></data>
+
+  <!-- Organizations (new keys) -->
+  <data name="Org_AlreadyMember" xml:space="preserve"><value>Kullanıcı zaten üyedir.</value></data>
+  <data name="Org_MemberAdded" xml:space="preserve"><value>Üye eklendi.</value></data>
+  <data name="Org_SettingsSaved" xml:space="preserve"><value>Ayarlar kaydedildi.</value></data>
+
+  <!-- Home page -->
+  <data name="Home_InitializePrompt" xml:space="preserve"><value>Başlamak için {0} konumunda bir depo başlatın.</value></data>
+  <data name="Home_NoMatchingSearch" xml:space="preserve"><value>'{0}' ile eşleşen depo bulunamadı</value></data>
+  <data name="Home_NoDescription" xml:space="preserve"><value>Açıklama sağlanmadı.</value></data>
+
+  <!-- Login page -->
+  <data name="Login_InvalidCredentials" xml:space="preserve"><value>Geçersiz kullanıcı adı/e-posta veya şifre</value></data>
+  <data name="Login_Error" xml:space="preserve"><value>Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.</value></data>
+  <data name="Login_InvalidRecoveryCode" xml:space="preserve"><value>Geçersiz kurtarma kodu. Lütfen tekrar deneyin.</value></data>
+  <data name="Login_InvalidAuthCode" xml:space="preserve"><value>Geçersiz doğrulama kodu. Lütfen tekrar deneyin.</value></data>
+  <data name="Login_VerificationError" xml:space="preserve"><value>Doğrulama sırasında bir hata oluştu. Lütfen tekrar deneyin.</value></data>
+  <data name="Login_SessionError" xml:space="preserve"><value>Oturum oluşturulamadı.</value></data>
+  <data name="Login_PasskeyFailed" xml:space="preserve"><value>Geçiş anahtarı doğrulaması başarısız oldu. Lütfen tekrar deneyin.</value></data>
+  <data name="Login_PasskeyAuthFailed" xml:space="preserve"><value>Geçiş anahtarı kimlik doğrulaması başarısız oldu: {0}</value></data>
+  <data name="Login_SignInWith" xml:space="preserve"><value>{0} ile giriş yap</value></data>
+  <data name="Login_RecoveryCode" xml:space="preserve"><value>Kurtarma Kodu</value></data>
+  <data name="Login_RecoveryCodePlaceholder" xml:space="preserve"><value>8 haneli kurtarma kodunu girin</value></data>
+  <data name="Login_RecoveryCodeHelp" xml:space="preserve"><value>Kurtarma kodlarınızdan birini girin.</value></data>
+  <data name="Login_AuthenticationCode" xml:space="preserve"><value>Doğrulama Kodu</value></data>
+  <data name="Login_AuthCodeHelp" xml:space="preserve"><value>Kimlik doğrulama uygulamanızdaki 6 haneli kodu girin.</value></data>
+  <data name="Login_UsePasskey" xml:space="preserve"><value>Geçiş anahtarı kullan</value></data>
+  <data name="Login_UseAuthenticatorInstead" xml:space="preserve"><value>Bunun yerine doğrulama kodu kullan</value></data>
+  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>Kurtarma kodu kullan</value></data>
+  <data name="Login_BackToLogin" xml:space="preserve"><value>Girişe geri dön</value></data>
+  <data name="Login_NoAccount" xml:space="preserve"><value>Hesabınız yok mu?</value></data>
+  <data name="Login_UsernamePlaceholder" xml:space="preserve"><value>Kullanıcı adı veya e-posta girin</value></data>
+  <data name="Login_PasswordPlaceholder" xml:space="preserve"><value>Şifre girin</value></data>
+
+  <!-- Import page (new keys) -->
+  <data name="Import_GitUrl" xml:space="preserve"><value>Git URL (yalnızca kod)</value></data>
+  <data name="Import_GitHub" xml:space="preserve"><value>GitHub (isteğe bağlı issues/PR ile)</value></data>
+  <data name="Import_GitLab" xml:space="preserve"><value>GitLab (isteğe bağlı issues/PR ile)</value></data>
+  <data name="Import_Bitbucket" xml:space="preserve"><value>Bitbucket (isteğe bağlı issues ile)</value></data>
+  <data name="Import_GitHubExample" xml:space="preserve"><value>örn., https://github.com/owner/repo</value></data>
+  <data name="Import_GitLabExample" xml:space="preserve"><value>örn., https://gitlab.com/owner/repo</value></data>
+  <data name="Import_BitbucketExample" xml:space="preserve"><value>örn., https://bitbucket.org/owner/repo</value></data>
+  <data name="Import_GitUrlExample" xml:space="preserve"><value>Geçerli herhangi bir Git URL (HTTPS veya SSH)</value></data>
+  <data name="Import_RepoNameHelp" xml:space="preserve"><value>Yeni yerel deponun adı</value></data>
+  <data name="Import_AuthTokenHelp" xml:space="preserve"><value>Özel depolar için gereklidir. Okuma erişimi olan bir kişisel erişim belirteci kullanın.</value></data>
+  <data name="Import_AuthTokenPlaceholder" xml:space="preserve"><value>Özel depolar için kişisel erişim belirteci</value></data>
+  <data name="Import_EnterUrl" xml:space="preserve"><value>Lütfen bir depo URL'si girin.</value></data>
+  <data name="Import_EnterName" xml:space="preserve"><value>Lütfen bir depo adı girin.</value></data>
+  <data name="Import_FailedToStart" xml:space="preserve"><value>İçe aktarma başlatılamadı: {0}</value></data>
+  <data name="Import_StatusPending" xml:space="preserve"><value>Bekliyor</value></data>
+  <data name="Import_StatusCloning" xml:space="preserve"><value>Klonlanıyor</value></data>
+  <data name="Import_StatusImportingIssues" xml:space="preserve"><value>Issues içe aktarılıyor</value></data>
+  <data name="Import_StatusImportingPRs" xml:space="preserve"><value>PR'ler içe aktarılıyor</value></data>
+  <data name="Import_StatusCompleted" xml:space="preserve"><value>Tamamlandı</value></data>
+  <data name="Import_StatusFailed" xml:space="preserve"><value>Başarısız</value></data>
+  <data name="Import_AboutDescription" xml:space="preserve"><value>GitHub, GitLab, Bitbucket veya herhangi bir Git URL'sinden depo içe aktarın. Depo, tam geçmişiyle birlikte klonlanacaktır.</value></data>
+  <data name="Import_AboutInclude" xml:space="preserve"><value>GitHub / GitLab içe aktarmaları ayrıca şunları içerebilir:</value></data>
+  <data name="Import_AboutIssues" xml:space="preserve"><value>Açıklamaları ve durumları ile Issues</value></data>
+  <data name="Import_AboutPRs" xml:space="preserve"><value>Pull request'ler / merge request'ler (issues olarak içe aktarılır)</value></data>
+  <data name="Import_AboutPrivate" xml:space="preserve"><value>Özel depolar için uygun okuma izinlerine sahip bir kişisel erişim belirteci sağlayın.</value></data>
 </root>

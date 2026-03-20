@@ -46,10 +46,10 @@ else
                         <div class="mb-3">
                             <label class="form-label fw-bold">@L["Import_SourceType"]</label>
                             <select class="form-select" @bind="sourceType">
-                                <option value="GitUrl">Git URL (code only)</option>
-                                <option value="GitHub">GitHub (with optional issues/PRs)</option>
-                                <option value="GitLab">GitLab (with optional issues/PRs)</option>
-                                <option value="Bitbucket">Bitbucket (with optional issues)</option>
+                                <option value="GitUrl">@L["Import_GitUrl"]</option>
+                                <option value="GitHub">@L["Import_GitHub"]</option>
+                                <option value="GitLab">@L["Import_GitLab"]</option>
+                                <option value="Bitbucket">@L["Import_Bitbucket"]</option>
                             </select>
                         </div>
 
@@ -58,10 +58,10 @@ else
                             <input type="text" class="form-control" @bind="sourceUrl"
                                    placeholder="@GetUrlPlaceholder()" />
                             <div class="form-text">
-                                @if (sourceType == "GitHub") { <span>e.g., https://github.com/owner/repo</span> }
-                                else if (sourceType == "GitLab") { <span>e.g., https://gitlab.com/owner/repo</span> }
-                                else if (sourceType == "Bitbucket") { <span>e.g., https://bitbucket.org/owner/repo</span> }
-                                else { <span>Any valid Git URL (HTTPS or SSH)</span> }
+                                @if (sourceType == "GitHub") { <span>@L["Import_GitHubExample"]</span> }
+                                else if (sourceType == "GitLab") { <span>@L["Import_GitLabExample"]</span> }
+                                else if (sourceType == "Bitbucket") { <span>@L["Import_BitbucketExample"]</span> }
+                                else { <span>@L["Import_GitUrlExample"]</span> }
                             </div>
                         </div>
 
@@ -69,14 +69,14 @@ else
                             <label class="form-label fw-bold">@L["Import_RepositoryName"]</label>
                             <input type="text" class="form-control" @bind="targetRepoName"
                                    placeholder="my-imported-repo" />
-                            <div class="form-text">The name for the new local repository</div>
+                            <div class="form-text">@L["Import_RepoNameHelp"]</div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-bold">@L["Import_AuthToken"] <span class="text-muted fw-normal">(@L["Import_Optional"])</span></label>
                             <input type="password" class="form-control" @bind="authToken"
-                                   placeholder="Personal access token for private repos" />
-                            <div class="form-text">Required for private repositories. Use a personal access token with read access.</div>
+                                   placeholder="@L["Import_AuthTokenPlaceholder"]" />
+                            <div class="form-text">@L["Import_AuthTokenHelp"]</div>
                         </div>
 
                         @if (sourceType != "GitUrl")
@@ -163,22 +163,22 @@ else
                                                     @switch (task.Status)
                                                     {
                                                         case MigrationStatus.Pending:
-                                                            <span class="badge bg-warning text-dark">Pending</span>
+                                                            <span class="badge bg-warning text-dark">@L["Import_StatusPending"]</span>
                                                             break;
                                                         case MigrationStatus.Cloning:
-                                                            <span class="badge bg-info">Cloning</span>
+                                                            <span class="badge bg-info">@L["Import_StatusCloning"]</span>
                                                             break;
                                                         case MigrationStatus.ImportingIssues:
-                                                            <span class="badge bg-info">Importing Issues</span>
+                                                            <span class="badge bg-info">@L["Import_StatusImportingIssues"]</span>
                                                             break;
                                                         case MigrationStatus.ImportingPullRequests:
-                                                            <span class="badge bg-info">Importing PRs</span>
+                                                            <span class="badge bg-info">@L["Import_StatusImportingPRs"]</span>
                                                             break;
                                                         case MigrationStatus.Completed:
-                                                            <span class="badge bg-success">Completed</span>
+                                                            <span class="badge bg-success">@L["Import_StatusCompleted"]</span>
                                                             break;
                                                         case MigrationStatus.Failed:
-                                                            <span class="badge bg-danger">Failed</span>
+                                                            <span class="badge bg-danger">@L["Import_StatusFailed"]</span>
                                                             if (!string.IsNullOrEmpty(task.ErrorMessage))
                                                             {
                                                                 <br /><small class="text-danger">@task.ErrorMessage</small>
@@ -216,16 +216,15 @@ else
                     </div>
                     <div class="card-body">
                         <p class="small text-muted">
-                            Import repositories from GitHub, GitLab, Bitbucket, or any Git URL. The repository
-                            will be cloned with its full history.
+                            @L["Import_AboutDescription"]
                         </p>
-                        <p class="small text-muted mb-2"><strong>GitHub / GitLab imports can also include:</strong></p>
+                        <p class="small text-muted mb-2"><strong>@L["Import_AboutInclude"]</strong></p>
                         <ul class="small text-muted">
-                            <li>Issues with their descriptions and state</li>
-                            <li>Pull requests / merge requests (imported as issues)</li>
+                            <li>@L["Import_AboutIssues"]</li>
+                            <li>@L["Import_AboutPRs"]</li>
                         </ul>
                         <p class="small text-muted mb-0">
-                            For private repositories, provide a personal access token with the appropriate read permissions.
+                            @L["Import_AboutPrivate"]
                         </p>
                     </div>
                 </div>
@@ -286,7 +285,7 @@ else
 
         if (string.IsNullOrWhiteSpace(sourceUrl))
         {
-            errorMessage = "Please enter a repository URL.";
+            errorMessage = L["Import_EnterUrl"];
             return;
         }
 
@@ -302,7 +301,7 @@ else
 
             if (string.IsNullOrWhiteSpace(targetRepoName))
             {
-                errorMessage = "Please enter a repository name.";
+                errorMessage = L["Import_EnterName"];
                 return;
             }
         }
@@ -327,7 +326,7 @@ else
         }
         catch (Exception ex)
         {
-            errorMessage = $"Failed to start import: {ex.Message}";
+            errorMessage = L["Import_FailedToStart", ex.Message];
         }
         finally
         {

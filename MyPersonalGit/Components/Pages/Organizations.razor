@@ -437,7 +437,7 @@
     {
         if (string.IsNullOrWhiteSpace(newMemberUsername)) return;
         var result = await OrgService.AddMemberAsync(OrgName!, newMemberUsername.Trim(), newMemberRole);
-        memberMessage = result ? "Member added." : "User is already a member.";
+        memberMessage = result ? L["Org_MemberAdded"] : L["Org_AlreadyMember"];
         memberMessageSuccess = result;
         if (result)
         {
@@ -499,7 +499,7 @@
             org.DisplayName = settingsDisplayName;
             org.Description = settingsDescription;
         });
-        settingsMessage = "Settings saved.";
+        settingsMessage = L["Org_SettingsSaved"];
         currentOrg = await OrgService.GetOrganizationAsync(OrgName!);
     }
 
