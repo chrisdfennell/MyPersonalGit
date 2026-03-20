@@ -869,4 +869,60 @@
   <data name="Import_AboutIssues" xml:space="preserve"><value>Issues with their descriptions and state</value></data>
   <data name="Import_AboutPRs" xml:space="preserve"><value>Pull requests / merge requests (imported as issues)</value></data>
   <data name="Import_AboutPrivate" xml:space="preserve"><value>For private repositories, provide a personal access token with the appropriate read permissions.</value></data>
+
+  <!-- Environments -->
+  <data name="Env_Title" xml:space="preserve"><value>Environments</value></data>
+  <data name="Env_Repositories" xml:space="preserve"><value>Repositories</value></data>
+  <data name="Env_NewEnvironment" xml:space="preserve"><value>New environment</value></data>
+  <data name="Env_RequiredReviewers" xml:space="preserve"><value>Required reviewers:</value></data>
+  <data name="Env_WaitTimer" xml:space="preserve"><value>Wait timer:</value></data>
+  <data name="Env_WaitTimerMin" xml:space="preserve"><value>{0} min</value></data>
+  <data name="Env_Branches" xml:space="preserve"><value>Branches:</value></data>
+  <data name="Env_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Env_Commit" xml:space="preserve"><value>Commit</value></data>
+  <data name="Env_Ref" xml:space="preserve"><value>Ref</value></data>
+  <data name="Env_Creator" xml:space="preserve"><value>Creator</value></data>
+  <data name="Env_Created" xml:space="preserve"><value>Created</value></data>
+  <data name="Env_Approve" xml:space="preserve"><value>Approve</value></data>
+  <data name="Env_Reject" xml:space="preserve"><value>Reject</value></data>
+  <data name="Env_NoDeployments" xml:space="preserve"><value>No deployments yet.</value></data>
+  <data name="Env_NoEnvironments" xml:space="preserve"><value>No environments configured yet.</value></data>
+  <data name="Env_NoEnvironmentsDescription" xml:space="preserve"><value>Environments let you configure deployment targets with protection rules like required reviewers and wait timers.</value></data>
+  <data name="Env_Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Env_NamePlaceholder" xml:space="preserve"><value>e.g. production, staging</value></data>
+  <data name="Env_UrlOptional" xml:space="preserve"><value>URL (optional)</value></data>
+  <data name="Env_WaitTimerMinutes" xml:space="preserve"><value>Wait timer (minutes)</value></data>
+  <data name="Env_RequireApproval" xml:space="preserve"><value>Require approval</value></data>
+  <data name="Env_RequiredReviewersInput" xml:space="preserve"><value>Required reviewers (comma-separated usernames)</value></data>
+  <data name="Env_AllowedBranches" xml:space="preserve"><value>Allowed branches (comma-separated, empty = all)</value></data>
+
+  <!-- Secret Scanning -->
+  <data name="SecretScan_Title" xml:space="preserve"><value>Secret Scanning</value></data>
+  <data name="SecretScan_All" xml:space="preserve"><value>All</value></data>
+  <data name="SecretScan_Open" xml:space="preserve"><value>Open</value></data>
+  <data name="SecretScan_Resolved" xml:space="preserve"><value>Resolved</value></data>
+  <data name="SecretScan_FullScan" xml:space="preserve"><value>Full Scan</value></data>
+  <data name="SecretScan_Scanning" xml:space="preserve"><value>Scanning...</value></data>
+  <data name="SecretScan_NoSecrets" xml:space="preserve"><value>No secrets detected</value></data>
+  <data name="SecretScan_NoSecretsDescription" xml:space="preserve"><value>Secret scanning checks your code for accidentally committed credentials like API keys, tokens, and passwords.</value></data>
+  <data name="SecretScan_Line" xml:space="preserve"><value>line</value></data>
+  <data name="SecretScan_Commit" xml:space="preserve"><value>commit</value></data>
+  <data name="SecretScan_ResolvedBy" xml:space="preserve"><value>Resolved by</value></data>
+  <data name="SecretScan_On" xml:space="preserve"><value>on</value></data>
+  <data name="SecretScan_MarkResolved" xml:space="preserve"><value>Mark as resolved</value></data>
+  <data name="SecretScan_MarkFalsePositive" xml:space="preserve"><value>Mark as false positive</value></data>
+
+  <!-- Traffic / Insights -->
+  <data name="Traffic_Title" xml:space="preserve"><value>Traffic</value></data>
+  <data name="Traffic_Clones14Days" xml:space="preserve"><value>Clones (14 days)</value></data>
+  <data name="Traffic_UniqueCloners" xml:space="preserve"><value>Unique cloners</value></data>
+  <data name="Traffic_PageViews" xml:space="preserve"><value>Page views</value></data>
+  <data name="Traffic_UniqueVisitors" xml:space="preserve"><value>Unique visitors</value></data>
+  <data name="Traffic_Clones" xml:space="preserve"><value>Clones</value></data>
+  <data name="Traffic_NoData" xml:space="preserve"><value>No traffic data available yet. Traffic data is collected when users clone, fetch, or view repository pages.</value></data>
+  <data name="Traffic_TopReferrers" xml:space="preserve"><value>Top referrers</value></data>
+  <data name="Traffic_Referrer" xml:space="preserve"><value>Referrer</value></data>
+  <data name="Traffic_Views" xml:space="preserve"><value>Views</value></data>
+  <data name="Traffic_PopularContent" xml:space="preserve"><value>Popular content</value></data>
+  <data name="Traffic_Path" xml:space="preserve"><value>Path</value></data>
 </root>

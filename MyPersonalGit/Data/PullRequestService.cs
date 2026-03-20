@@ -38,6 +38,7 @@ public class PullRequestService : IPullRequestService
     private readonly IIssueAutoCloseService _issueAutoCloseService;
     private readonly IWorkflowService _workflowService;
     private readonly IGpgKeyService _gpgKeyService;
+    private readonly IAutoMergeService _autoMergeService;
     private readonly IConfiguration _config;
 
     public PullRequestService(
@@ -51,6 +52,7 @@ public class PullRequestService : IPullRequestService
         IIssueAutoCloseService issueAutoCloseService,
         IWorkflowService workflowService,
         IGpgKeyService gpgKeyService,
+        IAutoMergeService autoMergeService,
         IConfiguration config)
     {
         _dbFactory = dbFactory;
@@ -63,6 +65,7 @@ public class PullRequestService : IPullRequestService
         _issueAutoCloseService = issueAutoCloseService;
         _workflowService = workflowService;
         _gpgKeyService = gpgKeyService;
+        _autoMergeService = autoMergeService;
         _config = config;
     }
 
@@ -731,6 +734,13 @@ public class PullRequestService : IPullRequestService
             repoName,
             $"/repo/{repoName}/pulls/{number}"
         );
+
+        // Trigger auto-merge check when a review is approved
+        if (state == ReviewState.Approved)
+        {
+            try { await _autoMergeService.TryAutoMergeAsync(repoName); }
+            catch (Exception ex) { _logger.LogWarning(ex, "Auto-merge check failed after review on PR #{Number}", number); }
+        }
 
         return true;
     }

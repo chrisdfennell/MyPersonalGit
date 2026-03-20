@@ -879,4 +879,60 @@
   <data name="Import_AboutIssues" xml:space="preserve"><value>Açıklamaları ve durumları ile Issues</value></data>
   <data name="Import_AboutPRs" xml:space="preserve"><value>Pull request'ler / merge request'ler (issues olarak içe aktarılır)</value></data>
   <data name="Import_AboutPrivate" xml:space="preserve"><value>Özel depolar için uygun okuma izinlerine sahip bir kişisel erişim belirteci sağlayın.</value></data>
+
+  <!-- Environments -->
+  <data name="Env_Title" xml:space="preserve"><value>Ortamlar</value></data>
+  <data name="Env_Repositories" xml:space="preserve"><value>Depolar</value></data>
+  <data name="Env_NewEnvironment" xml:space="preserve"><value>Yeni ortam</value></data>
+  <data name="Env_RequiredReviewers" xml:space="preserve"><value>Gerekli inceleyiciler:</value></data>
+  <data name="Env_WaitTimer" xml:space="preserve"><value>Bekleme zamanlayıcısı:</value></data>
+  <data name="Env_WaitTimerMin" xml:space="preserve"><value>{0} dk</value></data>
+  <data name="Env_Branches" xml:space="preserve"><value>Dallar:</value></data>
+  <data name="Env_Status" xml:space="preserve"><value>Durum</value></data>
+  <data name="Env_Commit" xml:space="preserve"><value>Commit</value></data>
+  <data name="Env_Ref" xml:space="preserve"><value>Ref</value></data>
+  <data name="Env_Creator" xml:space="preserve"><value>Oluşturan</value></data>
+  <data name="Env_Created" xml:space="preserve"><value>Oluşturulma</value></data>
+  <data name="Env_Approve" xml:space="preserve"><value>Onayla</value></data>
+  <data name="Env_Reject" xml:space="preserve"><value>Reddet</value></data>
+  <data name="Env_NoDeployments" xml:space="preserve"><value>Henüz dağıtım yok.</value></data>
+  <data name="Env_NoEnvironments" xml:space="preserve"><value>Henüz yapılandırılmış ortam yok.</value></data>
+  <data name="Env_NoEnvironmentsDescription" xml:space="preserve"><value>Ortamlar, gerekli inceleyiciler ve bekleme zamanlayıcıları gibi koruma kurallarıyla dağıtım hedeflerini yapılandırmanıza olanak tanır.</value></data>
+  <data name="Env_Name" xml:space="preserve"><value>Ad</value></data>
+  <data name="Env_NamePlaceholder" xml:space="preserve"><value>ör. production, staging</value></data>
+  <data name="Env_UrlOptional" xml:space="preserve"><value>URL (isteğe bağlı)</value></data>
+  <data name="Env_WaitTimerMinutes" xml:space="preserve"><value>Bekleme zamanlayıcısı (dakika)</value></data>
+  <data name="Env_RequireApproval" xml:space="preserve"><value>Onay gerektir</value></data>
+  <data name="Env_RequiredReviewersInput" xml:space="preserve"><value>Gerekli inceleyiciler (virgülle ayrılmış kullanıcı adları)</value></data>
+  <data name="Env_AllowedBranches" xml:space="preserve"><value>İzin verilen dallar (virgülle ayrılmış, boş = tümü)</value></data>
+
+  <!-- Secret Scanning -->
+  <data name="SecretScan_Title" xml:space="preserve"><value>Gizli anahtar taraması</value></data>
+  <data name="SecretScan_All" xml:space="preserve"><value>Tümü</value></data>
+  <data name="SecretScan_Open" xml:space="preserve"><value>Açık</value></data>
+  <data name="SecretScan_Resolved" xml:space="preserve"><value>Çözüldü</value></data>
+  <data name="SecretScan_FullScan" xml:space="preserve"><value>Tam tarama</value></data>
+  <data name="SecretScan_Scanning" xml:space="preserve"><value>Taranıyor...</value></data>
+  <data name="SecretScan_NoSecrets" xml:space="preserve"><value>Gizli anahtar tespit edilmedi</value></data>
+  <data name="SecretScan_NoSecretsDescription" xml:space="preserve"><value>Gizli anahtar taraması, kodunuzu yanlışlıkla commit edilmiş API anahtarları, belirteçler ve parolalar gibi kimlik bilgileri açısından kontrol eder.</value></data>
+  <data name="SecretScan_Line" xml:space="preserve"><value>satır</value></data>
+  <data name="SecretScan_Commit" xml:space="preserve"><value>commit</value></data>
+  <data name="SecretScan_ResolvedBy" xml:space="preserve"><value>Çözen</value></data>
+  <data name="SecretScan_On" xml:space="preserve"><value>tarih</value></data>
+  <data name="SecretScan_MarkResolved" xml:space="preserve"><value>Çözüldü olarak işaretle</value></data>
+  <data name="SecretScan_MarkFalsePositive" xml:space="preserve"><value>Yanlış pozitif olarak işaretle</value></data>
+
+  <!-- Traffic / Insights -->
+  <data name="Traffic_Title" xml:space="preserve"><value>Trafik</value></data>
+  <data name="Traffic_Clones14Days" xml:space="preserve"><value>Klonlar (14 gün)</value></data>
+  <data name="Traffic_UniqueCloners" xml:space="preserve"><value>Benzersiz klonlayıcılar</value></data>
+  <data name="Traffic_PageViews" xml:space="preserve"><value>Sayfa görüntülemeleri</value></data>
+  <data name="Traffic_UniqueVisitors" xml:space="preserve"><value>Benzersiz ziyaretçiler</value></data>
+  <data name="Traffic_Clones" xml:space="preserve"><value>Klonlar</value></data>
+  <data name="Traffic_NoData" xml:space="preserve"><value>Henüz trafik verisi yok. Trafik verileri, kullanıcılar depo sayfalarını klonladığında, çektiğinde veya görüntülediğinde toplanır.</value></data>
+  <data name="Traffic_TopReferrers" xml:space="preserve"><value>En çok yönlendiren kaynaklar</value></data>
+  <data name="Traffic_Referrer" xml:space="preserve"><value>Yönlendiren</value></data>
+  <data name="Traffic_Views" xml:space="preserve"><value>Görüntülemeler</value></data>
+  <data name="Traffic_PopularContent" xml:space="preserve"><value>Popüler içerik</value></data>
+  <data name="Traffic_Path" xml:space="preserve"><value>Yol</value></data>
 </root>

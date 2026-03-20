@@ -23,4 +23,7 @@ public static class NotificationType
     public const string PullRequestMerged = "pr_merged";
     public const string Mention = "mention";
     public const string RepositoryStarred = "repo_starred";
+    public const string DeploymentApproval = "deployment_approval";
+    public const string IssueTransferred = "issue_transferred";
+    public const string SecretDetected = "secret_detected";
 }

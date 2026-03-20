@@ -1,0 +1,248 @@
+@page "/repo/{RepoName}/environments"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@inject IEnvironmentService EnvironmentService
+@inject CurrentUserService UserService
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+@rendermode InteractiveServer
+
+<PageTitle>@L["Env_Title"] - @RepoName</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/">@L["Env_Repositories"]</a></li>
+                    <li class="breadcrumb-item"><a href="/repo/@RepoName">@RepoName</a></li>
+                    <li class="breadcrumb-item active">@L["Env_Title"]</li>
+                </ol>
+            </nav>
+            <h2 class="mt-2"><i class="bi bi-server me-2"></i>@L["Env_Title"]</h2>
+        </div>
+        @if (!string.IsNullOrEmpty(currentUser))
+        {
+            <button class="btn btn-primary" @onclick="() => showCreateModal = true">
+                <i class="bi bi-plus-lg me-1"></i> @L["Env_NewEnvironment"]
+            </button>
+        }
+    </div>
+
+    @if (environments.Any())
+    {
+        foreach (var env in environments)
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="card-title mb-1">
+                                <i class="bi bi-globe me-1"></i> @env.Name
+                                @if (!string.IsNullOrEmpty(env.Url))
+                                {
+                                    <a href="@env.Url" target="_blank" class="ms-2 small text-muted">@env.Url</a>
+                                }
+                            </h5>
+                            <div class="d-flex gap-3 text-muted small mt-1">
+                                @if (env.RequireApproval)
+                                {
+                                    <span><i class="bi bi-shield-check me-1"></i>@L["Env_RequiredReviewers"] @string.Join(", ", env.RequiredReviewers)</span>
+                                }
+                                @if (env.WaitTimerMinutes > 0)
+                                {
+                                    <span><i class="bi bi-clock me-1"></i>@L["Env_WaitTimer"] @string.Format(L["Env_WaitTimerMin"], env.WaitTimerMinutes)</span>
+                                }
+                                @if (env.AllowedBranches.Any())
+                                {
+                                    <span><i class="bi bi-diagram-2 me-1"></i>@L["Env_Branches"] @string.Join(", ", env.AllowedBranches)</span>
+                                }
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(currentUser))
+                        {
+                            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteEnvironment(env.Name)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        }
+                    </div>
+
+                    @{
+                        var envDeployments = deployments.Where(d => d.EnvironmentName == env.Name).Take(5).ToList();
+                    }
+                    @if (envDeployments.Any())
+                    {
+                        <table class="table table-sm mt-3 mb-0">
+                            <thead>
+                                <tr><th>@L["Env_Status"]</th><th>@L["Env_Commit"]</th><th>@L["Env_Ref"]</th><th>@L["Env_Creator"]</th><th>@L["Env_Created"]</th><th></th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var d in envDeployments)
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="badge @GetStatusBadge(d.Status)">@d.Status</span>
+                                        </td>
+                                        <td><code>@d.CommitSha[..7]</code></td>
+                                        <td>@d.Ref</td>
+                                        <td>@d.Creator</td>
+                                        <td>@d.CreatedAt.ToString("g")</td>
+                                        <td>
+                                            @if (d.Status == DeploymentStatus.WaitingApproval && !string.IsNullOrEmpty(currentUser))
+                                            {
+                                                <button class="btn btn-success btn-sm me-1" @onclick="() => ApproveDeployment(d.Id, true)">
+                                                    <i class="bi bi-check-lg"></i> @L["Env_Approve"]
+                                                </button>
+                                                <button class="btn btn-danger btn-sm" @onclick="() => ApproveDeployment(d.Id, false)">
+                                                    <i class="bi bi-x-lg"></i> @L["Env_Reject"]
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted mt-2 mb-0 small">@L["Env_NoDeployments"]</p>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-server display-4 d-block mb-3"></i>
+            <p>@L["Env_NoEnvironments"]</p>
+            <p class="small">@L["Env_NoEnvironmentsDescription"]</p>
+        </div>
+    }
+</div>
+
+@if (showCreateModal)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@L["Env_NewEnvironment"]</h5>
+                    <button class="btn-close" @onclick="() => showCreateModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">@L["Env_Name"]</label>
+                        <input class="form-control" @bind="newEnvName" placeholder="@L["Env_NamePlaceholder"]" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">@L["Env_UrlOptional"]</label>
+                        <input class="form-control" @bind="newEnvUrl" placeholder="https://..." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">@L["Env_WaitTimerMinutes"]</label>
+                        <input type="number" class="form-control" @bind="newEnvWaitTimer" min="0" />
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" @bind="newEnvRequireApproval" id="reqApproval" />
+                        <label class="form-check-label" for="reqApproval">@L["Env_RequireApproval"]</label>
+                    </div>
+                    @if (newEnvRequireApproval)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label">@L["Env_RequiredReviewersInput"]</label>
+                            <input class="form-control" @bind="newEnvReviewers" />
+                        </div>
+                    }
+                    <div class="mb-3">
+                        <label class="form-label">@L["Env_AllowedBranches"]</label>
+                        <input class="form-control" @bind="newEnvBranches" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => showCreateModal = false">@L["Common_Cancel"]</button>
+                    <button class="btn btn-primary" @onclick="CreateEnvironment" disabled="@string.IsNullOrWhiteSpace(newEnvName)">@L["Common_Create"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string RepoName { get; set; } = "";
+
+    private List<DeploymentEnvironment> environments = new();
+    private List<Deployment> deployments = new();
+    private string? currentUser;
+
+    private bool showCreateModal;
+    private string newEnvName = "";
+    private string newEnvUrl = "";
+    private int newEnvWaitTimer;
+    private bool newEnvRequireApproval;
+    private string newEnvReviewers = "";
+    private string newEnvBranches = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser = UserService.Username;
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        environments = await EnvironmentService.GetEnvironmentsAsync(RepoName);
+        deployments = await EnvironmentService.GetDeploymentsAsync(RepoName);
+    }
+
+    private async Task CreateEnvironment()
+    {
+        var reviewers = string.IsNullOrWhiteSpace(newEnvReviewers) ? new List<string>()
+            : newEnvReviewers.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+        var branches = string.IsNullOrWhiteSpace(newEnvBranches) ? new List<string>()
+            : newEnvBranches.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+        await EnvironmentService.CreateOrUpdateEnvironmentAsync(
+            RepoName, newEnvName.Trim(), string.IsNullOrWhiteSpace(newEnvUrl) ? null : newEnvUrl.Trim(),
+            newEnvWaitTimer, newEnvRequireApproval, reviewers, branches);
+
+        showCreateModal = false;
+        newEnvName = "";
+        newEnvUrl = "";
+        newEnvWaitTimer = 0;
+        newEnvRequireApproval = false;
+        newEnvReviewers = "";
+        newEnvBranches = "";
+        await LoadData();
+    }
+
+    private async Task DeleteEnvironment(string name)
+    {
+        await EnvironmentService.DeleteEnvironmentAsync(RepoName, name);
+        await LoadData();
+    }
+
+    private async Task ApproveDeployment(int deploymentId, bool approved)
+    {
+        if (!string.IsNullOrEmpty(currentUser))
+        {
+            await EnvironmentService.ApproveDeploymentAsync(deploymentId, currentUser, approved);
+            await LoadData();
+        }
+    }
+
+    private static string GetStatusBadge(DeploymentStatus status) => status switch
+    {
+        DeploymentStatus.Pending => "bg-secondary",
+        DeploymentStatus.WaitingApproval => "bg-warning text-dark",
+        DeploymentStatus.WaitingTimer => "bg-info",
+        DeploymentStatus.InProgress => "bg-primary",
+        DeploymentStatus.Success => "bg-success",
+        DeploymentStatus.Failure => "bg-danger",
+        DeploymentStatus.Cancelled => "bg-dark",
+        _ => "bg-secondary"
+    };
+}

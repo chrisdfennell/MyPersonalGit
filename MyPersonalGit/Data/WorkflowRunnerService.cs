@@ -343,6 +343,51 @@ public class WorkflowRunnerService : BackgroundService
         job.StartedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
 
+        // Environment gating: if this job has an environment, create a deployment and wait for approvals/timers
+        if (!string.IsNullOrEmpty(job.Environment))
+        {
+            try
+            {
+                var envService = _scopeFactory.CreateScope().ServiceProvider.GetRequiredService<IEnvironmentService>();
+                var deployment = await envService.CreateDeploymentAsync(
+                    run.RepoName, job.Environment, run.CommitSha, run.Branch, run.TriggeredBy, run.Id);
+
+                // Wait for deployment to be approved / timer to elapse (poll every 10s, max 30 min)
+                var maxWait = TimeSpan.FromMinutes(30);
+                var waited = TimeSpan.Zero;
+                while (deployment.Status is DeploymentStatus.WaitingApproval or DeploymentStatus.WaitingTimer or DeploymentStatus.Pending)
+                {
+                    if (waited >= maxWait || ct.IsCancellationRequested)
+                    {
+                        await envService.UpdateDeploymentStatusAsync(deployment.Id, DeploymentStatus.Cancelled);
+                        _logger.LogWarning("Deployment for job {JobName} timed out waiting for approval", job.Name);
+                        job.Status = WorkflowStatus.Cancelled;
+                        job.CompletedAt = DateTime.UtcNow;
+                        await db.SaveChangesAsync(ct);
+                        return false;
+                    }
+
+                    await Task.Delay(10_000, ct);
+                    waited += TimeSpan.FromSeconds(10);
+                    await envService.ProcessPendingDeploymentsAsync();
+                    deployment = await envService.GetDeploymentAsync(deployment.Id) ?? deployment;
+                }
+
+                if (deployment.Status == DeploymentStatus.Cancelled)
+                {
+                    _logger.LogInformation("Deployment for job {JobName} was rejected", job.Name);
+                    job.Status = WorkflowStatus.Cancelled;
+                    job.CompletedAt = DateTime.UtcNow;
+                    await db.SaveChangesAsync(ct);
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Environment gating failed for job {JobName}, proceeding anyway", job.Name);
+            }
+        }
+
         var image = MapImage(job.RunsOn);
         string? containerId = null;
 

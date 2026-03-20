@@ -87,6 +87,9 @@
 - **标记文件为已查看** — 通过每个文件的"已查看"复选框和进度计数器跟踪 Pull Request 中的审查进度
 - **Diff 语法高亮** — 通过 Prism.js 在 Pull Request 和比较 diff 中实现语言感知的语法着色
 - **表情反应** — 对 Issue、PR、讨论和评论使用表情反应：赞/踩、爱心、笑脸、庆祝、困惑、火箭和关注
+- **Auto-Merge** — 在 Pull Request 上启用自动合并，当所有必需的状态检查通过且审查已批准时自动合并
+- **Cherry-Pick / Revert via UI** — 从 Web 界面将任何提交 Cherry-pick 到另一个分支，或直接或作为新的 Pull Request 还原提交
+- **Transfer Issues** — 在仓库之间移动 Issue，保留标题、正文、评论、匹配的标签，并在原始 Issue 上创建带有转移说明的链接
 - **CODEOWNERS** — 根据文件路径自动分配 PR 审查者，可选强制要求 CODEOWNERS 在合并前审批
 - **仓库模板** — 从模板创建新仓库，自动复制文件、标签、Issue 模板和分支保护规则
 - **草稿 Issue 与 Issue 模板** — 创建草稿 Issue（进行中的工作），为每个仓库定义可重用的 Issue 模板（Bug 报告、功能请求），支持默认标签
@@ -117,6 +120,9 @@
 - **`working-directory`** — 在工作流级别设置 `defaults.run.working-directory` 或在每个步骤设置 `working-directory:` 来控制命令执行位置
 - **`defaults.run.shell`** — 为每个工作流或每个步骤配置自定义 shell（`bash`、`sh`、`python3` 等）
 - **`strategy.max-parallel`** — 限制并发矩阵作业执行数量
+- **Reusable Workflows (`workflow_call`)** — 使用 `on: workflow_call` 定义工作流，其他工作流可通过 `uses: ./.github/workflows/build.yml` 调用。支持类型化的输入、输出和密钥。被调用工作流的作业内联到调用者中
+- **Composite Actions** — 在 `.github/actions/{name}/action.yml` 中使用 `runs: using: composite` 定义多步骤操作。组合操作的步骤在执行时内联展开
+- **Environment Deployments** — 配置部署环境（如 `staging`、`production`）及保护规则：必需审查者、等待计时器和分支限制。带有 `environment:` 的工作流作业在执行前需要审批。包含批准/拒绝 UI 的完整部署历史
 - **`on.workflow_run`** — 工作流链：在工作流 A 完成时触发工作流 B。通过工作流名称和 `types: [completed]` 过滤
 - **自动创建发布** — `softprops/action-gh-release` 创建包含标签、标题、变更日志正文和预发布/草稿标志的真实 Release 实体。源代码归档（ZIP 和 TAR.GZ）自动作为可下载资产附加
 - **自动发布流水线** — 内置工作流在每次推送到 main 时自动标记版本、生成变更日志并推送 Docker 镜像到 Docker Hub
@@ -169,8 +175,11 @@
 - **个人访问令牌** — 基于令牌的 API 认证，支持可配置作用域和可选的路由级限制（glob 模式如 `/api/packages/**` 限制令牌访问特定 API 路径）
 - **备份与恢复** — 导出和导入服务器数据
 - **安全扫描** — 由 [OSV.dev](https://osv.dev/) 数据库驱动的真实依赖漏洞扫描。自动从 `.csproj`（NuGet）、`package.json`（npm）、`requirements.txt`（PyPI）、`Cargo.toml`（Rust）、`Gemfile`（Ruby）、`composer.json`（PHP）、`go.mod`（Go）、`pom.xml`（Maven/Java）和 `pubspec.yaml`（Dart/Flutter）提取依赖项，然后对照已知 CVE 进行检查。报告严重性、修复版本和咨询链接。另外还有手动安全公告的草稿/发布/关闭工作流
+- **Secret Scanning** — 自动扫描每次推送以检测泄露的凭证（AWS 密钥、GitHub/GitLab 令牌、Slack 令牌、私钥、API 密钥、JWT、连接字符串等）。20 个内置模式，支持完整正则表达式。按需全仓库扫描。带解决/误报工作流的警报。可通过 API 配置自定义模式
+- **Dependabot-Style Auto-Update PRs** — 自动检查过时的依赖项并创建 Pull Request 进行更新。支持 NuGet、npm 和 PyPI 生态系统。可配置的计划（每日/每周/每月）以及每个仓库的开放 PR 限制
+- **Repository Insights (Traffic)** — 跟踪克隆/拉取计数、页面浏览量、独立访客、热门来源和热门内容路径。Insights 选项卡中的流量图表包含 14 天摘要。每日聚合，保留 90 天。IP 地址经过哈希处理以保护隐私
 - **深色模式** — 完整的深色/浅色模式支持，在页头有切换开关
-- **多语言 / i18n** — 所有 27 个页面的完整本地化，共 676 个资源键。内置 11 种语言：英语、西班牙语、法语、德语、日语、韩语、简体中文、葡萄牙语、俄语、意大利语和土耳其语。通过创建 `SharedResource.{locale}.resx` 文件添加更多语言。页头的语言选择器可切换语言
+- **多语言 / i18n** — 所有 28 个页面的完整本地化，共 836 个资源键。内置 11 种语言：英语、西班牙语、法语、德语、日语、韩语、简体中文、葡萄牙语、俄语、意大利语和土耳其语。通过创建 `SharedResource.{locale}.resx` 文件添加更多语言。页头的语言选择器可切换语言
 - **Swagger / OpenAPI** — 在 `/swagger` 提供交互式 API 文档，所有 REST 端点均可发现和测试
 - **Mermaid 图表** — 在 Markdown 文件中渲染 Mermaid 图表（流程图、时序图、甘特图等）
 - **数学公式渲染** — Markdown 中的 LaTeX/KaTeX 数学表达式（`$inline$` 和 `$$display$$` 语法）

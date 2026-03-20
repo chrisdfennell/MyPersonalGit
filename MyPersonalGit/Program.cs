@@ -139,6 +139,13 @@ builder.Services.AddSingleton<IAGitFlowService, AGitFlowService>();
 builder.Services.AddSingleton<IWebAuthnService, WebAuthnService>();
 builder.Services.AddSingleton<IGitHooksService, GitHooksService>();
 builder.Services.AddSingleton<IAutolinkService, AutolinkService>();
+builder.Services.AddSingleton<ISecretScanService, SecretScanService>();
+builder.Services.AddSingleton<ICherryPickRevertService, CherryPickRevertService>();
+builder.Services.AddSingleton<IRepositoryTrafficService, RepositoryTrafficService>();
+builder.Services.AddHostedService<TrafficAggregationService>();
+builder.Services.AddSingleton<IEnvironmentService, EnvironmentService>();
+builder.Services.AddSingleton<IDependencyUpdateService, DependencyUpdateService>();
+builder.Services.AddHostedService<DependencyUpdateSchedulerService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddLocalization();
 builder.Services.AddScoped<CurrentUserService>();
@@ -341,6 +348,155 @@ using (var scope = app.Services.CreateScope())
             ""UpdatedAt"" TEXT NOT NULL
         );");
     db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_OrganizationSecrets_OrganizationName_Name"" ON ""OrganizationSecrets"" (""OrganizationName"", ""Name"");");
+
+    // From 20260320230000: Secret scanning, Cherry-pick/Revert, Traffic, Environments, Dependency Updates, Issue Transfers
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""SecretScanResults"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""RepoName"" TEXT NOT NULL,
+            ""CommitSha"" TEXT NOT NULL,
+            ""FilePath"" TEXT NOT NULL,
+            ""LineNumber"" INTEGER NOT NULL,
+            ""SecretType"" TEXT NOT NULL,
+            ""MatchSnippet"" TEXT NOT NULL,
+            ""State"" INTEGER NOT NULL DEFAULT 0,
+            ""ResolvedBy"" TEXT NULL,
+            ""DetectedAt"" TEXT NOT NULL,
+            ""ResolvedAt"" TEXT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_SecretScanResults_RepoName_State"" ON ""SecretScanResults"" (""RepoName"", ""State"");");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_SecretScanResults_RepoName_CommitSha"" ON ""SecretScanResults"" (""RepoName"", ""CommitSha"");");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""SecretScanPatterns"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""Name"" TEXT NOT NULL,
+            ""Pattern"" TEXT NOT NULL,
+            ""IsEnabled"" INTEGER NOT NULL DEFAULT 1,
+            ""IsBuiltIn"" INTEGER NOT NULL DEFAULT 0
+        );");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""DependencyUpdateConfigs"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""RepoName"" TEXT NOT NULL,
+            ""Ecosystem"" TEXT NOT NULL,
+            ""Schedule"" TEXT NOT NULL DEFAULT 'weekly',
+            ""IsEnabled"" INTEGER NOT NULL DEFAULT 1,
+            ""Directory"" TEXT NULL,
+            ""OpenPRLimit"" INTEGER NOT NULL DEFAULT 5,
+            ""LastRunAt"" TEXT NULL,
+            ""CreatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_DependencyUpdateConfigs_RepoName_Ecosystem"" ON ""DependencyUpdateConfigs"" (""RepoName"", ""Ecosystem"");");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""DependencyUpdateLogs"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""ConfigId"" INTEGER NOT NULL,
+            ""RepoName"" TEXT NOT NULL,
+            ""PackageName"" TEXT NOT NULL,
+            ""CurrentVersion"" TEXT NOT NULL,
+            ""NewVersion"" TEXT NOT NULL,
+            ""PullRequestNumber"" INTEGER NULL,
+            ""CreatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_DependencyUpdateLogs_RepoName"" ON ""DependencyUpdateLogs"" (""RepoName"");");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""DeploymentEnvironments"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""RepoName"" TEXT NOT NULL,
+            ""Name"" TEXT NOT NULL,
+            ""Url"" TEXT NULL,
+            ""WaitTimerMinutes"" INTEGER NOT NULL DEFAULT 0,
+            ""RequireApproval"" INTEGER NOT NULL DEFAULT 0,
+            ""RequiredReviewers"" TEXT NOT NULL DEFAULT '[]',
+            ""AllowedBranches"" TEXT NOT NULL DEFAULT '[]',
+            ""CreatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_DeploymentEnvironments_RepoName_Name"" ON ""DeploymentEnvironments"" (""RepoName"", ""Name"");");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""Deployments"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""EnvironmentId"" INTEGER NOT NULL,
+            ""RepoName"" TEXT NOT NULL,
+            ""EnvironmentName"" TEXT NOT NULL,
+            ""WorkflowRunId"" INTEGER NULL,
+            ""CommitSha"" TEXT NOT NULL,
+            ""Ref"" TEXT NOT NULL,
+            ""Creator"" TEXT NOT NULL,
+            ""Status"" INTEGER NOT NULL DEFAULT 0,
+            ""Description"" TEXT NULL,
+            ""CreatedAt"" TEXT NOT NULL,
+            ""StartedAt"" TEXT NULL,
+            ""CompletedAt"" TEXT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_Deployments_RepoName_EnvironmentName"" ON ""Deployments"" (""RepoName"", ""EnvironmentName"");");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_Deployments_Status"" ON ""Deployments"" (""Status"");");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""DeploymentApprovals"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""DeploymentId"" INTEGER NOT NULL,
+            ""Reviewer"" TEXT NOT NULL,
+            ""Approved"" INTEGER NOT NULL,
+            ""Comment"" TEXT NULL,
+            ""CreatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_DeploymentApprovals_DeploymentId"" ON ""DeploymentApprovals"" (""DeploymentId"");");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""RepositoryTrafficEvents"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""RepoName"" TEXT NOT NULL,
+            ""EventType"" TEXT NOT NULL,
+            ""Referrer"" TEXT NULL,
+            ""Path"" TEXT NULL,
+            ""IpHash"" TEXT NULL,
+            ""Timestamp"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_RepositoryTrafficEvents_RepoName_Timestamp"" ON ""RepositoryTrafficEvents"" (""RepoName"", ""Timestamp"");");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""RepositoryTrafficSummaries"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""RepoName"" TEXT NOT NULL,
+            ""Date"" TEXT NOT NULL,
+            ""Clones"" INTEGER NOT NULL DEFAULT 0,
+            ""UniqueCloners"" INTEGER NOT NULL DEFAULT 0,
+            ""PageViews"" INTEGER NOT NULL DEFAULT 0,
+            ""UniqueVisitors"" INTEGER NOT NULL DEFAULT 0
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_RepositoryTrafficSummaries_RepoName_Date"" ON ""RepositoryTrafficSummaries"" (""RepoName"", ""Date"");");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""IssueTransfers"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""FromRepoName"" TEXT NOT NULL,
+            ""FromIssueNumber"" INTEGER NOT NULL,
+            ""ToRepoName"" TEXT NOT NULL,
+            ""ToIssueNumber"" INTEGER NOT NULL,
+            ""TransferredBy"" TEXT NOT NULL,
+            ""TransferredAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_IssueTransfers_FromRepoName_FromIssueNumber"" ON ""IssueTransfers"" (""FromRepoName"", ""FromIssueNumber"");");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_IssueTransfers_ToRepoName_ToIssueNumber"" ON ""IssueTransfers"" (""ToRepoName"", ""ToIssueNumber"");");
+
+    // WorkflowJobs.Environment column
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""WorkflowJobs"" ADD COLUMN ""Environment"" TEXT NULL;"); } catch { }
+
+    // Seed built-in secret scan patterns
+    try
+    {
+        var secretScanService = app.Services.GetRequiredService<ISecretScanService>();
+        secretScanService.EnsureBuiltInPatternsAsync().GetAwaiter().GetResult();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Warning: Failed to seed secret scan patterns: {ex.Message}");
+    }
 
     if (!db.Users.Any())
     {

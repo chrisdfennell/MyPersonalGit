@@ -134,13 +134,39 @@ public class WorkflowService : IWorkflowService
                     Needs = jobDef.Needs.Count > 0 ? string.Join(";", jobDef.Needs) : null,
                     Condition = jobDef.If,
                     TimeoutMinutes = jobDef.TimeoutMinutes,
+                    Environment = jobDef.Environment,
                     Status = WorkflowStatus.Queued
                 };
+
+                // If this job uses a reusable workflow, resolve it and inline its steps
+                var stepsToProcess = jobDef.Steps;
+                if (!string.IsNullOrEmpty(jobDef.Uses) && jobDef.Uses.StartsWith("./"))
+                {
+                    try
+                    {
+                        var parser = new WorkflowYamlParser();
+                        var repoPath = GetRepoPath(repoName);
+                        if (repoPath != null)
+                        {
+                            var calledWorkflow = parser.ResolveReusableWorkflow(repoPath, jobDef.Uses);
+                            if (calledWorkflow != null)
+                            {
+                                // Inline all jobs from the called workflow as steps
+                                stepsToProcess = calledWorkflow.Jobs.Values.SelectMany(j => j.Steps).ToList();
+                                _logger.LogInformation("Resolved reusable workflow '{Uses}' with {StepCount} steps", jobDef.Uses, stepsToProcess.Count);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to resolve reusable workflow '{Uses}'", jobDef.Uses);
+                    }
+                }
 
                 // Resolve the effective working directory for steps
                 var defaultWorkDir = definition.DefaultWorkingDirectory;
 
-                foreach (var stepDef in jobDef.Steps)
+                foreach (var stepDef in stepsToProcess)
                 {
                     var command = stepDef.Run ?? TranslateUsesAction(stepDef);
                     if (command != null)
@@ -511,6 +537,10 @@ public class WorkflowService : IWorkflowService
         var uses = step.Uses.ToLowerInvariant();
         var with = step.With ?? new Dictionary<string, string>();
 
+        // Local composite actions (./.github/actions/xxx) — placeholder, expanded at runtime
+        if (step.Uses.StartsWith("./"))
+            return $"echo 'Composite action: {step.Uses} (expanded inline)'";
+
         // actions/checkout — already handled by the runner (clones to /workspace)
         if (uses.StartsWith("actions/checkout"))
             return "echo 'Checkout: repo already cloned to /workspace'";
@@ -797,5 +827,24 @@ public class WorkflowService : IWorkflowService
         using var hmac = new System.Security.Cryptography.HMACSHA256(System.Text.Encoding.UTF8.GetBytes(secret));
         var hash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(payload));
         return Convert.ToHexString(hash).ToLower();
+    }
+
+    private string? GetRepoPath(string repoName)
+    {
+        // Resolve repo path from config — matches pattern used by other services
+        var projectRoot = "/repos";
+        try
+        {
+            using var db = _dbFactory.CreateDbContext();
+            var settings = db.SystemSettings.FirstOrDefault();
+            if (settings != null && !string.IsNullOrEmpty(settings.ProjectRoot))
+                projectRoot = settings.ProjectRoot;
+        }
+        catch { }
+
+        var path = Path.Combine(projectRoot, repoName);
+        if (LibGit2Sharp.Repository.IsValid(path)) return path;
+        if (LibGit2Sharp.Repository.IsValid(path + ".git")) return path + ".git";
+        return null;
     }
 }

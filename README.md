@@ -87,6 +87,9 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Mark Files as Viewed** — Track review progress in pull requests with per-file "Viewed" checkboxes and a progress counter
 - **Diff Syntax Highlighting** — Language-aware syntax coloring in pull request and compare diffs via Prism.js
 - **Reaction Emoji** — React to issues, PRs, discussions, and comments with thumbs up/down, heart, laugh, hooray, confused, rocket, and eyes
+- **Auto-Merge** — Enable auto-merge on pull requests to automatically merge when all required status checks pass and reviews are approved
+- **Cherry-Pick / Revert via UI** — Cherry-pick any commit to another branch or revert a commit, either directly or as a new pull request, from the web interface
+- **Transfer Issues** — Move issues between repositories, preserving title, body, comments, matching labels, and linking the original with a transfer note
 - **CODEOWNERS** — Auto-assign PR reviewers based on file paths with optional enforcement requiring CODEOWNERS approval before merge
 - **Repository Templates** — Create new repositories from templates with automatic copying of files, labels, issue templates, and branch protection rules
 - **Draft Issues & Issue Templates** — Create draft issues (work-in-progress) and define reusable issue templates (bug report, feature request) per repository with default labels
@@ -117,6 +120,9 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **`working-directory`** — Set `defaults.run.working-directory` at workflow level or per-step `working-directory:` to control where commands execute
 - **`defaults.run.shell`** — Configure custom shell per workflow or per step (`bash`, `sh`, `python3`, etc.)
 - **`strategy.max-parallel`** — Limit concurrent matrix job execution
+- **Reusable Workflows (`workflow_call`)** — Define workflows with `on: workflow_call` that other workflows can invoke with `uses: ./.github/workflows/build.yml`. Supports typed inputs, outputs, and secrets. Called workflow jobs are inlined into the caller
+- **Composite Actions** — Define multi-step actions in `.github/actions/{name}/action.yml` with `runs: using: composite`. Steps from composite actions are expanded inline during execution
+- **Environment Deployments** — Configure deployment environments (e.g., `staging`, `production`) with protection rules: required reviewers, wait timers, and branch restrictions. Workflow jobs with `environment:` gate on approval before executing. Full deployment history with approve/reject UI
 - **`on.workflow_run`** — Chain workflows: trigger workflow B when workflow A completes. Filter by workflow name and `types: [completed]`
 - **Automatic Release Creation** — `softprops/action-gh-release` creates real Release entities with tag, title, changelog body, and pre-release/draft flags. Source code archives (ZIP and TAR.GZ) are automatically attached as downloadable assets
 - **Auto-Release Pipeline** — Built-in workflow auto-tags versions, generates changelogs, and pushes Docker images to Docker Hub on every push to main
@@ -180,8 +186,11 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Personal Access Tokens** — Token-based API authentication with configurable scopes and optional route-level restrictions (glob patterns like `/api/packages/**` to limit token access to specific API paths)
 - **Backup & Restore** — Export and import server data
 - **Security Scanning** — Real dependency vulnerability scanning powered by the [OSV.dev](https://osv.dev/) database. Automatically extracts dependencies from `.csproj` (NuGet), `package.json` (npm), `requirements.txt` (PyPI), `Cargo.toml` (Rust), `Gemfile` (Ruby), `composer.json` (PHP), `go.mod` (Go), `pom.xml` (Maven/Java), and `pubspec.yaml` (Dart/Flutter), then checks each against known CVEs. Reports severity, fixed versions, and advisory links. Plus manual security advisories with draft/publish/close workflow
+- **Secret Scanning** — Automatically scans every push for leaked credentials (AWS keys, GitHub/GitLab tokens, Slack tokens, private keys, API keys, JWTs, connection strings, and more). 20 built-in patterns with full regex support. Full repository scan on demand. Alerts with resolve/false-positive workflow. Custom patterns configurable via API
+- **Dependabot-Style Auto-Update PRs** — Automatically check for outdated dependencies and create pull requests to update them. Supports NuGet, npm, and PyPI ecosystems. Configurable schedule (daily/weekly/monthly) and open PR limit per repository
+- **Repository Insights (Traffic)** — Track clone/fetch counts, page views, unique visitors, top referrers, and popular content paths. Traffic charts in the Insights tab with 14-day summaries. Daily aggregation with 90-day retention. IP addresses are hashed for privacy
 - **Dark Mode** — Full dark/light mode support with a toggle in the header
-- **Multi-Language / i18n** — Full localization across all 27 pages with 676 resource keys. Ships with 11 languages: English, Spanish, French, German, Japanese, Korean, Chinese (Simplified), Portuguese, Russian, Italian, and Turkish. Language picker in the header. Add more by creating `SharedResource.{locale}.resx` files
+- **Multi-Language / i18n** — Full localization across all 28 pages with 836 resource keys. Ships with 11 languages: English, Spanish, French, German, Japanese, Korean, Chinese (Simplified), Portuguese, Russian, Italian, and Turkish. Language picker in the header. Add more by creating `SharedResource.{locale}.resx` files
 - **Swagger / OpenAPI** — Interactive API documentation at `/swagger` with all REST endpoints discoverable and testable
 - **Mermaid Diagrams** — Mermaid diagram rendering in Markdown files (flowcharts, sequence diagrams, Gantt charts, etc.)
 - **Math Rendering** — LaTeX/KaTeX math expressions in Markdown (`$inline$` and `$$display$$` syntax)
