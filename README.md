@@ -124,12 +124,23 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Webhooks** — Trigger external services on repository events
 - **Prometheus Metrics** — Built-in `/metrics` endpoint for monitoring
 
-### Package & Container Hosting
+### Package & Container Hosting (17 registries)
 - **Container Registry** — Host Docker/OCI images with `docker push` and `docker pull` (OCI Distribution Spec)
 - **NuGet Registry** — Host .NET packages with full NuGet v3 API (service index, search, push, restore)
 - **npm Registry** — Host Node.js packages with standard npm publish/install
 - **PyPI Registry** — Host Python packages with PEP 503 Simple API, JSON metadata API, and `twine upload` compatibility
 - **Maven Registry** — Host Java/JVM packages with standard Maven repository layout, `maven-metadata.xml` generation, and `mvn deploy` support
+- **Cargo Registry** — Host Rust crates with Cargo publish format, crate metadata API, and download endpoints
+- **RubyGems Registry** — Host Ruby gems with `gem push`/`gem install`, dependency API, and gem metadata
+- **Composer Registry** — Host PHP packages with Composer v2 API (`packages.json`, `p2/` metadata)
+- **Helm Registry** — Host Kubernetes Helm charts with `helm push`/`helm install` and dynamic `index.yaml` generation
+- **Conda Registry** — Host Conda packages with channel-based `repodata.json` and `.tar.bz2`/`.conda` support
+- **Conan Registry** — Host C/C++ Conan packages with recipe upload/download and `conan remote add` support
+- **Vagrant Registry** — Host Vagrant boxes with Vagrant Cloud-compatible metadata API
+- **Pub Registry** — Host Dart/Flutter packages with pub.dev-compatible API and `pubspec.yaml` parsing
+- **Swift Registry** — Host Swift packages with Swift Package Manager registry API and `Package.swift` manifest serving
+- **Debian Registry** — Host `.deb` packages with APT-compatible `Packages` index and `Release` file generation
+- **CRAN Registry** — Host R packages with `PACKAGES` index generation for `install.packages()`
 - **Generic Packages** — Upload and download arbitrary binary artifacts via REST API
 
 ### Static Sites
