@@ -254,8 +254,20 @@ public class IssuesController : ControllerBase
         return Ok(new { due_date = request.DueDate });
     }
 
+    // --- Transfer ---
+
+    [HttpPost("{number:int}/transfer")]
+    public async Task<IActionResult> TransferIssue(string repoName, int number, [FromBody] TransferIssueRequest request)
+    {
+        var username = User.Identity?.Name ?? "api-user";
+        var (success, error, newNumber) = await _issueService.TransferIssueAsync(repoName, number, request.TargetRepo, username);
+        if (!success) return BadRequest(new { error });
+        return Ok(new { success = true, new_repo = request.TargetRepo, new_number = newNumber });
+    }
+
     public record EditCommentRequest(string Body);
     public record LockRequest(string? Reason);
     public record SetAssigneesRequest(List<string> Assignees);
     public record SetDueDateRequest(DateTime? DueDate);
+    public record TransferIssueRequest(string TargetRepo);
 }

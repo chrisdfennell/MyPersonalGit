@@ -177,6 +177,26 @@ public class AppDbContext : DbContext
     // CI Runners
     public DbSet<Runner> Runners => Set<Runner>();
 
+    // Secret Scanning
+    public DbSet<SecretScanResult> SecretScanResults => Set<SecretScanResult>();
+    public DbSet<SecretScanPattern> SecretScanPatterns => Set<SecretScanPattern>();
+
+    // Dependency Updates
+    public DbSet<DependencyUpdateConfig> DependencyUpdateConfigs => Set<DependencyUpdateConfig>();
+    public DbSet<DependencyUpdateLog> DependencyUpdateLogs => Set<DependencyUpdateLog>();
+
+    // Deployment Environments
+    public DbSet<DeploymentEnvironment> DeploymentEnvironments => Set<DeploymentEnvironment>();
+    public DbSet<Deployment> Deployments => Set<Deployment>();
+    public DbSet<DeploymentApproval> DeploymentApprovals => Set<DeploymentApproval>();
+
+    // Repository Traffic
+    public DbSet<RepositoryTrafficEvent> RepositoryTrafficEvents => Set<RepositoryTrafficEvent>();
+    public DbSet<RepositoryTrafficSummary> RepositoryTrafficSummaries => Set<RepositoryTrafficSummary>();
+
+    // Issue Transfers
+    public DbSet<IssueTransfer> IssueTransfers => Set<IssueTransfer>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Shared JSON value converters + comparers for List<string> and string[]
@@ -647,6 +667,66 @@ public class AppDbContext : DbContext
         {
             e.HasIndex(r => r.Token).IsUnique();
             e.Property(r => r.Labels).HasConversion(arrayStringConverter, arrayStringComparer);
+        });
+
+        // --- SecretScanResult ---
+        modelBuilder.Entity<SecretScanResult>(e =>
+        {
+            e.HasIndex(r => new { r.RepoName, r.State });
+            e.HasIndex(r => new { r.RepoName, r.CommitSha });
+        });
+
+        // --- DependencyUpdateConfig ---
+        modelBuilder.Entity<DependencyUpdateConfig>(e =>
+        {
+            e.HasIndex(c => new { c.RepoName, c.Ecosystem }).IsUnique();
+        });
+
+        // --- DependencyUpdateLog ---
+        modelBuilder.Entity<DependencyUpdateLog>(e =>
+        {
+            e.HasIndex(l => l.RepoName);
+            e.HasIndex(l => l.ConfigId);
+        });
+
+        // --- DeploymentEnvironment ---
+        modelBuilder.Entity<DeploymentEnvironment>(e =>
+        {
+            e.HasIndex(env => new { env.RepoName, env.Name }).IsUnique();
+            e.Property(env => env.RequiredReviewers).HasConversion(listStringConverter, listStringComparer);
+            e.Property(env => env.AllowedBranches).HasConversion(listStringConverter, listStringComparer);
+        });
+
+        // --- Deployment ---
+        modelBuilder.Entity<Deployment>(e =>
+        {
+            e.HasIndex(d => new { d.RepoName, d.EnvironmentName });
+            e.HasIndex(d => d.Status);
+        });
+
+        // --- DeploymentApproval ---
+        modelBuilder.Entity<DeploymentApproval>(e =>
+        {
+            e.HasIndex(a => a.DeploymentId);
+        });
+
+        // --- RepositoryTrafficEvent ---
+        modelBuilder.Entity<RepositoryTrafficEvent>(e =>
+        {
+            e.HasIndex(t => new { t.RepoName, t.Timestamp });
+        });
+
+        // --- RepositoryTrafficSummary ---
+        modelBuilder.Entity<RepositoryTrafficSummary>(e =>
+        {
+            e.HasIndex(s => new { s.RepoName, s.Date }).IsUnique();
+        });
+
+        // --- IssueTransfer ---
+        modelBuilder.Entity<IssueTransfer>(e =>
+        {
+            e.HasIndex(t => new { t.FromRepoName, t.FromIssueNumber });
+            e.HasIndex(t => new { t.ToRepoName, t.ToIssueNumber });
         });
     }
 }

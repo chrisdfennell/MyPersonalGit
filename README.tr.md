@@ -87,6 +87,9 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Dosyaları Görüldü Olarak İşaretle** — Her dosya için "Görüldü" onay kutuları ve ilerleme sayacı ile pull request'lerde inceleme ilerlemesini takip etme
 - **Diff Söz Dizimi Vurgulama** — Prism.js aracılığıyla pull request ve karşılaştırma diff'lerinde dile duyarlı söz dizimi renklendirmesi
 - **Emoji Tepkileri** — Sorunlara, PR'lara, tartışmalara ve yorumlara beğeni/beğenmeme, kalp, gülen, kutlama, şaşkınlık, roket ve göz tepkileri
+- **Auto-Merge** — Pull request'lerde otomatik birleştirmeyi etkinleştirerek tüm gerekli durum kontrolleri geçtiğinde ve incelemeler onaylandığında otomatik birleştirme
+- **Cherry-Pick / Revert via UI** — Web arayüzünden herhangi bir commit'i başka bir dala cherry-pick yapın veya bir commit'i doğrudan ya da yeni bir pull request olarak geri alın
+- **Transfer Issues** — Başlığı, gövdeyi, yorumları, eşleşen etiketleri koruyarak ve orijinali bir transfer notu ile bağlayarak sorunları depolar arasında taşıyın
 - **CODEOWNERS** — Birleştirme öncesi CODEOWNERS onayı gerektirme seçeneğiyle dosya yollarına göre PR incelemecilerini otomatik atama
 - **Depo Şablonları** — Dosyaların, etiketlerin, sorun şablonlarının ve dal koruma kurallarının otomatik kopyalanması ile şablonlardan yeni depolar oluşturun
 - **Taslak Sorunlar ve Sorun Şablonları** — Taslak sorunlar (devam eden çalışma) oluşturun ve varsayılan etiketlerle depo başına yeniden kullanılabilir sorun şablonları (hata raporu, özellik isteği) tanımlayın
@@ -117,6 +120,9 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **`working-directory`** — Komutların nerede çalıştırılacağını kontrol etmek için iş akışı düzeyinde `defaults.run.working-directory` veya adım başına `working-directory:` ayarlayın
 - **`defaults.run.shell`** — İş akışı veya adım başına özel shell yapılandırın (`bash`, `sh`, `python3`, vb.)
 - **`strategy.max-parallel`** — Eşzamanlı matrix iş yürütmesini sınırlayın
+- **Reusable Workflows (`workflow_call`)** — `on: workflow_call` ile iş akışları tanımlayın, diğer iş akışları bunları `uses: ./.github/workflows/build.yml` ile çağırabilir. Tip belirlenmiş girdiler, çıktılar ve gizli anahtarları destekler. Çağrılan iş akışının görevleri çağırana satır içi eklenir
+- **Composite Actions** — `.github/actions/{name}/action.yml` içinde `runs: using: composite` ile çok adımlı eylemler tanımlayın. Bileşik eylemlerin adımları yürütme sırasında satır içi genişletilir
+- **Environment Deployments** — Koruma kurallarıyla dağıtım ortamlarını yapılandırın (ör., `staging`, `production`): zorunlu incelemeciler, bekleme zamanlayıcıları ve dal kısıtlamaları. `environment:` içeren iş akışı görevleri yürütme öncesi onay gerektirir. Onay/reddetme arayüzü ile tam dağıtım geçmişi
 - **`on.workflow_run`** — İş akışı zincirleme: İş akışı A tamamlandığında iş akışı B'yi tetikleyin. İş akışı adına ve `types: [completed]`'e göre filtreleyin
 - **Otomatik Sürüm Oluşturma** — `softprops/action-gh-release` etiket, başlık, changelog gövdesi ve ön sürüm/taslak bayraklarıyla gerçek Release varlıkları oluşturur. Kaynak kodu arşivleri (ZIP ve TAR.GZ) indirilebilir varlıklar olarak otomatik eklenir
 - **Otomatik Sürüm Pipeline'ı** — Yerleşik iş akışı, main'e her push'ta sürümleri otomatik etiketler, changelog oluşturur ve Docker imajlarını Docker Hub'a gönderir
@@ -169,8 +175,11 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Kişisel Erişim Belirteçleri** — Yapılandırılabilir kapsamlar ve isteğe bağlı rota düzeyinde kısıtlamalarla (belirteç erişimini belirli API yollarına sınırlamak için `/api/packages/**` gibi glob kalıpları) belirteç tabanlı API kimlik doğrulaması
 - **Yedekleme ve Geri Yükleme** — Sunucu verilerini dışa ve içe aktarma
 - **Güvenlik Taraması** — [OSV.dev](https://osv.dev/) veritabanı destekli gerçek bağımlılık güvenlik açığı taraması. `.csproj` (NuGet), `package.json` (npm), `requirements.txt` (PyPI), `Cargo.toml` (Rust), `Gemfile` (Ruby), `composer.json` (PHP), `go.mod` (Go), `pom.xml` (Maven/Java) ve `pubspec.yaml` (Dart/Flutter) dosyalarından bağımlılıkları otomatik çıkarır, ardından her birini bilinen CVE'lere karşı kontrol eder. Önem derecesi, düzeltilmiş sürümler ve danışma bağlantıları raporlar. Ayrıca taslak/yayınla/kapat iş akışıyla manuel güvenlik danışmaları
+- **Secret Scanning** — Her push'u otomatik olarak sızan kimlik bilgileri (AWS anahtarları, GitHub/GitLab belirteçleri, Slack belirteçleri, özel anahtarlar, API anahtarları, JWT'ler, bağlantı dizeleri ve daha fazlası) için tarar. Tam regex desteği ile 20 yerleşik kalıp. İsteğe bağlı tam depo taraması. Çözme/yanlış pozitif iş akışı ile uyarılar. API aracılığıyla yapılandırılabilir özel kalıplar
+- **Dependabot-Style Auto-Update PRs** — Eski bağımlılıkları otomatik olarak kontrol eder ve güncellemek için pull request'ler oluşturur. NuGet, npm ve PyPI ekosistemlerini destekler. Yapılandırılabilir zamanlama (günlük/haftalık/aylık) ve depo başına açık PR limiti
+- **Repository Insights (Traffic)** — Klonlama/çekme sayılarını, sayfa görüntülemelerini, benzersiz ziyaretçileri, en iyi yönlendiricileri ve popüler içerik yollarını takip edin. Insights sekmesinde 14 günlük özetlerle trafik grafikleri. 90 gün saklama süresi ile günlük toplama. Gizlilik için IP adresleri karma yapılır
 - **Karanlık Mod** — Başlıkta bir geçiş düğmesiyle tam karanlık/aydınlık mod desteği
-- **Çoklu Dil / i18n** — 676 kaynak anahtarı ile tüm 27 sayfada tam yerelleştirme. 11 dil ile birlikte gelir: İngilizce, İspanyolca, Fransızca, Almanca, Japonca, Korece, Çince (Basitleştirilmiş), Portekizce, Rusça, İtalyanca ve Türkçe. `SharedResource.{locale}.resx` dosyaları oluşturarak daha fazla dil ekleyin. Başlıktaki dil seçici ile geçiş yapın
+- **Çoklu Dil / i18n** — 836 kaynak anahtarı ile tüm 28 sayfada tam yerelleştirme. 11 dil ile birlikte gelir: İngilizce, İspanyolca, Fransızca, Almanca, Japonca, Korece, Çince (Basitleştirilmiş), Portekizce, Rusça, İtalyanca ve Türkçe. `SharedResource.{locale}.resx` dosyaları oluşturarak daha fazla dil ekleyin. Başlıktaki dil seçici ile geçiş yapın
 - **Swagger / OpenAPI** — `/swagger` adresinde etkileşimli API belgeleri; tüm REST uç noktaları keşfedilebilir ve test edilebilir
 - **Mermaid Diyagramları** — Markdown dosyalarında Mermaid diyagram oluşturma (akış şemaları, sıralama diyagramları, Gantt grafikleri vb.)
 - **Matematik Oluşturma** — Markdown'da LaTeX/KaTeX matematik ifadeleri (`$inline$` ve `$$display$$` söz dizimi)

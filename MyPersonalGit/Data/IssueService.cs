@@ -18,6 +18,7 @@ public interface IIssueService
     Task<bool> ToggleLockAsync(string repoName, int number, string? reason = null);
     Task<bool> SetAssigneesAsync(string repoName, int number, List<string> assignees);
     Task<bool> SetDueDateAsync(string repoName, int number, DateTime? dueDate);
+    Task<(bool Success, string? Error, int? NewNumber)> TransferIssueAsync(string fromRepoName, int number, string toRepoName, string transferredBy);
 }
 
 public class IssueService : IIssueService
@@ -269,5 +270,110 @@ public class IssueService : IIssueService
 
         _logger.LogInformation("Issue #{Number} in {RepoName} due date set to {DueDate}", number, repoName, dueDate);
         return true;
+    }
+
+    public async Task<(bool Success, string? Error, int? NewNumber)> TransferIssueAsync(string fromRepoName, int number, string toRepoName, string transferredBy)
+    {
+        if (fromRepoName == toRepoName) return (false, "Cannot transfer issue to the same repository", null);
+
+        using var db = _dbFactory.CreateDbContext();
+
+        var issue = await db.Issues
+            .Include(i => i.Comments)
+            .FirstOrDefaultAsync(i => i.RepoName == fromRepoName && i.Number == number);
+        if (issue == null) return (false, "Issue not found", null);
+
+        // Verify target repo exists
+        var targetRepo = await db.Repositories.FirstOrDefaultAsync(r => r.Name == toRepoName);
+        if (targetRepo == null) return (false, $"Repository '{toRepoName}' not found", null);
+
+        // Get next issue number in target repo
+        var maxNumber = await db.Issues
+            .Where(i => i.RepoName == toRepoName)
+            .MaxAsync(i => (int?)i.Number) ?? 0;
+        var newNumber = maxNumber + 1;
+
+        // Create new issue in target repo
+        var newIssue = new Issue
+        {
+            Number = newNumber,
+            RepoName = toRepoName,
+            Title = issue.Title,
+            Body = issue.Body,
+            Author = issue.Author,
+            State = issue.State,
+            Labels = new List<string>(), // Labels may not exist in target repo
+            Assignees = new List<string>(),
+            DueDate = issue.DueDate,
+            CreatedAt = issue.CreatedAt
+        };
+
+        // Copy labels that exist in target repo
+        if (issue.Labels.Any())
+        {
+            var targetLabels = await db.RepositoryLabels
+                .Where(l => l.RepoName == toRepoName)
+                .Select(l => l.Name)
+                .ToListAsync();
+            newIssue.Labels = issue.Labels.Where(l => targetLabels.Contains(l)).ToList();
+        }
+
+        db.Issues.Add(newIssue);
+        await db.SaveChangesAsync();
+
+        // Copy comments
+        foreach (var comment in issue.Comments ?? new())
+        {
+            db.IssueComments.Add(new IssueComment
+            {
+                IssueId = newIssue.Id,
+                Author = comment.Author,
+                Body = comment.Body,
+                CreatedAt = comment.CreatedAt,
+                UpdatedAt = comment.UpdatedAt
+            });
+        }
+
+        // Add transfer note to new issue
+        db.IssueComments.Add(new IssueComment
+        {
+            IssueId = newIssue.Id,
+            Author = transferredBy,
+            Body = $"*This issue was transferred from {fromRepoName}#{number} by @{transferredBy}*",
+            CreatedAt = DateTime.UtcNow
+        });
+
+        // Close original issue with transfer note
+        issue.State = IssueState.Closed;
+        issue.ClosedAt = DateTime.UtcNow;
+        db.IssueComments.Add(new IssueComment
+        {
+            IssueId = issue.Id,
+            Author = transferredBy,
+            Body = $"*This issue was transferred to {toRepoName}#{newNumber} by @{transferredBy}*",
+            CreatedAt = DateTime.UtcNow
+        });
+
+        // Create transfer record
+        db.IssueTransfers.Add(new IssueTransfer
+        {
+            FromRepoName = fromRepoName,
+            FromIssueNumber = number,
+            ToRepoName = toRepoName,
+            ToIssueNumber = newNumber,
+            TransferredBy = transferredBy,
+            TransferredAt = DateTime.UtcNow
+        });
+
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Issue #{Number} transferred from {From} to {To}#{NewNumber} by {User}",
+            number, fromRepoName, toRepoName, newNumber, transferredBy);
+
+        await _activityService.RecordActivityAsync(transferredBy, "transferred_issue", toRepoName,
+            $"{transferredBy} transferred issue #{number} from {fromRepoName} to {toRepoName}#{newNumber}",
+            $"/repo/{toRepoName}/issues/{newNumber}");
+
+        return (true, null, newNumber);
     }
 }

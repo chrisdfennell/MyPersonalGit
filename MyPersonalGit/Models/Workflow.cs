@@ -36,6 +36,7 @@ public class WorkflowJob
     public string? Condition { get; set; } // raw if: expression for job-level conditionals
     public int? TimeoutMinutes { get; set; }
     public string? OutputsJson { get; set; } // JSON dict of resolved job outputs after execution
+    public string? Environment { get; set; } // deployment environment name
     public WorkflowStatus Status { get; set; }
     public DateTime? StartedAt { get; set; }
     public DateTime? CompletedAt { get; set; }

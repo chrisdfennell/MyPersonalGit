@@ -2,10 +2,13 @@
 @using LibGit2Sharp
 @using System.IO
 @using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using GitRepository = LibGit2Sharp.Repository
 @using Microsoft.Extensions.Localization
 @using MyPersonalGit.Resources
 @inject IConfiguration Config
 @inject IAdminService AdminService
+@inject IRepositoryTrafficService TrafficService
 @inject NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
@@ -42,6 +45,9 @@
                 </button>
                 <button class="list-group-item list-group-item-action @(activeTab == "network" ? "active" : "")" @onclick='() => activeTab = "network"'>
                     <i class="bi bi-diagram-3 me-2"></i> @L["Insights_Network"]
+                </button>
+                <button class="list-group-item list-group-item-action @(activeTab == "traffic" ? "active" : "")" @onclick='() => { activeTab = "traffic"; LoadTrafficData(); }'>
+                    <i class="bi bi-graph-up-arrow me-2"></i> @L["Traffic_Title"]
                 </button>
             </div>
         </div>
@@ -205,6 +211,135 @@
                     </div>
                 </div>
             }
+            else if (activeTab == "traffic")
+            {
+                <div class="traffic-view">
+                    <h4 class="mb-4"><i class="bi bi-graph-up-arrow me-2"></i>@L["Traffic_Title"]</h4>
+
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <div class="h3 text-primary mb-0">@trafficTotalClones</div>
+                                    <small class="text-muted">@L["Traffic_Clones14Days"]</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <div class="h3 text-info mb-0">@trafficUniqueCloners</div>
+                                    <small class="text-muted">@L["Traffic_UniqueCloners"]</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <div class="h3 text-success mb-0">@trafficTotalViews</div>
+                                    <small class="text-muted">@L["Traffic_PageViews"]</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <div class="h3 text-warning mb-0">@trafficUniqueVisitors</div>
+                                    <small class="text-muted">@L["Traffic_UniqueVisitors"]</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (trafficSummary.Any())
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header">@L["Traffic_Clones"]</div>
+                            <div class="card-body">
+                                <div class="d-flex align-items-end gap-1" style="height: 120px;">
+                                    @{ var maxClones = trafficSummary.Any() ? Math.Max(trafficSummary.Max(s => s.Clones), 1) : 1; }
+                                    @foreach (var day in trafficSummary)
+                                    {
+                                        var h = day.Clones * 110.0 / maxClones;
+                                        <div class="flex-fill bg-primary rounded-top" style="height: @(h)px; min-height: 2px;" title="@day.Date.ToString("MMM dd"): @day.Clones clones"></div>
+                                    }
+                                </div>
+                                <div class="d-flex justify-content-between mt-1 small text-muted">
+                                    @if (trafficSummary.Any())
+                                    {
+                                        <span>@trafficSummary.First().Date.ToString("MMM dd")</span>
+                                        <span>@trafficSummary.Last().Date.ToString("MMM dd")</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header">@L["Traffic_PageViews"]</div>
+                            <div class="card-body">
+                                <div class="d-flex align-items-end gap-1" style="height: 120px;">
+                                    @{ var maxViews = trafficSummary.Any() ? Math.Max(trafficSummary.Max(s => s.PageViews), 1) : 1; }
+                                    @foreach (var day in trafficSummary)
+                                    {
+                                        var h = day.PageViews * 110.0 / maxViews;
+                                        <div class="flex-fill bg-success rounded-top" style="height: @(h)px; min-height: 2px;" title="@day.Date.ToString("MMM dd"): @day.PageViews views"></div>
+                                    }
+                                </div>
+                                <div class="d-flex justify-content-between mt-1 small text-muted">
+                                    @if (trafficSummary.Any())
+                                    {
+                                        <span>@trafficSummary.First().Date.ToString("MMM dd")</span>
+                                        <span>@trafficSummary.Last().Date.ToString("MMM dd")</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            @L["Traffic_NoData"]
+                        </div>
+                    }
+
+                    @if (topReferrers.Any())
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header">@L["Traffic_TopReferrers"]</div>
+                            <div class="card-body p-0">
+                                <table class="table table-sm mb-0">
+                                    <thead><tr><th>@L["Traffic_Referrer"]</th><th class="text-end">@L["Traffic_Views"]</th></tr></thead>
+                                    <tbody>
+                                        @foreach (var (referrer, count) in topReferrers)
+                                        {
+                                            <tr><td>@referrer</td><td class="text-end">@count</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+
+                    @if (popularPages.Any())
+                    {
+                        <div class="card">
+                            <div class="card-header">@L["Traffic_PopularContent"]</div>
+                            <div class="card-body p-0">
+                                <table class="table table-sm mb-0">
+                                    <thead><tr><th>@L["Traffic_Path"]</th><th class="text-end">@L["Traffic_Views"]</th></tr></thead>
+                                    <tbody>
+                                        @foreach (var (path, count) in popularPages)
+                                        {
+                                            <tr><td>@path</td><td class="text-end">@count</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
             else if (activeTab == "network")
             {
                 <div class="network-view">
@@ -253,6 +388,28 @@
     private List<BranchInfo> branches = new();
     private int totalCommits = 0;
 
+    // Traffic data
+    private List<RepositoryTrafficSummary> trafficSummary = new();
+    private List<(string Referrer, int Count)> topReferrers = new();
+    private List<(string Path, int Count)> popularPages = new();
+    private int trafficTotalClones, trafficUniqueCloners, trafficTotalViews, trafficUniqueVisitors;
+
+    private async void LoadTrafficData()
+    {
+        try
+        {
+            trafficSummary = await TrafficService.GetTrafficSummaryAsync(RepoName);
+            topReferrers = await TrafficService.GetTopReferrersAsync(RepoName);
+            popularPages = await TrafficService.GetPopularPagesAsync(RepoName);
+            (trafficTotalClones, trafficUniqueCloners, trafficTotalViews, trafficUniqueVisitors) = await TrafficService.GetTotalsAsync(RepoName);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading traffic data: {ex.Message}");
+        }
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         await LoadInsights();
@@ -274,7 +431,7 @@
             if (!Directory.Exists(repoPath))
                 return;
 
-            using var repo = new Repository(repoPath);
+            using var repo = new GitRepository(repoPath);
 
             LoadContributors(repo);
             LoadCommitActivity(repo);
@@ -287,7 +444,7 @@
         }
     }
 
-    private void LoadContributors(Repository repo)
+    private void LoadContributors(GitRepository repo)
     {
         var contributorDict = new Dictionary<string, Contributor>();
         var filter = new CommitFilter { IncludeReachableFrom = repo.Refs };
@@ -323,7 +480,7 @@
         totalCommits = repo.Commits.QueryBy(filter).Count();
     }
 
-    private void LoadCommitActivity(Repository repo)
+    private void LoadCommitActivity(GitRepository repo)
     {
         var now = DateTime.UtcNow;
         var weeks = new Dictionary<DateTime, int>();
@@ -354,7 +511,7 @@
         }).OrderBy(w => w.WeekStart).ToList();
     }
 
-    private void LoadCodeFrequency(Repository repo)
+    private void LoadCodeFrequency(GitRepository repo)
     {
         var now = DateTime.UtcNow;
         var weeks = new Dictionary<DateTime, CodeFrequency>();
@@ -391,7 +548,7 @@
         codeFrequency = weeks.Values.OrderBy(w => w.WeekStart).ToList();
     }
 
-    private void LoadBranches(Repository repo)
+    private void LoadBranches(GitRepository repo)
     {
         branches = repo.Branches.Select(b => new BranchInfo
         {

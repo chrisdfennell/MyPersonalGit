@@ -32,7 +32,7 @@ public sealed class GitHttpBackendMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, IIssueAutoCloseService issueAutoCloseService, IWorkflowService workflowService, IAGitFlowService agitFlowService)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, IIssueAutoCloseService issueAutoCloseService, IWorkflowService workflowService, IAGitFlowService agitFlowService, IRepositoryTrafficService trafficService, ISecretScanService secretScanService)
     {
         // Only handle /git/* paths; let everything else pass through.
         if (!context.Request.Path.StartsWithSegments("/git", out var remaining))
@@ -125,7 +125,7 @@ public sealed class GitHttpBackendMiddleware
             psi.Environment[envKey] = string.Join(",", header.Value.ToArray());
         }
 
-        // Track git operation type for Prometheus metrics
+        // Track git operation type for Prometheus metrics + traffic recording
         var service = context.Request.Query["service"].FirstOrDefault() ?? "";
         if (service == "git-upload-pack" || pathInfo.EndsWith("/git-upload-pack"))
         {
@@ -133,7 +133,15 @@ public sealed class GitHttpBackendMiddleware
             var repoDir = Path.Combine(projectRoot, pathInfo.Split('/')[1]);
             var isClone = !Directory.Exists(Path.Combine(repoDir, "refs", "heads")) ||
                           !Directory.EnumerateFiles(Path.Combine(repoDir, "refs", "heads")).Any();
-            GitOperationCounters.Increment(isClone ? "clone" : "fetch");
+            var opType = isClone ? "clone" : "fetch";
+            GitOperationCounters.Increment(opType);
+
+            // Record traffic
+            var trafficRepoName = pathInfo.Split('/', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+            if (trafficRepoName.EndsWith(".git", StringComparison.OrdinalIgnoreCase))
+                trafficRepoName = trafficRepoName[..^4];
+            var clientIp = context.Connection.RemoteIpAddress?.ToString();
+            _ = trafficService.RecordEventAsync(trafficRepoName, opType, ipAddress: clientIp);
         }
         else if (service == "git-receive-pack" || pathInfo.EndsWith("/git-receive-pack"))
         {
@@ -319,6 +327,19 @@ public sealed class GitHttpBackendMiddleware
                     catch (Exception ex)
                     {
                         _logger.LogWarning(ex, "Failed to trigger push workflows.");
+                    }
+
+                    // Secret scanning: scan pushed commits for leaked credentials
+                    try
+                    {
+                        if (Repository.IsValid(repoDir))
+                        {
+                            await secretScanService.ScanPushAsync(repoName, repoDir, sha);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to run secret scan after push.");
                     }
 
                     // AGit Flow: detect pushes to refs/for/* and create PRs

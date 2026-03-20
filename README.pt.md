@@ -87,6 +87,9 @@ Um servidor Git auto-hospedado com interface web semelhante ao GitHub, construí
 - **Marcar arquivos como vistos** — Acompanhamento do progresso de revisão em pull requests com caixas de seleção "Visto" por arquivo e um contador de progresso
 - **Destaque de sintaxe em Diffs** — Coloração de sintaxe baseada em linguagem em diffs de pull requests e comparações via Prism.js
 - **Reações com Emoji** — Reaja a issues, PRs, discussões e comentários com polegar para cima/baixo, coração, risada, comemoração, confuso, foguete e olhos
+- **Auto-Merge** — Ative o auto-merge em pull requests para mesclar automaticamente quando todas as verificações de status obrigatórias passarem e as revisões forem aprovadas
+- **Cherry-Pick / Revert via UI** — Faça cherry-pick de qualquer commit para outro branch ou reverta um commit, diretamente ou como um novo pull request, pela interface web
+- **Transfer Issues** — Mova issues entre repositórios, preservando título, corpo, comentários, labels correspondentes e vinculando o original com uma nota de transferência
 - **CODEOWNERS** — Atribuição automática de revisores de PR com base em caminhos de arquivo com aplicação opcional exigindo aprovação do CODEOWNERS antes do merge
 - **Templates de Repositório** — Crie novos repositórios a partir de templates com cópia automática de arquivos, labels, templates de issues e regras de proteção de branch
 - **Issues Rascunho e Templates de Issues** — Crie issues rascunho (trabalho em andamento) e defina templates de issues reutilizáveis (relatório de bug, solicitação de recurso) por repositório com labels padrão
@@ -117,6 +120,9 @@ Um servidor Git auto-hospedado com interface web semelhante ao GitHub, construí
 - **`working-directory`** — Defina `defaults.run.working-directory` no nível do workflow ou `working-directory:` por step para controlar onde comandos executam
 - **`defaults.run.shell`** — Configure shell personalizado por workflow ou por step (`bash`, `sh`, `python3`, etc.)
 - **`strategy.max-parallel`** — Limite a execução concorrente de jobs com matrix
+- **Reusable Workflows (`workflow_call`)** — Defina workflows com `on: workflow_call` que outros workflows podem invocar com `uses: ./.github/workflows/build.yml`. Suporta entradas, saídas e segredos tipados. Os jobs do workflow chamado são incorporados no chamador
+- **Composite Actions** — Defina ações de múltiplos passos em `.github/actions/{name}/action.yml` com `runs: using: composite`. Os passos das ações compostas são expandidos inline durante a execução
+- **Environment Deployments** — Configure ambientes de implantação (ex., `staging`, `production`) com regras de proteção: revisores obrigatórios, temporizadores de espera e restrições de branch. Jobs de workflow com `environment:` requerem aprovação antes da execução. Histórico completo de implantações com interface de aprovação/rejeição
 - **`on.workflow_run`** — Encadeie workflows: dispare o workflow B quando o workflow A completar. Filtre por nome de workflow e `types: [completed]`
 - **Criação Automática de Release** — `softprops/action-gh-release` cria entidades de Release reais com tag, título, corpo de changelog e flags de pré-release/rascunho. Arquivos de código-fonte (ZIP e TAR.GZ) são automaticamente anexados como assets para download
 - **Pipeline de Auto-Release** — Workflow integrado que auto-tageia versões, gera changelogs e envia imagens Docker para o Docker Hub em cada push para main
@@ -169,8 +175,11 @@ Um servidor Git auto-hospedado com interface web semelhante ao GitHub, construí
 - **Tokens de Acesso Pessoal** — Autenticação de API baseada em tokens com escopos configuráveis e restrições opcionais no nível de rota (padrões glob como `/api/packages/**` para limitar o acesso do token a caminhos de API específicos)
 - **Backup e Restauração** — Exporte e importe dados do servidor
 - **Varredura de Segurança** — Varredura real de vulnerabilidades de dependências alimentada pelo banco de dados [OSV.dev](https://osv.dev/). Extrai automaticamente dependências de `.csproj` (NuGet), `package.json` (npm), `requirements.txt` (PyPI), `Cargo.toml` (Rust), `Gemfile` (Ruby), `composer.json` (PHP), `go.mod` (Go), `pom.xml` (Maven/Java) e `pubspec.yaml` (Dart/Flutter), verificando cada uma contra CVEs conhecidos. Reporta severidade, versões corrigidas e links de consultoria. Além de consultoria de segurança manual com fluxo de trabalho rascunho/publicar/fechar
+- **Secret Scanning** — Escaneia automaticamente cada push em busca de credenciais vazadas (chaves AWS, tokens GitHub/GitLab, tokens Slack, chaves privadas, chaves API, JWTs, strings de conexão e mais). 20 padrões integrados com suporte completo a regex. Escaneamento completo do repositório sob demanda. Alertas com fluxo de trabalho resolver/falso positivo. Padrões personalizados configuráveis via API
+- **Dependabot-Style Auto-Update PRs** — Verifica automaticamente dependências desatualizadas e cria pull requests para atualizá-las. Suporta ecossistemas NuGet, npm e PyPI. Agendamento configurável (diário/semanal/mensal) e limite de PRs abertas por repositório
+- **Repository Insights (Traffic)** — Acompanhe contagens de clone/fetch, visualizações de página, visitantes únicos, principais referenciadores e caminhos de conteúdo populares. Gráficos de tráfego na aba Insights com resumos de 14 dias. Agregação diária com retenção de 90 dias. Endereços IP são criptografados por hash para privacidade
 - **Modo Escuro** — Suporte completo a modo escuro/claro com alternador no cabeçalho
-- **Multi-idioma / i18n** — Localização completa em todas as 27 páginas com 676 chaves de recurso. Inclui 11 idiomas: inglês, espanhol, francês, alemão, japonês, coreano, chinês (simplificado), português, russo, italiano e turco. Seletor de idioma no cabeçalho. Adicione mais criando arquivos `SharedResource.{locale}.resx`
+- **Multi-idioma / i18n** — Localização completa em todas as 28 páginas com 836 chaves de recurso. Inclui 11 idiomas: inglês, espanhol, francês, alemão, japonês, coreano, chinês (simplificado), português, russo, italiano e turco. Seletor de idioma no cabeçalho. Adicione mais criando arquivos `SharedResource.{locale}.resx`
 - **Swagger / OpenAPI** — Documentação interativa da API em `/swagger` com todos os endpoints REST descobríveis e testáveis
 - **Mermaid Diagrams** — Renderização de diagramas Mermaid em arquivos Markdown (fluxogramas, diagramas de sequência, gráficos de Gantt, etc.)
 - **Math Rendering** — Expressões matemáticas LaTeX/KaTeX em Markdown (sintaxe `$inline$` e `$$display$$`)

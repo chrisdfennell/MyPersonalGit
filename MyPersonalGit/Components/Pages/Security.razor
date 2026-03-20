@@ -5,7 +5,9 @@
 @using Microsoft.Extensions.Localization
 @using MyPersonalGit.Resources
 @inject ISecurityService SecurityService
+@inject ISecretScanService SecretScanService
 @inject IConfiguration Config
+@inject IAdminService AdminService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
@@ -41,6 +43,15 @@
         <li class="nav-item">
             <button class="nav-link @(ActiveTab == "dependencies" ? "active" : "")" @onclick='() => ActiveTab = "dependencies"'>
                 <i class="bi bi-box-seam me-1"></i> @L["Security_Dependencies"]
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == "secrets" ? "active" : "")" @onclick='() => { ActiveTab = "secrets"; LoadSecretScanResults(); }'>
+                <i class="bi bi-key me-1"></i> @L["SecretScan_Title"]
+                @if (secretAlerts.Count(a => a.State == SecretScanResultState.Open) > 0)
+                {
+                    <span class="badge bg-danger ms-1">@secretAlerts.Count(a => a.State == SecretScanResultState.Open)</span>
+                }
             </button>
         </li>
     </ul>
@@ -186,6 +197,71 @@
             </div>
         }
     }
+    else if (ActiveTab == "secrets")
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="btn-group">
+                <button class="btn btn-sm @(secretFilter == null ? "btn-primary" : "btn-outline-secondary")" @onclick='() => { secretFilter = null; LoadSecretScanResults(); }'>@L["SecretScan_All"]</button>
+                <button class="btn btn-sm @(secretFilter == SecretScanResultState.Open ? "btn-primary" : "btn-outline-secondary")" @onclick='() => { secretFilter = SecretScanResultState.Open; LoadSecretScanResults(); }'>@L["SecretScan_Open"]</button>
+                <button class="btn btn-sm @(secretFilter == SecretScanResultState.Resolved ? "btn-primary" : "btn-outline-secondary")" @onclick='() => { secretFilter = SecretScanResultState.Resolved; LoadSecretScanResults(); }'>@L["SecretScan_Resolved"]</button>
+            </div>
+            <button class="btn btn-warning btn-sm" @onclick="RunSecretScan" disabled="@isSecretScanning">
+                @if (isSecretScanning) { <span class="spinner-border spinner-border-sm me-1"></span> <text>@L["SecretScan_Scanning"]</text> }
+                else { <i class="bi bi-search me-1"></i> <text>@L["SecretScan_FullScan"]</text> }
+            </button>
+        </div>
+
+        @if (!secretAlerts.Any())
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-shield-check" style="font-size: 4rem; color: #198754;"></i>
+                    <h3 class="mt-3">@L["SecretScan_NoSecrets"]</h3>
+                    <p class="text-muted">@L["SecretScan_NoSecretsDescription"]</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="list-group">
+                @foreach (var alert in secretAlerts)
+                {
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-1">
+                                    <i class="bi bi-key-fill text-warning me-2"></i>
+                                    <h6 class="mb-0">@alert.SecretType</h6>
+                                    <span class="badge @(alert.State == SecretScanResultState.Open ? "bg-danger" : "bg-success") ms-2">@alert.State</span>
+                                </div>
+                                <p class="mb-1 small text-muted">
+                                    <code>@alert.FilePath</code> @L["SecretScan_Line"] @alert.LineNumber
+                                    <span class="mx-1">·</span>
+                                    @L["SecretScan_Commit"] <code>@alert.CommitSha[..7]</code>
+                                </p>
+                                <pre class="bg-light p-2 rounded small mb-0" style="max-width: 600px; overflow-x: auto;">@alert.MatchSnippet</pre>
+                                @if (alert.ResolvedBy != null)
+                                {
+                                    <small class="text-muted">@L["SecretScan_ResolvedBy"] @alert.ResolvedBy @L["SecretScan_On"] @alert.ResolvedAt?.ToString("g")</small>
+                                }
+                            </div>
+                            @if (alert.State == SecretScanResultState.Open)
+                            {
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-success" @onclick="() => ResolveSecret(alert.Id, SecretScanResultState.Resolved)" title="@L["SecretScan_MarkResolved"]">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => ResolveSecret(alert.Id, SecretScanResultState.FalsePositive)" title="@L["SecretScan_MarkFalsePositive"]">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
     else if (ActiveTab == "dependencies")
     {
         @if (LatestScan == null || LatestScan.Dependencies.Count == 0)
@@ -308,15 +384,50 @@
     private SecuritySeverity NewAdvisorySeverity { get; set; } = SecuritySeverity.Medium;
     private string NewAdvisoryAffectedVersions { get; set; } = "";
 
+    private List<SecretScanResult> secretAlerts = new();
+    private SecretScanResultState? secretFilter = null;
+    private bool isSecretScanning = false;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
+        secretAlerts = await SecretScanService.GetResultsAsync(RepoName, secretFilter);
     }
 
     private async Task LoadData()
     {
         Advisories = await SecurityService.GetAdvisoriesAsync(RepoName);
         LatestScan = await SecurityService.GetLatestScanAsync(RepoName);
+    }
+
+    private async void LoadSecretScanResults()
+    {
+        secretAlerts = await SecretScanService.GetResultsAsync(RepoName, secretFilter);
+        StateHasChanged();
+    }
+
+    private async Task RunSecretScan()
+    {
+        isSecretScanning = true;
+        StateHasChanged();
+        try
+        {
+            var systemSettings = await AdminService.GetSystemSettingsAsync();
+            var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot) ? systemSettings.ProjectRoot : Config["Git:ProjectRoot"] ?? "/repos";
+            var repoPath = Path.Combine(projectRoot, RepoName);
+            if (!Directory.Exists(repoPath)) repoPath = Path.Combine(projectRoot, RepoName + ".git");
+            await SecretScanService.FullScanAsync(RepoName, repoPath);
+            secretAlerts = await SecretScanService.GetResultsAsync(RepoName, secretFilter);
+        }
+        catch (Exception ex) { scanError = $"Secret scan failed: {ex.Message}"; }
+        finally { isSecretScanning = false; StateHasChanged(); }
+    }
+
+    private async Task ResolveSecret(int alertId, SecretScanResultState state)
+    {
+        await SecretScanService.ResolveResultAsync(alertId, UserService.Username, state);
+        secretAlerts = await SecretScanService.GetResultsAsync(RepoName, secretFilter);
+        StateHasChanged();
     }
 
     private bool isScanning = false;

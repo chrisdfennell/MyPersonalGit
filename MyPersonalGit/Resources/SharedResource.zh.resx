@@ -879,4 +879,60 @@
   <data name="Import_AboutIssues" xml:space="preserve"><value>包含描述和状态的 Issues</value></data>
   <data name="Import_AboutPRs" xml:space="preserve"><value>Pull requests / merge requests（作为 issues 导入）</value></data>
   <data name="Import_AboutPrivate" xml:space="preserve"><value>对于私有仓库，请提供具有相应读取权限的个人访问令牌。</value></data>
+
+  <!-- Environments -->
+  <data name="Env_Title" xml:space="preserve"><value>环境</value></data>
+  <data name="Env_Repositories" xml:space="preserve"><value>仓库</value></data>
+  <data name="Env_NewEnvironment" xml:space="preserve"><value>新建环境</value></data>
+  <data name="Env_RequiredReviewers" xml:space="preserve"><value>必需的审查者：</value></data>
+  <data name="Env_WaitTimer" xml:space="preserve"><value>等待计时器：</value></data>
+  <data name="Env_WaitTimerMin" xml:space="preserve"><value>{0} 分钟</value></data>
+  <data name="Env_Branches" xml:space="preserve"><value>分支：</value></data>
+  <data name="Env_Status" xml:space="preserve"><value>状态</value></data>
+  <data name="Env_Commit" xml:space="preserve"><value>提交</value></data>
+  <data name="Env_Ref" xml:space="preserve"><value>Ref</value></data>
+  <data name="Env_Creator" xml:space="preserve"><value>创建者</value></data>
+  <data name="Env_Created" xml:space="preserve"><value>创建时间</value></data>
+  <data name="Env_Approve" xml:space="preserve"><value>批准</value></data>
+  <data name="Env_Reject" xml:space="preserve"><value>拒绝</value></data>
+  <data name="Env_NoDeployments" xml:space="preserve"><value>暂无部署。</value></data>
+  <data name="Env_NoEnvironments" xml:space="preserve"><value>尚未配置环境。</value></data>
+  <data name="Env_NoEnvironmentsDescription" xml:space="preserve"><value>环境允许您配置带有保护规则的部署目标，例如必需的审查者和等待计时器。</value></data>
+  <data name="Env_Name" xml:space="preserve"><value>名称</value></data>
+  <data name="Env_NamePlaceholder" xml:space="preserve"><value>例如 production、staging</value></data>
+  <data name="Env_UrlOptional" xml:space="preserve"><value>URL（可选）</value></data>
+  <data name="Env_WaitTimerMinutes" xml:space="preserve"><value>等待计时器（分钟）</value></data>
+  <data name="Env_RequireApproval" xml:space="preserve"><value>需要审批</value></data>
+  <data name="Env_RequiredReviewersInput" xml:space="preserve"><value>必需的审查者（逗号分隔的用户名）</value></data>
+  <data name="Env_AllowedBranches" xml:space="preserve"><value>允许的分支（逗号分隔，留空 = 全部）</value></data>
+
+  <!-- Secret Scanning -->
+  <data name="SecretScan_Title" xml:space="preserve"><value>密钥扫描</value></data>
+  <data name="SecretScan_All" xml:space="preserve"><value>全部</value></data>
+  <data name="SecretScan_Open" xml:space="preserve"><value>未处理</value></data>
+  <data name="SecretScan_Resolved" xml:space="preserve"><value>已解决</value></data>
+  <data name="SecretScan_FullScan" xml:space="preserve"><value>完整扫描</value></data>
+  <data name="SecretScan_Scanning" xml:space="preserve"><value>扫描中...</value></data>
+  <data name="SecretScan_NoSecrets" xml:space="preserve"><value>未检测到密钥</value></data>
+  <data name="SecretScan_NoSecretsDescription" xml:space="preserve"><value>密钥扫描会检查您的代码中是否存在意外提交的凭据，如 API 密钥、令牌和密码。</value></data>
+  <data name="SecretScan_Line" xml:space="preserve"><value>行</value></data>
+  <data name="SecretScan_Commit" xml:space="preserve"><value>提交</value></data>
+  <data name="SecretScan_ResolvedBy" xml:space="preserve"><value>解决者</value></data>
+  <data name="SecretScan_On" xml:space="preserve"><value>于</value></data>
+  <data name="SecretScan_MarkResolved" xml:space="preserve"><value>标记为已解决</value></data>
+  <data name="SecretScan_MarkFalsePositive" xml:space="preserve"><value>标记为误报</value></data>
+
+  <!-- Traffic / Insights -->
+  <data name="Traffic_Title" xml:space="preserve"><value>流量</value></data>
+  <data name="Traffic_Clones14Days" xml:space="preserve"><value>克隆（14 天）</value></data>
+  <data name="Traffic_UniqueCloners" xml:space="preserve"><value>独立克隆者</value></data>
+  <data name="Traffic_PageViews" xml:space="preserve"><value>页面浏览量</value></data>
+  <data name="Traffic_UniqueVisitors" xml:space="preserve"><value>独立访客</value></data>
+  <data name="Traffic_Clones" xml:space="preserve"><value>克隆</value></data>
+  <data name="Traffic_NoData" xml:space="preserve"><value>暂无流量数据。当用户克隆、拉取或查看仓库页面时，系统会收集流量数据。</value></data>
+  <data name="Traffic_TopReferrers" xml:space="preserve"><value>热门来源</value></data>
+  <data name="Traffic_Referrer" xml:space="preserve"><value>来源</value></data>
+  <data name="Traffic_Views" xml:space="preserve"><value>浏览量</value></data>
+  <data name="Traffic_PopularContent" xml:space="preserve"><value>热门内容</value></data>
+  <data name="Traffic_Path" xml:space="preserve"><value>路径</value></data>
 </root>

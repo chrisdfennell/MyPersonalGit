@@ -879,4 +879,60 @@
   <data name="Import_AboutIssues" xml:space="preserve"><value>説明と状態を含む Issues</value></data>
   <data name="Import_AboutPRs" xml:space="preserve"><value>プルリクエスト / マージリクエスト（Issues としてインポート）</value></data>
   <data name="Import_AboutPrivate" xml:space="preserve"><value>プライベートリポジトリの場合、適切な読み取り権限を持つ個人アクセストークンを提供してください。</value></data>
+
+  <!-- Environments -->
+  <data name="Env_Title" xml:space="preserve"><value>環境</value></data>
+  <data name="Env_Repositories" xml:space="preserve"><value>リポジトリ</value></data>
+  <data name="Env_NewEnvironment" xml:space="preserve"><value>新しい環境</value></data>
+  <data name="Env_RequiredReviewers" xml:space="preserve"><value>必須レビュアー:</value></data>
+  <data name="Env_WaitTimer" xml:space="preserve"><value>待機タイマー:</value></data>
+  <data name="Env_WaitTimerMin" xml:space="preserve"><value>{0} 分</value></data>
+  <data name="Env_Branches" xml:space="preserve"><value>ブランチ:</value></data>
+  <data name="Env_Status" xml:space="preserve"><value>ステータス</value></data>
+  <data name="Env_Commit" xml:space="preserve"><value>コミット</value></data>
+  <data name="Env_Ref" xml:space="preserve"><value>Ref</value></data>
+  <data name="Env_Creator" xml:space="preserve"><value>作成者</value></data>
+  <data name="Env_Created" xml:space="preserve"><value>作成日</value></data>
+  <data name="Env_Approve" xml:space="preserve"><value>承認</value></data>
+  <data name="Env_Reject" xml:space="preserve"><value>却下</value></data>
+  <data name="Env_NoDeployments" xml:space="preserve"><value>デプロイメントはまだありません。</value></data>
+  <data name="Env_NoEnvironments" xml:space="preserve"><value>環境はまだ設定されていません。</value></data>
+  <data name="Env_NoEnvironmentsDescription" xml:space="preserve"><value>環境を使用すると、必須レビュアーや待機タイマーなどの保護ルールを備えたデプロイメントターゲットを設定できます。</value></data>
+  <data name="Env_Name" xml:space="preserve"><value>名前</value></data>
+  <data name="Env_NamePlaceholder" xml:space="preserve"><value>例: production, staging</value></data>
+  <data name="Env_UrlOptional" xml:space="preserve"><value>URL（任意）</value></data>
+  <data name="Env_WaitTimerMinutes" xml:space="preserve"><value>待機タイマー（分）</value></data>
+  <data name="Env_RequireApproval" xml:space="preserve"><value>承認を必須にする</value></data>
+  <data name="Env_RequiredReviewersInput" xml:space="preserve"><value>必須レビュアー（カンマ区切りのユーザー名）</value></data>
+  <data name="Env_AllowedBranches" xml:space="preserve"><value>許可されたブランチ（カンマ区切り、空 = すべて）</value></data>
+
+  <!-- Secret Scanning -->
+  <data name="SecretScan_Title" xml:space="preserve"><value>シークレットスキャン</value></data>
+  <data name="SecretScan_All" xml:space="preserve"><value>すべて</value></data>
+  <data name="SecretScan_Open" xml:space="preserve"><value>未対応</value></data>
+  <data name="SecretScan_Resolved" xml:space="preserve"><value>解決済み</value></data>
+  <data name="SecretScan_FullScan" xml:space="preserve"><value>フルスキャン</value></data>
+  <data name="SecretScan_Scanning" xml:space="preserve"><value>スキャン中...</value></data>
+  <data name="SecretScan_NoSecrets" xml:space="preserve"><value>シークレットは検出されませんでした</value></data>
+  <data name="SecretScan_NoSecretsDescription" xml:space="preserve"><value>シークレットスキャンは、APIキー、トークン、パスワードなど、誤ってコミットされた認証情報がないかコードをチェックします。</value></data>
+  <data name="SecretScan_Line" xml:space="preserve"><value>行</value></data>
+  <data name="SecretScan_Commit" xml:space="preserve"><value>コミット</value></data>
+  <data name="SecretScan_ResolvedBy" xml:space="preserve"><value>解決者</value></data>
+  <data name="SecretScan_On" xml:space="preserve"><value>日付</value></data>
+  <data name="SecretScan_MarkResolved" xml:space="preserve"><value>解決済みにする</value></data>
+  <data name="SecretScan_MarkFalsePositive" xml:space="preserve"><value>誤検知としてマーク</value></data>
+
+  <!-- Traffic / Insights -->
+  <data name="Traffic_Title" xml:space="preserve"><value>トラフィック</value></data>
+  <data name="Traffic_Clones14Days" xml:space="preserve"><value>クローン（14日間）</value></data>
+  <data name="Traffic_UniqueCloners" xml:space="preserve"><value>ユニーククローナー</value></data>
+  <data name="Traffic_PageViews" xml:space="preserve"><value>ページビュー</value></data>
+  <data name="Traffic_UniqueVisitors" xml:space="preserve"><value>ユニークビジター</value></data>
+  <data name="Traffic_Clones" xml:space="preserve"><value>クローン</value></data>
+  <data name="Traffic_NoData" xml:space="preserve"><value>トラフィックデータはまだありません。トラフィックデータは、ユーザーがリポジトリページをクローン、フェッチ、または閲覧したときに収集されます。</value></data>
+  <data name="Traffic_TopReferrers" xml:space="preserve"><value>トップリファラー</value></data>
+  <data name="Traffic_Referrer" xml:space="preserve"><value>リファラー</value></data>
+  <data name="Traffic_Views" xml:space="preserve"><value>閲覧数</value></data>
+  <data name="Traffic_PopularContent" xml:space="preserve"><value>人気コンテンツ</value></data>
+  <data name="Traffic_Path" xml:space="preserve"><value>パス</value></data>
 </root>
