@@ -312,6 +312,7 @@
   <data name="PR_DisableAutoMerge" xml:space="preserve"><value>자동 머지 비활성화</value></data>
   <data name="PR_Draft" xml:space="preserve"><value>초안</value></data>
   <data name="PR_EnableAutoMerge" xml:space="preserve"><value>자동 머지 활성화</value></data>
+  <data name="PR_AutoMergeEnabled" xml:space="preserve"><value>자동 병합 활성화됨</value></data>
   <data name="PR_FilesChanged" xml:space="preserve"><value>변경된 파일</value></data>
   <data name="PR_Labels" xml:space="preserve"><value>레이블</value></data>
   <data name="PR_LeaveReviewComment" xml:space="preserve"><value>리뷰 댓글 남기기</value></data>

@@ -148,13 +148,13 @@
                                 @if (currentPR.AutoMergeEnabled)
                                 {
                                     <span class="badge bg-info">
-                                        <i class="bi bi-robot me-1"></i> Auto-merge enabled (@(currentPR.AutoMergeStrategy ?? "MergeCommit"))
+                                        <i class="bi bi-robot me-1"></i> @L["PR_AutoMergeEnabled"] (@(currentPR.AutoMergeStrategy ?? "MergeCommit"))
                                     </span>
                                     <button class="btn btn-outline-secondary btn-sm" @onclick="DisableAutoMerge">
                                         <i class="bi bi-x me-1"></i> @L["PR_DisableAutoMerge"]
                                     </button>
                                 }
-                                else if (!canMerge)
+                                else
                                 {
                                     <button class="btn btn-outline-info btn-sm" @onclick="EnableAutoMerge">
                                         <i class="bi bi-robot me-1"></i> @L["PR_EnableAutoMerge"]

@@ -312,6 +312,7 @@
   <data name="PR_DisableAutoMerge" xml:space="preserve"><value>Отключить автослияние</value></data>
   <data name="PR_Draft" xml:space="preserve"><value>Черновик</value></data>
   <data name="PR_EnableAutoMerge" xml:space="preserve"><value>Включить автослияние</value></data>
+  <data name="PR_AutoMergeEnabled" xml:space="preserve"><value>Автослияние включено</value></data>
   <data name="PR_FilesChanged" xml:space="preserve"><value>Изменённые файлы</value></data>
   <data name="PR_Labels" xml:space="preserve"><value>Метки</value></data>
   <data name="PR_LeaveReviewComment" xml:space="preserve"><value>Оставить комментарий к ревью</value></data>
