@@ -1038,6 +1038,30 @@ else
                         </div>
                     </div>
 
+                    <div class="card border shadow-sm mb-4">
+                        <div class="card-header bg-warning bg-opacity-10 py-2 small fw-bold">
+                            <i class="bi bi-pencil-square me-1"></i> Rename Repository
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">New repository name</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="text" class="form-control form-control-sm" style="max-width: 300px;" @bind="settingsNewName" placeholder="new-name" />
+                                    <button class="btn btn-warning btn-sm" @onclick="RenameRepository" disabled="@string.IsNullOrWhiteSpace(settingsNewName)">Rename</button>
+                                </div>
+                            </div>
+                            <div class="form-text text-warning">
+                                <i class="bi bi-exclamation-triangle me-1"></i> Renaming may break existing clones and links
+                            </div>
+                            @if (!string.IsNullOrEmpty(renameMessage))
+                            {
+                                <div class="mt-2 small @(renameSuccess ? "text-success" : "text-danger")">
+                                    <i class="bi @(renameSuccess ? "bi-check-circle" : "bi-x-circle") me-1"></i>@renameMessage
+                                </div>
+                            }
+                        </div>
+                    </div>
+
                 }
 
                 @if (UserService.IsLoggedIn && (settingsSection == "default-branch" || settingsSection == "general"))
@@ -3385,6 +3409,11 @@ else
     private List<string> availableBranches = new();
     private string defaultBranchMessage = "";
 
+    // Rename
+    private string settingsNewName = "";
+    private string renameMessage = "";
+    private bool renameSuccess = false;
+
     // Transfer
     private string transferTargetOwner = "";
     private string transferMessage = "";
@@ -3651,6 +3680,23 @@ else
         repoWebsiteUrl = settingsWebsiteUrl;
         settingsSaveMessage = "Settings saved!";
         StateHasChanged();
+    }
+
+    private async Task RenameRepository()
+    {
+        renameMessage = "";
+        renameSuccess = false;
+        if (string.IsNullOrWhiteSpace(settingsNewName)) return;
+        var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        var (success, message) = await RepoService.RenameRepositoryAsync(dirName, settingsNewName.Trim(), projectRoot);
+        renameSuccess = success;
+        renameMessage = message;
+        if (success)
+        {
+            // Navigate to the renamed repo
+            Nav.NavigateTo($"/repo/{settingsNewName.Trim()}", true);
+        }
     }
 
     private async Task ChangeDefaultBranch()

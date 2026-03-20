@@ -108,6 +108,8 @@ public class AppDbContext : DbContext
 
     // Secrets
     public DbSet<RepositorySecret> RepositorySecrets => Set<RepositorySecret>();
+    public DbSet<UserSecret> UserSecrets => Set<UserSecret>();
+    public DbSet<OrganizationSecret> OrganizationSecrets => Set<OrganizationSecret>();
 
     // Container Registry
     public DbSet<ContainerManifest> ContainerManifests => Set<ContainerManifest>();
@@ -409,6 +411,18 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<RepositorySecret>(e =>
         {
             e.HasIndex(s => new { s.RepoName, s.Name }).IsUnique();
+        });
+
+        // --- UserSecret ---
+        modelBuilder.Entity<UserSecret>(e =>
+        {
+            e.HasIndex(s => new { s.Username, s.Name }).IsUnique();
+        });
+
+        // --- OrganizationSecret ---
+        modelBuilder.Entity<OrganizationSecret>(e =>
+        {
+            e.HasIndex(s => new { s.OrganizationName, s.Name }).IsUnique();
         });
 
         // --- Container Registry ---

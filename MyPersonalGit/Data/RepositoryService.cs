@@ -29,6 +29,7 @@ public interface IRepositoryService
     Task<List<ContributorInfo>> GetContributorsAsync(string repoPath, int maxCount = 20);
     Task<bool> TransferRepositoryAsync(string repoName, string newOwner, string projectRoot);
     Task<bool> SetDefaultBranchAsync(string repoName, string branchName, string projectRoot);
+    Task<(bool Success, string Message)> RenameRepositoryAsync(string oldName, string newName, string projectRoot);
 }
 
 public class ContributorInfo
@@ -520,5 +521,192 @@ public class RepositoryService : IRepositoryService
             _logger.LogWarning(ex, "Failed to set default branch for {Repo}", repoName);
             return false;
         }
+    }
+
+    public async Task<(bool Success, string Message)> RenameRepositoryAsync(string oldName, string newName, string projectRoot)
+    {
+        // Validate new name
+        if (string.IsNullOrWhiteSpace(newName))
+            return (false, "New name cannot be empty.");
+
+        newName = newName.Trim();
+
+        // Allow alphanumeric, hyphens, underscores, dots, and .git suffix
+        if (!System.Text.RegularExpressions.Regex.IsMatch(newName, @"^[a-zA-Z0-9._-]+$"))
+            return (false, "Repository name can only contain alphanumeric characters, hyphens, underscores, and dots.");
+
+        if (string.Equals(oldName, newName, StringComparison.OrdinalIgnoreCase))
+            return (false, "New name is the same as the current name.");
+
+        using var db = _dbFactory.CreateDbContext();
+
+        // Check DB for existing repo with new name
+        if (await db.Repositories.AnyAsync(r => r.Name.ToLower() == newName.ToLower()))
+            return (false, $"A repository named '{newName}' already exists.");
+
+        // Check filesystem
+        var newPath = Path.Combine(projectRoot, newName);
+        if (Directory.Exists(newPath))
+            return (false, $"A directory named '{newName}' already exists on disk.");
+
+        // Find the old repo record
+        var repo = await db.Repositories.FirstOrDefaultAsync(r => r.Name.ToLower() == oldName.ToLower());
+        if (repo == null)
+            return (false, "Repository not found.");
+
+        // Rename directory on disk
+        var oldPath = Path.Combine(projectRoot, oldName);
+        if (!Directory.Exists(oldPath))
+        {
+            // Try with .git suffix
+            oldPath = Path.Combine(projectRoot, oldName + ".git");
+            if (!Directory.Exists(oldPath))
+                return (false, "Repository directory not found on disk.");
+        }
+
+        try
+        {
+            Directory.Move(oldPath, newPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to rename repository directory from {Old} to {New}", oldPath, newPath);
+            return (false, $"Failed to rename directory: {ex.Message}");
+        }
+
+        // Update the main Repository record
+        var actualOldName = repo.Name;
+        repo.Name = newName;
+        repo.UpdatedAt = DateTime.UtcNow;
+
+        // Update all related records that reference the old RepoName
+        // Stars
+        var stars = await db.RepositoryStars.Where(s => s.RepoName == actualOldName).ToListAsync();
+        foreach (var s in stars) s.RepoName = newName;
+
+        // Watches
+        var watches = await db.RepositoryWatches.Where(w => w.RepoName == actualOldName).ToListAsync();
+        foreach (var w in watches) w.RepoName = newName;
+
+        // Forks (update both OriginalRepo and ForkedRepo references)
+        var forksAsOriginal = await db.RepositoryForks.Where(f => f.OriginalRepo == actualOldName).ToListAsync();
+        foreach (var f in forksAsOriginal) f.OriginalRepo = newName;
+        var forksAsForked = await db.RepositoryForks.Where(f => f.ForkedRepo == actualOldName).ToListAsync();
+        foreach (var f in forksAsForked) f.ForkedRepo = newName;
+
+        // Issues
+        var issues = await db.Issues.Where(i => i.RepoName == actualOldName).ToListAsync();
+        foreach (var i in issues) i.RepoName = newName;
+
+        // Pull Requests
+        var prs = await db.PullRequests.Where(p => p.RepoName == actualOldName).ToListAsync();
+        foreach (var p in prs) p.RepoName = newName;
+
+        // Labels
+        var labels = await db.RepositoryLabels.Where(l => l.RepoName == actualOldName).ToListAsync();
+        foreach (var l in labels) l.RepoName = newName;
+
+        // Secrets
+        var secrets = await db.RepositorySecrets.Where(s => s.RepoName == actualOldName).ToListAsync();
+        foreach (var s in secrets) s.RepoName = newName;
+
+        // Collaborators
+        var collabs = await db.RepositoryCollaborators.Where(c => c.RepoName == actualOldName).ToListAsync();
+        foreach (var c in collabs) c.RepoName = newName;
+
+        // Wiki pages
+        var wikiPages = await db.WikiPages.Where(w => w.RepoName == actualOldName).ToListAsync();
+        foreach (var w in wikiPages) w.RepoName = newName;
+
+        // Workflow runs
+        var workflowRuns = await db.WorkflowRuns.Where(w => w.RepoName == actualOldName).ToListAsync();
+        foreach (var w in workflowRuns) w.RepoName = newName;
+
+        // Workflow schedules
+        var schedules = await db.WorkflowSchedules.Where(s => s.RepoName == actualOldName).ToListAsync();
+        foreach (var s in schedules) s.RepoName = newName;
+
+        // Webhooks
+        var hooks = await db.Webhooks.Where(h => h.RepoName == actualOldName).ToListAsync();
+        foreach (var h in hooks) h.RepoName = newName;
+
+        // Branch protection rules
+        var branchRules = await db.BranchProtectionRules.Where(b => b.RepoName == actualOldName).ToListAsync();
+        foreach (var b in branchRules) b.RepoName = newName;
+
+        // Tag protection rules
+        var tagRules = await db.TagProtectionRules.Where(t => t.RepoName == actualOldName).ToListAsync();
+        foreach (var t in tagRules) t.RepoName = newName;
+
+        // Releases
+        var releases = await db.Releases.Where(r => r.RepoName == actualOldName).ToListAsync();
+        foreach (var r in releases) r.RepoName = newName;
+
+        // Commit statuses
+        var statuses = await db.CommitStatuses.Where(s => s.RepoName == actualOldName).ToListAsync();
+        foreach (var s in statuses) s.RepoName = newName;
+
+        // Projects
+        var projects = await db.Projects.Where(p => p.RepoName == actualOldName).ToListAsync();
+        foreach (var p in projects) p.RepoName = newName;
+
+        // LFS objects
+        var lfs = await db.LfsObjects.Where(l => l.RepoName == actualOldName).ToListAsync();
+        foreach (var l in lfs) l.RepoName = newName;
+
+        // Milestones
+        var milestones = await db.Milestones.Where(m => m.RepoName == actualOldName).ToListAsync();
+        foreach (var m in milestones) m.RepoName = newName;
+
+        // Discussions
+        var discussions = await db.Discussions.Where(d => d.RepoName == actualOldName).ToListAsync();
+        foreach (var d in discussions) d.RepoName = newName;
+
+        // Commit comments
+        var commitComments = await db.CommitComments.Where(c => c.RepoName == actualOldName).ToListAsync();
+        foreach (var c in commitComments) c.RepoName = newName;
+
+        // Time entries
+        var timeEntries = await db.TimeEntries.Where(t => t.RepoName == actualOldName).ToListAsync();
+        foreach (var t in timeEntries) t.RepoName = newName;
+
+        // Issue templates
+        var issueTemplates = await db.IssueTemplates.Where(t => t.RepoName == actualOldName).ToListAsync();
+        foreach (var t in issueTemplates) t.RepoName = newName;
+
+        // Issue dependencies
+        var issueDeps = await db.IssueDependencies.Where(d => d.RepoName == actualOldName).ToListAsync();
+        foreach (var d in issueDeps) d.RepoName = newName;
+
+        // Autolink patterns
+        var autolinks = await db.AutolinkPatterns.Where(a => a.RepoName == actualOldName).ToListAsync();
+        foreach (var a in autolinks) a.RepoName = newName;
+
+        // Mirrors
+        var mirrors = await db.RepositoryMirrors.Where(m => m.RepoName == actualOldName).ToListAsync();
+        foreach (var m in mirrors) m.RepoName = newName;
+
+        // Pinned repositories
+        var pinned = await db.PinnedRepositories.Where(p => p.RepoName == actualOldName).ToListAsync();
+        foreach (var p in pinned) p.RepoName = newName;
+
+        // Security scans
+        var scans = await db.SecurityScans.Where(s => s.RepoName == actualOldName).ToListAsync();
+        foreach (var s in scans) s.RepoName = newName;
+
+        // Security advisories
+        var advisories = await db.SecurityAdvisories.Where(a => a.RepoName == actualOldName).ToListAsync();
+        foreach (var a in advisories) a.RepoName = newName;
+
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Repository renamed from {OldName} to {NewName}", actualOldName, newName);
+
+        await _activityService.RecordActivityAsync(
+            repo.Owner, "renamed_repo", newName,
+            $"Repository renamed from {actualOldName} to {newName}",
+            $"/repo/{newName}");
+
+        return (true, $"Repository renamed from '{actualOldName}' to '{newName}'.");
     }
 }

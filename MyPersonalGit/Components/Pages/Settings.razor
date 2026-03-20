@@ -11,6 +11,7 @@
 @inject ITwoFactorService TwoFactorService
 @inject IWebAuthnService WebAuthnService
 @inject IJSRuntime JS
+@inject ISecretsService SecretsService
 @inject IAuthService AuthService
 @inject IOAuthService OAuthService
 @inject CurrentUserService UserService
@@ -66,6 +67,10 @@ else
                 <a class="list-group-item list-group-item-action @(ActiveTab == "notifications" ? "active" : "")"
                    @onclick='() => SetTab("notifications")' style="cursor: pointer;">
                     <i class="bi bi-bell"></i> @L["Settings_Notifications"]
+                </a>
+                <a class="list-group-item list-group-item-action @(ActiveTab == "secrets" ? "active" : "")"
+                   @onclick='() => SetTab("secrets")' style="cursor: pointer;">
+                    <i class="bi bi-key-fill"></i> Secrets
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "linked" ? "active" : "")"
                    @onclick='() => SetTab("linked")' style="cursor: pointer;">
@@ -603,6 +608,69 @@ else
                     </div>
                 </div>
             }
+            else if (ActiveTab == "secrets")
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-key-fill me-2"></i>User Secrets</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small">User-level secrets are available in all workflow runs for your repositories. Repository-level secrets override these.</p>
+
+                        @if (userSecrets.Any())
+                        {
+                            <div class="list-group mb-3">
+                                @foreach (var secret in userSecrets)
+                                {
+                                    <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                        <div>
+                                            <code class="fw-bold">@secret.Name</code>
+                                            <br /><small class="text-muted">Updated @secret.UpdatedAt.ToString("MMM d, yyyy")</small>
+                                        </div>
+                                        <div class="d-flex gap-1">
+                                            <button class="btn btn-outline-primary btn-sm" @onclick="() => BeginEditUserSecret(secret.Name)">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteUserSecret(secret.Name)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No user secrets configured.</p>
+                        }
+
+                        <div class="border rounded p-3 bg-light-subtle">
+                            <h6 class="small fw-bold mb-2">@(editingUserSecretName != null ? "Update Secret" : "Add Secret")</h6>
+                            <div class="mb-2">
+                                <input type="text" class="form-control form-control-sm" @bind="newUserSecretName"
+                                       placeholder="SECRET_NAME" disabled="@(editingUserSecretName != null)" />
+                            </div>
+                            <div class="mb-2">
+                                <input type="password" class="form-control form-control-sm" @bind="newUserSecretValue" placeholder="Secret value" />
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-gh-primary btn-sm" @onclick="SaveUserSecret"
+                                        disabled="@(string.IsNullOrWhiteSpace(newUserSecretName) || string.IsNullOrWhiteSpace(newUserSecretValue))">
+                                    @(editingUserSecretName != null ? "Update" : "Add Secret")
+                                </button>
+                                @if (editingUserSecretName != null)
+                                {
+                                    <button class="btn btn-outline-secondary btn-sm" @onclick="CancelEditUserSecret">Cancel</button>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(userSecretMessage))
+                            {
+                                <small class="@(userSecretMessageSuccess ? "text-success" : "text-danger") mt-1 d-block">@userSecretMessage</small>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
             else if (ActiveTab == "linked")
             {
                 <div class="card">
@@ -839,6 +907,14 @@ else
     private List<OAuthProviderConfig> enabledOAuthProviders = new();
     private string? LinkedAccountMessage;
 
+    // User secrets
+    private List<UserSecret> userSecrets = new();
+    private string newUserSecretName = "";
+    private string newUserSecretValue = "";
+    private string? editingUserSecretName = null;
+    private string userSecretMessage = "";
+    private bool userSecretMessageSuccess = false;
+
     protected override async Task OnInitializedAsync()
     {
         if (!string.IsNullOrEmpty(Tab))
@@ -881,6 +957,7 @@ else
         enabledOAuthProviders = await OAuthService.GetEnabledProvidersAsync();
         webAuthnCredentials = await WebAuthnService.GetCredentialsAsync(UserService.Username);
         try { webAuthnSupported = await JS.InvokeAsync<bool>("webAuthn.isSupported"); } catch { }
+        try { userSecrets = await SecretsService.GetUserSecretsAsync(UserService.Username); } catch { userSecrets = new(); }
     }
 
     private async Task SaveProfile()
@@ -1155,5 +1232,52 @@ else
         webAuthnCredentials = await WebAuthnService.GetCredentialsAsync(UserService.Username);
         webAuthnMessage = "Passkey removed.";
         webAuthnMessageIsError = false;
+    }
+
+    // --- User secrets methods ---
+    private async Task SaveUserSecret()
+    {
+        userSecretMessage = "";
+        if (string.IsNullOrWhiteSpace(newUserSecretName) || string.IsNullOrWhiteSpace(newUserSecretValue)) return;
+        var result = await SecretsService.SetUserSecretAsync(UserService.Username, newUserSecretName.Trim(), newUserSecretValue);
+        if (result)
+        {
+            userSecretMessage = editingUserSecretName != null ? "Secret updated." : "Secret added.";
+            userSecretMessageSuccess = true;
+            newUserSecretName = "";
+            newUserSecretValue = "";
+            editingUserSecretName = null;
+            userSecrets = await SecretsService.GetUserSecretsAsync(UserService.Username);
+        }
+        else
+        {
+            userSecretMessage = "Failed to save secret. Name must start with a letter or underscore, and contain only A-Z, 0-9, _.";
+            userSecretMessageSuccess = false;
+        }
+    }
+
+    private async Task DeleteUserSecret(string name)
+    {
+        userSecretMessage = "";
+        await SecretsService.DeleteUserSecretAsync(UserService.Username, name);
+        userSecrets = await SecretsService.GetUserSecretsAsync(UserService.Username);
+        userSecretMessage = $"Secret '{name}' deleted.";
+        userSecretMessageSuccess = true;
+    }
+
+    private void BeginEditUserSecret(string name)
+    {
+        editingUserSecretName = name;
+        newUserSecretName = name;
+        newUserSecretValue = "";
+        userSecretMessage = "";
+    }
+
+    private void CancelEditUserSecret()
+    {
+        editingUserSecretName = null;
+        newUserSecretName = "";
+        newUserSecretValue = "";
+        userSecretMessage = "";
     }
 }
