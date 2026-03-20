@@ -280,8 +280,9 @@ public sealed class GitHttpBackendMiddleware
             if (segments.Length >= 1)
             {
                 var repoDir = Path.Combine(projectRoot, segments[0]);
-                var repoName = segments[0].EndsWith(".git", StringComparison.OrdinalIgnoreCase)
-                    ? segments[0][..^4] : segments[0];
+                // Use the directory name as the repo name — this must match the DB name.
+                // Some repos are stored as "MyRepo.git", others as "MyRepo".
+                var repoName = segments[0];
                 var remoteUser = context.User?.Identity?.Name ?? "system";
                 var branch = "main";
                 var sha = "HEAD";
