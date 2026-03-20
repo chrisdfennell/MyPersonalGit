@@ -65,6 +65,7 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **Vista Comparazione** — Confronta branch con conteggio commit ahead/behind e rendering completo delle differenze
 - **Statistiche Linguaggio** — Barra di distribuzione linguaggi in stile GitHub su ogni pagina repository
 - **Branch Protection** — Regole configurabili per review obbligatorie, status check, prevenzione force-push e applicazione dell'approvazione CODEOWNERS
+- **Commit firmati obbligatori** — Regola di branch protection che richiede che tutti i commit siano firmati GPG prima del merge
 - **Tag Protection** — Proteggi i tag dalla cancellazione, aggiornamenti forzati e creazione non autorizzata con matching di pattern glob e liste di autorizzazione per utente
 - **Verifica Firma dei Commit** — Verifica firma GPG sui commit e tag annotati con badge "Verified"/"Signed" nell'interfaccia
 - **Label dei Repository** — Gestisci label con colori personalizzati per repository; le label vengono copiate automaticamente quando si creano repo da template
@@ -80,6 +81,10 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **Risoluzione Conflitti di Merge** — Risolvi i conflitti di merge direttamente nel browser con un editor visuale che mostra viste base/ours/theirs, pulsanti di accettazione rapida e validazione dei marcatori di conflitto
 - **Discussioni** — Conversazioni threaded in stile GitHub Discussions per repository con categorie (Generale, Q&A, Annunci, Idee, Mostra e Racconta, Sondaggi), fissa/blocca, segna come risposta e upvoting
 - **Suggerimenti di Code Review** — La modalità "Suggerisci modifiche" nelle review inline delle PR permette ai revisori di proporre sostituzioni di codice direttamente nel diff
+- **Image Diff** — Confronto di immagini affiancato nelle pull request con cursore di opacità per il diff visivo delle immagini modificate (PNG, JPG, GIF, SVG, WebP)
+- **File Tree nelle PR** — Barra laterale con albero dei file comprimibile nella vista diff delle pull request per una facile navigazione tra i file modificati
+- **Segna file come visti** — Monitoraggio del progresso delle review nelle pull request con checkbox "Visto" per file e un contatore di avanzamento
+- **Evidenziazione sintassi nei Diff** — Colorazione della sintassi in base al linguaggio nei diff delle pull request e delle comparazioni tramite Prism.js
 - **Emoji di Reazione** — Reagisci a issue, PR, discussioni e commenti con pollice su/giù, cuore, risata, evviva, confuso, razzo e occhi
 - **CODEOWNERS** — Assegnazione automatica dei revisori PR basata sui percorsi dei file con applicazione opzionale che richiede l'approvazione CODEOWNERS prima del merge
 - **Template di Repository** — Crea nuovi repository da template con copia automatica di file, label, template di issue e regole di branch protection
@@ -166,6 +171,7 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **Mermaid Diagrams** — Rendering di diagrammi Mermaid nei file Markdown (diagrammi di flusso, diagrammi di sequenza, diagrammi di Gantt, ecc.)
 - **Math Rendering** — Espressioni matematiche LaTeX/KaTeX nel Markdown (sintassi `$inline$` e `$$display$$`)
 - **CSV/TSV Viewer** — I file CSV e TSV vengono visualizzati come tabelle formattate e ordinabili invece di testo grezzo
+- **Jupyter Notebook Rendering** — I file `.ipynb` vengono visualizzati come notebook formattati con celle di codice, Markdown, output e immagini inline
 - **Repository Transfer** — Trasferisci la proprietà del repository a un altro utente o organizzazione dalle Impostazioni del repository
 - **Default Branch Configuration** — Cambia il branch predefinito per repository dalla scheda Impostazioni
 

@@ -355,6 +355,12 @@ else
                                     @RenderCsvTable(fileContent, Path?.EndsWith(".tsv", StringComparison.OrdinalIgnoreCase) == true ? '\t' : ',')
                                 </div>
                             }
+                            else if (Path?.EndsWith(".ipynb", StringComparison.OrdinalIgnoreCase) == true && !showRaw)
+                            {
+                                <div class="p-4">
+                                    @RenderNotebook(fileContent)
+                                </div>
+                            }
                             else
                             {
                                 <pre class="m-0 line-numbers" style="font-size: 13px; line-height: 1.5; overflow-x: auto; padding: 0.5em 0.5em 0.5em 3.8em;"><code class="@GetPrismLanguageClass(Path)">@fileContent</code></pre>
@@ -1031,6 +1037,7 @@ else
                                                 @if (rule.PreventDeletion) { <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle me-1">No deletion</span> }
                                                 @if (rule.RequireLinearHistory) { <span class="badge bg-secondary bg-opacity-10 text-secondary border me-1">Linear history</span> }
                                                 @if (rule.RequireCodeOwnersApproval) { <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle me-1">CODEOWNERS</span> }
+                                                @if (rule.RequireSignedCommits) { <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle me-1">@L["Repo_SignedCommits"]</span> }
                                             </div>
                                         </div>
                                         @if (UserService.IsLoggedIn)
@@ -1084,6 +1091,10 @@ else
                                         <div class="form-check mb-2">
                                             <input type="checkbox" class="form-check-input" id="requireCodeOwners" @bind="newProtectionRule.RequireCodeOwnersApproval" />
                                             <label class="form-check-label small" for="requireCodeOwners">Require CODEOWNERS approval</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" class="form-check-input" id="bpRequireSignedCommits" @bind="newProtectionRule.RequireSignedCommits" />
+                                            <label class="form-check-label small" for="bpRequireSignedCommits">@L["Repo_RequireSignedCommits"]</label>
                                         </div>
                                     </div>
                                 </div>
@@ -3845,6 +3856,202 @@ else
         }
         fields.Add(current.ToString());
         return fields;
+    }
+
+    private MarkupString RenderNotebook(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return new MarkupString("<p class='text-muted'>Empty notebook</p>");
+
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            // Determine kernel language from metadata
+            var language = "python";
+            if (root.TryGetProperty("metadata", out var metadata) &&
+                metadata.TryGetProperty("kernelspec", out var kernelspec) &&
+                kernelspec.TryGetProperty("language", out var lang))
+            {
+                language = lang.GetString() ?? "python";
+            }
+            else if (root.TryGetProperty("metadata", out var meta2) &&
+                     meta2.TryGetProperty("language_info", out var langInfo) &&
+                     langInfo.TryGetProperty("name", out var langName))
+            {
+                language = langName.GetString() ?? "python";
+            }
+
+            if (!root.TryGetProperty("cells", out var cells))
+                return new MarkupString("<p class='text-muted'>No cells found in notebook</p>");
+
+            var sb = new System.Text.StringBuilder();
+            sb.Append("<style>");
+            sb.Append(".nb-cell { margin-bottom: 16px; }");
+            sb.Append(".nb-code-cell { background: #f8f9fa; border: 1px solid #e1e4e8; border-radius: 6px; overflow: hidden; }");
+            sb.Append(".nb-label { font-family: monospace; font-size: 12px; color: #6a737d; padding: 8px 12px 0 12px; user-select: none; }");
+            sb.Append(".nb-source pre { margin: 0; padding: 8px 12px; font-size: 13px; line-height: 1.5; overflow-x: auto; background: transparent; }");
+            sb.Append(".nb-output { border-top: 1px solid #e1e4e8; padding: 8px 12px; background: #fff; }");
+            sb.Append(".nb-output pre { margin: 0; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }");
+            sb.Append(".nb-output img { max-width: 100%; }");
+            sb.Append(".nb-markdown { padding: 12px 16px; }");
+            sb.Append(".nb-raw pre { margin: 0; padding: 8px 12px; font-size: 13px; line-height: 1.5; background: #f8f9fa; border: 1px solid #e1e4e8; border-radius: 6px; }");
+            sb.Append("</style>");
+
+            int codeIndex = 1;
+            foreach (var cell in cells.EnumerateArray())
+            {
+                var cellType = cell.TryGetProperty("cell_type", out var ct) ? ct.GetString() : "code";
+
+                // Get source text (array of lines or single string)
+                var source = "";
+                if (cell.TryGetProperty("source", out var srcProp))
+                {
+                    if (srcProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+                    {
+                        var srcSb = new System.Text.StringBuilder();
+                        foreach (var line in srcProp.EnumerateArray())
+                            srcSb.Append(line.GetString());
+                        source = srcSb.ToString();
+                    }
+                    else if (srcProp.ValueKind == System.Text.Json.JsonValueKind.String)
+                    {
+                        source = srcProp.GetString() ?? "";
+                    }
+                }
+
+                if (cellType == "markdown")
+                {
+                    sb.Append("<div class=\"nb-cell nb-markdown markdown-body\">");
+                    var mdHtml = ConvertMarkdownToHtml(source);
+                    sb.Append(mdHtml.Value);
+                    sb.Append("</div>");
+                }
+                else if (cellType == "code")
+                {
+                    int execCount = 0;
+                    if (cell.TryGetProperty("execution_count", out var ec) && ec.ValueKind == System.Text.Json.JsonValueKind.Number)
+                        execCount = ec.GetInt32();
+                    else
+                        execCount = codeIndex;
+
+                    sb.Append("<div class=\"nb-cell nb-code-cell\">");
+                    sb.Append($"<div class=\"nb-label\">In [{execCount}]:</div>");
+                    sb.Append("<div class=\"nb-source\"><pre><code class=\"language-");
+                    sb.Append(System.Net.WebUtility.HtmlEncode(language));
+                    sb.Append("\">");
+                    sb.Append(System.Net.WebUtility.HtmlEncode(source));
+                    sb.Append("</code></pre></div>");
+
+                    // Render outputs
+                    if (cell.TryGetProperty("outputs", out var outputs))
+                    {
+                        foreach (var output in outputs.EnumerateArray())
+                        {
+                            var outputType = output.TryGetProperty("output_type", out var ot) ? ot.GetString() : "";
+
+                            if (outputType == "stream")
+                            {
+                                var text = GetNotebookOutputText(output, "text");
+                                if (!string.IsNullOrEmpty(text))
+                                {
+                                    sb.Append("<div class=\"nb-output\">");
+                                    sb.Append("<pre>");
+                                    sb.Append(System.Net.WebUtility.HtmlEncode(text));
+                                    sb.Append("</pre></div>");
+                                }
+                            }
+                            else if (outputType == "execute_result" || outputType == "display_data")
+                            {
+                                sb.Append("<div class=\"nb-output\">");
+                                sb.Append($"<div class=\"nb-label\">Out [{execCount}]:</div>");
+
+                                if (output.TryGetProperty("data", out var data))
+                                {
+                                    // Prefer HTML, then image, then plain text
+                                    if (data.TryGetProperty("text/html", out var htmlData))
+                                    {
+                                        sb.Append(GetNotebookMultilineString(htmlData));
+                                    }
+                                    else if (data.TryGetProperty("image/png", out var imgData))
+                                    {
+                                        var imgStr = imgData.ValueKind == System.Text.Json.JsonValueKind.Array
+                                            ? string.Join("", NotebookEnumerateStrings(imgData))
+                                            : imgData.GetString() ?? "";
+                                        sb.Append($"<img src=\"data:image/png;base64,{imgStr.Trim()}\" />");
+                                    }
+                                    else if (data.TryGetProperty("text/plain", out var plainData))
+                                    {
+                                        sb.Append("<pre>");
+                                        sb.Append(System.Net.WebUtility.HtmlEncode(GetNotebookMultilineString(plainData)));
+                                        sb.Append("</pre>");
+                                    }
+                                }
+                                sb.Append("</div>");
+                            }
+                            else if (outputType == "error")
+                            {
+                                var traceback = "";
+                                if (output.TryGetProperty("traceback", out var tb) && tb.ValueKind == System.Text.Json.JsonValueKind.Array)
+                                {
+                                    var tbSb = new System.Text.StringBuilder();
+                                    foreach (var tbLine in tb.EnumerateArray())
+                                        tbSb.AppendLine(tbLine.GetString());
+                                    traceback = tbSb.ToString();
+                                }
+                                if (!string.IsNullOrEmpty(traceback))
+                                {
+                                    // Strip ANSI escape codes
+                                    traceback = System.Text.RegularExpressions.Regex.Replace(traceback, @"\x1B\[[0-9;]*m", "");
+                                    sb.Append("<div class=\"nb-output\" style=\"background: #fff5f5;\">");
+                                    sb.Append("<pre style=\"color: #d32f2f;\">");
+                                    sb.Append(System.Net.WebUtility.HtmlEncode(traceback));
+                                    sb.Append("</pre></div>");
+                                }
+                            }
+                        }
+                    }
+                    sb.Append("</div>");
+                    codeIndex++;
+                }
+                else if (cellType == "raw")
+                {
+                    sb.Append("<div class=\"nb-cell\"><div class=\"nb-raw\"><pre>");
+                    sb.Append(System.Net.WebUtility.HtmlEncode(source));
+                    sb.Append("</pre></div></div>");
+                }
+            }
+            return new MarkupString(sb.ToString());
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            return new MarkupString($"<p class='text-danger'>Failed to parse notebook: {System.Net.WebUtility.HtmlEncode(ex.Message)}</p>");
+        }
+    }
+
+    private static string GetNotebookOutputText(System.Text.Json.JsonElement output, string property)
+    {
+        if (!output.TryGetProperty(property, out var prop)) return "";
+        return GetNotebookMultilineString(prop);
+    }
+
+    private static string GetNotebookMultilineString(System.Text.Json.JsonElement element)
+    {
+        if (element.ValueKind == System.Text.Json.JsonValueKind.Array)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var line in element.EnumerateArray())
+                sb.Append(line.GetString());
+            return sb.ToString();
+        }
+        return element.GetString() ?? "";
+    }
+
+    private static IEnumerable<string> NotebookEnumerateStrings(System.Text.Json.JsonElement array)
+    {
+        foreach (var item in array.EnumerateArray())
+            yield return item.GetString() ?? "";
     }
 
     private MarkupString ConvertMarkdownToHtml(string markdown)

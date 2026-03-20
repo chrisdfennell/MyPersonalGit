@@ -65,6 +65,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Karşılaştırma Görünümü** — İleri/geri commit sayıları ve tam fark görüntüleme ile dalları karşılaştırın
 - **Dil İstatistikleri** — Her depo sayfasında GitHub tarzı dil dağılım çubuğu
 - **Dal Koruması** — Zorunlu incelemeler, durum kontrolleri, force-push önleme ve CODEOWNERS onay zorunluluğu için yapılandırılabilir kurallar
+- **İmzalı Commit Zorunluluğu** — Birleştirme öncesinde tüm commit'lerin GPG ile imzalanmasını gerektiren dal koruma kuralı
 - **Etiket Koruması** — Glob kalıp eşleştirme ve kullanıcı bazlı izin listeleri ile etiketleri silme, zorla güncelleme ve yetkisiz oluşturmadan koruma
 - **Commit İmza Doğrulama** — Commitler ve açıklamalı etiketlerde GPG imza doğrulama, arayüzde "Verified" / "Signed" rozetleri
 - **Depo Etiketleri** — Depo başına özel renklerle etiket yönetimi; şablonlardan depo oluştururken etiketler otomatik olarak kopyalanır
@@ -80,6 +81,10 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Birleştirme Çakışması Çözümü** — Base/ours/theirs görünümleri, hızlı kabul düğmeleri ve çakışma işaretçisi doğrulaması ile tarayıcıda doğrudan birleştirme çakışmalarını çözün
 - **Tartışmalar** — Kategoriler (Genel, Soru-Cevap, Duyurular, Fikirler, Göster ve Anlat, Anketler), sabitleme/kilitleme, yanıt olarak işaretleme ve oylama ile depo başına GitHub Discussions tarzı zincirleme konuşmalar
 - **Kod İnceleme Önerileri** — PR satır içi incelemelerinde "Değişiklik öner" modu, incelemecilerin doğrudan fark içinde kod değişikliği önermesine olanak tanır
+- **Image Diff** — Pull request'lerde değiştirilen görsellerin (PNG, JPG, GIF, SVG, WebP) görsel karşılaştırması için opaklık kaydırıcısı ile yan yana görsel karşılaştırma
+- **PR'larda File Tree** — Değiştirilen dosyalar arasında kolay gezinme için pull request fark görünümünde daraltılabilir dosya ağacı kenar çubuğu
+- **Dosyaları Görüldü Olarak İşaretle** — Her dosya için "Görüldü" onay kutuları ve ilerleme sayacı ile pull request'lerde inceleme ilerlemesini takip etme
+- **Diff Söz Dizimi Vurgulama** — Prism.js aracılığıyla pull request ve karşılaştırma diff'lerinde dile duyarlı söz dizimi renklendirmesi
 - **Emoji Tepkileri** — Sorunlara, PR'lara, tartışmalara ve yorumlara beğeni/beğenmeme, kalp, gülen, kutlama, şaşkınlık, roket ve göz tepkileri
 - **CODEOWNERS** — Birleştirme öncesi CODEOWNERS onayı gerektirme seçeneğiyle dosya yollarına göre PR incelemecilerini otomatik atama
 - **Depo Şablonları** — Dosyaların, etiketlerin, sorun şablonlarının ve dal koruma kurallarının otomatik kopyalanması ile şablonlardan yeni depolar oluşturun
@@ -166,6 +171,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Mermaid Diyagramları** — Markdown dosyalarında Mermaid diyagram oluşturma (akış şemaları, sıralama diyagramları, Gantt grafikleri vb.)
 - **Matematik Oluşturma** — Markdown'da LaTeX/KaTeX matematik ifadeleri (`$inline$` ve `$$display$$` söz dizimi)
 - **CSV/TSV Görüntüleyici** — CSV ve TSV dosyaları düz metin yerine biçimlendirilmiş, sıralanabilir tablolar olarak görüntülenir
+- **Jupyter Notebook Görüntüleme** — `.ipynb` dosyaları kod hücreleri, Markdown, çıktılar ve satır içi görsellerle biçimlendirilmiş not defterleri olarak görüntülenir
 - **Depo Transferi** — Depo ayarlarından depo sahipliğini başka bir kullanıcıya veya kuruluşa aktarma
 - **Varsayılan Dal Yapılandırması** — Ayarlar sekmesinden depo başına varsayılan dalı değiştirme
 

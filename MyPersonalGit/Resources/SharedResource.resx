@@ -341,6 +341,14 @@
   <data name="PR_TitlePlaceholder" xml:space="preserve"><value>Pull request title</value></data>
   <data name="PR_Unified" xml:space="preserve"><value>Unified</value></data>
   <data name="PR_ViewComparison" xml:space="preserve"><value>View comparison</value></data>
+  <data name="PR_Files" xml:space="preserve"><value>Files</value></data>
+  <data name="PR_Viewed" xml:space="preserve"><value>Viewed</value></data>
+  <data name="PR_FilesViewed" xml:space="preserve"><value>files viewed</value></data>
+  <data name="PR_Before" xml:space="preserve"><value>Before</value></data>
+  <data name="PR_After" xml:space="preserve"><value>After</value></data>
+  <data name="PR_ImageDiff" xml:space="preserve"><value>Image comparison</value></data>
+  <data name="Repo_RequireSignedCommits" xml:space="preserve"><value>Require signed commits — all commits must be GPG-signed</value></data>
+  <data name="Repo_SignedCommits" xml:space="preserve"><value>Signed commits</value></data>
 
   <!-- Compare -->
   <data name="Compare_Base" xml:space="preserve"><value>Base</value></data>

@@ -412,6 +412,10 @@
                                         Showing <strong>@filePatches.Count</strong> changed file@(filePatches.Count != 1 ? "s" : "")
                                         with <span class="text-success fw-bold">@totalAdded additions</span> and
                                         <span class="text-danger fw-bold">@totalDeleted deletions</span>
+                                        @if (viewedFiles.Count > 0)
+                                        {
+                                            <span class="ms-2 badge bg-info bg-opacity-10 text-info">@viewedFiles.Count/@filePatches.Count @L["PR_FilesViewed"]</span>
+                                        }
                                     </span>
                                     <div class="btn-group btn-group-sm">
                                         <button class="btn @(diffMode == "unified" ? "btn-secondary" : "btn-outline-secondary")" @onclick='() => diffMode = "unified"'>@L["PR_Unified"]</button>
@@ -419,12 +423,59 @@
                                     </div>
                                 </div>
 
-                                @foreach (var patch in filePatches)
+                                <div class="row">
+                                    @* File tree sidebar *@
+                                    <div class="col-md-3">
+                                        <div class="card mb-3 position-sticky" style="top: 1rem;">
+                                            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                                                <span class="fw-semibold small">@L["PR_Files"]</span>
+                                                <button class="btn btn-sm btn-link p-0 text-muted" @onclick="() => showFileTree = !showFileTree">
+                                                    <i class="bi @(showFileTree ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                                                </button>
+                                            </div>
+                                            @if (showFileTree)
+                                            {
+                                                <div class="list-group list-group-flush" style="max-height: 70vh; overflow-y: auto;">
+                                                    @for (int fi = 0; fi < filePatches.Count; fi++)
+                                                    {
+                                                        var idx = fi;
+                                                        var fp = filePatches[fi];
+                                                        var statusIcon = fp.LinesDeleted == 0 && fp.LinesAdded > 0 ? "+" : fp.LinesAdded == 0 && fp.LinesDeleted > 0 ? "-" : "~";
+                                                        var statusColor = statusIcon == "+" ? "text-success" : statusIcon == "-" ? "text-danger" : "text-warning";
+                                                        var fileName = System.IO.Path.GetFileName(fp.Path);
+                                                        var dirName = System.IO.Path.GetDirectoryName(fp.Path)?.Replace("\\", "/");
+                                                        <a href="#diff-@idx" class="list-group-item list-group-item-action py-1 px-2 @(viewedFiles.Contains(fp.Path) ? "opacity-50" : "")" @onclick="() => ScrollToDiff(idx)" @onclick:preventDefault>
+                                                            <div class="d-flex align-items-center gap-1">
+                                                                <span class="fw-bold @statusColor" style="width: 14px; text-align: center; font-size: 13px;">@statusIcon</span>
+                                                                <div class="text-truncate" style="font-size: 12px;">
+                                                                    @if (!string.IsNullOrEmpty(dirName))
+                                                                    {
+                                                                        <span class="text-muted">@dirName/</span>
+                                                                    }
+                                                                    <span class="fw-semibold">@fileName</span>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                    @* Diff content *@
+                                    <div class="col-md-9">
+
+                                @for (int pi = 0; pi < filePatches.Count; pi++)
                                 {
-                                    <div class="border rounded-3 mb-3 overflow-hidden">
+                                    var patch = filePatches[pi];
+                                    var patchIndex = pi;
+                                    <div id="diff-@patchIndex" class="border rounded-3 mb-3 overflow-hidden" style="@(viewedFiles.Contains(patch.Path) ? "opacity: 0.5;" : "")">
                                         <div class="d-flex justify-content-between align-items-center px-3 py-2 bg-light-subtle border-bottom">
                                             <span class="font-monospace small fw-semibold">@patch.Path</span>
-                                            <div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="form-check form-check-inline mb-0">
+                                                    <input class="form-check-input" type="checkbox" id="viewed-@patchIndex" checked="@viewedFiles.Contains(patch.Path)" @onchange="() => ToggleViewed(patch.Path)" />
+                                                    <label class="form-check-label small text-muted" for="viewed-@patchIndex">@L["PR_Viewed"]</label>
+                                                </div>
                                                 <span class="badge bg-success bg-opacity-10 text-success me-1">+@patch.LinesAdded</span>
                                                 <span class="badge bg-danger bg-opacity-10 text-danger">-@patch.LinesDeleted</span>
                                             </div>
@@ -448,7 +499,7 @@
                                                                     }
                                                                     @(row.Sign == ' ' ? "" : row.Sign.ToString())
                                                                 </td>
-                                                                <td class="px-2 diff-text" style="white-space: pre-wrap; word-break: break-all;">@row.Content</td>
+                                                                <td class="px-2 diff-text" style="white-space: pre-wrap; word-break: break-all;"><code class="language-@GetDiffLanguage(patch.Path)">@row.Content</code></td>
                                                             </tr>
                                                             @* Inline comments for this line *@
                                                             @foreach (var comment in (lineNum > 0 ? GetCommentsForLine(patch.Path, lineNum, side) : new()))
@@ -557,7 +608,7 @@
                                                                     }
                                                                     @(pair.LeftLineNum > 0 ? pair.LeftLineNum.ToString() : "")
                                                                 </td>
-                                                                <td class="px-2 @(pair.Left == null ? "diff-empty" : pair.Left.StartsWith("-") ? "diff-removed" : "diff-context")" style="width: 50%; white-space: pre-wrap; word-break: break-all;">@(pair.Left != null && pair.Left.Length > 1 ? pair.Left.Substring(1) : pair.Left ?? "")</td>
+                                                                <td class="px-2 @(pair.Left == null ? "diff-empty" : pair.Left.StartsWith("-") ? "diff-removed" : "diff-context")" style="width: 50%; white-space: pre-wrap; word-break: break-all;"><code class="language-@GetDiffLanguage(patch.Path)">@(pair.Left != null && pair.Left.Length > 1 ? pair.Left.Substring(1) : pair.Left ?? "")</code></td>
                                                                 <td class="text-muted text-end px-1 diff-linenum @(pair.Right != null && pair.Right.StartsWith("+") ? "diff-added" : "diff-context")" style="width: 40px; user-select: none;">
                                                                     @if (pair.RightLineNum > 0 && UserService.IsLoggedIn)
                                                                     {
@@ -565,7 +616,7 @@
                                                                     }
                                                                     @(pair.RightLineNum > 0 ? pair.RightLineNum.ToString() : "")
                                                                 </td>
-                                                                <td class="px-2 @(pair.Right == null ? "diff-empty" : pair.Right.StartsWith("+") ? "diff-added" : "diff-context")" style="width: 50%; white-space: pre-wrap; word-break: break-all;">@(pair.Right != null && pair.Right.Length > 1 ? pair.Right.Substring(1) : pair.Right ?? "")</td>
+                                                                <td class="px-2 @(pair.Right == null ? "diff-empty" : pair.Right.StartsWith("+") ? "diff-added" : "diff-context")" style="width: 50%; white-space: pre-wrap; word-break: break-all;"><code class="language-@GetDiffLanguage(patch.Path)">@(pair.Right != null && pair.Right.Length > 1 ? pair.Right.Substring(1) : pair.Right ?? "")</code></td>
                                                             </tr>
                                                             @* Inline comments for left (removed) side *@
                                                             @if (pair.LeftLineNum > 0 && pair.Left != null && pair.Left.StartsWith("-"))
@@ -648,8 +699,36 @@
                                                 </table>
                                             }
                                         </div>
+                                        @* Image diff for image files *@
+                                        @if (IsImageFile(patch.Path))
+                                        {
+                                            <div class="p-3 border-top">
+                                                <div class="row">
+                                                    <div class="col-md-6 text-center">
+                                                        <span class="badge bg-danger mb-2">@L["PR_Before"]</span>
+                                                        <div class="border rounded p-2">
+                                                            <img src="/raw/@RepoName/@(patch.Path)?branch=@currentPR.TargetBranch" alt="Before" class="img-fluid" style="max-height: 400px; opacity: @((100 - imageDiffOpacity) / 100.0);" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 text-center">
+                                                        <span class="badge bg-success mb-2">@L["PR_After"]</span>
+                                                        <div class="border rounded p-2">
+                                                            <img src="/raw/@RepoName/@(patch.Path)?branch=@currentPR.SourceBranch" alt="After" class="img-fluid" style="max-height: 400px; opacity: @(imageDiffOpacity / 100.0);" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-center justify-content-center mt-2 gap-2">
+                                                    <span class="small text-muted">@L["PR_Before"]</span>
+                                                    <input type="range" class="form-range" style="width: 200px;" min="0" max="100" @bind="imageDiffOpacity" @bind:event="oninput" />
+                                                    <span class="small text-muted">@L["PR_After"]</span>
+                                                </div>
+                                            </div>
+                                        }
                                     </div>
                                 }
+
+                                    </div>@* end col-md-9 *@
+                                </div>@* end row *@
                             }
                             else
                             {
@@ -908,6 +987,9 @@
     [data-bs-theme="dark"] .markdown-body a { color: #58a6ff; }
     [data-bs-theme="dark"] .markdown-body h1, [data-bs-theme="dark"] .markdown-body h2 { border-bottom-color: #30363d; }
     [data-bs-theme="dark"] .markdown-body hr { background-color: #30363d; }
+    .diff-text code { background: transparent; padding: 0; margin: 0; font-size: inherit; border-radius: 0; display: inline; white-space: pre-wrap; word-break: break-all; }
+    .file-tree-sidebar .list-group-item { border-left: 3px solid transparent; }
+    .file-tree-sidebar .list-group-item:hover { border-left-color: var(--bs-primary); }
 </style>
 
 @code {
@@ -969,6 +1051,11 @@
     private const string SideLeft = "LEFT";
     private const string SideRight = "RIGHT";
 
+    // File tree & viewed state
+    private bool showFileTree = true;
+    private HashSet<string> viewedFiles = new();
+    private int imageDiffOpacity = 50;
+
     private static readonly MarkdownPipeline _mdPipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
         .Build();
@@ -993,7 +1080,28 @@
         if (currentPR != null && filePatches.Any())
         {
             try { await JS.InvokeVoidAsync("diffHighlight.apply"); } catch { }
+            if (activeTab == "files")
+            {
+                try { await JS.InvokeVoidAsync("Prism.highlightAll"); } catch { }
+            }
         }
+    }
+
+    private void ToggleViewed(string path)
+    {
+        if (!viewedFiles.Remove(path))
+            viewedFiles.Add(path);
+    }
+
+    private async Task ScrollToDiff(int index)
+    {
+        try { await JS.InvokeVoidAsync("eval", $"document.getElementById('diff-{index}')?.scrollIntoView({{behavior:'smooth', block:'start'}})"); } catch { }
+    }
+
+    private static bool IsImageFile(string path)
+    {
+        var ext = System.IO.Path.GetExtension(path)?.ToLowerInvariant();
+        return ext is ".png" or ".jpg" or ".jpeg" or ".gif" or ".svg" or ".webp" or ".bmp";
     }
 
     private string GetDiffLanguage(string? filePath)

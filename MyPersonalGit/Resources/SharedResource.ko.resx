@@ -341,6 +341,14 @@
   <data name="PR_TitlePlaceholder" xml:space="preserve"><value>Pull request 제목</value></data>
   <data name="PR_Unified" xml:space="preserve"><value>통합</value></data>
   <data name="PR_ViewComparison" xml:space="preserve"><value>비교 보기</value></data>
+  <data name="PR_Files" xml:space="preserve"><value>파일</value></data>
+  <data name="PR_Viewed" xml:space="preserve"><value>확인됨</value></data>
+  <data name="PR_FilesViewed" xml:space="preserve"><value>개 파일 확인됨</value></data>
+  <data name="PR_Before" xml:space="preserve"><value>이전</value></data>
+  <data name="PR_After" xml:space="preserve"><value>이후</value></data>
+  <data name="PR_ImageDiff" xml:space="preserve"><value>이미지 비교</value></data>
+  <data name="Repo_RequireSignedCommits" xml:space="preserve"><value>서명된 커밋 필수 — 모든 커밋은 GPG 서명이 필요합니다</value></data>
+  <data name="Repo_SignedCommits" xml:space="preserve"><value>서명된 커밋</value></data>
 
   <!-- Compare -->
   <data name="Compare_Base" xml:space="preserve"><value>베이스</value></data>

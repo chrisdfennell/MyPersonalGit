@@ -65,6 +65,7 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Vergleichsansicht** — Vergleichen Sie Branches mit Ahead/Behind-Commit-Zählern und vollständigem Diff-Rendering
 - **Sprachstatistiken** — GitHub-ähnliche Sprachaufschlüsselung auf jeder Repository-Seite
 - **Branch Protection** — Konfigurierbare Regeln für erforderliche Reviews, Status-Checks, Schutz vor Force-Push und CODEOWNERS-Genehmigungsdurchsetzung
+- **Signierte Commits erforderlich** — Branch-Protection-Regel, die verlangt, dass alle Commits GPG-signiert sind, bevor sie gemergt werden
 - **Tag Protection** — Schützen Sie Tags vor Löschung, erzwungenen Updates und unbefugter Erstellung mit Glob-Pattern-Matching und benutzerspezifischen Freigabelisten
 - **Commit-Signatur-Verifizierung** — GPG-Signaturverifizierung bei Commits und annotierten Tags mit "Verified"/"Signed"-Badges in der Oberfläche
 - **Repository Labels** — Verwalten Sie Labels mit benutzerdefinierten Farben pro Repository; Labels werden automatisch kopiert, wenn Repos aus Vorlagen erstellt werden
@@ -80,6 +81,10 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Merge-Konfliktlösung** — Lösen Sie Merge-Konflikte direkt im Browser mit einem visuellen Editor, der Base/Ours/Theirs-Ansichten, Schnellauswahl-Buttons und Konfliktmarker-Validierung zeigt
 - **Diskussionen** — GitHub-Discussions-ähnliche Thread-Konversationen pro Repository mit Kategorien (Allgemein, Fragen & Antworten, Ankündigungen, Ideen, Zeig & Erzähl, Umfragen), Pinnen/Sperren, als Antwort markieren und Upvoting
 - **Code-Review-Vorschläge** — Der "Änderungen vorschlagen"-Modus in PR-Inline-Reviews ermöglicht es Reviewern, Code-Ersetzungen direkt im Diff vorzuschlagen
+- **Image Diff** — Seite-an-Seite-Bildvergleich in Pull Requests mit Opazitätsregler für visuelles Diffing geänderter Bilder (PNG, JPG, GIF, SVG, WebP)
+- **File Tree in PRs** — Einklappbare Dateibaum-Seitenleiste in der Pull-Request-Diff-Ansicht zur einfachen Navigation zwischen geänderten Dateien
+- **Dateien als gesehen markieren** — Fortschrittsanzeige für Reviews in Pull Requests mit "Gesehen"-Checkboxen pro Datei und einem Fortschrittszähler
+- **Diff-Syntaxhervorhebung** — Sprachbewusste Syntaxfärbung in Pull-Request- und Vergleichs-Diffs über Prism.js
 - **Reaktions-Emoji** — Reagieren Sie auf Issues, PRs, Diskussionen und Kommentare mit Daumen hoch/runter, Herz, Lachen, Hurra, Verwirrt, Rakete und Augen
 - **CODEOWNERS** — Automatische Zuweisung von PR-Reviewern basierend auf Dateipfaden mit optionaler Durchsetzung, die CODEOWNERS-Genehmigung vor dem Merge erfordert
 - **Repository-Vorlagen** — Erstellen Sie neue Repositories aus Vorlagen mit automatischem Kopieren von Dateien, Labels, Issue-Vorlagen und Branch-Protection-Regeln
@@ -166,6 +171,7 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Mermaid Diagrams** — Mermaid-Diagramm-Rendering in Markdown-Dateien (Flussdiagramme, Sequenzdiagramme, Gantt-Diagramme usw.)
 - **Math Rendering** — LaTeX/KaTeX-Mathematikausdrücke in Markdown (`$inline$`- und `$$display$$`-Syntax)
 - **CSV/TSV Viewer** — CSV- und TSV-Dateien werden als formatierte, sortierbare Tabellen anstatt als Rohtext dargestellt
+- **Jupyter Notebook Rendering** — `.ipynb`-Dateien werden als formatierte Notebooks mit Code-Zellen, Markdown, Ausgaben und Inline-Bildern dargestellt
 - **Repository Transfer** — Übertragen Sie die Repository-Inhaberschaft an einen anderen Benutzer oder eine Organisation über die Repository-Einstellungen
 - **Default Branch Configuration** — Ändern Sie den Standard-Branch pro Repository über den Einstellungen-Tab
 

@@ -341,6 +341,14 @@
   <data name="PR_TitlePlaceholder" xml:space="preserve"><value>Pull requestのタイトル</value></data>
   <data name="PR_Unified" xml:space="preserve"><value>統合</value></data>
   <data name="PR_ViewComparison" xml:space="preserve"><value>比較を表示</value></data>
+  <data name="PR_Files" xml:space="preserve"><value>ファイル</value></data>
+  <data name="PR_Viewed" xml:space="preserve"><value>確認済み</value></data>
+  <data name="PR_FilesViewed" xml:space="preserve"><value>件のファイルを確認済み</value></data>
+  <data name="PR_Before" xml:space="preserve"><value>変更前</value></data>
+  <data name="PR_After" xml:space="preserve"><value>変更後</value></data>
+  <data name="PR_ImageDiff" xml:space="preserve"><value>画像の比較</value></data>
+  <data name="Repo_RequireSignedCommits" xml:space="preserve"><value>署名付きコミットを必須にする — すべてのコミットはGPG署名が必要です</value></data>
+  <data name="Repo_SignedCommits" xml:space="preserve"><value>署名付きコミット</value></data>
 
   <!-- Compare -->
   <data name="Compare_Base" xml:space="preserve"><value>ベース</value></data>
