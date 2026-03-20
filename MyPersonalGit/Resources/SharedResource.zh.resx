@@ -945,4 +945,8 @@
   <data name="Issues_TransferDescription" xml:space="preserve"><value>将此议题移动到另一个仓库。评论和匹配的标签将被复制。</value></data>
   <data name="Issues_TargetRepository" xml:space="preserve"><value>目标仓库</value></data>
   <data name="Issues_TargetRepoPlaceholder" xml:space="preserve"><value>例如 MyOtherRepo</value></data>
+  <!-- Contributing / Download -->
+  <data name="Issues_ContributingAlert" xml:space="preserve"><value>请在提交议题前阅读贡献指南。</value></data>
+  <data name="Issues_ViewContributing" xml:space="preserve"><value>查看贡献指南</value></data>
+  <data name="Repo_Download" xml:space="preserve"><value>下载</value></data>
 </root>

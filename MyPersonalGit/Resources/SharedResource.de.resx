@@ -945,4 +945,8 @@
   <data name="Issues_TransferDescription" xml:space="preserve"><value>Dieses Issue in ein anderes Repository verschieben. Kommentare und passende Labels werden kopiert.</value></data>
   <data name="Issues_TargetRepository" xml:space="preserve"><value>Ziel-Repository</value></data>
   <data name="Issues_TargetRepoPlaceholder" xml:space="preserve"><value>z.B. MeinAnderesRepo</value></data>
+  <!-- Contributing / Download -->
+  <data name="Issues_ContributingAlert" xml:space="preserve"><value>Bitte lesen Sie die Beitragsrichtlinien, bevor Sie ein Issue erstellen.</value></data>
+  <data name="Issues_ViewContributing" xml:space="preserve"><value>Beitragsrichtlinien anzeigen</value></data>
+  <data name="Repo_Download" xml:space="preserve"><value>Herunterladen</value></data>
 </root>

@@ -945,4 +945,8 @@
   <data name="Issues_TransferDescription" xml:space="preserve"><value>このイシューを別のリポジトリに移動します。コメントと一致するラベルがコピーされます。</value></data>
   <data name="Issues_TargetRepository" xml:space="preserve"><value>移動先リポジトリ</value></data>
   <data name="Issues_TargetRepoPlaceholder" xml:space="preserve"><value>例: MyOtherRepo</value></data>
+  <!-- Contributing / Download -->
+  <data name="Issues_ContributingAlert" xml:space="preserve"><value>イシューを送信する前に、コントリビューションガイドラインをお読みください。</value></data>
+  <data name="Issues_ViewContributing" xml:space="preserve"><value>コントリビューションガイドラインを見る</value></data>
+  <data name="Repo_Download" xml:space="preserve"><value>ダウンロード</value></data>
 </root>

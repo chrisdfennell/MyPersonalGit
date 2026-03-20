@@ -333,6 +333,9 @@ else
                             {
                                 <button class="btn btn-light btn-sm border" @onclick="() => showDeleteModal = true"><i class="bi bi-trash me-1 text-danger"></i> @L["Repo_Delete"]</button>
                             }
+                            <a href="/raw/@RepoName/@(Path)?branch=@currentBranch&download=true" class="btn btn-light btn-sm border">
+                                <i class="bi bi-download me-1"></i> @L["Repo_Download"]
+                            </a>
                             <button class="btn @(showRaw ? "btn-secondary" : "btn-light") btn-sm border" @onclick="() => showRaw = !showRaw">
                                 <i class="bi bi-code-square me-1"></i> Raw
                             </button>
@@ -525,7 +528,7 @@ else
 
                 </div>
 
-                @if ((languageStats.Any() || releases.Any() || !string.IsNullOrEmpty(repoDescription) || settingsTopics.Any()) && string.IsNullOrEmpty(fileSearchTerm))
+                @if ((languageStats.Any() || releases.Any() || !string.IsNullOrEmpty(repoDescription) || settingsTopics.Any() || !string.IsNullOrEmpty(licenseName)) && string.IsNullOrEmpty(fileSearchTerm))
                 {
                     <div class="col-md-3">
                         <div class="border-bottom pb-3 mb-3">
@@ -549,6 +552,14 @@ else
                                     {
                                         <a href="/explore?topic=@topic" class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill text-decoration-none" style="font-size: 11px;">@topic</a>
                                     }
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(licenseName))
+                            {
+                                <div class="mt-2">
+                                    <a href="/repo/@RepoName/LICENSE" class="small text-decoration-none">
+                                        <i class="bi bi-file-earmark-text me-1"></i>@licenseName
+                                    </a>
                                 </div>
                             }
                             <div class="d-flex flex-wrap gap-3 mt-3 small text-muted">
@@ -817,6 +828,29 @@ else
                     {
                         <div class="card border shadow-sm mb-3">
                             <div class="card-body">
+                                @if (editingReleaseId == release.Id)
+                                {
+                                    <div class="mb-2">
+                                        <input type="text" class="form-control form-control-sm mb-2" @bind="editReleaseTitle" />
+                                        <textarea class="form-control form-control-sm mb-2" rows="4" @bind="editReleaseBody" placeholder="Release notes (Markdown)"></textarea>
+                                        <div class="d-flex gap-3 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" @bind="editReleaseIsDraft" id="editDraft" />
+                                                <label class="form-check-label small" for="editDraft">Draft</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" @bind="editReleaseIsPrerelease" id="editPrerelease" />
+                                                <label class="form-check-label small" for="editPrerelease">Pre-release</label>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-primary btn-sm" @onclick="SaveReleaseEdit">Save</button>
+                                            <button class="btn btn-secondary btn-sm" @onclick="() => editingReleaseId = null">Cancel</button>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <h5 class="fw-bold mb-1">
@@ -832,9 +866,14 @@ else
                                     </div>
                                     @if (UserService.IsLoggedIn)
                                     {
-                                        <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteRelease(release.Id)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-secondary" @onclick="() => EditRelease(release)">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" @onclick="() => DeleteRelease(release.Id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
                                     }
                                 </div>
 
@@ -887,6 +926,7 @@ else
                                         }
                                     </div>
                                 }
+                                } @* end else (not editing) *@
                             </div>
                         </div>
                     }
@@ -3180,6 +3220,9 @@ else
     private long fileSize = 0;
     private int lineCount = 0;
     private string readmeContent = "";
+    private string licenseName = "";
+    private string licenseFilePath = "";
+    private bool hasContributing;
     private List<LanguageStat> languageStats = new();
     private List<string> fileCodeOwners = new();
 
@@ -4057,6 +4100,30 @@ else
         await LoadReleases();
     }
 
+    private int? editingReleaseId;
+    private string editReleaseTitle = "";
+    private string editReleaseBody = "";
+    private bool editReleaseIsDraft;
+    private bool editReleaseIsPrerelease;
+
+    private void EditRelease(MyPersonalGit.Models.Release release)
+    {
+        editingReleaseId = release.Id;
+        editReleaseTitle = release.Title;
+        editReleaseBody = release.Body ?? "";
+        editReleaseIsDraft = release.IsDraft;
+        editReleaseIsPrerelease = release.IsPrerelease;
+    }
+
+    private async Task SaveReleaseEdit()
+    {
+        if (editingReleaseId == null) return;
+        var dirName = System.IO.Path.GetFileName(RepoFullPath);
+        await ReleaseService.UpdateReleaseAsync(dirName, editingReleaseId.Value, editReleaseTitle, editReleaseBody, editReleaseIsDraft, editReleaseIsPrerelease);
+        editingReleaseId = null;
+        await LoadReleases();
+    }
+
     private async Task DeleteRelease(int releaseId)
     {
         var dirName = System.IO.Path.GetFileName(RepoFullPath);
@@ -4208,6 +4275,7 @@ else
                     isFile = false;
                     LoadTree(branch.Tip.Tree, repo);
                     LoadReadme(branch.Tip.Tree);
+                    LoadLicense(branch.Tip.Tree);
                     LoadLanguageStats(branch.Tip.Tree);
                 }
                 else
@@ -4219,6 +4287,7 @@ else
                         isFile = false;
                         LoadTree((Tree)entry.Target, repo);
                         LoadReadme((Tree)entry.Target);
+                        LoadLicense((Tree)entry.Target);
                     }
                     else
                     {
@@ -4758,6 +4827,57 @@ else
             using var reader = new StreamReader(((Blob)readme.Target).GetContentStream(), Encoding.UTF8);
             readmeContent = reader.ReadToEnd();
         }
+    }
+
+    private void LoadLicense(Tree tree)
+    {
+        licenseName = "";
+        licenseFilePath = "";
+        hasContributing = false;
+
+        var licenseNames = new[] { "LICENSE", "LICENSE.md", "LICENSE.txt", "LICENCE", "LICENCE.md", "LICENCE.txt", "COPYING" };
+        foreach (var name in licenseNames)
+        {
+            var entry = tree.FirstOrDefault(e => e.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (entry != null && entry.TargetType == TreeEntryTargetType.Blob)
+            {
+                licenseFilePath = entry.Name;
+                using var reader = new StreamReader(((Blob)entry.Target).GetContentStream(), Encoding.UTF8);
+                var content = reader.ReadToEnd();
+
+                // Detect common licenses by content
+                if (content.Contains("MIT License", StringComparison.OrdinalIgnoreCase) || content.Contains("Permission is hereby granted, free of charge", StringComparison.OrdinalIgnoreCase))
+                    licenseName = "MIT License";
+                else if (content.Contains("Apache License", StringComparison.OrdinalIgnoreCase) && content.Contains("Version 2.0", StringComparison.OrdinalIgnoreCase))
+                    licenseName = "Apache-2.0";
+                else if (content.Contains("GNU GENERAL PUBLIC LICENSE", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (content.Contains("Version 3", StringComparison.OrdinalIgnoreCase)) licenseName = "GPL-3.0";
+                    else if (content.Contains("Version 2", StringComparison.OrdinalIgnoreCase)) licenseName = "GPL-2.0";
+                    else licenseName = "GPL";
+                }
+                else if (content.Contains("GNU LESSER GENERAL PUBLIC LICENSE", StringComparison.OrdinalIgnoreCase))
+                    licenseName = "LGPL";
+                else if (content.Contains("BSD 2-Clause", StringComparison.OrdinalIgnoreCase) || content.Contains("Redistribution and use", StringComparison.OrdinalIgnoreCase) && content.Length < 2000)
+                    licenseName = "BSD";
+                else if (content.Contains("ISC License", StringComparison.OrdinalIgnoreCase))
+                    licenseName = "ISC";
+                else if (content.Contains("Mozilla Public License", StringComparison.OrdinalIgnoreCase))
+                    licenseName = "MPL-2.0";
+                else if (content.Contains("THE UNLICENSE", StringComparison.OrdinalIgnoreCase) || content.Contains("This is free and unencumbered", StringComparison.OrdinalIgnoreCase))
+                    licenseName = "Unlicense";
+                else
+                    licenseName = entry.Name;
+                break;
+            }
+        }
+
+        // Check for CONTRIBUTING.md
+        var contributing = tree.FirstOrDefault(e =>
+            e.Name.Equals("CONTRIBUTING.md", StringComparison.OrdinalIgnoreCase) ||
+            e.Name.Equals("CONTRIBUTING.txt", StringComparison.OrdinalIgnoreCase) ||
+            e.Name.Equals("CONTRIBUTING", StringComparison.OrdinalIgnoreCase));
+        hasContributing = contributing != null;
     }
 
     private void LoadLanguageStats(Tree tree)

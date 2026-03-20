@@ -21,7 +21,7 @@ public class RawFileController : ControllerBase
 
     [HttpGet("raw/{repoName}/{*path}")]
     [ResponseCache(Duration = 300)]
-    public async Task<IActionResult> GetRawFile(string repoName, string path, [FromQuery] string? branch = null)
+    public async Task<IActionResult> GetRawFile(string repoName, string path, [FromQuery] string? branch = null, [FromQuery] bool download = false)
     {
         if (string.IsNullOrEmpty(path) || path.Contains(".."))
             return NotFound();
@@ -76,6 +76,11 @@ public class RawFileController : ControllerBase
             }
             ms.Position = 0;
 
+            if (download)
+            {
+                var fileName = System.IO.Path.GetFileName(path);
+                return File(ms, contentType, fileName);
+            }
             return File(ms, contentType);
         }
         catch
