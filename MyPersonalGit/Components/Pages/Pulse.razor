@@ -1,0 +1,277 @@
+@page "/repo/{RepoName}/pulse"
+@using LibGit2Sharp
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using MyPersonalGit.Services
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@inject IActivityService ActivityService
+@inject IIssueService IssueService
+@inject IPullRequestService PRService
+@inject IAdminService AdminService
+@inject IConfiguration Config
+@inject IStringLocalizer<SharedResource> L
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<PageTitle>Pulse · @RepoName</PageTitle>
+
+<div class="repo-header border-bottom bg-light-subtle mb-4 pt-3">
+    <div class="container-xl px-3">
+        <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-journal-bookmark text-muted me-2 h4 mb-0"></i>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 h4">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">@L["Nav_Repositories"]</a></li>
+                    <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
+                    <li class="breadcrumb-item active fw-bold" aria-current="page">Pulse</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="container-xl px-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0"><i class="bi bi-activity me-2"></i>Pulse — last 7 days</h4>
+        <span class="text-muted small">@startDate.ToString("MMM dd") – @endDate.ToString("MMM dd, yyyy")</span>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center border shadow-sm">
+                <div class="card-body py-3">
+                    <div class="h2 mb-0 text-primary">@prsMerged</div>
+                    <small class="text-muted">PRs merged</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border shadow-sm">
+                <div class="card-body py-3">
+                    <div class="h2 mb-0 text-success">@issuesOpened</div>
+                    <small class="text-muted">Issues opened</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border shadow-sm">
+                <div class="card-body py-3">
+                    <div class="h2 mb-0 text-danger">@issuesClosed</div>
+                    <small class="text-muted">Issues closed</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border shadow-sm">
+                <div class="card-body py-3">
+                    <div class="h2 mb-0 text-info">@commitCount</div>
+                    <small class="text-muted">Commits</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (topContributors.Any())
+    {
+        <div class="card border shadow-sm mb-4">
+            <div class="card-header bg-light-subtle py-2 small fw-bold">
+                <i class="bi bi-people me-1"></i> Top contributors this week
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Contributor</th><th class="text-end">Commits</th></tr></thead>
+                    <tbody>
+                        @foreach (var (name, count) in topContributors)
+                        {
+                            <tr><td>@name</td><td class="text-end">@count</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    @if (activeBranches.Any())
+    {
+        <div class="card border shadow-sm mb-4">
+            <div class="card-header bg-light-subtle py-2 small fw-bold">
+                <i class="bi bi-diagram-2 me-1"></i> Active branches
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Branch</th><th>Last commit</th><th class="text-end">Ahead</th></tr></thead>
+                    <tbody>
+                        @foreach (var branch in activeBranches)
+                        {
+                            <tr>
+                                <td><code>@branch.Name</code></td>
+                                <td class="small text-muted">@branch.LastCommitMessage</td>
+                                <td class="text-end"><span class="badge bg-success">@branch.AheadCount</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    @if (recentActivity.Any())
+    {
+        <div class="card border shadow-sm mb-4">
+            <div class="card-header bg-light-subtle py-2 small fw-bold">
+                <i class="bi bi-clock-history me-1"></i> Recent activity
+            </div>
+            <div class="list-group list-group-flush">
+                @foreach (var activity in recentActivity)
+                {
+                    <a href="@activity.Url" class="list-group-item list-group-item-action py-2">
+                        <div class="d-flex justify-content-between">
+                            <span class="small">
+                                <i class="bi @GetActivityIcon(activity.ActivityType) me-1 text-muted"></i>
+                                @activity.Description
+                            </span>
+                            <small class="text-muted">@GetRelativeTime(activity.Timestamp)</small>
+                        </div>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-activity display-4 d-block mb-3"></i>
+            <p>No activity in the last 7 days.</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string RepoName { get; set; } = "";
+
+    private DateTime startDate = DateTime.UtcNow.AddDays(-7);
+    private DateTime endDate = DateTime.UtcNow;
+
+    private int prsMerged;
+    private int issuesOpened;
+    private int issuesClosed;
+    private int commitCount;
+    private List<(string Name, int Count)> topContributors = new();
+    private List<BranchActivity> activeBranches = new();
+    private List<UserActivity> recentActivity = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPulse();
+    }
+
+    private async Task LoadPulse()
+    {
+        // Get issues and PRs
+        var issues = await IssueService.GetIssuesAsync(RepoName);
+        var prs = await PRService.GetPullRequestsAsync(RepoName);
+
+        issuesOpened = issues.Count(i => i.CreatedAt >= startDate);
+        issuesClosed = issues.Count(i => i.ClosedAt >= startDate);
+        prsMerged = prs.Count(p => p.State == PullRequestState.Merged && p.MergedAt >= startDate);
+
+        // Get commits and contributors from git
+        try
+        {
+            var systemSettings = await AdminService.GetSystemSettingsAsync();
+            var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot) ? systemSettings.ProjectRoot : Config["Git:ProjectRoot"] ?? "/repos";
+            var repoPath = System.IO.Path.Combine(projectRoot, RepoName);
+            if (!LibGit2Sharp.Repository.IsValid(repoPath)) repoPath += ".git";
+
+            if (LibGit2Sharp.Repository.IsValid(repoPath))
+            {
+                using var repo = new LibGit2Sharp.Repository(repoPath);
+                var head = repo.Head;
+
+                if (head?.Tip != null)
+                {
+                    // Count recent commits and top contributors
+                    var contributors = new Dictionary<string, int>();
+                    var filter = new CommitFilter { IncludeReachableFrom = head.Tip, SortBy = CommitSortStrategies.Time };
+
+                    foreach (var commit in repo.Commits.QueryBy(filter))
+                    {
+                        if (commit.Author.When.UtcDateTime < startDate) break;
+                        commitCount++;
+                        var name = commit.Author.Name;
+                        contributors[name] = contributors.GetValueOrDefault(name) + 1;
+                    }
+
+                    topContributors = contributors
+                        .OrderByDescending(c => c.Value)
+                        .Take(10)
+                        .Select(c => (c.Key, c.Value))
+                        .ToList();
+
+                    // Active branches (non-default with recent commits)
+                    var defaultBranch = head.FriendlyName;
+                    foreach (var branch in repo.Branches.Where(b => !b.IsRemote && b.FriendlyName != defaultBranch))
+                    {
+                        if (branch.Tip == null) continue;
+                        if (branch.Tip.Author.When.UtcDateTime < startDate) continue;
+
+                        var ahead = 0;
+                        try
+                        {
+                            var divergence = repo.ObjectDatabase.CalculateHistoryDivergence(branch.Tip, head.Tip);
+                            ahead = divergence.AheadBy ?? 0;
+                        }
+                        catch { }
+
+                        activeBranches.Add(new BranchActivity
+                        {
+                            Name = branch.FriendlyName,
+                            LastCommitMessage = branch.Tip.MessageShort,
+                            AheadCount = ahead
+                        });
+                    }
+
+                    activeBranches = activeBranches.OrderByDescending(b => b.AheadCount).Take(10).ToList();
+                }
+            }
+        }
+        catch { }
+
+        // Recent activity from ActivityService
+        var allActivities = await ActivityService.GetRecentActivitiesAsync();
+        recentActivity = allActivities
+            .Where(a => a.Repository == RepoName && a.Timestamp >= startDate)
+            .Take(20)
+            .ToList();
+    }
+
+    private static string GetActivityIcon(string type) => type switch
+    {
+        "opened_issue" => "bi-circle-fill text-success",
+        "closed_issue" => "bi-check-circle-fill text-danger",
+        "opened_pr" => "bi-git text-success",
+        "merged_pr" => "bi-check2-all text-primary",
+        "closed_pr" => "bi-x-circle text-danger",
+        "created_release" => "bi-tag text-info",
+        "transferred_issue" => "bi-arrow-left-right",
+        _ => "bi-record-circle"
+    };
+
+    private static string GetRelativeTime(DateTime date)
+    {
+        var diff = DateTime.UtcNow - date;
+        if (diff.TotalMinutes < 1) return "just now";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+        return $"{(int)diff.TotalDays}d ago";
+    }
+
+    private class BranchActivity
+    {
+        public string Name { get; set; } = "";
+        public string LastCommitMessage { get; set; } = "";
+        public int AheadCount { get; set; }
+    }
+}

@@ -1,6 +1,8 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 @using MyPersonalGit.Data
 @using MyPersonalGit.Services
+@using Microsoft.JSInterop
 @using Microsoft.Extensions.Localization
 @using MyPersonalGit.Resources
 @inject IAdminService AdminService
@@ -27,7 +29,7 @@
 
             <div class="gh-search-container d-none d-md-flex flex-grow-1 mx-2" style="max-width: 300px;">
                 <div class="input-group input-group-sm bg-dark-subtle rounded-2 border border-secondary border-opacity-50">
-                    <input type="text" class="form-control bg-transparent border-0 text-white placeholder-secondary" placeholder="@L["Search_Placeholder"]" />
+                    <input id="global-search-input" type="text" class="form-control bg-transparent border-0 text-white placeholder-secondary" placeholder="@L["Search_Placeholder"]" />
                     <span class="input-group-text bg-transparent border-0 text-secondary">/</span>
                 </div>
             </div>
@@ -111,6 +113,35 @@
             </div>
         </div>
     </header>
+
+    @if (showShortcutsHelp)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 9999;" @onclick="() => showShortcutsHelp = false">
+            <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation="true">
+                <div class="modal-content">
+                    <div class="modal-header py-2">
+                        <h5 class="modal-title"><i class="bi bi-keyboard me-2"></i>Keyboard Shortcuts</h5>
+                        <button class="btn-close" @onclick="() => showShortcutsHelp = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table table-sm mb-0">
+                            <tbody>
+                                <tr><td><kbd>/</kbd></td><td>Focus search</td></tr>
+                                <tr><td><kbd>?</kbd></td><td>Show this help</td></tr>
+                                <tr><td><kbd>g</kbd> <kbd>h</kbd></td><td>Go to Home</td></tr>
+                                <tr><td><kbd>g</kbd> <kbd>i</kbd></td><td>Go to Issues</td></tr>
+                                <tr><td><kbd>g</kbd> <kbd>p</kbd></td><td>Go to Pull Requests</td></tr>
+                                <tr><td><kbd>g</kbd> <kbd>a</kbd></td><td>Go to Actions</td></tr>
+                                <tr><td><kbd>g</kbd> <kbd>s</kbd></td><td>Go to Settings</td></tr>
+                                <tr><td><kbd>g</kbd> <kbd>n</kbd></td><td>Go to Notifications</td></tr>
+                                <tr><td><kbd>Esc</kbd></td><td>Close modal / blur input</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 
     <main class="gh-main">
         <div class="container-xl py-4 px-3">
@@ -330,6 +361,9 @@
     private string currentTheme = "light";
     private string currentCulture = "en";
     private int unreadNotificationCount;
+    private bool showShortcutsHelp;
+    private DotNetObjectReference<MainLayout>? _dotNetRef;
+    private System.Threading.Timer? _notificationTimer;
 
     private static readonly (string Code, string Name)[] supportedLanguages = new[]
     {
@@ -353,8 +387,28 @@
                     if (UserService.IsLoggedIn)
                     {
                         try { unreadNotificationCount = await NotificationService.GetUnreadCountAsync(UserService.Username); } catch { }
+
+                        // Auto-refresh notification count every 60 seconds
+                        _notificationTimer = new System.Threading.Timer(async _ =>
+                        {
+                            try
+                            {
+                                var count = await NotificationService.GetUnreadCountAsync(UserService.Username);
+                                if (count != unreadNotificationCount)
+                                {
+                                    unreadNotificationCount = count;
+                                    await InvokeAsync(StateHasChanged);
+                                }
+                            }
+                            catch { }
+                        }, null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(60));
                     }
                 }
+
+                // Initialize keyboard shortcuts
+                _dotNetRef = DotNetObjectReference.Create(this);
+                await JS.InvokeVoidAsync("keyboardShortcuts.init", _dotNetRef);
+
                 StateHasChanged();
             }
             catch { }
@@ -374,10 +428,32 @@
         await JS.InvokeVoidAsync("themeHelper.set", currentTheme);
     }
 
+    [JSInvokable]
+    public void OnShortcut(string shortcut)
+    {
+        switch (shortcut)
+        {
+            case "help":
+                showShortcutsHelp = !showShortcutsHelp;
+                InvokeAsync(StateHasChanged);
+                break;
+            case "escape":
+                showShortcutsHelp = false;
+                InvokeAsync(StateHasChanged);
+                break;
+        }
+    }
+
     private async Task HandleLogout()
     {
         await UserService.LogoutAsync();
         await JS.InvokeVoidAsync("sessionHelper.remove", "sessionId");
         Navigation.NavigateTo("/login", forceLoad: true);
+    }
+
+    public void Dispose()
+    {
+        _notificationTimer?.Dispose();
+        _dotNetRef?.Dispose();
     }
 }

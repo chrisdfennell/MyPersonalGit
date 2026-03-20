@@ -157,6 +157,64 @@
             }
         };
 
+        window.keyboardShortcuts = {
+            _pending: null,
+            _dotNetRef: null,
+            init: function(dotNetRef) {
+                this._dotNetRef = dotNetRef;
+                document.addEventListener('keydown', this._handler.bind(this));
+            },
+            _handler: function(e) {
+                var tag = (e.target.tagName || '').toLowerCase();
+                var isInput = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
+
+                // Esc always works
+                if (e.key === 'Escape') {
+                    document.activeElement?.blur();
+                    if (this._dotNetRef) this._dotNetRef.invokeMethodAsync('OnShortcut', 'escape');
+                    return;
+                }
+
+                // Don't fire shortcuts when typing in inputs
+                if (isInput) return;
+
+                if (e.key === '/') {
+                    e.preventDefault();
+                    var search = document.getElementById('global-search-input');
+                    if (search) search.focus();
+                    return;
+                }
+
+                if (e.key === '?') {
+                    e.preventDefault();
+                    if (this._dotNetRef) this._dotNetRef.invokeMethodAsync('OnShortcut', 'help');
+                    return;
+                }
+
+                // Two-key combos: g + letter
+                if (this._pending === 'g') {
+                    this._pending = null;
+                    var routes = { 'h': '/', 'i': '/search?type=issues', 'p': '/search?type=pulls', 'n': '/notifications', 'a': null, 's': null };
+                    if (e.key in routes) {
+                        e.preventDefault();
+                        var route = routes[e.key];
+                        if (route) window.location.href = route;
+                        else if (this._dotNetRef) this._dotNetRef.invokeMethodAsync('OnShortcut', 'g' + e.key);
+                    }
+                    return;
+                }
+
+                if (e.key === 'g') {
+                    this._pending = 'g';
+                    setTimeout(function() { window.keyboardShortcuts._pending = null; }, 1000);
+                    return;
+                }
+            },
+            dispose: function() {
+                document.removeEventListener('keydown', this._handler);
+            }
+        };
+
         window.lineLink = {
             scrollToHash: function() {
                 var hash = window.location.hash;
