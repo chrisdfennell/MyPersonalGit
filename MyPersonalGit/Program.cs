@@ -487,6 +487,23 @@ using (var scope = app.Services.CreateScope())
     // WorkflowJobs.Environment column
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""WorkflowJobs"" ADD COLUMN ""Environment"" TEXT NULL;"); } catch { }
 
+    // One-time fixup: workflow runs stored with stripped ".git" suffix need to match the DB repo name
+    try
+    {
+        var repos = db.Repositories.Select(r => r.Name).ToList();
+        foreach (var repo in repos)
+        {
+            var stripped = repo.EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? repo[..^4] : null;
+            if (stripped != null)
+            {
+                var fixed_ = db.Database.ExecuteSqlRaw(
+                    @"UPDATE ""WorkflowRuns"" SET ""RepoName"" = {0} WHERE ""RepoName"" = {1}", repo, stripped);
+                if (fixed_ > 0) Console.WriteLine($"==> Fixed {fixed_} workflow run(s): '{stripped}' -> '{repo}'");
+            }
+        }
+    }
+    catch { }
+
     // Seed built-in secret scan patterns
     try
     {
