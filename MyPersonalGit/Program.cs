@@ -137,6 +137,7 @@ builder.Services.AddSingleton<ICodeSearchService, CodeSearchService>();
 builder.Services.AddSingleton<ITimeTrackingService, TimeTrackingService>();
 builder.Services.AddSingleton<IAGitFlowService, AGitFlowService>();
 builder.Services.AddSingleton<IWebAuthnService, WebAuthnService>();
+builder.Services.AddSingleton<IGitHooksService, GitHooksService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddLocalization();
 builder.Services.AddScoped<CurrentUserService>();
@@ -277,9 +278,19 @@ using (var scope = app.Services.CreateScope())
             ""LastUsedAt"" TEXT NULL
         );");
     db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_WebAuthnCredentials_Username_CredentialId"" ON ""WebAuthnCredentials"" (""Username"", ""CredentialId"");");
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""PinnedRepositories"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""Username"" TEXT NOT NULL,
+            ""RepoName"" TEXT NOT NULL,
+            ""SortOrder"" INTEGER NOT NULL DEFAULT 0,
+            ""CreatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_PinnedRepositories_Username_RepoName"" ON ""PinnedRepositories"" (""Username"", ""RepoName"");");
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""SspiEnabled"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""AGitFlowEnabled"" INTEGER NOT NULL DEFAULT 1;"); } catch { }
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""BranchProtectionRules"" ADD COLUMN ""RequireSignedCommits"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""BranchProtectionRules"" ADD COLUMN ""ProtectedFilePatterns"" TEXT NOT NULL DEFAULT '[]';"); } catch { }
 
     if (!db.Users.Any())
     {

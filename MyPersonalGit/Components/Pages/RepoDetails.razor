@@ -40,6 +40,7 @@
 @inject ITagProtectionService TagProtectionService
 @inject IRepositoryLabelService LabelService
 @inject IStringLocalizer<SharedResource> L
+@inject IGitHooksService GitHooksService
 @using TagProtectionRule = MyPersonalGit.Models.TagProtectionRule
 @using RepositoryLabel = MyPersonalGit.Models.RepositoryLabel
 @rendermode InteractiveServer
@@ -1038,6 +1039,10 @@ else
                                                 @if (rule.RequireLinearHistory) { <span class="badge bg-secondary bg-opacity-10 text-secondary border me-1">Linear history</span> }
                                                 @if (rule.RequireCodeOwnersApproval) { <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle me-1">CODEOWNERS</span> }
                                                 @if (rule.RequireSignedCommits) { <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle me-1">@L["Repo_SignedCommits"]</span> }
+                                                @if (rule.ProtectedFilePatterns.Any())
+                                                {
+                                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle me-1">@rule.ProtectedFilePatterns.Count file pattern(s)</span>
+                                                }
                                             </div>
                                         </div>
                                         @if (UserService.IsLoggedIn)
@@ -1097,6 +1102,11 @@ else
                                             <label class="form-check-label small" for="bpRequireSignedCommits">@L["Repo_RequireSignedCommits"]</label>
                                         </div>
                                     </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Protected file patterns</label>
+                                    <input type="text" class="form-control form-control-sm" @bind="newProtectedFilePatterns" placeholder="*.lock, migrations/**, .github/workflows/*" />
+                                    <div class="form-text">Comma-separated glob patterns. Changes to matching files require review approval.</div>
                                 </div>
                                 @if (newProtectionRule.RequirePullRequest)
                                 {
@@ -1210,6 +1220,49 @@ else
                                     <i class="bi bi-plus-lg me-1"></i>Add rule
                                 </button>
                             }
+                        }
+                    </div>
+                </div>
+
+                @* Git Hooks *@
+                <div class="card border shadow-sm mb-4">
+                    <div class="card-header bg-light-subtle py-2 small fw-bold">
+                        <i class="bi bi-terminal me-1"></i> Git Hooks
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Hook type</label>
+                            <select class="form-select form-select-sm" style="width: 220px;" value="@selectedHookName"
+                                    @onchange="HandleHookSelectionChanged">
+                                <option value="pre-receive">pre-receive</option>
+                                <option value="update">update</option>
+                                <option value="post-receive">post-receive</option>
+                                <option value="post-update">post-update</option>
+                                <option value="pre-push">pre-push</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Script content</label>
+                            <textarea class="form-control form-control-sm font-monospace" rows="12"
+                                      @bind="hookContent" placeholder="#!/bin/bash&#10;# Enter hook script here..."></textarea>
+                        </div>
+                        @if (!string.IsNullOrEmpty(hookStatusMessage))
+                        {
+                            <div class="alert alert-info alert-dismissible py-2 small mb-3">
+                                @hookStatusMessage
+                                <button type="button" class="btn-close btn-close-sm" @onclick="() => hookStatusMessage = string.Empty"></button>
+                            </div>
+                        }
+                        @if (UserService.IsLoggedIn)
+                        {
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-gh-primary btn-sm" @onclick="SaveGitHook" disabled="@string.IsNullOrWhiteSpace(hookContent)">
+                                    <i class="bi bi-save me-1"></i>Save hook
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" @onclick="DeleteGitHook" disabled="@string.IsNullOrWhiteSpace(hookContent)">
+                                    <i class="bi bi-trash me-1"></i>Delete hook
+                                </button>
+                            </div>
                         }
                     </div>
                 </div>
@@ -3201,11 +3254,18 @@ else
     private List<BranchProtectionRule> branchProtectionRules = new();
     private bool showAddProtectionRule = false;
     private BranchProtectionRule newProtectionRule = new() { BranchPattern = "" };
+    private string newProtectedFilePatterns = "";
 
     // Tag protection
     private List<TagProtectionRule> tagProtectionRules = new();
     private bool showAddTagProtectionRule = false;
     private TagProtectionRule newTagProtectionRule = new() { TagPattern = "" };
+
+    // Git hooks
+    private Dictionary<string, string> gitHooks = new();
+    private string selectedHookName = "pre-receive";
+    private string hookContent = "";
+    private string hookStatusMessage = "";
 
     // Repository labels
     private List<RepositoryLabel> repoLabels = new();
@@ -3651,7 +3711,7 @@ else
         if (tab == "code" && string.IsNullOrEmpty(Path)) Nav.NavigateTo($"/repo/{RepoName}");
         else LoadRepoData();
         if (tab == "settings" || tab == "branches") await LoadBranchProtectionRules();
-        if (tab == "settings") { await LoadCollaborators(); await LoadMirrors(); await LoadDeployKeys(); await LoadTagProtectionRules(); await LoadRepoLabels(); }
+        if (tab == "settings") { await LoadCollaborators(); await LoadMirrors(); await LoadDeployKeys(); await LoadTagProtectionRules(); await LoadRepoLabels(); await LoadGitHooks(); }
         if (tab == "releases") await LoadReleases();
         if (tab == "packages") await LoadContainerTags();
         if (tab == "graph") LoadGraph();
@@ -5112,8 +5172,10 @@ else
     {
         if (!UserService.IsLoggedIn) return;
         if (string.IsNullOrWhiteSpace(newProtectionRule.BranchPattern)) return;
+        newProtectionRule.ProtectedFilePatterns = newProtectedFilePatterns.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
         await BranchProtectionService.AddRuleAsync(RepoName, newProtectionRule);
         newProtectionRule = new BranchProtectionRule { BranchPattern = "" };
+        newProtectedFilePatterns = "";
         showAddProtectionRule = false;
         await LoadBranchProtectionRules();
     }
@@ -5145,6 +5207,38 @@ else
         if (!UserService.IsLoggedIn) return;
         await TagProtectionService.DeleteRuleAsync(RepoName, ruleId);
         await LoadTagProtectionRules();
+    }
+
+    private async Task LoadGitHooks()
+    {
+        gitHooks = await GitHooksService.GetHooksAsync(RepoFullPath);
+        hookContent = gitHooks.TryGetValue(selectedHookName, out var content) ? content : "";
+        hookStatusMessage = "";
+    }
+
+    private Task HandleHookSelectionChanged(ChangeEventArgs e)
+    {
+        selectedHookName = e.Value?.ToString() ?? "pre-receive";
+        hookContent = gitHooks.TryGetValue(selectedHookName, out var content) ? content : "";
+        hookStatusMessage = "";
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveGitHook()
+    {
+        if (!UserService.IsLoggedIn) return;
+        if (string.IsNullOrWhiteSpace(hookContent)) return;
+        var success = await GitHooksService.SaveHookAsync(RepoFullPath, selectedHookName, hookContent);
+        hookStatusMessage = success ? $"Hook '{selectedHookName}' saved successfully." : $"Failed to save hook '{selectedHookName}'.";
+        if (success) await LoadGitHooks();
+    }
+
+    private async Task DeleteGitHook()
+    {
+        if (!UserService.IsLoggedIn) return;
+        var success = await GitHooksService.DeleteHookAsync(RepoFullPath, selectedHookName);
+        hookStatusMessage = success ? $"Hook '{selectedHookName}' deleted." : $"Failed to delete hook '{selectedHookName}'.";
+        if (success) await LoadGitHooks();
     }
 
     private async Task LoadRepoLabels()

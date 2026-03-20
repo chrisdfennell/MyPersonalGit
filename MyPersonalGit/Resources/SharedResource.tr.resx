@@ -349,6 +349,16 @@
   <data name="PR_ImageDiff" xml:space="preserve"><value>Görsel karşılaştırma</value></data>
   <data name="Repo_RequireSignedCommits" xml:space="preserve"><value>İmzalı commit zorunlu — tüm commitler GPG ile imzalanmalıdır</value></data>
   <data name="Repo_SignedCommits" xml:space="preserve"><value>İmzalı commitler</value></data>
+  <data name="Repo_ProtectedFilePatterns" xml:space="preserve"><value>Korumalı dosya kalıpları</value></data>
+  <data name="Repo_ProtectedFilePatternsPlaceholder" xml:space="preserve"><value>*.lock, migrations/**, .github/workflows/*</value></data>
+  <data name="Repo_ProtectedFilePatternsHelp" xml:space="preserve"><value>Virgülle ayrılmış glob kalıpları. Eşleşen dosyalardaki değişiklikler inceleme onayı gerektirir.</value></data>
+  <data name="Repo_GitHooks" xml:space="preserve"><value>Git Hooks</value></data>
+  <data name="Repo_HookType" xml:space="preserve"><value>Hook türü</value></data>
+  <data name="Repo_SaveHook" xml:space="preserve"><value>Hook'u kaydet</value></data>
+  <data name="Repo_DeleteHook" xml:space="preserve"><value>Hook'u sil</value></data>
+  <data name="Profile_PinnedRepos" xml:space="preserve"><value>Sabitlenmiş depolar</value></data>
+  <data name="Profile_Unpin" xml:space="preserve"><value>Sabitlemeyi kaldır</value></data>
+  <data name="Profile_Pin" xml:space="preserve"><value>Sabitle</value></data>
 
   <!-- Compare -->
   <data name="Compare_Base" xml:space="preserve"><value>Temel</value></data>

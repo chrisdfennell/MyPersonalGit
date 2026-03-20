@@ -349,6 +349,16 @@
   <data name="PR_ImageDiff" xml:space="preserve"><value>图片对比</value></data>
   <data name="Repo_RequireSignedCommits" xml:space="preserve"><value>要求签名提交 — 所有提交必须使用GPG签名</value></data>
   <data name="Repo_SignedCommits" xml:space="preserve"><value>签名提交</value></data>
+  <data name="Repo_ProtectedFilePatterns" xml:space="preserve"><value>受保护的文件模式</value></data>
+  <data name="Repo_ProtectedFilePatternsPlaceholder" xml:space="preserve"><value>*.lock, migrations/**, .github/workflows/*</value></data>
+  <data name="Repo_ProtectedFilePatternsHelp" xml:space="preserve"><value>逗号分隔的glob模式。匹配文件的更改需要审查批准。</value></data>
+  <data name="Repo_GitHooks" xml:space="preserve"><value>Git Hooks</value></data>
+  <data name="Repo_HookType" xml:space="preserve"><value>Hook 类型</value></data>
+  <data name="Repo_SaveHook" xml:space="preserve"><value>保存 Hook</value></data>
+  <data name="Repo_DeleteHook" xml:space="preserve"><value>删除 Hook</value></data>
+  <data name="Profile_PinnedRepos" xml:space="preserve"><value>置顶仓库</value></data>
+  <data name="Profile_Unpin" xml:space="preserve"><value>取消置顶</value></data>
+  <data name="Profile_Pin" xml:space="preserve"><value>置顶</value></data>
 
   <!-- Compare -->
   <data name="Compare_Base" xml:space="preserve"><value>基准</value></data>
