@@ -936,4 +936,13 @@
   <data name="Traffic_Views" xml:space="preserve"><value>조회수</value></data>
   <data name="Traffic_PopularContent" xml:space="preserve"><value>인기 콘텐츠</value></data>
   <data name="Traffic_Path" xml:space="preserve"><value>경로</value></data>
+  <!-- Cherry-pick / Revert -->
+  <data name="CherryPick_Title" xml:space="preserve"><value>체리픽 대상...</value></data>
+  <data name="Revert_Title" xml:space="preserve"><value>되돌리기</value></data>
+  <data name="PR_MergedBy" xml:space="preserve"><value>병합한 사용자</value></data>
+  <!-- Issue Transfer -->
+  <data name="Issues_TransferIssue" xml:space="preserve"><value>이슈 이전</value></data>
+  <data name="Issues_TransferDescription" xml:space="preserve"><value>이 이슈를 다른 저장소로 이동합니다. 댓글과 일치하는 라벨이 복사됩니다.</value></data>
+  <data name="Issues_TargetRepository" xml:space="preserve"><value>대상 저장소</value></data>
+  <data name="Issues_TargetRepoPlaceholder" xml:space="preserve"><value>예: MyOtherRepo</value></data>
 </root>

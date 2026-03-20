@@ -257,6 +257,9 @@
                                 <button class="btn btn-outline-secondary btn-sm" @onclick="ToggleLock" title="@(currentIssue.IsLocked ? "Unlock" : "Lock")">
                                     <i class="bi @(currentIssue.IsLocked ? "bi-unlock" : "bi-lock")"></i>
                                 </button>
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="() => showTransferModal = true" title="@L["Issues_TransferIssue"]">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                </button>
                             </div>
                             <div class="input-group input-group-sm" style="max-width: 250px;">
                                 <input type="text" class="form-control" @bind="newAssigneeInput" placeholder="@L["Issues_AddAssignee"]" />
@@ -729,6 +732,38 @@
     </div>
 }
 
+@if (showTransferModal)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-arrow-left-right me-2"></i>@L["Issues_TransferIssue"]</h5>
+                    <button class="btn-close" @onclick="() => showTransferModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">@L["Issues_TransferDescription"]</p>
+                    <div class="mb-3">
+                        <label class="form-label">@L["Issues_TargetRepository"]</label>
+                        <input class="form-control" @bind="transferTargetRepo" placeholder="@L["Issues_TargetRepoPlaceholder"]" />
+                    </div>
+                    @if (!string.IsNullOrEmpty(transferError))
+                    {
+                        <div class="alert alert-danger small py-2">@transferError</div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => showTransferModal = false">@L["Common_Cancel"]</button>
+                    <button class="btn btn-primary" @onclick="TransferIssue" disabled="@(string.IsNullOrWhiteSpace(transferTargetRepo) || isTransferring)">
+                        @if (isTransferring) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        @L["Issues_TransferIssue"]
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     [Parameter] public string RepoName { get; set; } = "";
     [Parameter] public int? Number { get; set; }
@@ -1183,6 +1218,36 @@
         if (!UserService.IsLoggedIn || currentIssue == null) return;
         await IssueService.UpdateIssueAsync(RepoName, currentIssue.Number, i => i.IsDraft = false);
         await LoadIssues();
+    }
+
+    // Transfer issue
+    private bool showTransferModal;
+    private string transferTargetRepo = "";
+    private string? transferError;
+    private bool isTransferring;
+
+    private async Task TransferIssue()
+    {
+        if (currentIssue == null || string.IsNullOrWhiteSpace(transferTargetRepo)) return;
+        isTransferring = true;
+        transferError = null;
+        StateHasChanged();
+
+        var (success, error, newNumber) = await IssueService.TransferIssueAsync(
+            RepoName, currentIssue.Number, transferTargetRepo.Trim(), UserService.Username);
+
+        if (success)
+        {
+            showTransferModal = false;
+            Nav.NavigateTo($"/repo/{transferTargetRepo.Trim()}/issues/{newNumber}");
+        }
+        else
+        {
+            transferError = error;
+        }
+
+        isTransferring = false;
+        StateHasChanged();
     }
 }
 
