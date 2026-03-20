@@ -58,6 +58,57 @@
                 {
                     <code class="d-block bg-light p-2 rounded small mb-3">pip install @SelectedPackage.Name --index-url @(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/pypi/simple/</code>
                 }
+                else if (SelectedPackage.Type == "cargo")
+                {
+                    <pre class="bg-light p-2 rounded small mb-3"><code>[registries.mygit]
+index = "sparse+@(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/cargo/"</code></pre>
+                    <code class="d-block bg-light p-2 rounded small mb-3">cargo add @SelectedPackage.Name --registry mygit</code>
+                }
+                else if (SelectedPackage.Type == "rubygems")
+                {
+                    <code class="d-block bg-light p-2 rounded small mb-3">gem install @SelectedPackage.Name --source @(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/rubygems</code>
+                }
+                else if (SelectedPackage.Type == "composer")
+                {
+                    <code class="d-block bg-light p-2 rounded small mb-3">composer require @SelectedPackage.Name</code>
+                    <p class="small text-muted">Repository URL: <code>@(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/composer</code></p>
+                }
+                else if (SelectedPackage.Type == "helm")
+                {
+                    <code class="d-block bg-light p-2 rounded small mb-3">helm repo add mygit @(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/helm</code>
+                    <code class="d-block bg-light p-2 rounded small mb-3">helm install @SelectedPackage.Name mygit/@SelectedPackage.Name</code>
+                }
+                else if (SelectedPackage.Type == "conda")
+                {
+                    <code class="d-block bg-light p-2 rounded small mb-3">conda install -c @(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/conda/main @SelectedPackage.Name</code>
+                }
+                else if (SelectedPackage.Type == "conan")
+                {
+                    <code class="d-block bg-light p-2 rounded small mb-3">conan remote add mygit @(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/conan</code>
+                    <code class="d-block bg-light p-2 rounded small mb-3">conan install --requires @SelectedPackage.Name</code>
+                }
+                else if (SelectedPackage.Type == "vagrant")
+                {
+                    <code class="d-block bg-light p-2 rounded small mb-3">vagrant box add @(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/vagrant/@SelectedPackage.Name</code>
+                }
+                else if (SelectedPackage.Type == "pub")
+                {
+                    <code class="d-block bg-light p-2 rounded small mb-3">dart pub add @SelectedPackage.Name --hosted-url=@(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/pub</code>
+                }
+                else if (SelectedPackage.Type == "swift")
+                {
+                    <code class="d-block bg-light p-2 rounded small mb-3">.package(url: "@(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/swift/@SelectedPackage.Name", from: "1.0.0")</code>
+                }
+                else if (SelectedPackage.Type == "debian")
+                {
+                    <pre class="bg-light p-2 rounded small mb-3"><code>echo "deb @(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/debian stable main" | sudo tee /etc/apt/sources.list.d/mygit.list
+sudo apt update
+sudo apt install @SelectedPackage.Name</code></pre>
+                }
+                else if (SelectedPackage.Type == "cran")
+                {
+                    <code class="d-block bg-light p-2 rounded small mb-3">install.packages("@SelectedPackage.Name", repos = "@(new Uri(Nav.BaseUri).GetLeftPart(UriPartial.Authority))/api/packages/cran")</code>
+                }
                 else if (SelectedPackage.Type == "maven")
                 {
                     var parts = SelectedPackage.Name.Split(':');
@@ -142,6 +193,36 @@
             <li class="nav-item">
                 <a class="nav-link @(Type == "maven" ? "active" : "")" href="/packages/maven">
                     <i class="bi bi-box me-1"></i>Maven
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Type == "cargo" ? "active" : "")" href="/packages/cargo">
+                    <i class="bi bi-box me-1"></i>Cargo
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Type == "rubygems" ? "active" : "")" href="/packages/rubygems">
+                    <i class="bi bi-gem me-1"></i>RubyGems
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Type == "composer" ? "active" : "")" href="/packages/composer">
+                    <i class="bi bi-box me-1"></i>Composer
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Type == "helm" ? "active" : "")" href="/packages/helm">
+                    <i class="bi bi-box me-1"></i>Helm
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Type == "conda" ? "active" : "")" href="/packages/conda">
+                    <i class="bi bi-box me-1"></i>Conda
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Type == "conan" ? "active" : "")" href="/packages/conan">
+                    <i class="bi bi-box me-1"></i>Conan
                 </a>
             </li>
             <li class="nav-item">
