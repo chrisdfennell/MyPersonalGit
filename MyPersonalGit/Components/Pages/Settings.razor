@@ -217,13 +217,19 @@ else
                         {
                             <div class="mb-3">
                                 <h6>Step 1: Add to your authenticator app</h6>
-                                <p>Scan the QR code or manually enter this URI in your authenticator app:</p>
-                                <div class="bg-light p-3 rounded mb-3">
-                                    <code class="text-break">@TwoFactorSetupUri</code>
+                                <p>Scan the QR code with your authenticator app:</p>
+                                <div class="d-flex justify-content-center bg-white p-3 rounded mb-3 border" style="max-width: 250px;">
+                                    <div id="qrcode-2fa"></div>
                                 </div>
-                                <p class="small text-muted">
-                                    <strong>Secret key:</strong> <code>@TwoFactorSetupSecret</code>
-                                </p>
+                                <details class="mb-3">
+                                    <summary class="small text-muted" style="cursor: pointer;">Can't scan? Enter manually</summary>
+                                    <div class="bg-light p-3 rounded mt-2">
+                                        <p class="small mb-1"><strong>Secret key:</strong></p>
+                                        <code class="text-break user-select-all">@TwoFactorSetupSecret</code>
+                                        <p class="small mt-2 mb-1"><strong>Full URI:</strong></p>
+                                        <code class="text-break small" style="font-size: 11px;">@TwoFactorSetupUri</code>
+                                    </div>
+                                </details>
                             </div>
 
                             <div class="mb-3">
@@ -922,6 +928,14 @@ else
             ActiveTab = Tab;
         }
         await LoadData();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (ShowTwoFactorSetup && !string.IsNullOrEmpty(TwoFactorSetupUri))
+        {
+            try { await JS.InvokeVoidAsync("generateQRCode", "qrcode-2fa", TwoFactorSetupUri); } catch { }
+        }
     }
 
     protected override Task OnParametersSetAsync()
