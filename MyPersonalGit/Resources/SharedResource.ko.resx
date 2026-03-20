@@ -349,6 +349,16 @@
   <data name="PR_ImageDiff" xml:space="preserve"><value>이미지 비교</value></data>
   <data name="Repo_RequireSignedCommits" xml:space="preserve"><value>서명된 커밋 필수 — 모든 커밋은 GPG 서명이 필요합니다</value></data>
   <data name="Repo_SignedCommits" xml:space="preserve"><value>서명된 커밋</value></data>
+  <data name="Repo_ProtectedFilePatterns" xml:space="preserve"><value>보호된 파일 패턴</value></data>
+  <data name="Repo_ProtectedFilePatternsPlaceholder" xml:space="preserve"><value>*.lock, migrations/**, .github/workflows/*</value></data>
+  <data name="Repo_ProtectedFilePatternsHelp" xml:space="preserve"><value>쉼표로 구분된 glob 패턴. 일치하는 파일의 변경 사항은 리뷰 승인이 필요합니다.</value></data>
+  <data name="Repo_GitHooks" xml:space="preserve"><value>Git Hooks</value></data>
+  <data name="Repo_HookType" xml:space="preserve"><value>Hook 유형</value></data>
+  <data name="Repo_SaveHook" xml:space="preserve"><value>Hook 저장</value></data>
+  <data name="Repo_DeleteHook" xml:space="preserve"><value>Hook 삭제</value></data>
+  <data name="Profile_PinnedRepos" xml:space="preserve"><value>고정된 저장소</value></data>
+  <data name="Profile_Unpin" xml:space="preserve"><value>고정 해제</value></data>
+  <data name="Profile_Pin" xml:space="preserve"><value>고정</value></data>
 
   <!-- Compare -->
   <data name="Compare_Base" xml:space="preserve"><value>베이스</value></data>

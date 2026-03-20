@@ -166,6 +166,9 @@ public class AppDbContext : DbContext
     // WebAuthn / Passkeys
     public DbSet<WebAuthnCredential> WebAuthnCredentials => Set<WebAuthnCredential>();
 
+    // Pinned Repositories
+    public DbSet<PinnedRepository> PinnedRepositories => Set<PinnedRepository>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Shared JSON value converters + comparers for List<string> and string[]
@@ -353,6 +356,7 @@ public class AppDbContext : DbContext
         {
             e.Property(r => r.RequiredStatusChecks).HasConversion(listStringConverter, listStringComparer);
             e.Property(r => r.AllowedPushUsers).HasConversion(listStringConverter, listStringComparer);
+            e.Property(r => r.ProtectedFilePatterns).HasConversion(listStringConverter, listStringComparer);
         });
 
         // --- UserProfile ---
@@ -604,6 +608,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<WebAuthnCredential>(e =>
         {
             e.HasIndex(c => new { c.Username, c.CredentialId }).IsUnique();
+        });
+
+        // --- PinnedRepository ---
+        modelBuilder.Entity<PinnedRepository>(e =>
+        {
+            e.HasIndex(p => new { p.Username, p.RepoName }).IsUnique();
         });
     }
 }

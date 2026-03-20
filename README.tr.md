@@ -174,6 +174,9 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Jupyter Notebook Görüntüleme** — `.ipynb` dosyaları kod hücreleri, Markdown, çıktılar ve satır içi görsellerle biçimlendirilmiş not defterleri olarak görüntülenir
 - **Depo Transferi** — Depo ayarlarından depo sahipliğini başka bir kullanıcıya veya kuruluşa aktarma
 - **Varsayılan Dal Yapılandırması** — Ayarlar sekmesinden depo başına varsayılan dalı değiştirme
+- **Repository Pinning** — Hızlı erişim için kullanıcı profil sayfanıza en fazla 6 favori depoyu sabitleyin
+- **Git Hooks Management** — Depo başına sunucu tarafı Git Hooks'ları (pre-receive, update, post-receive, post-update, pre-push) görüntüleme, düzenleme ve yönetme için Web UI
+- **Protected File Patterns** — Belirli dosyalardaki değişiklikler için inceleme onayı gerektiren glob kalıplı dal koruma kuralı (örn. `*.lock`, `migrations/**`, `.github/workflows/*`)
 
 ## Teknoloji Yığını
 

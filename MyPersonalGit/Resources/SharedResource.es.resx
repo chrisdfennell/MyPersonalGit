@@ -349,6 +349,16 @@
   <data name="PR_ImageDiff" xml:space="preserve"><value>Comparación de imágenes</value></data>
   <data name="Repo_RequireSignedCommits" xml:space="preserve"><value>Requerir commits firmados — todos los commits deben estar firmados con GPG</value></data>
   <data name="Repo_SignedCommits" xml:space="preserve"><value>Commits firmados</value></data>
+  <data name="Repo_ProtectedFilePatterns" xml:space="preserve"><value>Patrones de archivos protegidos</value></data>
+  <data name="Repo_ProtectedFilePatternsPlaceholder" xml:space="preserve"><value>*.lock, migrations/**, .github/workflows/*</value></data>
+  <data name="Repo_ProtectedFilePatternsHelp" xml:space="preserve"><value>Patrones glob separados por comas. Los cambios en archivos coincidentes requieren aprobación de revisión.</value></data>
+  <data name="Repo_GitHooks" xml:space="preserve"><value>Git Hooks</value></data>
+  <data name="Repo_HookType" xml:space="preserve"><value>Tipo de hook</value></data>
+  <data name="Repo_SaveHook" xml:space="preserve"><value>Guardar hook</value></data>
+  <data name="Repo_DeleteHook" xml:space="preserve"><value>Eliminar hook</value></data>
+  <data name="Profile_PinnedRepos" xml:space="preserve"><value>Repositorios fijados</value></data>
+  <data name="Profile_Unpin" xml:space="preserve"><value>Desfijar</value></data>
+  <data name="Profile_Pin" xml:space="preserve"><value>Fijar</value></data>
 
   <!-- Compare -->
   <data name="Compare_Base" xml:space="preserve"><value>Base</value></data>

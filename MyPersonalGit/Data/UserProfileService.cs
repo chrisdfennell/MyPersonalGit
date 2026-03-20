@@ -26,6 +26,9 @@ public interface IUserProfileService
     Task<TwoFactorAuth?> Get2FAAsync(string username);
     Task<TwoFactorAuth> Enable2FAAsync(string username);
     Task<bool> Disable2FAAsync(string username);
+    Task<List<PinnedRepository>> GetPinnedReposAsync(string username);
+    Task<bool> PinRepoAsync(string username, string repoName);
+    Task<bool> UnpinRepoAsync(string username, string repoName);
 }
 
 public class UserProfileService : IUserProfileService
@@ -562,5 +565,55 @@ public class UserProfileService : IUserProfileService
             codes[i] = BitConverter.ToUInt32(bytes).ToString("D8");
         }
         return codes;
+    }
+
+    public async Task<List<PinnedRepository>> GetPinnedReposAsync(string username)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        return await db.PinnedRepositories
+            .Where(p => p.Username == username)
+            .OrderBy(p => p.SortOrder)
+            .ToListAsync();
+    }
+
+    public async Task<bool> PinRepoAsync(string username, string repoName)
+    {
+        using var db = _dbFactory.CreateDbContext();
+
+        // Check if already pinned
+        if (await db.PinnedRepositories.AnyAsync(p => p.Username == username && p.RepoName == repoName))
+            return false;
+
+        // Limit to 6 pins max
+        var currentCount = await db.PinnedRepositories.CountAsync(p => p.Username == username);
+        if (currentCount >= 6)
+            return false;
+
+        db.PinnedRepositories.Add(new PinnedRepository
+        {
+            Username = username,
+            RepoName = repoName,
+            SortOrder = currentCount,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await db.SaveChangesAsync();
+        _logger.LogInformation("Repo '{RepoName}' pinned for {Username}", repoName, username);
+        return true;
+    }
+
+    public async Task<bool> UnpinRepoAsync(string username, string repoName)
+    {
+        using var db = _dbFactory.CreateDbContext();
+
+        var pin = await db.PinnedRepositories.FirstOrDefaultAsync(p => p.Username == username && p.RepoName == repoName);
+        if (pin == null)
+            return false;
+
+        db.PinnedRepositories.Remove(pin);
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Repo '{RepoName}' unpinned for {Username}", repoName, username);
+        return true;
     }
 }

@@ -349,6 +349,16 @@
   <data name="PR_ImageDiff" xml:space="preserve"><value>Comparaison d'images</value></data>
   <data name="Repo_RequireSignedCommits" xml:space="preserve"><value>Exiger des commits signés — tous les commits doivent être signés avec GPG</value></data>
   <data name="Repo_SignedCommits" xml:space="preserve"><value>Commits signés</value></data>
+  <data name="Repo_ProtectedFilePatterns" xml:space="preserve"><value>Modèles de fichiers protégés</value></data>
+  <data name="Repo_ProtectedFilePatternsPlaceholder" xml:space="preserve"><value>*.lock, migrations/**, .github/workflows/*</value></data>
+  <data name="Repo_ProtectedFilePatternsHelp" xml:space="preserve"><value>Modèles glob séparés par des virgules. Les modifications des fichiers correspondants nécessitent une approbation de révision.</value></data>
+  <data name="Repo_GitHooks" xml:space="preserve"><value>Git Hooks</value></data>
+  <data name="Repo_HookType" xml:space="preserve"><value>Type de hook</value></data>
+  <data name="Repo_SaveHook" xml:space="preserve"><value>Enregistrer le hook</value></data>
+  <data name="Repo_DeleteHook" xml:space="preserve"><value>Supprimer le hook</value></data>
+  <data name="Profile_PinnedRepos" xml:space="preserve"><value>Dépôts épinglés</value></data>
+  <data name="Profile_Unpin" xml:space="preserve"><value>Désépingler</value></data>
+  <data name="Profile_Pin" xml:space="preserve"><value>Épingler</value></data>
 
   <!-- Compare -->
   <data name="Compare_Base" xml:space="preserve"><value>Base</value></data>

@@ -174,6 +174,9 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Jupyter Notebook Rendering** — `.ipynb`-Dateien werden als formatierte Notebooks mit Code-Zellen, Markdown, Ausgaben und Inline-Bildern dargestellt
 - **Repository Transfer** — Übertragen Sie die Repository-Inhaberschaft an einen anderen Benutzer oder eine Organisation über die Repository-Einstellungen
 - **Default Branch Configuration** — Ändern Sie den Standard-Branch pro Repository über den Einstellungen-Tab
+- **Repository Pinning** — Heften Sie bis zu 6 Lieblings-Repositories an Ihre Benutzerprofilseite für schnellen Zugriff an
+- **Git Hooks Management** — Web-Oberfläche zum Anzeigen, Bearbeiten und Verwalten von serverseitigen Git Hooks (pre-receive, update, post-receive, post-update, pre-push) pro Repository
+- **Protected File Patterns** — Branch-Schutzregel mit Glob-Mustern, um eine Review-Genehmigung für Änderungen an bestimmten Dateien zu erfordern (z. B. `*.lock`, `migrations/**`, `.github/workflows/*`)
 
 ## Technologie-Stack
 

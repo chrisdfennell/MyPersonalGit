@@ -185,6 +185,9 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Jupyter Notebook Rendering** — `.ipynb` files render as formatted notebooks with code cells, Markdown, outputs, and inline images
 - **Repository Transfer** — Transfer repository ownership to another user or organization from repository Settings
 - **Default Branch Configuration** — Change the default branch per repository from the Settings tab
+- **Repository Pinning** — Pin up to 6 favorite repositories to your user profile page for quick access
+- **Git Hooks Management** — Web UI to view, edit, and manage server-side Git hooks (pre-receive, update, post-receive, post-update, pre-push) per repository
+- **Protected File Patterns** — Branch protection rule with glob patterns to require review approval for changes to specific files (e.g., `*.lock`, `migrations/**`, `.github/workflows/*`)
 
 ## Tech Stack
 

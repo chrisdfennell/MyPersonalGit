@@ -349,6 +349,16 @@
   <data name="PR_ImageDiff" xml:space="preserve"><value>Сравнение изображений</value></data>
   <data name="Repo_RequireSignedCommits" xml:space="preserve"><value>Требовать подписанные коммиты — все коммиты должны быть подписаны GPG</value></data>
   <data name="Repo_SignedCommits" xml:space="preserve"><value>Подписанные коммиты</value></data>
+  <data name="Repo_ProtectedFilePatterns" xml:space="preserve"><value>Защищённые шаблоны файлов</value></data>
+  <data name="Repo_ProtectedFilePatternsPlaceholder" xml:space="preserve"><value>*.lock, migrations/**, .github/workflows/*</value></data>
+  <data name="Repo_ProtectedFilePatternsHelp" xml:space="preserve"><value>Glob-шаблоны через запятую. Изменения в совпадающих файлах требуют одобрения рецензента.</value></data>
+  <data name="Repo_GitHooks" xml:space="preserve"><value>Git Hooks</value></data>
+  <data name="Repo_HookType" xml:space="preserve"><value>Тип hook</value></data>
+  <data name="Repo_SaveHook" xml:space="preserve"><value>Сохранить hook</value></data>
+  <data name="Repo_DeleteHook" xml:space="preserve"><value>Удалить hook</value></data>
+  <data name="Profile_PinnedRepos" xml:space="preserve"><value>Закреплённые репозитории</value></data>
+  <data name="Profile_Unpin" xml:space="preserve"><value>Открепить</value></data>
+  <data name="Profile_Pin" xml:space="preserve"><value>Закрепить</value></data>
 
   <!-- Compare -->
   <data name="Compare_Base" xml:space="preserve"><value>Базовая</value></data>

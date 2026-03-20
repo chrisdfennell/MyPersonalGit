@@ -349,6 +349,16 @@
   <data name="PR_ImageDiff" xml:space="preserve"><value>Bildvergleich</value></data>
   <data name="Repo_RequireSignedCommits" xml:space="preserve"><value>Signierte Commits erforderlich — alle Commits müssen mit GPG signiert sein</value></data>
   <data name="Repo_SignedCommits" xml:space="preserve"><value>Signierte Commits</value></data>
+  <data name="Repo_ProtectedFilePatterns" xml:space="preserve"><value>Geschützte Dateimuster</value></data>
+  <data name="Repo_ProtectedFilePatternsPlaceholder" xml:space="preserve"><value>*.lock, migrations/**, .github/workflows/*</value></data>
+  <data name="Repo_ProtectedFilePatternsHelp" xml:space="preserve"><value>Kommagetrennte Glob-Muster. Änderungen an übereinstimmenden Dateien erfordern eine Review-Genehmigung.</value></data>
+  <data name="Repo_GitHooks" xml:space="preserve"><value>Git Hooks</value></data>
+  <data name="Repo_HookType" xml:space="preserve"><value>Hook-Typ</value></data>
+  <data name="Repo_SaveHook" xml:space="preserve"><value>Hook speichern</value></data>
+  <data name="Repo_DeleteHook" xml:space="preserve"><value>Hook löschen</value></data>
+  <data name="Profile_PinnedRepos" xml:space="preserve"><value>Angeheftete Repositories</value></data>
+  <data name="Profile_Unpin" xml:space="preserve"><value>Loslösen</value></data>
+  <data name="Profile_Pin" xml:space="preserve"><value>Anheften</value></data>
 
   <!-- Compare -->
   <data name="Compare_Base" xml:space="preserve"><value>Basis</value></data>

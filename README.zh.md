@@ -174,6 +174,9 @@
 - **Jupyter Notebook 渲染** — `.ipynb` 文件以格式化的笔记本形式呈现，包含代码单元格、Markdown、输出和内联图片
 - **仓库转移** — 从仓库设置中将仓库所有权转移给其他用户或组织
 - **默认分支配置** — 从设置选项卡更改每个仓库的默认分支
+- **Repository Pinning** — 将最多6个常用仓库固定到用户个人资料页面以便快速访问
+- **Git Hooks Management** — 用于查看、编辑和管理每个仓库的服务器端 Git Hooks（pre-receive、update、post-receive、post-update、pre-push）的 Web UI
+- **Protected File Patterns** — 使用 glob 模式的分支保护规则，要求对特定文件的更改进行审查批准（例如 `*.lock`、`migrations/**`、`.github/workflows/*`）
 
 ## 技术栈
 

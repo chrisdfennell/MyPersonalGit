@@ -270,6 +270,46 @@
             }
             else if (ActiveTab == "repositories")
             {
+                @if (pinnedRepos.Any())
+                {
+                    <div class="mb-4">
+                        <h5 class="mb-3"><i class="bi bi-pin-angle-fill"></i> Pinned Repositories</h5>
+                        <div class="row row-cols-1 row-cols-md-2 g-3">
+                            @foreach (var pin in pinnedRepos)
+                            {
+                                var repo = UserRepos.FirstOrDefault(r => r.DisplayName == pin.RepoName || r.Name == pin.RepoName);
+                                <div class="col">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1">
+                                                        <a href="/repo/@pin.RepoName" class="text-primary fw-bold text-decoration-none">@pin.RepoName</a>
+                                                    </h6>
+                                                    @if (repo != null && !string.IsNullOrEmpty(repo.Description))
+                                                    {
+                                                        <p class="mb-0 small text-muted">@repo.Description</p>
+                                                    }
+                                                    else if (repo != null)
+                                                    {
+                                                        <p class="mb-0 small text-muted fst-italic">@repo.LastCommitMessage</p>
+                                                    }
+                                                </div>
+                                                @if (IsOwnProfile)
+                                                {
+                                                    <button class="btn btn-sm btn-outline-secondary" title="Unpin" @onclick="() => UnpinRepo(pin.RepoName)" @onclick:preventDefault @onclick:stopPropagation>
+                                                        <i class="bi bi-pin-fill"></i>
+                                                    </button>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">@L["Profile_Repositories"]</h5>
@@ -286,8 +326,9 @@
                         <div class="list-group list-group-flush">
                             @foreach (var repo in VisibleRepos)
                             {
-                                <a href="/repo/@repo.DisplayName" class="list-group-item list-group-item-action">
-                                    <div class="d-flex justify-content-between align-items-start">
+                                var isPinned = pinnedRepos.Any(p => p.RepoName == repo.DisplayName || p.RepoName == repo.Name);
+                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-start">
+                                    <a href="/repo/@repo.DisplayName" class="text-decoration-none flex-grow-1">
                                         <div>
                                             <div class="d-flex align-items-center mb-1">
                                                 <h6 class="mb-0 text-primary fw-bold me-2">@repo.DisplayName</h6>
@@ -304,9 +345,26 @@
                                                 <p class="mb-1 small text-muted fst-italic">@repo.LastCommitMessage</p>
                                             }
                                         </div>
-                                        <small class="text-muted">@FormatTimeAgo(repo.LastCommitDate ?? DateTime.UtcNow)</small>
+                                    </a>
+                                    <div class="d-flex align-items-center gap-2 ms-2">
+                                        <small class="text-muted text-nowrap">@FormatTimeAgo(repo.LastCommitDate ?? DateTime.UtcNow)</small>
+                                        @if (IsOwnProfile)
+                                        {
+                                            @if (isPinned)
+                                            {
+                                                <button class="btn btn-sm btn-outline-warning" title="Unpin repository" @onclick="() => UnpinRepo(repo.DisplayName)" @onclick:preventDefault @onclick:stopPropagation>
+                                                    <i class="bi bi-star-fill"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-sm btn-outline-secondary" title="Pin repository" @onclick="() => PinRepo(repo.DisplayName)" @onclick:preventDefault @onclick:stopPropagation>
+                                                    <i class="bi bi-star"></i>
+                                                </button>
+                                            }
+                                        }
                                     </div>
-                                </a>
+                                </div>
                             }
                         </div>
                     }
@@ -362,6 +420,7 @@
     private List<UserActivity> Activities = new();
     private List<ContributionDay> Contributions = new();
     private List<ProfileRepo> UserRepos = new();
+    private List<PinnedRepository> pinnedRepos = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -380,6 +439,7 @@
         Activities = await ProfileService.GetActivityAsync(Username);
         Contributions = await ProfileService.GetContributionsAsync(Username);
         await LoadRepositories();
+        pinnedRepos = await ProfileService.GetPinnedReposAsync(Username);
         Statistics.TotalRepositories = UserRepos.Count;
     }
 
@@ -422,6 +482,18 @@
             }
             catch { }
         }
+    }
+
+    private async Task PinRepo(string repoName)
+    {
+        await ProfileService.PinRepoAsync(Username, repoName);
+        pinnedRepos = await ProfileService.GetPinnedReposAsync(Username);
+    }
+
+    private async Task UnpinRepo(string repoName)
+    {
+        await ProfileService.UnpinRepoAsync(Username, repoName);
+        pinnedRepos = await ProfileService.GetPinnedReposAsync(Username);
     }
 
     private IEnumerable<ProfileRepo> VisibleRepos =>
