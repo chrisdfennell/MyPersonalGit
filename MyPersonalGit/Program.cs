@@ -600,6 +600,7 @@ app.UsePages();
 
 // Rate limiting (before auth so rejected requests don't waste auth work)
 app.UseRateLimiter();
+app.UseRateLimitHeaders();
 
 // SSPI / Windows Integrated Authentication
 app.UseSspiAuth();
@@ -614,6 +615,21 @@ app.UseApiAuth();
 // NOTE: This uses `git http-backend` under the hood.
 app.UseBasicAuthForGit();
 app.UseGitHttpBackend();
+
+// Health check endpoint
+app.MapGet("/health", async (IDbContextFactory<AppDbContext> dbFactory) =>
+{
+    try
+    {
+        using var db = dbFactory.CreateDbContext();
+        await db.Database.CanConnectAsync();
+        return Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow, database = "connected" });
+    }
+    catch
+    {
+        return Results.Json(new { status = "unhealthy", timestamp = DateTime.UtcNow, database = "disconnected" }, statusCode: 503);
+    }
+});
 
 app.MapControllers();
 

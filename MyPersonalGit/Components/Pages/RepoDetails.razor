@@ -49,6 +49,11 @@
 @rendermode InteractiveServer
 
 <PageTitle>@GetPageTitle() · Personal Git</PageTitle>
+<HeadContent>
+    <meta property="og:title" content="@GetPageTitle() · Personal Git" />
+    <meta property="og:description" content="@(repoDescription ?? $"Repository {RepoName} on Personal Git")" />
+    <meta property="og:url" content="@Nav.Uri" />
+</HeadContent>
 
 @if (notFound)
 {
@@ -372,7 +377,16 @@ else
                             }
                             else
                             {
-                                <pre class="m-0 line-numbers" style="font-size: 13px; line-height: 1.5; overflow-x: auto; padding: 0.5em 0.5em 0.5em 3.8em;"><code class="@GetPrismLanguageClass(Path)">@fileContent</code></pre>
+                                <div class="d-flex" style="font-size: 13px; line-height: 1.5; overflow-x: auto;">
+                                    <div class="line-number-gutter text-end select-none pe-2 border-end" style="min-width: 50px; color: #6e7781; padding-top: 0.5em;">
+                                        @{ var lines = fileContent.Split('\n'); }
+                                        @for (int i = 1; i <= lines.Length; i++)
+                                        {
+                                            <a id="L@i" href="#L@i" class="d-block text-decoration-none line-link" style="color: #6e7781;" @onclick:preventDefault="false">@i</a>
+                                        }
+                                    </div>
+                                    <pre class="m-0 flex-grow-1" style="padding: 0.5em;"><code class="@GetPrismLanguageClass(Path)">@fileContent</code></pre>
+                                </div>
                             }
                         </div>
                     </div>
@@ -2869,6 +2883,19 @@ else
         z-index: 1;
     }
 
+    .line-link:hover {
+        color: #0969da !important;
+        text-decoration: underline !important;
+    }
+
+    .line-highlight {
+        background-color: rgba(255, 235, 59, 0.3) !important;
+    }
+
+    [data-bs-theme="dark"] .line-highlight {
+        background-color: rgba(255, 235, 59, 0.15) !important;
+    }
+
     /* Dark mode overrides */
     [data-bs-theme="dark"] .list-group-item:hover {
         background-color: #161b22;
@@ -4087,8 +4114,8 @@ else
             try { await JS.InvokeVoidAsync("editorHelper.enableTabKey", "codeEditor"); } catch { }
             try { await JS.InvokeVoidAsync("editorHelper.autoresize", "codeEditor"); } catch { }
         }
-        // Scroll to anchor fragment if present in the URL (for TOC links)
-        try { await JS.InvokeVoidAsync("eval", "if(location.hash){document.querySelector(location.hash)?.scrollIntoView({behavior:'smooth'})}"); } catch { }
+        // Scroll to anchor fragment if present in the URL (for TOC links and line links)
+        try { await JS.InvokeVoidAsync("lineLink.scrollToHash"); } catch { }
     }
 
     private string GetPageTitle()

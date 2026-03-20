@@ -5,6 +5,7 @@
 @using MyPersonalGit.Resources
 @inject IAdminService AdminService
 @inject CurrentUserService UserService
+@inject INotificationService NotificationService
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
@@ -66,8 +67,14 @@
                 </button>
                 @if (UserService.IsLoggedIn)
                 {
-                    <a href="/notifications" class="text-white text-opacity-75 text-decoration-none">
+                    <a href="/notifications" class="text-white text-opacity-75 text-decoration-none position-relative">
                         <i class="bi bi-bell"></i>
+                        @if (unreadNotificationCount > 0)
+                        {
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                                @(unreadNotificationCount > 99 ? "99+" : unreadNotificationCount)
+                            </span>
+                        }
                     </a>
                     <div class="dropdown">
                         <button class="btn btn-link text-white text-opacity-75 text-decoration-none p-0 d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -322,6 +329,7 @@
 @code {
     private string currentTheme = "light";
     private string currentCulture = "en";
+    private int unreadNotificationCount;
 
     private static readonly (string Code, string Name)[] supportedLanguages = new[]
     {
@@ -342,6 +350,10 @@
                 if (!string.IsNullOrEmpty(sessionId))
                 {
                     await UserService.InitializeFromSessionAsync(sessionId);
+                    if (UserService.IsLoggedIn)
+                    {
+                        try { unreadNotificationCount = await NotificationService.GetUnreadCountAsync(UserService.Username); } catch { }
+                    }
                 }
                 StateHasChanged();
             }

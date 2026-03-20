@@ -21,7 +21,12 @@
 @inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>Issues · @RepoName</PageTitle>
+<PageTitle>@(currentIssue != null ? $"{currentIssue.Title} · Issue #{currentIssue.Number}" : "Issues") · @RepoName</PageTitle>
+<HeadContent>
+    <meta property="og:title" content="@(currentIssue != null ? $"{currentIssue.Title} · Issue #{currentIssue.Number}" : "Issues") · @RepoName" />
+    <meta property="og:description" content="@(currentIssue?.Body?.Length > 200 ? currentIssue.Body[..200] + "..." : currentIssue?.Body ?? $"Issues for {RepoName}")" />
+    <meta property="og:url" content="@Nav.Uri" />
+</HeadContent>
 
 <div class="repo-header border-bottom bg-light-subtle mb-4 pt-3">
     <div class="container-xl px-3">

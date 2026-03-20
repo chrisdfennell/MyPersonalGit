@@ -22,7 +22,12 @@
 @inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>Pull Requests · @RepoName</PageTitle>
+<PageTitle>@(currentPR != null ? $"{currentPR.Title} · PR #{currentPR.Number}" : "Pull Requests") · @RepoName</PageTitle>
+<HeadContent>
+    <meta property="og:title" content="@(currentPR != null ? $"{currentPR.Title} · PR #{currentPR.Number}" : "Pull Requests") · @RepoName" />
+    <meta property="og:description" content="@(currentPR?.Body?.Length > 200 ? currentPR.Body[..200] + "..." : currentPR?.Body ?? $"Pull requests for {RepoName}")" />
+    <meta property="og:url" content="@Nav.Uri" />
+</HeadContent>
 
 <div class="repo-header border-bottom bg-light-subtle mb-4 pt-3">
     <div class="container-xl px-3">
