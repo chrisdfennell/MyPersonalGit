@@ -936,4 +936,13 @@
   <data name="Traffic_Views" xml:space="preserve"><value>Visualizzazioni</value></data>
   <data name="Traffic_PopularContent" xml:space="preserve"><value>Contenuti popolari</value></data>
   <data name="Traffic_Path" xml:space="preserve"><value>Percorso</value></data>
+  <!-- Cherry-pick / Revert -->
+  <data name="CherryPick_Title" xml:space="preserve"><value>Cherry-pick su...</value></data>
+  <data name="Revert_Title" xml:space="preserve"><value>Ripristina</value></data>
+  <data name="PR_MergedBy" xml:space="preserve"><value>Unito da</value></data>
+  <!-- Issue Transfer -->
+  <data name="Issues_TransferIssue" xml:space="preserve"><value>Trasferisci issue</value></data>
+  <data name="Issues_TransferDescription" xml:space="preserve"><value>Sposta questa issue in un altro repository. I commenti e le etichette corrispondenti saranno copiati.</value></data>
+  <data name="Issues_TargetRepository" xml:space="preserve"><value>Repository di destinazione</value></data>
+  <data name="Issues_TargetRepoPlaceholder" xml:space="preserve"><value>es. MioAltroRepo</value></data>
 </root>

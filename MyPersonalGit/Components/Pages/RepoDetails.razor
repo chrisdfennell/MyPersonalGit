@@ -38,7 +38,9 @@
 @inject CurrentUserService UserService
 @inject ICodeOwnersService CodeOwnersService
 @inject ITagProtectionService TagProtectionService
+@inject ICherryPickRevertService CherryPickRevertService
 @inject IRepositoryLabelService LabelService
+@inject IDependencyUpdateService DependencyUpdateService
 @inject IStringLocalizer<SharedResource> L
 @inject IGitHooksService GitHooksService
 @inject IAutolinkService AutolinkService
@@ -964,6 +966,9 @@ else
                                 <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "mirrors" ? "active" : "")" @onclick='() => settingsSection = "mirrors"'>
                                     <i class="bi bi-arrow-repeat me-2"></i>Mirrors
                                 </a>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "dependabot" ? "active" : "")" @onclick='() => { settingsSection = "dependabot"; LoadDependabotConfigs(); }'>
+                                    <i class="bi bi-arrow-up-circle me-2"></i>Dependabot
+                                </a>
 
                                 <span class="list-group-item fw-bold text-muted bg-transparent border-0 py-1 px-2 mt-2" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Danger</span>
                                 <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "transfer" ? "active" : "")" @onclick='() => settingsSection = "transfer"'>
@@ -1869,6 +1874,63 @@ else
                     </div>
                 }
 
+                @if (UserService.IsLoggedIn && settingsSection == "dependabot")
+                {
+                    <div class="card border shadow-sm mb-4">
+                        <div class="card-header bg-light-subtle py-2 small fw-bold">
+                            <i class="bi bi-arrow-up-circle me-1"></i> Dependabot — Automatic Dependency Updates
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small">Automatically check for outdated dependencies and create pull requests to update them.</p>
+
+                            @if (depbotConfigs.Any())
+                            {
+                                <table class="table table-sm mb-3">
+                                    <thead><tr><th>Ecosystem</th><th>Schedule</th><th>Enabled</th><th>Last run</th><th></th></tr></thead>
+                                    <tbody>
+                                        @foreach (var cfg in depbotConfigs)
+                                        {
+                                            <tr>
+                                                <td><strong>@cfg.Ecosystem</strong></td>
+                                                <td>@cfg.Schedule</td>
+                                                <td><span class="badge @(cfg.IsEnabled ? "bg-success" : "bg-secondary")">@(cfg.IsEnabled ? "Active" : "Disabled")</span></td>
+                                                <td class="small text-muted">@(cfg.LastRunAt?.ToString("g") ?? "Never")</td>
+                                                <td>
+                                                    <button class="btn btn-outline-danger btn-sm" @onclick="() => DisableDependabot(cfg.Id)">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+
+                            <div class="d-flex gap-2 align-items-end">
+                                <div>
+                                    <label class="form-label small mb-1">Ecosystem</label>
+                                    <select class="form-select form-select-sm" @bind="newDepbotEcosystem">
+                                        <option value="NuGet">NuGet (.NET)</option>
+                                        <option value="npm">npm (Node.js)</option>
+                                        <option value="pip">pip (Python)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label small mb-1">Schedule</label>
+                                    <select class="form-select form-select-sm" @bind="newDepbotSchedule">
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary btn-sm" @onclick="EnableDependabot">
+                                    <i class="bi bi-plus me-1"></i> Enable
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+
                 @if (UserService.IsLoggedIn && settingsSection == "danger")
                 {
                     <div class="card border-danger shadow-sm">
@@ -2193,11 +2255,36 @@ else
                             <div class="d-flex gap-3 small text-muted">
                                 <span>commit <code>@selectedCommit.Sha</code></span>
                             </div>
-                            <div class="btn-group btn-group-sm border rounded shadow-sm">
-                                <button type="button" class="btn btn-light @(diffViewMode == "unified" ? "active border-primary" : "")" @onclick='() => diffViewMode = "unified"'>Unified</button>
-                                <button type="button" class="btn btn-light @(diffViewMode == "split" ? "active border-primary" : "")" @onclick='() => diffViewMode = "split"'>Split</button>
+                            <div class="d-flex gap-2 align-items-center">
+                                @if (UserService.IsLoggedIn)
+                                {
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="bi bi-signpost-split me-1"></i> @L["CherryPick_Title"]
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            @foreach (var b in branches.Where(b => b.Name != currentBranch))
+                                            {
+                                                var branchName = b.Name;
+                                                <li><button class="dropdown-item small" @onclick="() => CherryPickCommit(selectedCommit.Sha, branchName)">@branchName</button></li>
+                                            }
+                                        </ul>
+                                    </div>
+                                    <button class="btn btn-outline-danger btn-sm" @onclick="() => RevertCommit(selectedCommit.Sha)" disabled="@isReverting">
+                                        @if (isReverting) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i> @L["Revert_Title"]
+                                    </button>
+                                }
+                                <div class="btn-group btn-group-sm border rounded shadow-sm">
+                                    <button type="button" class="btn btn-light @(diffViewMode == "unified" ? "active border-primary" : "")" @onclick='() => diffViewMode = "unified"'>Unified</button>
+                                    <button type="button" class="btn btn-light @(diffViewMode == "split" ? "active border-primary" : "")" @onclick='() => diffViewMode = "split"'>Split</button>
+                                </div>
                             </div>
                         </div>
+                        @if (!string.IsNullOrEmpty(cherryPickRevertMessage))
+                        {
+                            <div class="alert @(cherryPickRevertSuccess ? "alert-success" : "alert-danger") mt-2 mb-0 small py-2">@cherryPickRevertMessage</div>
+                        }
                     </div>
                 </div>
 
@@ -5664,4 +5751,55 @@ else
     public class DiffPair { public string? Left { get; set; } public string? Right { get; set; } public int LeftLineNum { get; set; } public int RightLineNum { get; set; } }
     public class UnifiedDiffRow { public string OldNum { get; set; } = ""; public string NewNum { get; set; } = ""; public char Sign { get; set; } public string Content { get; set; } = ""; public string CssClass { get; set; } = ""; }
     public class LanguageStat { public string Name { get; set; } = ""; public double Percentage { get; set; } public string Color { get; set; } = ""; }
+
+    // Dependabot
+    private List<MyPersonalGit.Models.DependencyUpdateConfig> depbotConfigs = new();
+    private string newDepbotEcosystem = "NuGet";
+    private string newDepbotSchedule = "weekly";
+
+    private async void LoadDependabotConfigs()
+    {
+        depbotConfigs = await DependencyUpdateService.GetConfigsAsync(RepoName);
+        StateHasChanged();
+    }
+
+    private async Task EnableDependabot()
+    {
+        await DependencyUpdateService.EnableUpdatesAsync(RepoName, newDepbotEcosystem, newDepbotSchedule);
+        depbotConfigs = await DependencyUpdateService.GetConfigsAsync(RepoName);
+        StateHasChanged();
+    }
+
+    private async Task DisableDependabot(int configId)
+    {
+        await DependencyUpdateService.DisableUpdatesAsync(RepoName, configId);
+        depbotConfigs = await DependencyUpdateService.GetConfigsAsync(RepoName);
+        StateHasChanged();
+    }
+
+    // Cherry-pick / Revert
+    private bool isReverting;
+    private string? cherryPickRevertMessage;
+    private bool cherryPickRevertSuccess;
+
+    private async Task CherryPickCommit(string sha, string targetBranch)
+    {
+        cherryPickRevertMessage = null;
+        var (success, error, prNumber) = await CherryPickRevertService.CherryPickAsPullRequestAsync(RepoName, sha, targetBranch, UserService.Username);
+        cherryPickRevertSuccess = success;
+        cherryPickRevertMessage = success ? $"PR #{prNumber} created for cherry-pick to {targetBranch}" : error;
+        StateHasChanged();
+    }
+
+    private async Task RevertCommit(string sha)
+    {
+        isReverting = true;
+        cherryPickRevertMessage = null;
+        StateHasChanged();
+        var (success, error, prNumber) = await CherryPickRevertService.RevertAsPullRequestAsync(RepoName, sha, currentBranch, UserService.Username);
+        cherryPickRevertSuccess = success;
+        cherryPickRevertMessage = success ? $"PR #{prNumber} created to revert {sha[..7]}" : error;
+        isReverting = false;
+        StateHasChanged();
+    }
 }

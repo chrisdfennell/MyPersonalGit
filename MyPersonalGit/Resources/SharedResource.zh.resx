@@ -936,4 +936,13 @@
   <data name="Traffic_Views" xml:space="preserve"><value>浏览量</value></data>
   <data name="Traffic_PopularContent" xml:space="preserve"><value>热门内容</value></data>
   <data name="Traffic_Path" xml:space="preserve"><value>路径</value></data>
+  <!-- Cherry-pick / Revert -->
+  <data name="CherryPick_Title" xml:space="preserve"><value>拣选到...</value></data>
+  <data name="Revert_Title" xml:space="preserve"><value>还原</value></data>
+  <data name="PR_MergedBy" xml:space="preserve"><value>合并者</value></data>
+  <!-- Issue Transfer -->
+  <data name="Issues_TransferIssue" xml:space="preserve"><value>转移议题</value></data>
+  <data name="Issues_TransferDescription" xml:space="preserve"><value>将此议题移动到另一个仓库。评论和匹配的标签将被复制。</value></data>
+  <data name="Issues_TargetRepository" xml:space="preserve"><value>目标仓库</value></data>
+  <data name="Issues_TargetRepoPlaceholder" xml:space="preserve"><value>例如 MyOtherRepo</value></data>
 </root>

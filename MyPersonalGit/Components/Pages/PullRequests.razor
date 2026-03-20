@@ -17,6 +17,7 @@
 @inject CurrentUserService UserService
 @inject ICodeOwnersService CodeOwnersService
 @inject IConflictResolutionService ConflictService
+@inject ICherryPickRevertService CherryPickRevertService
 @inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
@@ -161,6 +162,29 @@
                                     </button>
                                 }
                             </div>
+                        </div>
+                    </div>
+                }
+
+                @* Revert button for merged PRs *@
+                @if (currentPR.State == PullRequestState.Merged && UserService.IsLoggedIn)
+                {
+                    <div class="card mb-3">
+                        <div class="card-body py-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small text-muted">
+                                    <i class="bi bi-check2-all text-primary me-1"></i>
+                                    @L["PR_MergedBy"] @currentPR.MergedBy @L["SecretScan_On"] @currentPR.MergedAt?.ToString("g")
+                                </span>
+                                <button class="btn btn-outline-danger btn-sm" @onclick="RevertMergedPR" disabled="@isRevertingPR">
+                                    @if (isRevertingPR) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> @L["Revert_Title"]
+                                </button>
+                            </div>
+                            @if (!string.IsNullOrEmpty(revertPRMessage))
+                            {
+                                <div class="alert @(revertPRSuccess ? "alert-success" : "alert-danger") mt-2 mb-0 small py-2">@revertPRMessage</div>
+                            }
                         </div>
                     </div>
                 }
@@ -1675,6 +1699,73 @@
         finally
         {
             isResolvingConflicts = false;
+        }
+    }
+
+    // Revert merged PR
+    private bool isRevertingPR;
+    private string? revertPRMessage;
+    private bool revertPRSuccess;
+
+    private async Task RevertMergedPR()
+    {
+        if (currentPR == null) return;
+        isRevertingPR = true;
+        revertPRMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            // Get the merge commit SHA from the target branch tip at merge time
+            var repoPath = "";
+            var systemSettings = await AdminService.GetSystemSettingsAsync();
+            repoPath = !string.IsNullOrEmpty(systemSettings.ProjectRoot) ? systemSettings.ProjectRoot : Config["Git:ProjectRoot"] ?? "/repos";
+            repoPath = Path.Combine(repoPath, RepoName);
+            if (!Directory.Exists(repoPath)) repoPath += ".git";
+
+            // Find the merge commit SHA
+            string? mergeSha = null;
+            if (LibGit2Sharp.Repository.IsValid(repoPath))
+            {
+                using var repo = new LibGit2Sharp.Repository(repoPath);
+                var targetBranch = repo.Branches[currentPR.TargetBranch];
+                if (targetBranch?.Tip != null)
+                {
+                    // Walk back to find the merge commit for this PR
+                    foreach (var commit in repo.Commits.QueryBy(new CommitFilter { IncludeReachableFrom = targetBranch.Tip, SortBy = CommitSortStrategies.Time }).Take(50))
+                    {
+                        if (commit.Message.Contains($"#{currentPR.Number}"))
+                        {
+                            mergeSha = commit.Sha;
+                            break;
+                        }
+                    }
+                    mergeSha ??= targetBranch.Tip.Sha;
+                }
+            }
+
+            if (mergeSha == null)
+            {
+                revertPRMessage = "Could not find merge commit";
+                revertPRSuccess = false;
+            }
+            else
+            {
+                var (success, error, prNumber) = await CherryPickRevertService.RevertAsPullRequestAsync(
+                    RepoName, mergeSha, currentPR.TargetBranch, UserService.Username);
+                revertPRSuccess = success;
+                revertPRMessage = success ? $"Revert PR #{prNumber} created" : error;
+            }
+        }
+        catch (Exception ex)
+        {
+            revertPRMessage = $"Error: {ex.Message}";
+            revertPRSuccess = false;
+        }
+        finally
+        {
+            isRevertingPR = false;
+            StateHasChanged();
         }
     }
 }

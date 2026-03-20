@@ -936,4 +936,13 @@
   <data name="Traffic_Views" xml:space="preserve"><value>閲覧数</value></data>
   <data name="Traffic_PopularContent" xml:space="preserve"><value>人気コンテンツ</value></data>
   <data name="Traffic_Path" xml:space="preserve"><value>パス</value></data>
+  <!-- Cherry-pick / Revert -->
+  <data name="CherryPick_Title" xml:space="preserve"><value>チェリーピック先...</value></data>
+  <data name="Revert_Title" xml:space="preserve"><value>元に戻す</value></data>
+  <data name="PR_MergedBy" xml:space="preserve"><value>マージ者</value></data>
+  <!-- Issue Transfer -->
+  <data name="Issues_TransferIssue" xml:space="preserve"><value>イシューを移動</value></data>
+  <data name="Issues_TransferDescription" xml:space="preserve"><value>このイシューを別のリポジトリに移動します。コメントと一致するラベルがコピーされます。</value></data>
+  <data name="Issues_TargetRepository" xml:space="preserve"><value>移動先リポジトリ</value></data>
+  <data name="Issues_TargetRepoPlaceholder" xml:space="preserve"><value>例: MyOtherRepo</value></data>
 </root>
