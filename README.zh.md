@@ -164,7 +164,7 @@
 - **用户资料** — 每用户的贡献热力图、活动源和统计
 - **个人访问令牌** — 基于令牌的 API 认证，支持可配置作用域和可选的路由级限制（glob 模式如 `/api/packages/**` 限制令牌访问特定 API 路径）
 - **备份与恢复** — 导出和导入服务器数据
-- **安全扫描** — 由 [OSV.dev](https://osv.dev/) 数据库驱动的真实依赖漏洞扫描。自动从 `.csproj`（NuGet）、`package.json`（npm）和 `requirements.txt`（PyPI）提取依赖项，然后对照已知 CVE 进行检查。报告严重性、修复版本和咨询链接。另外还有手动安全公告的草稿/发布/关闭工作流
+- **安全扫描** — 由 [OSV.dev](https://osv.dev/) 数据库驱动的真实依赖漏洞扫描。自动从 `.csproj`（NuGet）、`package.json`（npm）、`requirements.txt`（PyPI）、`Cargo.toml`（Rust）、`Gemfile`（Ruby）、`composer.json`（PHP）、`go.mod`（Go）、`pom.xml`（Maven/Java）和 `pubspec.yaml`（Dart/Flutter）提取依赖项，然后对照已知 CVE 进行检查。报告严重性、修复版本和咨询链接。另外还有手动安全公告的草稿/发布/关闭工作流
 - **深色模式** — 完整的深色/浅色模式支持，在页头有切换开关
 - **多语言 / i18n** — 所有 27 个页面的完整本地化，共 676 个资源键。内置 11 种语言：英语、西班牙语、法语、德语、日语、韩语、简体中文、葡萄牙语、俄语、意大利语和土耳其语。通过创建 `SharedResource.{locale}.resx` 文件添加更多语言。页头的语言选择器可切换语言
 - **Swagger / OpenAPI** — 在 `/swagger` 提供交互式 API 文档，所有 REST 端点均可发现和测试

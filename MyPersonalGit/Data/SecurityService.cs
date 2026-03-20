@@ -174,7 +174,7 @@ public class SecurityService : ISecurityService
         return await CreateScanAsync(repoName, dependencies);
     }
 
-    /// <summary>Extracts dependencies from .csproj, package.json, and requirements.txt in the repo.</summary>
+    /// <summary>Extracts dependencies from .csproj, package.json, requirements.txt, Cargo.toml, Gemfile, composer.json, go.mod, pom.xml, pubspec.yaml in the repo.</summary>
     private static List<Dependency> ExtractDependencies(string repoPath)
     {
         var dependencies = new List<Dependency>();
@@ -214,6 +214,18 @@ public class SecurityService : ISecurityService
                     ParsePackageJson((Blob)entry.Target, dependencies);
                 else if (name == "requirements.txt")
                     ParseRequirementsTxt((Blob)entry.Target, dependencies);
+                else if (name == "cargo.toml")
+                    ParseCargoToml((Blob)entry.Target, dependencies);
+                else if (name == "gemfile" || name.EndsWith(".gemspec"))
+                    ParseGemfile((Blob)entry.Target, dependencies);
+                else if (name == "composer.json")
+                    ParseComposerJson((Blob)entry.Target, dependencies);
+                else if (name == "go.mod")
+                    ParseGoMod((Blob)entry.Target, dependencies);
+                else if (name == "pom.xml")
+                    ParsePomXml((Blob)entry.Target, dependencies);
+                else if (name == "pubspec.yaml")
+                    ParsePubspecYaml((Blob)entry.Target, dependencies);
             }
         }
     }
@@ -301,6 +313,147 @@ public class SecurityService : ISecurityService
         catch { }
     }
 
+    private static void ParseCargoToml(Blob blob, List<Dependency> dependencies)
+    {
+        try
+        {
+            using var reader = new StreamReader(blob.GetContentStream());
+            string? line;
+            bool inDeps = false;
+            while ((line = reader.ReadLine()) != null)
+            {
+                line = line.Trim();
+                if (line.StartsWith("[dependencies]") || line.StartsWith("[dev-dependencies]") || line.StartsWith("[build-dependencies]"))
+                { inDeps = true; continue; }
+                if (line.StartsWith("[")) { inDeps = false; continue; }
+                if (!inDeps || string.IsNullOrEmpty(line) || line.StartsWith('#')) continue;
+                // name = "1.2.3" or name = { version = "1.2.3" }
+                var match = Regex.Match(line, @"^([a-zA-Z0-9_-]+)\s*=\s*""([^""]+)""");
+                if (!match.Success)
+                    match = Regex.Match(line, @"^([a-zA-Z0-9_-]+)\s*=\s*\{.*version\s*=\s*""([^""]+)""");
+                if (match.Success)
+                    dependencies.Add(new Dependency { Name = match.Groups[1].Value, Version = match.Groups[2].Value.TrimStart('^').TrimStart('~'), Type = "crates.io", Vulnerabilities = new() });
+            }
+        }
+        catch { }
+    }
+
+    private static void ParseGemfile(Blob blob, List<Dependency> dependencies)
+    {
+        try
+        {
+            using var reader = new StreamReader(blob.GetContentStream());
+            string? line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                line = line.Trim();
+                if (string.IsNullOrEmpty(line) || line.StartsWith('#')) continue;
+                // gem 'name', '~> 1.2' or gem "name", ">= 1.0"
+                var match = Regex.Match(line, @"gem\s+['""]([^'""]+)['""]\s*,\s*['""][~>=<]*\s*([0-9][^'""]*)['""]");
+                if (match.Success)
+                    dependencies.Add(new Dependency { Name = match.Groups[1].Value, Version = match.Groups[2].Value, Type = "RubyGems", Vulnerabilities = new() });
+                else
+                {
+                    // gem 'name' (no version)
+                    match = Regex.Match(line, @"gem\s+['""]([^'""]+)['""]");
+                    if (match.Success)
+                        dependencies.Add(new Dependency { Name = match.Groups[1].Value, Version = "0", Type = "RubyGems", Vulnerabilities = new() });
+                }
+            }
+        }
+        catch { }
+    }
+
+    private static void ParseComposerJson(Blob blob, List<Dependency> dependencies)
+    {
+        try
+        {
+            using var reader = new StreamReader(blob.GetContentStream());
+            var content = reader.ReadToEnd();
+            using var doc = JsonDocument.Parse(content);
+            var root = doc.RootElement;
+            foreach (var section in new[] { "require", "require-dev" })
+            {
+                if (!root.TryGetProperty(section, out var deps)) continue;
+                foreach (var dep in deps.EnumerateObject())
+                {
+                    if (dep.Name == "php" || dep.Name.StartsWith("ext-")) continue;
+                    var version = Regex.Replace(dep.Value.GetString() ?? "", @"^[\^~>=<]*", "");
+                    if (!string.IsNullOrEmpty(version) && char.IsDigit(version[0]))
+                        dependencies.Add(new Dependency { Name = dep.Name, Version = version, Type = "Packagist", Vulnerabilities = new() });
+                }
+            }
+        }
+        catch { }
+    }
+
+    private static void ParseGoMod(Blob blob, List<Dependency> dependencies)
+    {
+        try
+        {
+            using var reader = new StreamReader(blob.GetContentStream());
+            string? line;
+            bool inRequire = false;
+            while ((line = reader.ReadLine()) != null)
+            {
+                line = line.Trim();
+                if (line == "require (") { inRequire = true; continue; }
+                if (line == ")") { inRequire = false; continue; }
+                if (line.StartsWith("require "))
+                {
+                    var match = Regex.Match(line, @"require\s+(\S+)\s+v?(\S+)");
+                    if (match.Success)
+                        dependencies.Add(new Dependency { Name = match.Groups[1].Value, Version = match.Groups[2].Value, Type = "Go", Vulnerabilities = new() });
+                }
+                else if (inRequire)
+                {
+                    var match = Regex.Match(line, @"^(\S+)\s+v?(\S+)");
+                    if (match.Success && !line.StartsWith("//"))
+                        dependencies.Add(new Dependency { Name = match.Groups[1].Value, Version = match.Groups[2].Value, Type = "Go", Vulnerabilities = new() });
+                }
+            }
+        }
+        catch { }
+    }
+
+    private static void ParsePomXml(Blob blob, List<Dependency> dependencies)
+    {
+        try
+        {
+            using var reader = new StreamReader(blob.GetContentStream());
+            var content = reader.ReadToEnd();
+            var matches = Regex.Matches(content,
+                @"<dependency>\s*<groupId>([^<]+)</groupId>\s*<artifactId>([^<]+)</artifactId>\s*<version>([^<]+)</version>",
+                RegexOptions.Singleline);
+            foreach (Match match in matches)
+                dependencies.Add(new Dependency { Name = $"{match.Groups[1].Value}:{match.Groups[2].Value}", Version = match.Groups[3].Value, Type = "Maven", Vulnerabilities = new() });
+        }
+        catch { }
+    }
+
+    private static void ParsePubspecYaml(Blob blob, List<Dependency> dependencies)
+    {
+        try
+        {
+            using var reader = new StreamReader(blob.GetContentStream());
+            string? line;
+            bool inDeps = false;
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (line == "dependencies:" || line == "dev_dependencies:") { inDeps = true; continue; }
+                if (!line.StartsWith(" ") && !line.StartsWith("\t") && line.Length > 0) { inDeps = false; continue; }
+                if (!inDeps) continue;
+                line = line.Trim();
+                if (string.IsNullOrEmpty(line) || line.StartsWith('#')) continue;
+                // name: ^1.2.3 or name: ">=1.0.0"
+                var match = Regex.Match(line, @"^([a-zA-Z0-9_]+):\s*[\^~>=]*""?([0-9][^""'\s]*)""?");
+                if (match.Success)
+                    dependencies.Add(new Dependency { Name = match.Groups[1].Value, Version = match.Groups[2].Value, Type = "Pub", Vulnerabilities = new() });
+            }
+        }
+        catch { }
+    }
+
     /// <summary>Queries the OSV.dev API for known vulnerabilities for a package.</summary>
     private static async Task<List<Vulnerability>> QueryOsvAsync(HttpClient client, string packageName, string version, string ecosystem)
     {
@@ -312,6 +465,12 @@ public class SecurityService : ISecurityService
             "NuGet" => "NuGet",
             "npm" => "npm",
             "PyPI" => "PyPI",
+            "crates.io" => "crates.io",
+            "RubyGems" => "RubyGems",
+            "Packagist" => "Packagist",
+            "Go" => "Go",
+            "Maven" => "Maven",
+            "Pub" => "Pub",
             _ => ecosystem
         };
 
