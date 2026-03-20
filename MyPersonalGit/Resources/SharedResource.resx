@@ -937,4 +937,11 @@
   <data name="Issues_TransferDescription" xml:space="preserve"><value>Move this issue to another repository. Comments and matching labels will be copied.</value></data>
   <data name="Issues_TargetRepository" xml:space="preserve"><value>Target repository</value></data>
   <data name="Issues_TargetRepoPlaceholder" xml:space="preserve"><value>e.g. MyOtherRepo</value></data>
+
+  <!-- Contributing awareness -->
+  <data name="Issues_ContributingAlert" xml:space="preserve"><value>Please read the contributing guidelines before submitting an issue.</value></data>
+  <data name="Issues_ViewContributing" xml:space="preserve"><value>View contributing guidelines</value></data>
+
+  <!-- File download -->
+  <data name="Repo_Download" xml:space="preserve"><value>Download</value></data>
 </root>

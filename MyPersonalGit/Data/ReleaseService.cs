@@ -8,6 +8,7 @@ public interface IReleaseService
     Task<List<Release>> GetReleasesAsync(string repoName);
     Task<Release?> GetReleaseAsync(string repoName, int releaseId);
     Task<Release> CreateReleaseAsync(string repoName, string tagName, string title, string? body, string author, bool isDraft, bool isPrerelease);
+    Task<bool> UpdateReleaseAsync(string repoName, int releaseId, string title, string? body, bool isDraft, bool isPrerelease);
     Task<bool> DeleteReleaseAsync(string repoName, int releaseId);
     Task<ReleaseAsset> AddAssetAsync(int releaseId, string fileName, long size, string contentType, byte[] data);
     Task<(ReleaseAsset? asset, byte[]? data)> GetAssetAsync(int assetId);
@@ -77,6 +78,23 @@ public class ReleaseService : IReleaseService
         await _activityService.RecordActivityAsync(author, "created_release", repoName, $"{author} released {title} ({tagName})", $"/repo/{repoName}");
 
         return release;
+    }
+
+    public async Task<bool> UpdateReleaseAsync(string repoName, int releaseId, string title, string? body, bool isDraft, bool isPrerelease)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var release = await db.Releases.FirstOrDefaultAsync(r => r.RepoName.ToLower() == repoName.ToLower() && r.Id == releaseId);
+        if (release == null) return false;
+
+        release.Title = title;
+        release.Body = body;
+        release.IsDraft = isDraft;
+        release.IsPrerelease = isPrerelease;
+        if (!isDraft && release.PublishedAt == null) release.PublishedAt = DateTime.UtcNow;
+
+        await db.SaveChangesAsync();
+        _logger.LogInformation("Release {ReleaseId} updated for {RepoName}", releaseId, repoName);
+        return true;
     }
 
     public async Task<bool> DeleteReleaseAsync(string repoName, int releaseId)

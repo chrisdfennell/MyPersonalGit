@@ -15,6 +15,7 @@
 @inject ITimeTrackingService TimeTrackingService
 @inject IConfiguration Config
 @inject IAdminService AdminService
+@inject IRepositoryService RepoService
 @inject NavigationManager Nav
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
@@ -680,6 +681,14 @@
                     <button type="button" class="btn-close" @onclick="() => showNewIssueModal = false"></button>
                 </div>
                 <div class="modal-body">
+                    @if (hasContributingFile)
+                    {
+                        <div class="alert alert-info small py-2 mb-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            @L["Issues_ContributingAlert"]
+                            <a href="/repo/@RepoName/CONTRIBUTING.md" target="_blank" class="alert-link">@L["Issues_ViewContributing"]</a>
+                        </div>
+                    }
                     <div class="mb-3">
                         <label class="form-label fw-bold">@L["Issues_TitleLabel"]</label>
                         <input type="text" class="form-control" @bind="newIssueTitle" placeholder="@L["Issues_IssueTitlePlaceholder"]" />
@@ -774,6 +783,7 @@
     [Parameter] public int? Number { get; set; }
 
     private List<Issue> issues = new();
+    private bool hasContributingFile;
     private Issue? currentIssue;
     private Milestone? currentIssueMilestone;
     private string filterState = "open";
@@ -858,6 +868,27 @@
     private async Task LoadIssues()
     {
         issues = await IssueService.GetIssuesAsync(RepoName);
+
+        // Check for CONTRIBUTING.md
+        try
+        {
+            var systemSettings = await AdminService.GetSystemSettingsAsync();
+            var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot) ? systemSettings.ProjectRoot : Config["Git:ProjectRoot"] ?? "/repos";
+            var repoPath = System.IO.Path.Combine(projectRoot, RepoName);
+            if (!LibGit2Sharp.Repository.IsValid(repoPath)) repoPath += ".git";
+            if (LibGit2Sharp.Repository.IsValid(repoPath))
+            {
+                using var repo = new LibGit2Sharp.Repository(repoPath);
+                var head = repo.Head;
+                if (head?.Tip != null)
+                {
+                    hasContributingFile = head.Tip.Tree.Any(e =>
+                        e.Name.StartsWith("CONTRIBUTING", StringComparison.OrdinalIgnoreCase));
+                }
+            }
+        }
+        catch { }
+
         if (Number.HasValue)
         {
             currentIssue = await IssueService.GetIssueAsync(RepoName, Number.Value);

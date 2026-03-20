@@ -945,4 +945,8 @@
   <data name="Issues_TransferDescription" xml:space="preserve"><value>Mover este issue para outro repositório. Comentários e labels correspondentes serão copiados.</value></data>
   <data name="Issues_TargetRepository" xml:space="preserve"><value>Repositório de destino</value></data>
   <data name="Issues_TargetRepoPlaceholder" xml:space="preserve"><value>ex. MeuOutroRepo</value></data>
+  <!-- Contributing / Download -->
+  <data name="Issues_ContributingAlert" xml:space="preserve"><value>Por favor, leia as diretrizes de contribuição antes de enviar um issue.</value></data>
+  <data name="Issues_ViewContributing" xml:space="preserve"><value>Ver diretrizes de contribuição</value></data>
+  <data name="Repo_Download" xml:space="preserve"><value>Baixar</value></data>
 </root>
