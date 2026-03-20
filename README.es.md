@@ -65,6 +65,7 @@ Un servidor Git autoalojado con una interfaz web similar a GitHub, construido co
 - **Vista de Comparacion** — Compara ramas con conteo de commits adelante/atras y renderizado completo de diffs
 - **Estadisticas de Lenguaje** — Barra de desglose de lenguajes al estilo GitHub en cada pagina de repositorio
 - **Proteccion de Ramas** — Reglas configurables para revisiones requeridas, verificaciones de estado, prevencion de force-push y aprobacion obligatoria de CODEOWNERS
+- **Commits Firmados Obligatorios** — Regla de proteccion de rama que requiere que todos los commits esten firmados con GPG antes de fusionar
 - **Proteccion de Etiquetas** — Protege etiquetas contra eliminacion, actualizaciones forzadas y creacion no autorizada con coincidencia de patrones glob y listas de usuarios permitidos
 - **Verificacion de Firma de Commits** — Verificacion de firmas GPG en commits y etiquetas anotadas con insignias "Verified" / "Signed" en la interfaz
 - **Etiquetas de Repositorio** — Gestiona etiquetas con colores personalizados por repositorio; las etiquetas se copian automaticamente al crear repositorios desde plantillas
@@ -80,6 +81,10 @@ Un servidor Git autoalojado con una interfaz web similar a GitHub, construido co
 - **Resolucion de Conflictos de Merge** — Resuelve conflictos de merge directamente en el navegador con un editor visual que muestra vistas base/nuestro/suyo, botones de aceptacion rapida y validacion de marcadores de conflicto
 - **Discusiones** — Conversaciones con hilos al estilo GitHub Discussions por repositorio con categorias (General, Preguntas y Respuestas, Anuncios, Ideas, Mostrar y Contar, Encuestas), fijar/bloquear, marcar como respuesta y votos positivos
 - **Sugerencias en Revision de Codigo** — El modo "Sugerir cambios" en revisiones en linea de PRs permite a los revisores proponer reemplazos de codigo directamente en el diff
+- **Image Diff** — Comparacion de imagenes lado a lado en pull requests con control deslizante de opacidad para diferencias visuales de imagenes modificadas (PNG, JPG, GIF, SVG, WebP)
+- **File Tree en PRs** — Barra lateral con arbol de archivos plegable en la vista de diferencias de pull requests para navegar facilmente entre archivos modificados
+- **Marcar Archivos como Vistos** — Seguimiento del progreso de revision en pull requests con casillas "Visto" por archivo y un contador de progreso
+- **Resaltado de Sintaxis en Diffs** — Coloreado de sintaxis segun el lenguaje en los diffs de pull requests y comparaciones mediante Prism.js
 - **Reacciones con Emoji** — Reacciona a issues, PRs, discusiones y comentarios con pulgar arriba/abajo, corazon, risa, celebracion, confundido, cohete y ojos
 - **CODEOWNERS** — Asignacion automatica de revisores de PRs basada en rutas de archivos con aplicacion opcional que requiere aprobacion de CODEOWNERS antes del merge
 - **Plantillas de Repositorio** — Crea nuevos repositorios a partir de plantillas con copia automatica de archivos, etiquetas, plantillas de issues y reglas de proteccion de ramas
@@ -166,6 +171,7 @@ Un servidor Git autoalojado con una interfaz web similar a GitHub, construido co
 - **Mermaid Diagrams** — Renderizado de diagramas Mermaid en archivos Markdown (diagramas de flujo, diagramas de secuencia, diagramas de Gantt, etc.)
 - **Math Rendering** — Expresiones matematicas LaTeX/KaTeX en Markdown (sintaxis `$inline$` y `$$display$$`)
 - **CSV/TSV Viewer** — Los archivos CSV y TSV se renderizan como tablas formateadas y ordenables en lugar de texto sin formato
+- **Jupyter Notebook Rendering** — Los archivos `.ipynb` se renderizan como notebooks formateados con celdas de codigo, Markdown, salidas e imagenes en linea
 - **Repository Transfer** — Transfiere la propiedad del repositorio a otro usuario u organizacion desde la Configuracion del repositorio
 - **Default Branch Configuration** — Cambia la rama predeterminada por repositorio desde la pestana de Configuracion
 

@@ -279,6 +279,7 @@ using (var scope = app.Services.CreateScope())
     db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_WebAuthnCredentials_Username_CredentialId"" ON ""WebAuthnCredentials"" (""Username"", ""CredentialId"");");
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""SspiEnabled"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""AGitFlowEnabled"" INTEGER NOT NULL DEFAULT 1;"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""BranchProtectionRules"" ADD COLUMN ""RequireSignedCommits"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
 
     if (!db.Users.Any())
     {

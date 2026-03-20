@@ -341,6 +341,14 @@
   <data name="PR_TitlePlaceholder" xml:space="preserve"><value>Заголовок pull request</value></data>
   <data name="PR_Unified" xml:space="preserve"><value>Единый</value></data>
   <data name="PR_ViewComparison" xml:space="preserve"><value>Просмотр сравнения</value></data>
+  <data name="PR_Files" xml:space="preserve"><value>Файлы</value></data>
+  <data name="PR_Viewed" xml:space="preserve"><value>Просмотрено</value></data>
+  <data name="PR_FilesViewed" xml:space="preserve"><value>файлов просмотрено</value></data>
+  <data name="PR_Before" xml:space="preserve"><value>До</value></data>
+  <data name="PR_After" xml:space="preserve"><value>После</value></data>
+  <data name="PR_ImageDiff" xml:space="preserve"><value>Сравнение изображений</value></data>
+  <data name="Repo_RequireSignedCommits" xml:space="preserve"><value>Требовать подписанные коммиты — все коммиты должны быть подписаны GPG</value></data>
+  <data name="Repo_SignedCommits" xml:space="preserve"><value>Подписанные коммиты</value></data>
 
   <!-- Compare -->
   <data name="Compare_Base" xml:space="preserve"><value>Базовая</value></data>

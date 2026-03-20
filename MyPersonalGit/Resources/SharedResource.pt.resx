@@ -341,6 +341,14 @@
   <data name="PR_TitlePlaceholder" xml:space="preserve"><value>Título do pull request</value></data>
   <data name="PR_Unified" xml:space="preserve"><value>Unificado</value></data>
   <data name="PR_ViewComparison" xml:space="preserve"><value>Ver comparação</value></data>
+  <data name="PR_Files" xml:space="preserve"><value>Arquivos</value></data>
+  <data name="PR_Viewed" xml:space="preserve"><value>Visto</value></data>
+  <data name="PR_FilesViewed" xml:space="preserve"><value>arquivos vistos</value></data>
+  <data name="PR_Before" xml:space="preserve"><value>Antes</value></data>
+  <data name="PR_After" xml:space="preserve"><value>Depois</value></data>
+  <data name="PR_ImageDiff" xml:space="preserve"><value>Comparação de imagens</value></data>
+  <data name="Repo_RequireSignedCommits" xml:space="preserve"><value>Exigir commits assinados — todos os commits devem ser assinados com GPG</value></data>
+  <data name="Repo_SignedCommits" xml:space="preserve"><value>Commits assinados</value></data>
 
   <!-- Compare -->
   <data name="Compare_Base" xml:space="preserve"><value>Base</value></data>

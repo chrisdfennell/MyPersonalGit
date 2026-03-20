@@ -65,6 +65,7 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Vue comparative** — Comparez les branches avec le nombre de commits en avance/en retard et un rendu complet des diffs
 - **Statistiques de langages** — Barre de répartition des langages à la GitHub sur chaque page de dépôt
 - **Protection de branches** — Règles configurables pour les reviews obligatoires, les checks de statut, la prévention du force-push et l'approbation CODEOWNERS
+- **Commits signés obligatoires** — Règle de protection de branche exigeant que tous les commits soient signés GPG avant la fusion
 - **Protection de tags** — Protégez les tags contre la suppression, les mises à jour forcées et la création non autorisée avec correspondance par motifs glob et listes d'autorisation par utilisateur
 - **Vérification de signature de commits** — Vérification des signatures GPG sur les commits et tags annotés avec badges « Verified » / « Signed » dans l'interface
 - **Labels de dépôt** — Gérez les labels avec des couleurs personnalisées par dépôt ; les labels sont automatiquement copiés lors de la création de dépôts à partir de modèles
@@ -80,6 +81,10 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Résolution des conflits de fusion** — Résolvez les conflits de fusion directement dans le navigateur avec un éditeur visuel affichant les vues base/ours/theirs, des boutons d'acceptation rapide et la validation des marqueurs de conflit
 - **Discussions** — Conversations en fil à la GitHub Discussions par dépôt avec catégories (Général, Q&A, Annonces, Idées, Show & Tell, Sondages), épinglage/verrouillage, marquer comme réponse et votes positifs
 - **Suggestions de revue de code** — Le mode « Suggérer des modifications » dans les reviews inline de PRs permet aux reviewers de proposer des remplacements de code directement dans le diff
+- **Image Diff** — Comparaison d'images côte à côte dans les pull requests avec curseur d'opacité pour le diff visuel des images modifiées (PNG, JPG, GIF, SVG, WebP)
+- **File Tree dans les PRs** — Barre latérale avec arborescence de fichiers repliable dans la vue diff des pull requests pour naviguer facilement entre les fichiers modifiés
+- **Marquer les fichiers comme vus** — Suivi de la progression des revues dans les pull requests avec cases « Vu » par fichier et compteur de progression
+- **Coloration syntaxique des diffs** — Coloration syntaxique selon le langage dans les diffs de pull requests et de comparaison via Prism.js
 - **Émoji de réaction** — Réagissez aux issues, PRs, discussions et commentaires avec pouce haut/bas, cœur, rire, hourra, perplexe, fusée et yeux
 - **CODEOWNERS** — Attribution automatique des reviewers de PR en fonction des chemins de fichiers avec application optionnelle exigeant l'approbation CODEOWNERS avant la fusion
 - **Modèles de dépôt** — Créez de nouveaux dépôts à partir de modèles avec copie automatique des fichiers, labels, modèles d'issues et règles de protection de branches
@@ -166,6 +171,7 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Mermaid Diagrams** — Rendu de diagrammes Mermaid dans les fichiers Markdown (organigrammes, diagrammes de séquence, diagrammes de Gantt, etc.)
 - **Math Rendering** — Expressions mathématiques LaTeX/KaTeX dans le Markdown (syntaxe `$inline$` et `$$display$$`)
 - **CSV/TSV Viewer** — Les fichiers CSV et TSV sont affichés sous forme de tableaux formatés et triables au lieu de texte brut
+- **Jupyter Notebook Rendering** — Les fichiers `.ipynb` sont affichés comme des notebooks formatés avec cellules de code, Markdown, sorties et images en ligne
 - **Repository Transfer** — Transférez la propriété du dépôt à un autre utilisateur ou organisation depuis les Paramètres du dépôt
 - **Default Branch Configuration** — Changez la branche par défaut par dépôt depuis l'onglet Paramètres
 

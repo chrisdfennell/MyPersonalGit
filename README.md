@@ -65,6 +65,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Compare View** — Compare branches with ahead/behind commit counts and full diff rendering
 - **Language Stats** — GitHub-style language breakdown bar on each repository page
 - **Branch Protection** — Configurable rules for required reviews, status checks, force-push prevention, and CODEOWNERS approval enforcement
+- **Signed Commits Required** — Branch protection rule to require all commits be GPG-signed before merging
 - **Tag Protection** — Protect tags from deletion, force updates, and unauthorized creation with glob pattern matching and per-user allow lists
 - **Commit Signature Verification** — GPG signature verification on commits and annotated tags with "Verified" / "Signed" badges in the UI
 - **Repository Labels** — Manage labels with custom colors per repository; labels are automatically copied when creating repos from templates
@@ -80,6 +81,10 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Merge Conflict Resolution** — Resolve merge conflicts directly in the browser with a visual editor showing base/ours/theirs views, quick accept buttons, and conflict marker validation
 - **Discussions** — GitHub Discussions-style threaded conversations per repository with categories (General, Q&A, Announcements, Ideas, Show & Tell, Polls), pin/lock, mark as answer, and upvoting
 - **Code Review Suggestions** — "Suggest changes" mode in PR inline reviews lets reviewers propose code replacements directly in the diff
+- **Image Diff** — Side-by-side image comparison in pull requests with opacity slider for visual diffing of changed images (PNG, JPG, GIF, SVG, WebP)
+- **File Tree in PRs** — Collapsible file tree sidebar in pull request diff view for easy navigation between changed files
+- **Mark Files as Viewed** — Track review progress in pull requests with per-file "Viewed" checkboxes and a progress counter
+- **Diff Syntax Highlighting** — Language-aware syntax coloring in pull request and compare diffs via Prism.js
 - **Reaction Emoji** — React to issues, PRs, discussions, and comments with thumbs up/down, heart, laugh, hooray, confused, rocket, and eyes
 - **CODEOWNERS** — Auto-assign PR reviewers based on file paths with optional enforcement requiring CODEOWNERS approval before merge
 - **Repository Templates** — Create new repositories from templates with automatic copying of files, labels, issue templates, and branch protection rules
@@ -177,6 +182,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Mermaid Diagrams** — Mermaid diagram rendering in Markdown files (flowcharts, sequence diagrams, Gantt charts, etc.)
 - **Math Rendering** — LaTeX/KaTeX math expressions in Markdown (`$inline$` and `$$display$$` syntax)
 - **CSV/TSV Viewer** — CSV and TSV files render as formatted, sortable tables instead of raw text
+- **Jupyter Notebook Rendering** — `.ipynb` files render as formatted notebooks with code cells, Markdown, outputs, and inline images
 - **Repository Transfer** — Transfer repository ownership to another user or organization from repository Settings
 - **Default Branch Configuration** — Change the default branch per repository from the Settings tab
 
@@ -902,21 +908,3 @@ dotnet test
 ## License
 
 MIT
-
-## Mermaid Test
-
-```mermaid
-graph TD
-    A[Push Code] --> B[CI/CD Runs]
-    B --> C{Tests Pass?}
-    C -->|Yes| D[Deploy]
-    C -->|No| E[Fix]
-```
-
-## Math Test
-
-Inline: $E = mc^2$
-
-Display:
-
-$$\sum_{i=1}^{n} i = \frac{n(n+1)}{2}$$

@@ -15,6 +15,7 @@ public class BranchProtectionRule
     public bool RestrictPushes { get; set; }
     public List<string> AllowedPushUsers { get; set; } = new();
     public bool RequireCodeOwnersApproval { get; set; }
+    public bool RequireSignedCommits { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
