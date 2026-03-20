@@ -856,9 +856,11 @@
   <data name="Import_GitHub" xml:space="preserve"><value>GitHub (isteğe bağlı issues/PR ile)</value></data>
   <data name="Import_GitLab" xml:space="preserve"><value>GitLab (isteğe bağlı issues/PR ile)</value></data>
   <data name="Import_Bitbucket" xml:space="preserve"><value>Bitbucket (isteğe bağlı issues ile)</value></data>
+  <data name="Import_Gitea" xml:space="preserve"><value>Gitea / Forgejo / Gogs (isteğe bağlı issues/PR ile)</value></data>
   <data name="Import_GitHubExample" xml:space="preserve"><value>örn., https://github.com/owner/repo</value></data>
   <data name="Import_GitLabExample" xml:space="preserve"><value>örn., https://gitlab.com/owner/repo</value></data>
   <data name="Import_BitbucketExample" xml:space="preserve"><value>örn., https://bitbucket.org/owner/repo</value></data>
+  <data name="Import_GiteaExample" xml:space="preserve"><value>örn., https://gitea.example.com/owner/repo</value></data>
   <data name="Import_GitUrlExample" xml:space="preserve"><value>Geçerli herhangi bir Git URL (HTTPS veya SSH)</value></data>
   <data name="Import_RepoNameHelp" xml:space="preserve"><value>Yeni yerel deponun adı</value></data>
   <data name="Import_AuthTokenHelp" xml:space="preserve"><value>Özel depolar için gereklidir. Okuma erişimi olan bir kişisel erişim belirteci kullanın.</value></data>
