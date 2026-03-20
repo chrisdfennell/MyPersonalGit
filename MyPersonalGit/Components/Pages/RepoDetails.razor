@@ -910,12 +910,65 @@ else
         else if (activeTab == "settings")
         {
             <div class="settings-view mb-5">
-                <div class="mb-4">
-                    <h5 class="fw-bold">@L["Repo_Settings"]</h5>
-                    <p class="text-muted small">@L["Repo_SettingsDescription"]</p>
-                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <nav class="position-sticky" style="top: 1rem;">
+                            <div class="list-group list-group-flush small">
+                                <span class="list-group-item fw-bold text-muted bg-transparent border-0 py-1 px-2" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">@L["Repo_General"]</span>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "general" ? "active" : "")" @onclick='() => settingsSection = "general"'>
+                                    <i class="bi bi-gear me-2"></i>@L["Repo_General"]
+                                </a>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "default-branch" ? "active" : "")" @onclick='() => settingsSection = "default-branch"'>
+                                    <i class="bi bi-signpost-split me-2"></i>@L["Repo_DefaultBranch"]
+                                </a>
 
-                @if (UserService.IsLoggedIn)
+                                <span class="list-group-item fw-bold text-muted bg-transparent border-0 py-1 px-2 mt-2" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Access</span>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "collaborators" ? "active" : "")" @onclick='() => settingsSection = "collaborators"'>
+                                    <i class="bi bi-people me-2"></i>Collaborators
+                                </a>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "deploy-keys" ? "active" : "")" @onclick='() => settingsSection = "deploy-keys"'>
+                                    <i class="bi bi-key me-2"></i>Deploy Keys
+                                </a>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "secrets" ? "active" : "")" @onclick='() => settingsSection = "secrets"'>
+                                    <i class="bi bi-key-fill me-2"></i>Secrets
+                                </a>
+
+                                <span class="list-group-item fw-bold text-muted bg-transparent border-0 py-1 px-2 mt-2" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Code & automation</span>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "branches" ? "active" : "")" @onclick='() => settingsSection = "branches"'>
+                                    <i class="bi bi-shield-lock me-2"></i>Branch Protection
+                                </a>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "tags" ? "active" : "")" @onclick='() => settingsSection = "tags"'>
+                                    <i class="bi bi-shield-check me-2"></i>Tag Protection
+                                </a>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "hooks" ? "active" : "")" @onclick='() => settingsSection = "hooks"'>
+                                    <i class="bi bi-terminal me-2"></i>@L["Repo_GitHooks"]
+                                </a>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "labels" ? "active" : "")" @onclick='() => settingsSection = "labels"'>
+                                    <i class="bi bi-tags me-2"></i>Labels
+                                </a>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "pages" ? "active" : "")" @onclick='() => settingsSection = "pages"'>
+                                    <i class="bi bi-globe me-2"></i>Pages
+                                </a>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "mirrors" ? "active" : "")" @onclick='() => settingsSection = "mirrors"'>
+                                    <i class="bi bi-arrow-repeat me-2"></i>Mirrors
+                                </a>
+
+                                <span class="list-group-item fw-bold text-muted bg-transparent border-0 py-1 px-2 mt-2" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Danger</span>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "transfer" ? "active" : "")" @onclick='() => settingsSection = "transfer"'>
+                                    <i class="bi bi-arrow-left-right me-2"></i>@L["Repo_TransferRepo"]
+                                </a>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 @(settingsSection == "archive" ? "active" : "")" @onclick='() => settingsSection = "archive"'>
+                                    <i class="bi bi-archive me-2"></i>Archive
+                                </a>
+                                <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 py-1 px-2 text-danger @(settingsSection == "danger" ? "active" : "")" @onclick='() => settingsSection = "danger"'>
+                                    <i class="bi bi-exclamation-triangle me-2"></i>Danger Zone
+                                </a>
+                            </div>
+                        </nav>
+                    </div>
+                    <div class="col-md-9">
+
+                @if (UserService.IsLoggedIn && (settingsSection == "general" || settingsSection == ""))
                 {
                     <div class="card border shadow-sm mb-4">
                         <div class="card-header bg-light-subtle py-2 small fw-bold">
@@ -978,6 +1031,10 @@ else
                         </div>
                     </div>
 
+                }
+
+                @if (UserService.IsLoggedIn && (settingsSection == "default-branch" || settingsSection == "general"))
+                {
                     <div class="card border shadow-sm mb-4">
                         <div class="card-header bg-light-subtle py-2 small fw-bold">
                             <i class="bi bi-signpost-split me-1"></i> @L["Repo_DefaultBranch"]
@@ -999,7 +1056,10 @@ else
                             <div class="form-text">@L["Repo_DefaultBranchHelp"]</div>
                         </div>
                     </div>
+                }
 
+                @if (UserService.IsLoggedIn && settingsSection == "transfer")
+                {
                     <div class="card border border-warning shadow-sm mb-4">
                         <div class="card-header bg-warning-subtle py-2 small fw-bold text-warning-emphasis">
                             <i class="bi bi-arrow-left-right me-1"></i> @L["Repo_TransferRepo"]
@@ -1018,6 +1078,8 @@ else
                     </div>
                 }
 
+                @if (settingsSection == "branches")
+                {
                 <div class="card border shadow-sm mb-4">
                     <div class="card-header bg-light-subtle py-2 small fw-bold">
                         <i class="bi bi-shield-lock me-1"></i> Branch protection rules
@@ -1135,8 +1197,11 @@ else
                         }
                     </div>
                 </div>
+                }
 
                 @* Tag Protection Rules *@
+                @if (settingsSection == "tags")
+                {
                 <div class="card border shadow-sm mb-4">
                     <div class="card-header bg-light-subtle py-2 small fw-bold">
                         <i class="bi bi-tag me-1"></i> Tag protection rules
@@ -1223,8 +1288,11 @@ else
                         }
                     </div>
                 </div>
+                }
 
                 @* Git Hooks *@
+                @if (settingsSection == "hooks")
+                {
                 <div class="card border shadow-sm mb-4">
                     <div class="card-header bg-light-subtle py-2 small fw-bold">
                         <i class="bi bi-terminal me-1"></i> Git Hooks
@@ -1266,8 +1334,11 @@ else
                         }
                     </div>
                 </div>
+                }
 
                 @* Repository Labels *@
+                @if (settingsSection == "labels")
+                {
                 <div class="card border shadow-sm mb-4">
                     <div class="card-header bg-light-subtle py-2 small fw-bold">
                         <i class="bi bi-tags me-1"></i> Labels
@@ -1333,8 +1404,9 @@ else
                         }
                     </div>
                 </div>
+                }
 
-                @if (UserService.IsLoggedIn)
+                @if (UserService.IsLoggedIn && settingsSection == "collaborators")
                 {
                     <div class="card border shadow-sm mb-4">
                         <div class="card-header bg-light-subtle py-2 small fw-bold">
@@ -1377,7 +1449,10 @@ else
                             </div>
                         </div>
                     </div>
+                }
 
+                @if (UserService.IsLoggedIn && settingsSection == "pages")
+                {
                     <div class="card border shadow-sm mb-4">
                         <div class="card-header bg-light-subtle py-2 small fw-bold">
                             <i class="bi bi-globe me-1"></i> Pages
@@ -1403,7 +1478,10 @@ else
                             <button class="btn btn-gh-primary btn-sm" @onclick="SavePagesSettings">Save</button>
                         </div>
                     </div>
+                }
 
+                @if (UserService.IsLoggedIn && settingsSection == "secrets")
+                {
                     <div class="card border shadow-sm mb-4">
                         <div class="card-header bg-light-subtle py-2 small fw-bold">
                             <i class="bi bi-key-fill me-1"></i> Secrets
@@ -1473,7 +1551,10 @@ else
                             }
                         </div>
                     </div>
+                }
 
+                @if (UserService.IsLoggedIn && settingsSection == "deploy-keys")
+                {
                     <div class="card border shadow-sm mb-4">
                         <div class="card-header bg-light-subtle py-2 small fw-bold">
                             <i class="bi bi-key me-1"></i> Deploy Keys
@@ -1555,7 +1636,10 @@ else
                             }
                         </div>
                     </div>
+                }
 
+                @if (UserService.IsLoggedIn && settingsSection == "mirrors")
+                {
                     <div class="card shadow-sm mb-4">
                         <div class="card-header py-2 small fw-bold">
                             <i class="bi bi-arrow-repeat me-1"></i> Mirrors
@@ -1641,7 +1725,10 @@ else
                             </div>
                         </div>
                     </div>
+                }
 
+                @if (UserService.IsLoggedIn && settingsSection == "archive")
+                {
                     <div class="card border shadow-sm mb-4">
                         <div class="card-header bg-light-subtle py-2 small fw-bold">
                             <i class="bi bi-archive me-1"></i> Archive
@@ -1658,7 +1745,10 @@ else
                             </div>
                         </div>
                     </div>
+                }
 
+                @if (UserService.IsLoggedIn && settingsSection == "danger")
+                {
                     <div class="card border-danger shadow-sm">
                         <div class="card-header bg-danger bg-opacity-10 text-danger py-2 small fw-bold border-danger border-opacity-25">Danger Zone</div>
                         <div class="card-body">
@@ -1672,7 +1762,9 @@ else
                         </div>
                     </div>
                 }
-            </div>
+                    </div> <!-- end col-md-9 -->
+                </div> <!-- end row -->
+            </div> <!-- end settings-view -->
         }
         else if (activeTab == "blame")
         {
@@ -3186,6 +3278,7 @@ else
     // Settings tab state
     private bool settingsIsPrivate = false;
     private bool settingsIsTemplate = false;
+    private string settingsSection = "general";
     private string settingsDescription = "";
     private string settingsWebsiteUrl = "";
     private string settingsSaveMessage = "";
