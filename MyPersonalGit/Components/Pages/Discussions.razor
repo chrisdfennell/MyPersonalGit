@@ -533,13 +533,13 @@
 
     private string GetCategoryName(DiscussionCategory category) => category switch
     {
-        DiscussionCategory.General => "General",
-        DiscussionCategory.QAndA => "Q&A",
-        DiscussionCategory.Announcements => "Announcements",
-        DiscussionCategory.Ideas => "Ideas",
-        DiscussionCategory.ShowAndTell => "Show & Tell",
-        DiscussionCategory.Polls => "Polls",
-        _ => "General"
+        DiscussionCategory.General => L["Discussions_General"],
+        DiscussionCategory.QAndA => L["Discussions_QAndA"],
+        DiscussionCategory.Announcements => L["Discussions_Announcements"],
+        DiscussionCategory.Ideas => L["Discussions_Ideas"],
+        DiscussionCategory.ShowAndTell => L["Discussions_ShowAndTell"],
+        DiscussionCategory.Polls => L["Discussions_Polls"],
+        _ => L["Discussions_General"]
     };
 
     private string GetCategoryIcon(DiscussionCategory category) => category switch

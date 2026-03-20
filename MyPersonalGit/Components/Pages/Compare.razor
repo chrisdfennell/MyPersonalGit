@@ -325,7 +325,7 @@
 
         if (string.IsNullOrEmpty(selectedBase) || string.IsNullOrEmpty(selectedHead))
         {
-            error = "Please select both branches.";
+            error = L["Compare_SelectBothBranches"];
             return;
         }
 
@@ -338,7 +338,7 @@
         var repoPath = GetRepoFullPath();
         if (!Repository.IsValid(repoPath))
         {
-            error = "Repository not found.";
+            error = L["Compare_RepoNotFound"];
             return;
         }
 
@@ -350,7 +350,7 @@
 
             if (baseBranch?.Tip == null || headBranch?.Tip == null)
             {
-                error = "One or both branches have no commits.";
+                error = L["Compare_NoCommits"];
                 return;
             }
 

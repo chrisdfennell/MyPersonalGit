@@ -791,4 +791,90 @@
   <data name="Language_zh" xml:space="preserve"><value>中文</value></data>
   <data name="Language_pt" xml:space="preserve"><value>Português</value></data>
   <data name="Language_ko" xml:space="preserve"><value>한국어</value></data>
+  <data name="Language_ru" xml:space="preserve"><value>Русский</value></data>
+  <data name="Language_it" xml:space="preserve"><value>Italiano</value></data>
+  <data name="Language_tr" xml:space="preserve"><value>Türkçe</value></data>
+
+  <!-- PR (new keys) -->
+  <data name="PR_Showing" xml:space="preserve"><value>Показано</value></data>
+  <data name="PR_ChangedFiles" xml:space="preserve"><value>изменённый файл</value></data>
+  <data name="PR_Additions" xml:space="preserve"><value>добавлений</value></data>
+  <data name="PR_Deletions" xml:space="preserve"><value>удалений</value></data>
+
+  <!-- Compare (new keys) -->
+  <data name="Compare_SelectBothBranches" xml:space="preserve"><value>Пожалуйста, выберите обе ветки.</value></data>
+  <data name="Compare_RepoNotFound" xml:space="preserve"><value>Репозиторий не найден.</value></data>
+  <data name="Compare_NoCommits" xml:space="preserve"><value>В одной или обеих ветках нет коммитов.</value></data>
+
+  <!-- Actions (new keys) -->
+  <data name="Actions_Active" xml:space="preserve"><value>Активен</value></data>
+  <data name="Actions_Inactive" xml:space="preserve"><value>Неактивен</value></data>
+  <data name="Actions_ClickRunWorkflow" xml:space="preserve"><value>Нажмите "Run workflow" для запуска рабочего процесса из .github/workflows/</value></data>
+
+  <!-- Admin (new keys) -->
+  <data name="Admin_Disabled" xml:space="preserve"><value>Отключено</value></data>
+  <data name="Admin_Enabled" xml:space="preserve"><value>Включено</value></data>
+  <data name="Admin_EnterClientId" xml:space="preserve"><value>Введите Client ID</value></data>
+  <data name="Admin_EnterClientSecret" xml:space="preserve"><value>Введите Client Secret</value></data>
+  <data name="Admin_SettingsSaved" xml:space="preserve"><value>Настройки успешно сохранены!</value></data>
+
+  <!-- Organizations (new keys) -->
+  <data name="Org_AlreadyMember" xml:space="preserve"><value>Пользователь уже является участником.</value></data>
+  <data name="Org_MemberAdded" xml:space="preserve"><value>Участник добавлен.</value></data>
+  <data name="Org_SettingsSaved" xml:space="preserve"><value>Настройки сохранены.</value></data>
+
+  <!-- Home page -->
+  <data name="Home_InitializePrompt" xml:space="preserve"><value>Инициализируйте репозиторий в {0}, чтобы начать.</value></data>
+  <data name="Home_NoMatchingSearch" xml:space="preserve"><value>Не удалось найти репозитории, соответствующие '{0}'</value></data>
+  <data name="Home_NoDescription" xml:space="preserve"><value>Описание не указано.</value></data>
+
+  <!-- Login page -->
+  <data name="Login_InvalidCredentials" xml:space="preserve"><value>Неверное имя пользователя/email или пароль</value></data>
+  <data name="Login_Error" xml:space="preserve"><value>Произошла ошибка при входе. Пожалуйста, попробуйте снова.</value></data>
+  <data name="Login_InvalidRecoveryCode" xml:space="preserve"><value>Неверный код восстановления. Пожалуйста, попробуйте снова.</value></data>
+  <data name="Login_InvalidAuthCode" xml:space="preserve"><value>Неверный код аутентификации. Пожалуйста, попробуйте снова.</value></data>
+  <data name="Login_VerificationError" xml:space="preserve"><value>Произошла ошибка при проверке. Пожалуйста, попробуйте снова.</value></data>
+  <data name="Login_SessionError" xml:space="preserve"><value>Не удалось создать сессию.</value></data>
+  <data name="Login_PasskeyFailed" xml:space="preserve"><value>Проверка ключа доступа не удалась. Пожалуйста, попробуйте снова.</value></data>
+  <data name="Login_PasskeyAuthFailed" xml:space="preserve"><value>Аутентификация с ключом доступа не удалась: {0}</value></data>
+  <data name="Login_SignInWith" xml:space="preserve"><value>Войти через {0}</value></data>
+  <data name="Login_RecoveryCode" xml:space="preserve"><value>Код восстановления</value></data>
+  <data name="Login_RecoveryCodePlaceholder" xml:space="preserve"><value>Введите 8-значный код восстановления</value></data>
+  <data name="Login_RecoveryCodeHelp" xml:space="preserve"><value>Введите один из ваших кодов восстановления.</value></data>
+  <data name="Login_AuthenticationCode" xml:space="preserve"><value>Код аутентификации</value></data>
+  <data name="Login_AuthCodeHelp" xml:space="preserve"><value>Введите 6-значный код из вашего приложения аутентификации.</value></data>
+  <data name="Login_UsePasskey" xml:space="preserve"><value>Использовать ключ доступа</value></data>
+  <data name="Login_UseAuthenticatorInstead" xml:space="preserve"><value>Использовать код аутентификации вместо этого</value></data>
+  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>Использовать код восстановления</value></data>
+  <data name="Login_BackToLogin" xml:space="preserve"><value>Вернуться к входу</value></data>
+  <data name="Login_NoAccount" xml:space="preserve"><value>Нет аккаунта?</value></data>
+  <data name="Login_UsernamePlaceholder" xml:space="preserve"><value>Введите имя пользователя или email</value></data>
+  <data name="Login_PasswordPlaceholder" xml:space="preserve"><value>Введите пароль</value></data>
+
+  <!-- Import page (new keys) -->
+  <data name="Import_GitUrl" xml:space="preserve"><value>Git URL (только код)</value></data>
+  <data name="Import_GitHub" xml:space="preserve"><value>GitHub (с опциональными issues/PR)</value></data>
+  <data name="Import_GitLab" xml:space="preserve"><value>GitLab (с опциональными issues/PR)</value></data>
+  <data name="Import_Bitbucket" xml:space="preserve"><value>Bitbucket (с опциональными issues)</value></data>
+  <data name="Import_GitHubExample" xml:space="preserve"><value>напр., https://github.com/owner/repo</value></data>
+  <data name="Import_GitLabExample" xml:space="preserve"><value>напр., https://gitlab.com/owner/repo</value></data>
+  <data name="Import_BitbucketExample" xml:space="preserve"><value>напр., https://bitbucket.org/owner/repo</value></data>
+  <data name="Import_GitUrlExample" xml:space="preserve"><value>Любой действительный Git URL (HTTPS или SSH)</value></data>
+  <data name="Import_RepoNameHelp" xml:space="preserve"><value>Имя для нового локального репозитория</value></data>
+  <data name="Import_AuthTokenHelp" xml:space="preserve"><value>Требуется для приватных репозиториев. Используйте персональный токен доступа с правами на чтение.</value></data>
+  <data name="Import_AuthTokenPlaceholder" xml:space="preserve"><value>Персональный токен доступа для приватных репозиториев</value></data>
+  <data name="Import_EnterUrl" xml:space="preserve"><value>Пожалуйста, введите URL репозитория.</value></data>
+  <data name="Import_EnterName" xml:space="preserve"><value>Пожалуйста, введите имя репозитория.</value></data>
+  <data name="Import_FailedToStart" xml:space="preserve"><value>Не удалось начать импорт: {0}</value></data>
+  <data name="Import_StatusPending" xml:space="preserve"><value>Ожидание</value></data>
+  <data name="Import_StatusCloning" xml:space="preserve"><value>Клонирование</value></data>
+  <data name="Import_StatusImportingIssues" xml:space="preserve"><value>Импорт issues</value></data>
+  <data name="Import_StatusImportingPRs" xml:space="preserve"><value>Импорт PR</value></data>
+  <data name="Import_StatusCompleted" xml:space="preserve"><value>Завершено</value></data>
+  <data name="Import_StatusFailed" xml:space="preserve"><value>Ошибка</value></data>
+  <data name="Import_AboutDescription" xml:space="preserve"><value>Импортируйте репозитории из GitHub, GitLab, Bitbucket или любого Git URL. Репозиторий будет клонирован с полной историей.</value></data>
+  <data name="Import_AboutInclude" xml:space="preserve"><value>Импорт из GitHub / GitLab также может включать:</value></data>
+  <data name="Import_AboutIssues" xml:space="preserve"><value>Issues с описаниями и состоянием</value></data>
+  <data name="Import_AboutPRs" xml:space="preserve"><value>Pull requests / merge requests (импортируются как issues)</value></data>
+  <data name="Import_AboutPrivate" xml:space="preserve"><value>Для приватных репозиториев предоставьте персональный токен доступа с соответствующими правами на чтение.</value></data>
 </root>

@@ -135,15 +135,15 @@ else
                                 </tr>
                                 <tr>
                                     <td><strong>Authentication:</strong></td>
-                                    <td>@(Settings.RequireAuth ? "Enabled" : "Disabled")</td>
+                                    <td>@(Settings.RequireAuth ? L["Admin_Enabled"] : L["Admin_Disabled"])</td>
                                 </tr>
                                 <tr>
                                     <td><strong>User Registration:</strong></td>
-                                    <td>@(Settings.AllowUserRegistration ? "Enabled" : "Disabled")</td>
+                                    <td>@(Settings.AllowUserRegistration ? L["Admin_Enabled"] : L["Admin_Disabled"])</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Actions/CI-CD:</strong></td>
-                                    <td>@(Settings.EnableActions ? "Enabled" : "Disabled")</td>
+                                    <td>@(Settings.EnableActions ? L["Admin_Enabled"] : L["Admin_Disabled"])</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Prometheus Metrics:</strong></td>
@@ -871,14 +871,14 @@ else
                                                 <input type="text" class="form-control form-control-sm"
                                                        value="@provider.ClientId"
                                                        @onchange="e => provider.ClientId = e.Value?.ToString() ?? string.Empty"
-                                                       placeholder="Enter Client ID" />
+                                                       placeholder="@L["Admin_EnterClientId"]" />
                                             </div>
                                             <div class="mb-2">
                                                 <label class="form-label small fw-bold mb-1">Client Secret</label>
                                                 <input type="password" class="form-control form-control-sm"
                                                        value="@provider.ClientSecret"
                                                        @onchange="e => provider.ClientSecret = e.Value?.ToString() ?? string.Empty"
-                                                       placeholder="Enter Client Secret" />
+                                                       placeholder="@L["Admin_EnterClientSecret"]" />
                                             </div>
                                             <div class="form-check mb-2">
                                                 <input class="form-check-input" type="checkbox" checked="@provider.IsEnabled"
@@ -1080,7 +1080,7 @@ else
     {
         await AdminService.SaveSystemSettingsAsync(Settings);
         await AdminService.AddAuditLogAsync(UserService.Username, "UPDATE_SETTINGS", "System settings updated");
-        SettingsMessage = "Settings saved successfully!";
+        SettingsMessage = L["Admin_SettingsSaved"];
         await Task.Delay(3000);
         SettingsMessage = "";
     }

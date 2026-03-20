@@ -791,4 +791,90 @@
   <data name="Language_zh" xml:space="preserve"><value>中文</value></data>
   <data name="Language_pt" xml:space="preserve"><value>Português</value></data>
   <data name="Language_ko" xml:space="preserve"><value>한국어</value></data>
+  <data name="Language_ru" xml:space="preserve"><value>Русский</value></data>
+  <data name="Language_it" xml:space="preserve"><value>Italiano</value></data>
+  <data name="Language_tr" xml:space="preserve"><value>Türkçe</value></data>
+
+  <!-- PR (new keys) -->
+  <data name="PR_Showing" xml:space="preserve"><value>表示中</value></data>
+  <data name="PR_ChangedFiles" xml:space="preserve"><value>変更されたファイル</value></data>
+  <data name="PR_Additions" xml:space="preserve"><value>追加</value></data>
+  <data name="PR_Deletions" xml:space="preserve"><value>削除</value></data>
+
+  <!-- Compare (new keys) -->
+  <data name="Compare_SelectBothBranches" xml:space="preserve"><value>両方のブランチを選択してください。</value></data>
+  <data name="Compare_RepoNotFound" xml:space="preserve"><value>リポジトリが見つかりません。</value></data>
+  <data name="Compare_NoCommits" xml:space="preserve"><value>一方または両方のブランチにコミットがありません。</value></data>
+
+  <!-- Actions (new keys) -->
+  <data name="Actions_Active" xml:space="preserve"><value>アクティブ</value></data>
+  <data name="Actions_Inactive" xml:space="preserve"><value>非アクティブ</value></data>
+  <data name="Actions_ClickRunWorkflow" xml:space="preserve"><value>"Run workflow" をクリックして .github/workflows/ からワークフローを実行します</value></data>
+
+  <!-- Admin (new keys) -->
+  <data name="Admin_Disabled" xml:space="preserve"><value>無効</value></data>
+  <data name="Admin_Enabled" xml:space="preserve"><value>有効</value></data>
+  <data name="Admin_EnterClientId" xml:space="preserve"><value>Client ID を入力</value></data>
+  <data name="Admin_EnterClientSecret" xml:space="preserve"><value>Client Secret を入力</value></data>
+  <data name="Admin_SettingsSaved" xml:space="preserve"><value>設定が正常に保存されました！</value></data>
+
+  <!-- Organizations (new keys) -->
+  <data name="Org_AlreadyMember" xml:space="preserve"><value>ユーザーは既にメンバーです。</value></data>
+  <data name="Org_MemberAdded" xml:space="preserve"><value>メンバーが追加されました。</value></data>
+  <data name="Org_SettingsSaved" xml:space="preserve"><value>設定が保存されました。</value></data>
+
+  <!-- Home page -->
+  <data name="Home_InitializePrompt" xml:space="preserve"><value>{0} にリポジトリを初期化して開始します。</value></data>
+  <data name="Home_NoMatchingSearch" xml:space="preserve"><value>'{0}' に一致するリポジトリが見つかりませんでした</value></data>
+  <data name="Home_NoDescription" xml:space="preserve"><value>説明はありません。</value></data>
+
+  <!-- Login page -->
+  <data name="Login_InvalidCredentials" xml:space="preserve"><value>ユーザー名/メールアドレスまたはパスワードが無効です</value></data>
+  <data name="Login_Error" xml:space="preserve"><value>ログイン中にエラーが発生しました。もう一度お試しください。</value></data>
+  <data name="Login_InvalidRecoveryCode" xml:space="preserve"><value>リカバリーコードが無効です。もう一度お試しください。</value></data>
+  <data name="Login_InvalidAuthCode" xml:space="preserve"><value>認証コードが無効です。もう一度お試しください。</value></data>
+  <data name="Login_VerificationError" xml:space="preserve"><value>検証中にエラーが発生しました。もう一度お試しください。</value></data>
+  <data name="Login_SessionError" xml:space="preserve"><value>セッションの作成に失敗しました。</value></data>
+  <data name="Login_PasskeyFailed" xml:space="preserve"><value>パスキーの検証に失敗しました。もう一度お試しください。</value></data>
+  <data name="Login_PasskeyAuthFailed" xml:space="preserve"><value>パスキー認証に失敗しました: {0}</value></data>
+  <data name="Login_SignInWith" xml:space="preserve"><value>{0} でサインイン</value></data>
+  <data name="Login_RecoveryCode" xml:space="preserve"><value>リカバリーコード</value></data>
+  <data name="Login_RecoveryCodePlaceholder" xml:space="preserve"><value>8桁のリカバリーコードを入力</value></data>
+  <data name="Login_RecoveryCodeHelp" xml:space="preserve"><value>リカバリーコードの1つを入力してください。</value></data>
+  <data name="Login_AuthenticationCode" xml:space="preserve"><value>認証コード</value></data>
+  <data name="Login_AuthCodeHelp" xml:space="preserve"><value>認証アプリの6桁のコードを入力してください。</value></data>
+  <data name="Login_UsePasskey" xml:space="preserve"><value>パスキーを使用</value></data>
+  <data name="Login_UseAuthenticatorInstead" xml:space="preserve"><value>代わりに認証コードを使用</value></data>
+  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>リカバリーコードを使用</value></data>
+  <data name="Login_BackToLogin" xml:space="preserve"><value>ログインに戻る</value></data>
+  <data name="Login_NoAccount" xml:space="preserve"><value>アカウントをお持ちでないですか？</value></data>
+  <data name="Login_UsernamePlaceholder" xml:space="preserve"><value>ユーザー名またはメールアドレスを入力</value></data>
+  <data name="Login_PasswordPlaceholder" xml:space="preserve"><value>パスワードを入力</value></data>
+
+  <!-- Import page (new keys) -->
+  <data name="Import_GitUrl" xml:space="preserve"><value>Git URL（コードのみ）</value></data>
+  <data name="Import_GitHub" xml:space="preserve"><value>GitHub（オプションのissues/PR付き）</value></data>
+  <data name="Import_GitLab" xml:space="preserve"><value>GitLab（オプションのissues/PR付き）</value></data>
+  <data name="Import_Bitbucket" xml:space="preserve"><value>Bitbucket（オプションのissues付き）</value></data>
+  <data name="Import_GitHubExample" xml:space="preserve"><value>例: https://github.com/owner/repo</value></data>
+  <data name="Import_GitLabExample" xml:space="preserve"><value>例: https://gitlab.com/owner/repo</value></data>
+  <data name="Import_BitbucketExample" xml:space="preserve"><value>例: https://bitbucket.org/owner/repo</value></data>
+  <data name="Import_GitUrlExample" xml:space="preserve"><value>任意の有効な Git URL（HTTPS または SSH）</value></data>
+  <data name="Import_RepoNameHelp" xml:space="preserve"><value>新しいローカルリポジトリの名前</value></data>
+  <data name="Import_AuthTokenHelp" xml:space="preserve"><value>プライベートリポジトリに必要です。読み取りアクセス権を持つ個人アクセストークンを使用してください。</value></data>
+  <data name="Import_AuthTokenPlaceholder" xml:space="preserve"><value>プライベートリポジトリ用の個人アクセストークン</value></data>
+  <data name="Import_EnterUrl" xml:space="preserve"><value>リポジトリのURLを入力してください。</value></data>
+  <data name="Import_EnterName" xml:space="preserve"><value>リポジトリ名を入力してください。</value></data>
+  <data name="Import_FailedToStart" xml:space="preserve"><value>インポートの開始に失敗しました: {0}</value></data>
+  <data name="Import_StatusPending" xml:space="preserve"><value>保留中</value></data>
+  <data name="Import_StatusCloning" xml:space="preserve"><value>クローン中</value></data>
+  <data name="Import_StatusImportingIssues" xml:space="preserve"><value>Issues をインポート中</value></data>
+  <data name="Import_StatusImportingPRs" xml:space="preserve"><value>PR をインポート中</value></data>
+  <data name="Import_StatusCompleted" xml:space="preserve"><value>完了</value></data>
+  <data name="Import_StatusFailed" xml:space="preserve"><value>失敗</value></data>
+  <data name="Import_AboutDescription" xml:space="preserve"><value>GitHub、GitLab、Bitbucket、または任意の Git URL からリポジトリをインポートします。リポジトリは完全な履歴と共にクローンされます。</value></data>
+  <data name="Import_AboutInclude" xml:space="preserve"><value>GitHub / GitLab のインポートには以下も含められます:</value></data>
+  <data name="Import_AboutIssues" xml:space="preserve"><value>説明と状態を含む Issues</value></data>
+  <data name="Import_AboutPRs" xml:space="preserve"><value>プルリクエスト / マージリクエスト（Issues としてインポート）</value></data>
+  <data name="Import_AboutPrivate" xml:space="preserve"><value>プライベートリポジトリの場合、適切な読み取り権限を持つ個人アクセストークンを提供してください。</value></data>
 </root>

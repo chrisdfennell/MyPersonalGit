@@ -791,4 +791,90 @@
   <data name="Language_zh" xml:space="preserve"><value>中文</value></data>
   <data name="Language_pt" xml:space="preserve"><value>Português</value></data>
   <data name="Language_ko" xml:space="preserve"><value>한국어</value></data>
+  <data name="Language_ru" xml:space="preserve"><value>Русский</value></data>
+  <data name="Language_it" xml:space="preserve"><value>Italiano</value></data>
+  <data name="Language_tr" xml:space="preserve"><value>Türkçe</value></data>
+
+  <!-- PR (new keys) -->
+  <data name="PR_Showing" xml:space="preserve"><value>Affichage de</value></data>
+  <data name="PR_ChangedFiles" xml:space="preserve"><value>fichier modifié</value></data>
+  <data name="PR_Additions" xml:space="preserve"><value>ajouts</value></data>
+  <data name="PR_Deletions" xml:space="preserve"><value>suppressions</value></data>
+
+  <!-- Compare (new keys) -->
+  <data name="Compare_SelectBothBranches" xml:space="preserve"><value>Veuillez sélectionner les deux branches.</value></data>
+  <data name="Compare_RepoNotFound" xml:space="preserve"><value>Dépôt introuvable.</value></data>
+  <data name="Compare_NoCommits" xml:space="preserve"><value>Une ou les deux branches n'ont aucun commit.</value></data>
+
+  <!-- Actions (new keys) -->
+  <data name="Actions_Active" xml:space="preserve"><value>Actif</value></data>
+  <data name="Actions_Inactive" xml:space="preserve"><value>Inactif</value></data>
+  <data name="Actions_ClickRunWorkflow" xml:space="preserve"><value>Cliquez sur "Run workflow" pour déclencher un workflow depuis .github/workflows/</value></data>
+
+  <!-- Admin (new keys) -->
+  <data name="Admin_Disabled" xml:space="preserve"><value>Désactivé</value></data>
+  <data name="Admin_Enabled" xml:space="preserve"><value>Activé</value></data>
+  <data name="Admin_EnterClientId" xml:space="preserve"><value>Saisir le Client ID</value></data>
+  <data name="Admin_EnterClientSecret" xml:space="preserve"><value>Saisir le Client Secret</value></data>
+  <data name="Admin_SettingsSaved" xml:space="preserve"><value>Paramètres enregistrés avec succès !</value></data>
+
+  <!-- Organizations (new keys) -->
+  <data name="Org_AlreadyMember" xml:space="preserve"><value>L'utilisateur est déjà membre.</value></data>
+  <data name="Org_MemberAdded" xml:space="preserve"><value>Membre ajouté.</value></data>
+  <data name="Org_SettingsSaved" xml:space="preserve"><value>Paramètres enregistrés.</value></data>
+
+  <!-- Home page -->
+  <data name="Home_InitializePrompt" xml:space="preserve"><value>Initialisez un dépôt dans {0} pour commencer.</value></data>
+  <data name="Home_NoMatchingSearch" xml:space="preserve"><value>Nous n'avons trouvé aucun dépôt correspondant à '{0}'</value></data>
+  <data name="Home_NoDescription" xml:space="preserve"><value>Aucune description fournie.</value></data>
+
+  <!-- Login page -->
+  <data name="Login_InvalidCredentials" xml:space="preserve"><value>Nom d'utilisateur/e-mail ou mot de passe invalide</value></data>
+  <data name="Login_Error" xml:space="preserve"><value>Une erreur est survenue lors de la connexion. Veuillez réessayer.</value></data>
+  <data name="Login_InvalidRecoveryCode" xml:space="preserve"><value>Code de récupération invalide. Veuillez réessayer.</value></data>
+  <data name="Login_InvalidAuthCode" xml:space="preserve"><value>Code d'authentification invalide. Veuillez réessayer.</value></data>
+  <data name="Login_VerificationError" xml:space="preserve"><value>Une erreur est survenue lors de la vérification. Veuillez réessayer.</value></data>
+  <data name="Login_SessionError" xml:space="preserve"><value>Impossible de créer la session.</value></data>
+  <data name="Login_PasskeyFailed" xml:space="preserve"><value>La vérification de la passkey a échoué. Veuillez réessayer.</value></data>
+  <data name="Login_PasskeyAuthFailed" xml:space="preserve"><value>L'authentification par passkey a échoué : {0}</value></data>
+  <data name="Login_SignInWith" xml:space="preserve"><value>Se connecter avec {0}</value></data>
+  <data name="Login_RecoveryCode" xml:space="preserve"><value>Code de récupération</value></data>
+  <data name="Login_RecoveryCodePlaceholder" xml:space="preserve"><value>Saisir le code de récupération à 8 chiffres</value></data>
+  <data name="Login_RecoveryCodeHelp" xml:space="preserve"><value>Saisissez l'un de vos codes de récupération.</value></data>
+  <data name="Login_AuthenticationCode" xml:space="preserve"><value>Code d'authentification</value></data>
+  <data name="Login_AuthCodeHelp" xml:space="preserve"><value>Saisissez le code à 6 chiffres de votre application d'authentification.</value></data>
+  <data name="Login_UsePasskey" xml:space="preserve"><value>Utiliser une passkey</value></data>
+  <data name="Login_UseAuthenticatorInstead" xml:space="preserve"><value>Utiliser un code d'authentification à la place</value></data>
+  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>Utiliser un code de récupération</value></data>
+  <data name="Login_BackToLogin" xml:space="preserve"><value>Retour à la connexion</value></data>
+  <data name="Login_NoAccount" xml:space="preserve"><value>Vous n'avez pas de compte ?</value></data>
+  <data name="Login_UsernamePlaceholder" xml:space="preserve"><value>Saisir le nom d'utilisateur ou l'e-mail</value></data>
+  <data name="Login_PasswordPlaceholder" xml:space="preserve"><value>Saisir le mot de passe</value></data>
+
+  <!-- Import page (new keys) -->
+  <data name="Import_GitUrl" xml:space="preserve"><value>URL Git (code uniquement)</value></data>
+  <data name="Import_GitHub" xml:space="preserve"><value>GitHub (avec issues/PRs optionnels)</value></data>
+  <data name="Import_GitLab" xml:space="preserve"><value>GitLab (avec issues/PRs optionnels)</value></data>
+  <data name="Import_Bitbucket" xml:space="preserve"><value>Bitbucket (avec issues optionnels)</value></data>
+  <data name="Import_GitHubExample" xml:space="preserve"><value>ex., https://github.com/owner/repo</value></data>
+  <data name="Import_GitLabExample" xml:space="preserve"><value>ex., https://gitlab.com/owner/repo</value></data>
+  <data name="Import_BitbucketExample" xml:space="preserve"><value>ex., https://bitbucket.org/owner/repo</value></data>
+  <data name="Import_GitUrlExample" xml:space="preserve"><value>Toute URL Git valide (HTTPS ou SSH)</value></data>
+  <data name="Import_RepoNameHelp" xml:space="preserve"><value>Le nom du nouveau dépôt local</value></data>
+  <data name="Import_AuthTokenHelp" xml:space="preserve"><value>Requis pour les dépôts privés. Utilisez un token d'accès personnel avec accès en lecture.</value></data>
+  <data name="Import_AuthTokenPlaceholder" xml:space="preserve"><value>Token d'accès personnel pour les dépôts privés</value></data>
+  <data name="Import_EnterUrl" xml:space="preserve"><value>Veuillez saisir une URL de dépôt.</value></data>
+  <data name="Import_EnterName" xml:space="preserve"><value>Veuillez saisir un nom de dépôt.</value></data>
+  <data name="Import_FailedToStart" xml:space="preserve"><value>Échec du démarrage de l'importation : {0}</value></data>
+  <data name="Import_StatusPending" xml:space="preserve"><value>En attente</value></data>
+  <data name="Import_StatusCloning" xml:space="preserve"><value>Clonage en cours</value></data>
+  <data name="Import_StatusImportingIssues" xml:space="preserve"><value>Importation des issues</value></data>
+  <data name="Import_StatusImportingPRs" xml:space="preserve"><value>Importation des PRs</value></data>
+  <data name="Import_StatusCompleted" xml:space="preserve"><value>Terminé</value></data>
+  <data name="Import_StatusFailed" xml:space="preserve"><value>Échoué</value></data>
+  <data name="Import_AboutDescription" xml:space="preserve"><value>Importez des dépôts depuis GitHub, GitLab, Bitbucket ou toute URL Git. Le dépôt sera cloné avec son historique complet.</value></data>
+  <data name="Import_AboutInclude" xml:space="preserve"><value>Les importations GitHub / GitLab peuvent également inclure :</value></data>
+  <data name="Import_AboutIssues" xml:space="preserve"><value>Les issues avec leurs descriptions et état</value></data>
+  <data name="Import_AboutPRs" xml:space="preserve"><value>Les pull requests / merge requests (importés comme issues)</value></data>
+  <data name="Import_AboutPrivate" xml:space="preserve"><value>Pour les dépôts privés, fournissez un token d'accès personnel avec les permissions de lecture appropriées.</value></data>
 </root>

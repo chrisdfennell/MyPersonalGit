@@ -791,4 +791,90 @@
   <data name="Language_zh" xml:space="preserve"><value>中文</value></data>
   <data name="Language_pt" xml:space="preserve"><value>Português</value></data>
   <data name="Language_ko" xml:space="preserve"><value>한국어</value></data>
+  <data name="Language_ru" xml:space="preserve"><value>Русский</value></data>
+  <data name="Language_it" xml:space="preserve"><value>Italiano</value></data>
+  <data name="Language_tr" xml:space="preserve"><value>Türkçe</value></data>
+
+  <!-- PR (new keys) -->
+  <data name="PR_Showing" xml:space="preserve"><value>显示</value></data>
+  <data name="PR_ChangedFiles" xml:space="preserve"><value>个更改的文件</value></data>
+  <data name="PR_Additions" xml:space="preserve"><value>处添加</value></data>
+  <data name="PR_Deletions" xml:space="preserve"><value>处删除</value></data>
+
+  <!-- Compare (new keys) -->
+  <data name="Compare_SelectBothBranches" xml:space="preserve"><value>请选择两个分支。</value></data>
+  <data name="Compare_RepoNotFound" xml:space="preserve"><value>未找到仓库。</value></data>
+  <data name="Compare_NoCommits" xml:space="preserve"><value>一个或两个分支没有提交记录。</value></data>
+
+  <!-- Actions (new keys) -->
+  <data name="Actions_Active" xml:space="preserve"><value>活跃</value></data>
+  <data name="Actions_Inactive" xml:space="preserve"><value>不活跃</value></data>
+  <data name="Actions_ClickRunWorkflow" xml:space="preserve"><value>点击 "Run workflow" 从 .github/workflows/ 触发工作流</value></data>
+
+  <!-- Admin (new keys) -->
+  <data name="Admin_Disabled" xml:space="preserve"><value>已禁用</value></data>
+  <data name="Admin_Enabled" xml:space="preserve"><value>已启用</value></data>
+  <data name="Admin_EnterClientId" xml:space="preserve"><value>输入 Client ID</value></data>
+  <data name="Admin_EnterClientSecret" xml:space="preserve"><value>输入 Client Secret</value></data>
+  <data name="Admin_SettingsSaved" xml:space="preserve"><value>设置保存成功！</value></data>
+
+  <!-- Organizations (new keys) -->
+  <data name="Org_AlreadyMember" xml:space="preserve"><value>该用户已是成员。</value></data>
+  <data name="Org_MemberAdded" xml:space="preserve"><value>成员已添加。</value></data>
+  <data name="Org_SettingsSaved" xml:space="preserve"><value>设置已保存。</value></data>
+
+  <!-- Home page -->
+  <data name="Home_InitializePrompt" xml:space="preserve"><value>在 {0} 中初始化一个仓库以开始使用。</value></data>
+  <data name="Home_NoMatchingSearch" xml:space="preserve"><value>未找到与 '{0}' 匹配的仓库</value></data>
+  <data name="Home_NoDescription" xml:space="preserve"><value>暂无描述。</value></data>
+
+  <!-- Login page -->
+  <data name="Login_InvalidCredentials" xml:space="preserve"><value>用户名/邮箱或密码无效</value></data>
+  <data name="Login_Error" xml:space="preserve"><value>登录时发生错误，请重试。</value></data>
+  <data name="Login_InvalidRecoveryCode" xml:space="preserve"><value>恢复代码无效，请重试。</value></data>
+  <data name="Login_InvalidAuthCode" xml:space="preserve"><value>验证码无效，请重试。</value></data>
+  <data name="Login_VerificationError" xml:space="preserve"><value>验证时发生错误，请重试。</value></data>
+  <data name="Login_SessionError" xml:space="preserve"><value>创建会话失败。</value></data>
+  <data name="Login_PasskeyFailed" xml:space="preserve"><value>通行密钥验证失败，请重试。</value></data>
+  <data name="Login_PasskeyAuthFailed" xml:space="preserve"><value>通行密钥认证失败：{0}</value></data>
+  <data name="Login_SignInWith" xml:space="preserve"><value>使用 {0} 登录</value></data>
+  <data name="Login_RecoveryCode" xml:space="preserve"><value>恢复代码</value></data>
+  <data name="Login_RecoveryCodePlaceholder" xml:space="preserve"><value>输入8位恢复代码</value></data>
+  <data name="Login_RecoveryCodeHelp" xml:space="preserve"><value>输入您的恢复代码之一。</value></data>
+  <data name="Login_AuthenticationCode" xml:space="preserve"><value>验证码</value></data>
+  <data name="Login_AuthCodeHelp" xml:space="preserve"><value>输入认证应用中的6位数代码。</value></data>
+  <data name="Login_UsePasskey" xml:space="preserve"><value>使用通行密钥</value></data>
+  <data name="Login_UseAuthenticatorInstead" xml:space="preserve"><value>改用验证码</value></data>
+  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>使用恢复代码</value></data>
+  <data name="Login_BackToLogin" xml:space="preserve"><value>返回登录</value></data>
+  <data name="Login_NoAccount" xml:space="preserve"><value>还没有账户？</value></data>
+  <data name="Login_UsernamePlaceholder" xml:space="preserve"><value>输入用户名或邮箱</value></data>
+  <data name="Login_PasswordPlaceholder" xml:space="preserve"><value>输入密码</value></data>
+
+  <!-- Import page (new keys) -->
+  <data name="Import_GitUrl" xml:space="preserve"><value>Git URL（仅代码）</value></data>
+  <data name="Import_GitHub" xml:space="preserve"><value>GitHub（可选 issues/PR）</value></data>
+  <data name="Import_GitLab" xml:space="preserve"><value>GitLab（可选 issues/PR）</value></data>
+  <data name="Import_Bitbucket" xml:space="preserve"><value>Bitbucket（可选 issues）</value></data>
+  <data name="Import_GitHubExample" xml:space="preserve"><value>例如：https://github.com/owner/repo</value></data>
+  <data name="Import_GitLabExample" xml:space="preserve"><value>例如：https://gitlab.com/owner/repo</value></data>
+  <data name="Import_BitbucketExample" xml:space="preserve"><value>例如：https://bitbucket.org/owner/repo</value></data>
+  <data name="Import_GitUrlExample" xml:space="preserve"><value>任何有效的 Git URL（HTTPS 或 SSH）</value></data>
+  <data name="Import_RepoNameHelp" xml:space="preserve"><value>新本地仓库的名称</value></data>
+  <data name="Import_AuthTokenHelp" xml:space="preserve"><value>私有仓库需要此项。请使用具有读取权限的个人访问令牌。</value></data>
+  <data name="Import_AuthTokenPlaceholder" xml:space="preserve"><value>用于私有仓库的个人访问令牌</value></data>
+  <data name="Import_EnterUrl" xml:space="preserve"><value>请输入仓库 URL。</value></data>
+  <data name="Import_EnterName" xml:space="preserve"><value>请输入仓库名称。</value></data>
+  <data name="Import_FailedToStart" xml:space="preserve"><value>无法启动导入：{0}</value></data>
+  <data name="Import_StatusPending" xml:space="preserve"><value>等待中</value></data>
+  <data name="Import_StatusCloning" xml:space="preserve"><value>克隆中</value></data>
+  <data name="Import_StatusImportingIssues" xml:space="preserve"><value>正在导入 Issues</value></data>
+  <data name="Import_StatusImportingPRs" xml:space="preserve"><value>正在导入 PR</value></data>
+  <data name="Import_StatusCompleted" xml:space="preserve"><value>已完成</value></data>
+  <data name="Import_StatusFailed" xml:space="preserve"><value>失败</value></data>
+  <data name="Import_AboutDescription" xml:space="preserve"><value>从 GitHub、GitLab、Bitbucket 或任何 Git URL 导入仓库。仓库将连同完整历史记录一起克隆。</value></data>
+  <data name="Import_AboutInclude" xml:space="preserve"><value>GitHub / GitLab 导入还可以包括：</value></data>
+  <data name="Import_AboutIssues" xml:space="preserve"><value>包含描述和状态的 Issues</value></data>
+  <data name="Import_AboutPRs" xml:space="preserve"><value>Pull requests / merge requests（作为 issues 导入）</value></data>
+  <data name="Import_AboutPrivate" xml:space="preserve"><value>对于私有仓库，请提供具有相应读取权限的个人访问令牌。</value></data>
 </root>
