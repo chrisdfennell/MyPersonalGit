@@ -138,6 +138,7 @@ builder.Services.AddSingleton<ITimeTrackingService, TimeTrackingService>();
 builder.Services.AddSingleton<IAGitFlowService, AGitFlowService>();
 builder.Services.AddSingleton<IWebAuthnService, WebAuthnService>();
 builder.Services.AddSingleton<IGitHooksService, GitHooksService>();
+builder.Services.AddSingleton<IAutolinkService, AutolinkService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddLocalization();
 builder.Services.AddScoped<CurrentUserService>();
@@ -291,6 +292,33 @@ using (var scope = app.Services.CreateScope())
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""AGitFlowEnabled"" INTEGER NOT NULL DEFAULT 1;"); } catch { }
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""BranchProtectionRules"" ADD COLUMN ""RequireSignedCommits"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""BranchProtectionRules"" ADD COLUMN ""ProtectedFilePatterns"" TEXT NOT NULL DEFAULT '[]';"); } catch { }
+
+    // From 20260320200000: AutolinkPatterns table, External issue tracker columns
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""AutolinkPatterns"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""RepoName"" TEXT NOT NULL,
+            ""Prefix"" TEXT NOT NULL,
+            ""UrlTemplate"" TEXT NOT NULL,
+            ""CreatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_AutolinkPatterns_RepoName_Prefix"" ON ""AutolinkPatterns"" (""RepoName"", ""Prefix"");");
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Repositories"" ADD COLUMN ""ExternalIssueTrackerUrl"" TEXT NULL;"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Repositories"" ADD COLUMN ""ExternalIssueTrackerPattern"" TEXT NULL;"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Repositories"" ADD COLUMN ""UseExternalIssueTracker"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
+
+    // From 20260320210000: CI Runners table for distributed runner support
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""Runners"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""Name"" TEXT NOT NULL,
+            ""Token"" TEXT NOT NULL,
+            ""Labels"" TEXT NOT NULL DEFAULT '[]',
+            ""IsOnline"" INTEGER NOT NULL DEFAULT 0,
+            ""LastHeartbeat"" TEXT NULL,
+            ""CreatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Runners_Token"" ON ""Runners"" (""Token"");");
 
     if (!db.Users.Any())
     {

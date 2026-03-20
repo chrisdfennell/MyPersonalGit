@@ -856,9 +856,11 @@
   <data name="Import_GitHub" xml:space="preserve"><value>GitHub（オプションのissues/PR付き）</value></data>
   <data name="Import_GitLab" xml:space="preserve"><value>GitLab（オプションのissues/PR付き）</value></data>
   <data name="Import_Bitbucket" xml:space="preserve"><value>Bitbucket（オプションのissues付き）</value></data>
+  <data name="Import_Gitea" xml:space="preserve"><value>Gitea / Forgejo / Gogs（オプションのissues/PR付き）</value></data>
   <data name="Import_GitHubExample" xml:space="preserve"><value>例: https://github.com/owner/repo</value></data>
   <data name="Import_GitLabExample" xml:space="preserve"><value>例: https://gitlab.com/owner/repo</value></data>
   <data name="Import_BitbucketExample" xml:space="preserve"><value>例: https://bitbucket.org/owner/repo</value></data>
+  <data name="Import_GiteaExample" xml:space="preserve"><value>例: https://gitea.example.com/owner/repo</value></data>
   <data name="Import_GitUrlExample" xml:space="preserve"><value>任意の有効な Git URL（HTTPS または SSH）</value></data>
   <data name="Import_RepoNameHelp" xml:space="preserve"><value>新しいローカルリポジトリの名前</value></data>
   <data name="Import_AuthTokenHelp" xml:space="preserve"><value>プライベートリポジトリに必要です。読み取りアクセス権を持つ個人アクセストークンを使用してください。</value></data>

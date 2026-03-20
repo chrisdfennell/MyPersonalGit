@@ -50,6 +50,7 @@ else
                                 <option value="GitHub">@L["Import_GitHub"]</option>
                                 <option value="GitLab">@L["Import_GitLab"]</option>
                                 <option value="Bitbucket">@L["Import_Bitbucket"]</option>
+                                <option value="Gitea">@L["Import_Gitea"]</option>
                             </select>
                         </div>
 
@@ -61,6 +62,7 @@ else
                                 @if (sourceType == "GitHub") { <span>@L["Import_GitHubExample"]</span> }
                                 else if (sourceType == "GitLab") { <span>@L["Import_GitLabExample"]</span> }
                                 else if (sourceType == "Bitbucket") { <span>@L["Import_BitbucketExample"]</span> }
+                                else if (sourceType == "Gitea") { <span>@L["Import_GiteaExample"]</span> }
                                 else { <span>@L["Import_GitUrlExample"]</span> }
                             </div>
                         </div>
@@ -339,6 +341,7 @@ else
         "GitHub" => "https://github.com/owner/repo",
         "GitLab" => "https://gitlab.com/owner/repo",
         "Bitbucket" => "https://bitbucket.org/owner/repo",
+        "Gitea" => "https://gitea.example.com/owner/repo",
         _ => "https://github.com/owner/repo.git"
     };
 

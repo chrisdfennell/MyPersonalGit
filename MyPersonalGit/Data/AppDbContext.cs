@@ -169,6 +169,12 @@ public class AppDbContext : DbContext
     // Pinned Repositories
     public DbSet<PinnedRepository> PinnedRepositories => Set<PinnedRepository>();
 
+    // Autolink Patterns
+    public DbSet<AutolinkPattern> AutolinkPatterns => Set<AutolinkPattern>();
+
+    // CI Runners
+    public DbSet<Runner> Runners => Set<Runner>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Shared JSON value converters + comparers for List<string> and string[]
@@ -614,6 +620,19 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<PinnedRepository>(e =>
         {
             e.HasIndex(p => new { p.Username, p.RepoName }).IsUnique();
+        });
+
+        // --- AutolinkPattern ---
+        modelBuilder.Entity<AutolinkPattern>(e =>
+        {
+            e.HasIndex(a => new { a.RepoName, a.Prefix }).IsUnique();
+        });
+
+        // --- Runner ---
+        modelBuilder.Entity<Runner>(e =>
+        {
+            e.HasIndex(r => r.Token).IsUnique();
+            e.Property(r => r.Labels).HasConversion(arrayStringConverter, arrayStringComparer);
         });
     }
 }

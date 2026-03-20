@@ -234,6 +234,7 @@ public class MigrationService : IMigrationService
                 MigrationSource.GitHub => $"{apiUrl}/issues?state=all&per_page=100",
                 MigrationSource.GitLab => $"{apiUrl}/issues?per_page=100",
                 MigrationSource.Bitbucket => $"{apiUrl}/issues?pagelen=50",
+                MigrationSource.Gitea => $"{apiUrl}/issues?state=all&page=1&limit=50",
                 _ => null
             };
 
@@ -297,6 +298,7 @@ public class MigrationService : IMigrationService
             {
                 MigrationSource.GitHub => $"{apiUrl}/pulls?state=all&per_page=100",
                 MigrationSource.GitLab => $"{apiUrl}/merge_requests?per_page=100",
+                MigrationSource.Gitea => $"{apiUrl}/pulls?state=all&page=1&limit=50",
                 _ => null
             };
 
@@ -355,6 +357,8 @@ public class MigrationService : IMigrationService
                     ($"https://gitlab.com/api/v4/projects/{Uri.EscapeDataString($"{segments[0]}/{segments[1]}")}", segments[0]),
                 MigrationSource.Bitbucket when segments.Length >= 2 =>
                     ($"https://api.bitbucket.org/2.0/repositories/{segments[0]}/{segments[1]}", segments[0]),
+                MigrationSource.Gitea when segments.Length >= 2 =>
+                    ($"{uri.Scheme}://{uri.Host}{(uri.IsDefaultPort ? "" : $":{uri.Port}")}/api/v1/repos/{segments[0]}/{segments[1]}", segments[0]),
                 _ => (null, null)
             };
         }
@@ -366,7 +370,7 @@ public class MigrationService : IMigrationService
 
     private static string GetIssueState(JsonElement issue, MigrationSource source)
     {
-        if (source == MigrationSource.GitHub || source == MigrationSource.GitLab)
+        if (source == MigrationSource.GitHub || source == MigrationSource.GitLab || source == MigrationSource.Gitea)
         {
             return issue.TryGetProperty("state", out var s) ? s.GetString() ?? "open" : "open";
         }

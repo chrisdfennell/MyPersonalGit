@@ -15,7 +15,8 @@ public enum MigrationSource
     GitUrl,
     GitHub,
     GitLab,
-    Bitbucket
+    Bitbucket,
+    Gitea
 }
 
 public class MigrationTask

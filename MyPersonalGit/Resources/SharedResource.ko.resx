@@ -856,9 +856,11 @@
   <data name="Import_GitHub" xml:space="preserve"><value>GitHub (선택적 issues/PR 포함)</value></data>
   <data name="Import_GitLab" xml:space="preserve"><value>GitLab (선택적 issues/PR 포함)</value></data>
   <data name="Import_Bitbucket" xml:space="preserve"><value>Bitbucket (선택적 issues 포함)</value></data>
+  <data name="Import_Gitea" xml:space="preserve"><value>Gitea / Forgejo / Gogs (선택적 issues/PR 포함)</value></data>
   <data name="Import_GitHubExample" xml:space="preserve"><value>예: https://github.com/owner/repo</value></data>
   <data name="Import_GitLabExample" xml:space="preserve"><value>예: https://gitlab.com/owner/repo</value></data>
   <data name="Import_BitbucketExample" xml:space="preserve"><value>예: https://bitbucket.org/owner/repo</value></data>
+  <data name="Import_GiteaExample" xml:space="preserve"><value>예: https://gitea.example.com/owner/repo</value></data>
   <data name="Import_GitUrlExample" xml:space="preserve"><value>유효한 Git URL (HTTPS 또는 SSH)</value></data>
   <data name="Import_RepoNameHelp" xml:space="preserve"><value>새 로컬 리포지토리의 이름</value></data>
   <data name="Import_AuthTokenHelp" xml:space="preserve"><value>비공개 리포지토리에 필요합니다. 읽기 권한이 있는 개인 액세스 토큰을 사용하세요.</value></data>

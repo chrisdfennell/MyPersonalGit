@@ -54,7 +54,7 @@
 
 ### 代码与仓库
 - **仓库管理** — 创建、浏览和删除 Git 仓库，配备完整的代码浏览器、文件编辑器、提交历史、分支和标签
-- **仓库导入/迁移** — 从 GitHub、GitLab、Bitbucket 或任意 Git URL 导入仓库，可选导入 Issue 和 PR。支持后台处理和进度跟踪
+- **仓库导入/迁移** — 从 GitHub、GitLab、Bitbucket、Gitea/Forgejo/Gogs 或任意 Git URL 导入仓库，可选导入 Issue 和 PR。支持后台处理和进度跟踪
 - **仓库归档** — 将仓库标记为只读并显示视觉徽章；归档仓库的推送操作将被阻止
 - **Git Smart HTTP** — 通过 HTTP 使用 Basic Auth 进行克隆、拉取和推送
 - **内置 SSH 服务器** — 原生 SSH 服务器用于 Git 操作——无需外部 OpenSSH。支持 ECDH 密钥交换、AES-CTR 加密和公钥认证（RSA、ECDSA、Ed25519）
@@ -71,6 +71,7 @@
 - **仓库标签** — 管理每个仓库的自定义颜色标签；从模板创建仓库时自动复制标签
 - **AGit 工作流** — 推送审查工作流：`git push origin HEAD:refs/for/main` 无需 Fork 或创建远程分支即可创建 Pull Request。后续推送自动更新已有的开放 PR
 - **探索** — 浏览所有可访问的仓库，支持搜索、排序和主题过滤
+- **Autolink References** — 自动将 `#123` 转换为 Issue 链接，并支持按仓库配置自定义模式（例如 `JIRA-456` → 外部 URL）
 - **搜索** — 跨仓库、Issue、PR 和代码的全文搜索
 
 ### 协作
@@ -129,12 +130,15 @@
 - **Webhooks** — 在仓库事件上触发外部服务
 - **Prometheus 指标** — 内置 `/metrics` 端点用于监控
 
-### 软件包与容器托管
+### 软件包与容器托管 (20 registries)
 - **容器注册表** — 使用 `docker push` 和 `docker pull` 托管 Docker/OCI 镜像（OCI Distribution Spec）
 - **NuGet 注册表** — 托管 .NET 软件包，完整的 NuGet v3 API（服务索引、搜索、推送、还原）
 - **npm 注册表** — 托管 Node.js 软件包，标准的 npm 发布/安装
 - **PyPI 注册表** — 托管 Python 软件包，支持 PEP 503 Simple API、JSON 元数据 API 和 `twine upload` 兼容性
 - **Maven 注册表** — 托管 Java/JVM 软件包，标准的 Maven 仓库布局、`maven-metadata.xml` 生成和 `mvn deploy` 支持
+- **Alpine Registry** — 托管 Alpine Linux `.apk` 软件包，支持 APKINDEX 生成
+- **RPM Registry** — 托管 RPM 软件包，包含 `dnf`/`yum` 用的 `repomd.xml` 元数据
+- **Chef Registry** — 托管 Chef Cookbook，兼容 Chef Supermarket API
 - **通用软件包** — 通过 REST API 上传和下载任意二进制制品
 
 ### 静态站点
@@ -177,6 +181,9 @@
 - **Repository Pinning** — 将最多6个常用仓库固定到用户个人资料页面以便快速访问
 - **Git Hooks Management** — 用于查看、编辑和管理每个仓库的服务器端 Git Hooks（pre-receive、update、post-receive、post-update、pre-push）的 Web UI
 - **Protected File Patterns** — 使用 glob 模式的分支保护规则，要求对特定文件的更改进行审查批准（例如 `*.lock`、`migrations/**`、`.github/workflows/*`）
+- **External Issue Tracker** — 配置仓库链接到外部 Issue 跟踪器（Jira、Linear 等），支持自定义 URL 模式
+- **Federation (NodeInfo/WebFinger)** — NodeInfo 2.0 发现、WebFinger 和 host-meta，实现跨实例可发现性
+- **Distributed CI Runners** — 外部运行器可通过 API 注册、轮询排队任务并报告结果
 
 ## 技术栈
 

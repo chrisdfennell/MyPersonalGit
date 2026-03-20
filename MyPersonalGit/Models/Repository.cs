@@ -25,6 +25,9 @@ public class Repository
     public string PagesBranch { get; set; } = "gh-pages";
     public bool IsTemplate { get; set; }
     public int? TemplateRepositoryId { get; set; }
+    public string? ExternalIssueTrackerUrl { get; set; }
+    public string? ExternalIssueTrackerPattern { get; set; } // e.g., "PROJ-{id}"
+    public bool UseExternalIssueTracker { get; set; }
 }
 
 public class RepositoryStar

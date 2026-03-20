@@ -54,7 +54,7 @@ Um servidor Git auto-hospedado com interface web semelhante ao GitHub, construí
 
 ### Código e Repositórios
 - **Gerenciamento de Repositórios** — Crie, navegue e exclua repositórios Git com navegador de código completo, editor de arquivos, histórico de commits, branches e tags
-- **Importação/Migração de Repositórios** — Importe repositórios do GitHub, GitLab, Bitbucket ou qualquer URL Git com importação opcional de issues e PRs. Processamento em segundo plano com acompanhamento de progresso
+- **Importação/Migração de Repositórios** — Importe repositórios do GitHub, GitLab, Bitbucket, Gitea/Forgejo/Gogs ou qualquer URL Git com importação opcional de issues e PRs. Processamento em segundo plano com acompanhamento de progresso
 - **Arquivamento de Repositórios** — Marque repositórios como somente leitura com badges visuais; pushes são bloqueados para repositórios arquivados
 - **Git Smart HTTP** — Clone, fetch e push via HTTP com Basic Auth
 - **Servidor SSH Integrado** — Servidor SSH nativo para operações Git — sem necessidade de OpenSSH externo. Suporta troca de chaves ECDH, criptografia AES-CTR e autenticação por chave pública (RSA, ECDSA, Ed25519)
@@ -71,6 +71,7 @@ Um servidor Git auto-hospedado com interface web semelhante ao GitHub, construí
 - **Labels de Repositório** — Gerencie labels com cores personalizadas por repositório; labels são automaticamente copiadas ao criar repositórios a partir de templates
 - **AGit Flow** — Fluxo de trabalho push-to-review: `git push origin HEAD:refs/for/main` cria um pull request sem fazer fork ou criar branches remotos. Pushes subsequentes atualizam PRs abertos existentes
 - **Explorar** — Navegue por todos os repositórios acessíveis com busca, ordenação e filtragem por tópicos
+- **Autolink References** — Converte automaticamente `#123` em links de issues, além de padrões personalizados configuráveis (por exemplo, `JIRA-456` → URLs externas) por repositório
 - **Busca** — Busca de texto completo em repositórios, issues, PRs e código
 
 ### Colaboração
@@ -129,12 +130,15 @@ Um servidor Git auto-hospedado com interface web semelhante ao GitHub, construí
 - **Webhooks** — Dispare serviços externos em eventos de repositório
 - **Métricas Prometheus** — Endpoint `/metrics` integrado para monitoramento
 
-### Hospedagem de Pacotes e Contêineres
+### Hospedagem de Pacotes e Contêineres (20 registries)
 - **Registro de Contêineres** — Hospede imagens Docker/OCI com `docker push` e `docker pull` (OCI Distribution Spec)
 - **Registro NuGet** — Hospede pacotes .NET com API NuGet v3 completa (índice de serviço, busca, push, restauração)
 - **Registro npm** — Hospede pacotes Node.js com npm publish/install padrão
 - **Registro PyPI** — Hospede pacotes Python com PEP 503 Simple API, API de metadados JSON e compatibilidade com `twine upload`
 - **Registro Maven** — Hospede pacotes Java/JVM com layout de repositório Maven padrão, geração de `maven-metadata.xml` e suporte a `mvn deploy`
+- **Alpine Registry** — Hospede pacotes Alpine Linux `.apk` com geração de APKINDEX
+- **RPM Registry** — Hospede pacotes RPM com metadados `repomd.xml` para `dnf`/`yum`
+- **Chef Registry** — Hospede cookbooks Chef com API compatível com Chef Supermarket
 - **Pacotes Genéricos** — Faça upload e download de artefatos binários arbitrários via REST API
 
 ### Sites Estáticos
@@ -177,6 +181,9 @@ Um servidor Git auto-hospedado com interface web semelhante ao GitHub, construí
 - **Repository Pinning** — Fixe até 6 repositórios favoritos na sua página de perfil de usuário para acesso rápido
 - **Git Hooks Management** — Interface web para visualizar, editar e gerenciar Git hooks do lado do servidor (pre-receive, update, post-receive, post-update, pre-push) por repositório
 - **Protected File Patterns** — Regra de proteção de branch com padrões glob para exigir aprovação de revisão para alterações em arquivos específicos (por exemplo, `*.lock`, `migrations/**`, `.github/workflows/*`)
+- **External Issue Tracker** — Configure repositórios para vincular a um rastreador de issues externo (Jira, Linear, etc.) com padrões de URL personalizados
+- **Federation (NodeInfo/WebFinger)** — Descoberta NodeInfo 2.0, WebFinger e host-meta para descoberta entre instâncias
+- **Distributed CI Runners** — Runners externos podem se registrar via API, consultar jobs na fila e reportar resultados
 
 ## Stack Tecnológica
 

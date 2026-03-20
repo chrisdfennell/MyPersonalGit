@@ -54,7 +54,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 
 ### Code & Repositories
 - **Repository Management** — Create, browse, and delete Git repositories with a full code browser, file editor, commit history, branches, and tags
-- **Repository Import/Migration** — Import repositories from GitHub, GitLab, Bitbucket, or any Git URL with optional issue and PR import. Background processing with progress tracking
+- **Repository Import/Migration** — Import repositories from GitHub, GitLab, Bitbucket, Gitea/Forgejo/Gogs, or any Git URL with optional issue and PR import. Background processing with progress tracking
 - **Repository Archiving** — Mark repositories as read-only with visual badges; pushes are blocked for archived repos
 - **Git Smart HTTP** — Clone, fetch, and push over HTTP with Basic Auth
 - **Built-in SSH Server** — Native SSH server for Git operations — no external OpenSSH required. Supports ECDH key exchange, AES-CTR encryption, and public key authentication (RSA, ECDSA, Ed25519)
@@ -71,6 +71,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Repository Labels** — Manage labels with custom colors per repository; labels are automatically copied when creating repos from templates
 - **AGit Flow** — Push-to-review workflow: `git push origin HEAD:refs/for/main` creates a pull request without forking or creating remote branches. Updates existing open PRs on subsequent pushes
 - **Explore** — Browse all accessible repositories with search, sort, and topic filtering
+- **Autolink References** — Auto-convert `#123` to issue links, plus configurable custom patterns (e.g., `JIRA-456` → external URLs) per repository
 - **Search** — Full-text search across repositories, issues, PRs, and code
 
 ### Collaboration
@@ -129,7 +130,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Webhooks** — Trigger external services on repository events
 - **Prometheus Metrics** — Built-in `/metrics` endpoint for monitoring
 
-### Package & Container Hosting (17 registries)
+### Package & Container Hosting (20 registries)
 - **Container Registry** — Host Docker/OCI images with `docker push` and `docker pull` (OCI Distribution Spec)
 - **NuGet Registry** — Host .NET packages with full NuGet v3 API (service index, search, push, restore)
 - **npm Registry** — Host Node.js packages with standard npm publish/install
@@ -146,6 +147,9 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Swift Registry** — Host Swift packages with Swift Package Manager registry API and `Package.swift` manifest serving
 - **Debian Registry** — Host `.deb` packages with APT-compatible `Packages` index and `Release` file generation
 - **CRAN Registry** — Host R packages with `PACKAGES` index generation for `install.packages()`
+- **Alpine Registry** — Host Alpine Linux `.apk` packages with APKINDEX generation
+- **RPM Registry** — Host RPM packages with `repomd.xml` metadata for `dnf`/`yum`
+- **Chef Registry** — Host Chef cookbooks with Chef Supermarket-compatible API
 - **Generic Packages** — Upload and download arbitrary binary artifacts via REST API
 
 ### Static Sites
@@ -188,6 +192,9 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Repository Pinning** — Pin up to 6 favorite repositories to your user profile page for quick access
 - **Git Hooks Management** — Web UI to view, edit, and manage server-side Git hooks (pre-receive, update, post-receive, post-update, pre-push) per repository
 - **Protected File Patterns** — Branch protection rule with glob patterns to require review approval for changes to specific files (e.g., `*.lock`, `migrations/**`, `.github/workflows/*`)
+- **External Issue Tracker** — Configure repositories to link to an external issue tracker (Jira, Linear, etc.) with custom URL patterns instead of built-in issues
+- **Federation (NodeInfo/WebFinger)** — NodeInfo 2.0 discovery at `/.well-known/nodeinfo`, WebFinger at `/.well-known/webfinger`, and host-meta for cross-instance discoverability
+- **Distributed CI Runners** — External runners can register via API, poll for queued jobs, and report results. Enables distributed CI execution across multiple machines alongside the built-in Docker runner
 
 ## Tech Stack
 
