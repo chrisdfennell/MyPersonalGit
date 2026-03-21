@@ -1,0 +1,593 @@
+@page "/repo/{RepoName}/ide"
+@page "/repo/{RepoName}/ide/{*FilePath}"
+@layout IdeLayout
+@rendermode InteractiveServer
+@using MyPersonalGit.Data
+@using MyPersonalGit.Services
+@using MyPersonalGit.Components.Shared
+@using static MyPersonalGit.Components.Shared.IdeTabBar
+@inject IWebIdeService WebIdeService
+@inject IJSRuntime JS
+@inject IConfiguration Config
+@inject NavigationManager Navigation
+@inject CurrentUserService UserService
+@inject IAdminService AdminService
+@implements IAsyncDisposable
+
+<div class="ide-container">
+    <div class="ide-sidebar">
+        <div class="ide-sidebar-tabs">
+            <button class="ide-sidebar-tab @(sidebarMode == "files" ? "active" : "")" @onclick='() => sidebarMode = "files"' title="Explorer">
+                <i class="bi bi-files"></i>
+            </button>
+            <button class="ide-sidebar-tab @(sidebarMode == "search" ? "active" : "")" @onclick='() => sidebarMode = "search"' title="Search">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+        <div class="ide-sidebar-content">
+            @if (sidebarMode == "files")
+            {
+                <IdeFileTree Nodes="treeNodes"
+                             ActiveFilePath="@activeTabPath"
+                             ModifiedFiles="modifiedFiles"
+                             OnFileSelected="HandleFileSelected"
+                             OnNewFile="HandleNewFile"
+                             OnNewFolder="HandleNewFolder"
+                             OnDeletePath="HandleDeletePath"
+                             OnRenamePath="HandleRenamePath" />
+            }
+            else
+            {
+                <IdeSearchPanel RepoName="@RepoName"
+                                Branch="@currentBranch"
+                                OnResultSelected="HandleSearchResultSelected" />
+            }
+        </div>
+    </div>
+
+    <div class="ide-tabs">
+        <IdeTabBar Tabs="openTabs"
+                   ActiveTabPath="@activeTabPath"
+                   OnTabSelected="HandleTabSelected"
+                   OnTabClosed="HandleTabClosed" />
+    </div>
+
+    <div class="ide-editor">
+        @if (isLoading)
+        {
+            <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                <span class="spinner-border spinner-border-sm me-2"></span>Loading...
+            </div>
+        }
+        else if (openTabs.Count == 0)
+        {
+            <div class="ide-welcome d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+                <i class="bi bi-braces display-3 mb-3 opacity-25"></i>
+                <h5 class="fw-light opacity-50">Web IDE</h5>
+                <p class="small opacity-50">Select a file from the tree to begin editing</p>
+                <div class="mt-3 small opacity-50">
+                    <p class="mb-1"><kbd>Ctrl+S</kbd> Save &middot; <kbd>Ctrl+Shift+F</kbd> Search</p>
+                </div>
+            </div>
+        }
+        <div id="monaco-container" style="width: 100%; height: 100%; @(openTabs.Count == 0 ? "display: none;" : "")"></div>
+    </div>
+
+    <div class="ide-bottom-panel">
+        <IdeCommitPanel Changes="pendingChanges"
+                        OnCommit="HandleCommit"
+                        IsCommitting="isCommitting" />
+    </div>
+</div>
+
+@code {
+    [Parameter] public string RepoName { get; set; } = "";
+    [Parameter] public string? FilePath { get; set; }
+
+    private List<TreeNode>? treeNodes;
+    private List<OpenTab> openTabs = new();
+    private string? activeTabPath;
+    private string currentBranch = "main";
+    private List<string> branches = new();
+    private HashSet<string> modifiedFiles = new();
+    private Dictionary<string, string> fileContents = new();
+    private bool isLoading = true;
+    private bool isCommitting;
+    private string sidebarMode = "files";
+    private string? editorId;
+    private List<FileChange> pendingChanges = new();
+    private DotNetObjectReference<WebIde>? dotNetRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Parse branch from query string
+            var uri = new Uri(Navigation.Uri);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            var branchParam = query["branch"];
+            if (!string.IsNullOrEmpty(branchParam))
+                currentBranch = branchParam;
+
+            treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
+
+            // Load branch list from the repo
+            var systemSettings = await AdminService.GetSystemSettingsAsync();
+            var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot)
+                ? systemSettings.ProjectRoot
+                : Config["Git:ProjectRoot"] ?? Config["Git:ReposPath"] ?? "/repos";
+            branches = await Task.Run(() =>
+            {
+                var repoPath = System.IO.Path.Combine(projectRoot, RepoName);
+                if (!LibGit2Sharp.Repository.IsValid(repoPath))
+                {
+                    repoPath = repoPath + ".git";
+                    if (!LibGit2Sharp.Repository.IsValid(repoPath))
+                    {
+                        repoPath = System.IO.Path.Combine(projectRoot, RepoName, RepoName + ".git");
+                    }
+                }
+                try
+                {
+                    using var repo = new LibGit2Sharp.Repository(repoPath);
+                    return repo.Branches
+                        .Where(b => !b.IsRemote)
+                        .Select(b => b.FriendlyName)
+                        .OrderBy(b => b)
+                        .ToList();
+                }
+                catch
+                {
+                    return new List<string> { "main" };
+                }
+            });
+
+            if (!branches.Contains(currentBranch) && branches.Count > 0)
+                currentBranch = branches[0];
+        }
+        catch
+        {
+            treeNodes = new();
+            branches = new List<string> { "main" };
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                dotNetRef = DotNetObjectReference.Create(this);
+
+                // Load Monaco from CDN first
+                await JS.InvokeVoidAsync("monacoInterop.init");
+
+                // Initialize Monaco editor
+                var theme = await JS.InvokeAsync<string>("themeHelper.get");
+                var monacoTheme = theme == "dark" ? "vs-dark" : "vs";
+
+                editorId = await JS.InvokeAsync<string>("monacoInterop.createEditor", "monaco-container",
+                    new { theme = monacoTheme, fontSize = 14, minimap = true });
+
+                // Register content change callback
+                await JS.InvokeVoidAsync("monacoInterop.onDidChangeContent", editorId, dotNetRef, "OnEditorContentChanged");
+
+                // Auto-open file if specified in route
+                if (!string.IsNullOrEmpty(FilePath))
+                {
+                    await HandleFileSelected(FilePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Monaco not loaded yet - will retry
+                Console.WriteLine($"Monaco init error: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task HandleFileSelected(string path)
+    {
+        // Check if already open
+        var existingTab = openTabs.FirstOrDefault(t => t.FilePath == path);
+        if (existingTab != null)
+        {
+            await SwitchToTab(path);
+            return;
+        }
+
+        try
+        {
+            // Load file content
+            var fileContent = await WebIdeService.GetFileContentAsync(RepoName, currentBranch, path);
+            fileContents[path] = fileContent.Content;
+
+            // Create tab
+            var tab = new OpenTab
+            {
+                FilePath = path,
+                FileName = System.IO.Path.GetFileName(path),
+                IsDirty = false,
+                OriginalContent = fileContent.Content
+            };
+            openTabs.Add(tab);
+
+            // Open in editor
+            activeTabPath = path;
+            StateHasChanged();
+            await Task.Delay(50); // Let Blazor re-render so monaco-container becomes visible
+
+            if (editorId != null)
+            {
+                await JS.InvokeVoidAsync("monacoInterop.layout", editorId);
+                var isReadOnly = !UserService.IsLoggedIn;
+                await JS.InvokeVoidAsync("monacoInterop.openFile", editorId, path, fileContent.Content, isReadOnly);
+                await JS.InvokeVoidAsync("monacoInterop.layout", editorId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to open file: {ex.Message}");
+        }
+    }
+
+    private async Task HandleTabSelected(string path)
+    {
+        await SwitchToTab(path);
+    }
+
+    private async Task SwitchToTab(string path)
+    {
+        if (editorId != null && fileContents.ContainsKey(path))
+        {
+            await JS.InvokeVoidAsync("monacoInterop.openFile", editorId, path, fileContents[path], !UserService.IsLoggedIn);
+        }
+        activeTabPath = path;
+        StateHasChanged();
+    }
+
+    private async Task HandleTabClosed(string path)
+    {
+        // Save current content if dirty
+        if (editorId != null && modifiedFiles.Contains(path))
+        {
+            try
+            {
+                var content = await JS.InvokeAsync<string>("monacoInterop.getFileContent", editorId, path);
+                fileContents[path] = content;
+            }
+            catch { }
+        }
+
+        if (editorId != null)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("monacoInterop.closeFile", editorId, path);
+            }
+            catch { }
+        }
+
+        var tabIndex = openTabs.FindIndex(t => t.FilePath == path);
+        openTabs.RemoveAll(t => t.FilePath == path);
+        modifiedFiles.Remove(path);
+        fileContents.Remove(path);
+
+        // Switch to adjacent tab
+        if (activeTabPath == path)
+        {
+            if (openTabs.Count > 0)
+            {
+                var newIndex = Math.Min(tabIndex, openTabs.Count - 1);
+                await SwitchToTab(openTabs[newIndex].FilePath);
+            }
+            else
+            {
+                activeTabPath = null;
+            }
+        }
+
+        UpdatePendingChanges();
+        StateHasChanged();
+    }
+
+    private async Task HandleCommit((string message, List<FileChange> changes) args)
+    {
+        if (!UserService.IsLoggedIn) return;
+
+        isCommitting = true;
+        StateHasChanged();
+
+        try
+        {
+            // Get latest content from Monaco for all modified files
+            var commitChanges = new List<FileChange>();
+            foreach (var change in args.changes)
+            {
+                string? content = null;
+                if (change.Action != "delete" && editorId != null)
+                {
+                    try
+                    {
+                        content = await JS.InvokeAsync<string>("monacoInterop.getFileContent", editorId, change.Path);
+                    }
+                    catch
+                    {
+                        content = fileContents.GetValueOrDefault(change.Path);
+                    }
+                }
+                commitChanges.Add(new FileChange(change.Path, content ?? change.Content, change.Action, change.OldPath));
+            }
+
+            await WebIdeService.CommitMultipleFilesAsync(
+                RepoName,
+                currentBranch,
+                UserService.Username,
+                $"{UserService.Username}@personalgit.local",
+                args.message,
+                commitChanges
+            );
+
+            // Reset dirty state for committed files
+            foreach (var change in commitChanges)
+            {
+                modifiedFiles.Remove(change.Path);
+                var tab = openTabs.FirstOrDefault(t => t.FilePath == change.Path);
+                if (tab != null)
+                {
+                    tab.IsDirty = false;
+                    tab.OriginalContent = fileContents.GetValueOrDefault(change.Path, "");
+                }
+            }
+
+            // Refresh tree
+            treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
+            UpdatePendingChanges();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Commit failed: {ex.Message}");
+        }
+        finally
+        {
+            isCommitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleNewFile(string folderPath)
+    {
+        if (!UserService.IsLoggedIn) return;
+
+        try
+        {
+            var fileName = await JS.InvokeAsync<string>("prompt", "Enter file name:");
+            if (string.IsNullOrWhiteSpace(fileName)) return;
+
+            var newPath = string.IsNullOrEmpty(folderPath) ? fileName : $"{folderPath}/{fileName}";
+
+            await WebIdeService.CreateFileAsync(
+                RepoName, currentBranch, newPath, "",
+                UserService.Username, $"{UserService.Username}@personalgit.local"
+            );
+
+            treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
+            StateHasChanged();
+
+            // Open the new file
+            await HandleFileSelected(newPath);
+        }
+        catch { }
+    }
+
+    private async Task HandleNewFolder(string folderPath)
+    {
+        if (!UserService.IsLoggedIn) return;
+
+        try
+        {
+            var folderName = await JS.InvokeAsync<string>("prompt", "Enter folder name:");
+            if (string.IsNullOrWhiteSpace(folderName)) return;
+
+            var newPath = string.IsNullOrEmpty(folderPath) ? folderName : $"{folderPath}/{folderName}";
+            // Create a .gitkeep file to create the folder
+            var keepPath = $"{newPath}/.gitkeep";
+
+            await WebIdeService.CreateFileAsync(
+                RepoName, currentBranch, keepPath, "",
+                UserService.Username, $"{UserService.Username}@personalgit.local"
+            );
+
+            treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
+            StateHasChanged();
+        }
+        catch { }
+    }
+
+    private async Task HandleDeletePath(string path)
+    {
+        if (!UserService.IsLoggedIn) return;
+
+        try
+        {
+            var confirmed = await JS.InvokeAsync<bool>("confirm", $"Are you sure you want to delete '{path}'?");
+            if (!confirmed) return;
+
+            await WebIdeService.DeletePathAsync(
+                RepoName, currentBranch, path,
+                UserService.Username, $"{UserService.Username}@personalgit.local"
+            );
+
+            // Close tab if open
+            var tab = openTabs.FirstOrDefault(t => t.FilePath == path);
+            if (tab != null)
+            {
+                await HandleTabClosed(path);
+            }
+
+            treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
+            StateHasChanged();
+        }
+        catch { }
+    }
+
+    private async Task HandleRenamePath((string oldPath, string newPath) args)
+    {
+        if (!UserService.IsLoggedIn) return;
+
+        try
+        {
+            var newName = await JS.InvokeAsync<string>("prompt", "Enter new name:", System.IO.Path.GetFileName(args.oldPath));
+            if (string.IsNullOrWhiteSpace(newName)) return;
+
+            var directory = System.IO.Path.GetDirectoryName(args.oldPath)?.Replace("\\", "/");
+            var newFullPath = string.IsNullOrEmpty(directory) ? newName : $"{directory}/{newName}";
+
+            await WebIdeService.RenamePathAsync(
+                RepoName, currentBranch, args.oldPath, newFullPath,
+                UserService.Username, $"{UserService.Username}@personalgit.local"
+            );
+
+            // Update tab if the renamed file was open
+            var tab = openTabs.FirstOrDefault(t => t.FilePath == args.oldPath);
+            if (tab != null)
+            {
+                tab.FilePath = newFullPath;
+                tab.FileName = System.IO.Path.GetFileName(newFullPath);
+                if (activeTabPath == args.oldPath)
+                    activeTabPath = newFullPath;
+
+                // Update content dictionary
+                if (fileContents.TryGetValue(args.oldPath, out var content))
+                {
+                    fileContents.Remove(args.oldPath);
+                    fileContents[newFullPath] = content;
+                }
+
+                if (modifiedFiles.Remove(args.oldPath))
+                    modifiedFiles.Add(newFullPath);
+            }
+
+            treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
+            StateHasChanged();
+        }
+        catch { }
+    }
+
+    private async Task HandleSearchResultSelected((string filePath, int lineNumber) args)
+    {
+        await HandleFileSelected(args.filePath);
+
+        // Reveal the line in the editor
+        if (editorId != null)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("monacoInterop.revealLine", editorId, args.lineNumber);
+            }
+            catch { }
+        }
+
+        sidebarMode = "files";
+        StateHasChanged();
+    }
+
+    private async Task HandleBranchChanged(string newBranch)
+    {
+        currentBranch = newBranch;
+
+        // Close all tabs
+        if (editorId != null)
+        {
+            foreach (var tab in openTabs.ToList())
+            {
+                try { await JS.InvokeVoidAsync("monacoInterop.closeFile", editorId, tab.FilePath); }
+                catch { }
+            }
+        }
+
+        openTabs.Clear();
+        activeTabPath = null;
+        modifiedFiles.Clear();
+        fileContents.Clear();
+        pendingChanges.Clear();
+
+        // Reload tree
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
+        }
+        catch
+        {
+            treeNodes = new();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnEditorContentChanged(string filePath)
+    {
+        var tab = openTabs.FirstOrDefault(t => t.FilePath == filePath);
+        if (tab == null) return;
+
+        // Update cached content
+        if (editorId != null)
+        {
+            try
+            {
+                var content = await JS.InvokeAsync<string>("monacoInterop.getFileContent", editorId, filePath);
+                fileContents[filePath] = content;
+
+                var isDirty = content != tab.OriginalContent;
+                tab.IsDirty = isDirty;
+
+                if (isDirty)
+                    modifiedFiles.Add(filePath);
+                else
+                    modifiedFiles.Remove(filePath);
+
+                UpdatePendingChanges();
+                await InvokeAsync(StateHasChanged);
+            }
+            catch { }
+        }
+    }
+
+    private void UpdatePendingChanges()
+    {
+        pendingChanges = modifiedFiles
+            .Select(path =>
+            {
+                var tab = openTabs.FirstOrDefault(t => t.FilePath == path);
+                var content = fileContents.GetValueOrDefault(path, "");
+                var action = string.IsNullOrEmpty(tab?.OriginalContent) ? "add" : "modify";
+                return new FileChange(path, content, action);
+            })
+            .ToList();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (editorId != null)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("monacoInterop.dispose", editorId);
+            }
+            catch { }
+        }
+        dotNetRef?.Dispose();
+    }
+}

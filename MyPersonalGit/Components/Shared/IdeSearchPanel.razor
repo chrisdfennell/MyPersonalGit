@@ -1,0 +1,183 @@
+@using MyPersonalGit.Data
+@inject IWebIdeService WebIdeService
+
+<div class="ide-search-panel">
+    <div class="ide-search-header px-2 py-1 border-bottom">
+        <span class="small fw-semibold"><i class="bi bi-search me-1"></i>Search</span>
+    </div>
+
+    <div class="ide-search-inputs px-2 py-2">
+        <div class="input-group input-group-sm mb-1">
+            <input type="text" class="form-control" placeholder="Search in files..."
+                   @bind="searchQuery" @bind:event="oninput"
+                   @onkeydown="HandleSearchKeyDown" />
+            <button class="btn btn-outline-secondary" @onclick="ExecuteSearch" disabled="@isSearching">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+        <input type="text" class="form-control form-control-sm" placeholder="File extension filter (e.g. .cs)"
+               @bind="extFilter" @bind:event="oninput" />
+    </div>
+
+    <div class="ide-search-results">
+        @if (isSearching)
+        {
+            <div class="text-center py-3">
+                <span class="spinner-border spinner-border-sm text-muted"></span>
+                <span class="text-muted small ms-1">Searching...</span>
+            </div>
+        }
+        else if (hasSearched && (results == null || results.Count == 0))
+        {
+            <div class="text-muted small px-3 py-2">
+                <i class="bi bi-emoji-frown me-1"></i>No results found
+            </div>
+        }
+        else if (results != null && results.Count > 0)
+        {
+            <div class="small px-2 py-1 text-muted border-bottom">
+                @results.Count result(s) found
+            </div>
+            @foreach (var result in results.Take(200))
+            {
+                <div class="ide-search-result px-2 py-1" @onclick="() => SelectResult(result)" title="@result.FilePath:@result.LineNumber">
+                    <div class="ide-search-result-path text-truncate">
+                        <i class="bi bi-file-earmark-code me-1"></i>
+                        <span class="fw-semibold">@GetFileName(result.FilePath)</span>
+                        <span class="text-muted ms-1">@GetDirectory(result.FilePath)</span>
+                        <span class="text-muted">:@result.LineNumber</span>
+                    </div>
+                    <div class="ide-search-result-line font-monospace">
+                        @HighlightMatch(result.LineContent)
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string RepoName { get; set; } = "";
+    [Parameter] public string Branch { get; set; } = "main";
+    [Parameter] public EventCallback<(string filePath, int lineNumber)> OnResultSelected { get; set; }
+
+    private string searchQuery = "";
+    private string extFilter = "";
+    private bool isSearching;
+    private bool hasSearched;
+    private List<SearchResult>? results;
+
+    private async Task HandleSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            await ExecuteSearch();
+    }
+
+    private async Task ExecuteSearch()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery)) return;
+
+        isSearching = true;
+        hasSearched = true;
+        StateHasChanged();
+
+        try
+        {
+            var ext = string.IsNullOrWhiteSpace(extFilter) ? null : extFilter.Trim();
+            results = await WebIdeService.SearchFilesAsync(RepoName, Branch, searchQuery, ext);
+        }
+        catch
+        {
+            results = new();
+        }
+        finally
+        {
+            isSearching = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SelectResult(SearchResult result)
+    {
+        await OnResultSelected.InvokeAsync((result.FilePath, result.LineNumber));
+    }
+
+    private static string GetFileName(string path) => System.IO.Path.GetFileName(path);
+    private static string GetDirectory(string path)
+    {
+        var dir = System.IO.Path.GetDirectoryName(path)?.Replace("\\", "/");
+        return string.IsNullOrEmpty(dir) ? "" : dir;
+    }
+
+    private RenderFragment HighlightMatch(string line) => builder =>
+    {
+        if (string.IsNullOrEmpty(searchQuery) || string.IsNullOrEmpty(line))
+        {
+            builder.AddContent(0, line);
+            return;
+        }
+
+        var idx = line.IndexOf(searchQuery, StringComparison.OrdinalIgnoreCase);
+        if (idx < 0)
+        {
+            builder.AddContent(0, line);
+            return;
+        }
+
+        var before = line[..idx];
+        var match = line.Substring(idx, searchQuery.Length);
+        var after = line[(idx + searchQuery.Length)..];
+
+        builder.AddContent(1, before);
+        builder.OpenElement(2, "mark");
+        builder.AddContent(3, match);
+        builder.CloseElement();
+        builder.AddContent(4, after);
+    };
+}
+
+<style>
+    .ide-search-panel {
+        display: flex;
+        flex-direction: column;
+        font-size: 0.8125rem;
+        border-top: 1px solid var(--bs-border-color);
+    }
+
+    .ide-search-inputs .form-control {
+        font-size: 0.75rem;
+    }
+
+    .ide-search-results {
+        overflow-y: auto;
+        max-height: 300px;
+    }
+
+    .ide-search-result {
+        cursor: pointer;
+        border-bottom: 1px solid var(--bs-border-color-translucent);
+    }
+
+    .ide-search-result:hover {
+        background: var(--bs-tertiary-bg);
+    }
+
+    .ide-search-result-path {
+        font-size: 0.75rem;
+    }
+
+    .ide-search-result-line {
+        font-size: 0.6875rem;
+        color: var(--bs-secondary-color);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding-left: 1.25rem;
+    }
+
+    .ide-search-result-line mark {
+        background: var(--bs-warning-bg-subtle);
+        padding: 0 1px;
+        border-radius: 2px;
+    }
+</style>

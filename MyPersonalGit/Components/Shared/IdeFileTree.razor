@@ -1,0 +1,445 @@
+@using MyPersonalGit.Data
+
+<div class="ide-file-tree">
+    <div class="ide-file-tree-filter px-2 py-1">
+        <div class="input-group input-group-sm">
+            <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search" style="font-size: 0.75rem;"></i></span>
+            <input type="text" class="form-control border-start-0 ps-0" placeholder="Filter files..."
+                   @bind="filterText" @bind:event="oninput" />
+        </div>
+    </div>
+
+    <div class="ide-file-tree-content" @oncontextmenu="HandleBackgroundContextMenu" @oncontextmenu:preventDefault="true">
+        @if (filteredNodes != null)
+        {
+            <ul class="tree-list">
+                @foreach (var node in filteredNodes)
+                {
+                    @TreeNodeItem(node)
+                }
+            </ul>
+        }
+    </div>
+
+    @if (showContextMenu)
+    {
+        <div class="ide-context-menu-backdrop" @onclick="CloseContextMenu"></div>
+        <div class="ide-context-menu dropdown-menu show" style="position: fixed; left: @(contextMenuX)px; top: @(contextMenuY)px; z-index: 9999;">
+            @if (contextMenuIsFolder || contextMenuPath == null)
+            {
+                <button class="dropdown-item small" @onclick="HandleContextNewFile">
+                    <i class="bi bi-file-earmark-plus me-2"></i>New File
+                </button>
+                <button class="dropdown-item small" @onclick="HandleContextNewFolder">
+                    <i class="bi bi-folder-plus me-2"></i>New Folder
+                </button>
+            }
+            @if (contextMenuPath != null)
+            {
+                <button class="dropdown-item small" @onclick="HandleContextRename">
+                    <i class="bi bi-pencil me-2"></i>Rename
+                </button>
+                <hr class="dropdown-divider" />
+                <button class="dropdown-item small text-danger" @onclick="HandleContextDelete">
+                    <i class="bi bi-trash me-2"></i>Delete
+                </button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<TreeNode>? Nodes { get; set; }
+    [Parameter] public string? ActiveFilePath { get; set; }
+    [Parameter] public HashSet<string>? ModifiedFiles { get; set; }
+    [Parameter] public EventCallback<string> OnFileSelected { get; set; }
+    [Parameter] public EventCallback<string> OnNewFile { get; set; }
+    [Parameter] public EventCallback<string> OnNewFolder { get; set; }
+    [Parameter] public EventCallback<string> OnDeletePath { get; set; }
+    [Parameter] public EventCallback<(string oldPath, string newPath)> OnRenamePath { get; set; }
+
+    private string filterText = "";
+    private HashSet<string> expandedFolders = new();
+    private bool showContextMenu;
+    private double contextMenuX;
+    private double contextMenuY;
+    private string? contextMenuPath;
+    private bool contextMenuIsFolder;
+
+    private List<TreeNode>? filteredNodes => FilterNodes(Nodes);
+
+    private List<TreeNode>? FilterNodes(List<TreeNode>? nodes)
+    {
+        if (nodes == null) return null;
+        if (string.IsNullOrWhiteSpace(filterText)) return nodes;
+
+        var result = new List<TreeNode>();
+        foreach (var node in nodes)
+        {
+            if (node.Type == "tree")
+            {
+                var filteredChildren = FilterNodes(node.Children);
+                if (filteredChildren != null && filteredChildren.Count > 0)
+                {
+                    result.Add(node with { Children = filteredChildren });
+                    expandedFolders.Add(node.Path);
+                }
+            }
+            else if (node.Name.Contains(filterText, StringComparison.OrdinalIgnoreCase))
+            {
+                result.Add(node);
+            }
+        }
+        return result;
+    }
+
+    private bool IsExpanded(string path) => expandedFolders.Contains(path);
+
+    private void ToggleFolder(string path)
+    {
+        if (!expandedFolders.Add(path))
+            expandedFolders.Remove(path);
+    }
+
+    private async Task SelectFile(string path)
+    {
+        await OnFileSelected.InvokeAsync(path);
+    }
+
+    private string GetFileIcon(string name)
+    {
+        var ext = System.IO.Path.GetExtension(name).ToLowerInvariant();
+        return ext switch
+        {
+            ".cs" or ".js" or ".ts" or ".py" or ".rb" or ".go" or ".rs" or ".java" or
+            ".cpp" or ".c" or ".h" or ".jsx" or ".tsx" or ".vue" or ".svelte" or
+            ".php" or ".swift" or ".kt" or ".dart" or ".lua" or ".r" or ".sh" or
+            ".ps1" or ".razor" or ".cshtml" => "bi-file-earmark-code",
+            ".html" or ".htm" or ".xml" or ".svg" => "bi-filetype-html",
+            ".css" or ".scss" or ".less" => "bi-filetype-css",
+            ".json" => "bi-filetype-json",
+            ".md" => "bi-filetype-md",
+            ".yml" or ".yaml" => "bi-filetype-yml",
+            ".sql" => "bi-filetype-sql",
+            ".png" or ".jpg" or ".jpeg" or ".gif" or ".ico" or ".webp" => "bi-file-earmark-image",
+            ".pdf" => "bi-filetype-pdf",
+            ".zip" or ".tar" or ".gz" or ".rar" => "bi-file-earmark-zip",
+            _ => "bi-file-earmark"
+        };
+    }
+
+    private void HandleBackgroundContextMenu(MouseEventArgs e)
+    {
+        contextMenuX = e.ClientX;
+        contextMenuY = e.ClientY;
+        contextMenuPath = null;
+        contextMenuIsFolder = true;
+        showContextMenu = true;
+    }
+
+    private void HandleNodeContextMenu(MouseEventArgs e, TreeNode node)
+    {
+        contextMenuX = e.ClientX;
+        contextMenuY = e.ClientY;
+        contextMenuPath = node.Path;
+        contextMenuIsFolder = node.Type == "tree";
+        showContextMenu = true;
+    }
+
+    private void CloseContextMenu()
+    {
+        showContextMenu = false;
+    }
+
+    private async Task HandleContextNewFile()
+    {
+        showContextMenu = false;
+        var folder = contextMenuPath ?? "";
+        await OnNewFile.InvokeAsync(folder);
+    }
+
+    private async Task HandleContextNewFolder()
+    {
+        showContextMenu = false;
+        var folder = contextMenuPath ?? "";
+        await OnNewFolder.InvokeAsync(folder);
+    }
+
+    private async Task HandleContextRename()
+    {
+        showContextMenu = false;
+        if (contextMenuPath != null)
+            await OnRenamePath.InvokeAsync((contextMenuPath, ""));
+    }
+
+    private async Task HandleContextDelete()
+    {
+        showContextMenu = false;
+        if (contextMenuPath != null)
+            await OnDeletePath.InvokeAsync(contextMenuPath);
+    }
+
+    private RenderFragment<TreeNode> TreeNodeItem => node => __builder =>
+    {
+        if (node.Type == "tree")
+        {
+            var expanded = IsExpanded(node.Path);
+            <li class="tree-node tree-folder">
+                <div class="tree-node-label @(node.Path == ActiveFilePath ? "active" : "")"
+                     @onclick="() => ToggleFolder(node.Path)"
+                     @oncontextmenu="(e) => HandleNodeContextMenu(e, node)"
+                     @oncontextmenu:preventDefault="true">
+                    <i class="bi @(expanded ? "bi-chevron-down" : "bi-chevron-right") tree-arrow"></i>
+                    <i class="bi @(expanded ? "bi-folder2-open" : "bi-folder") tree-icon text-warning"></i>
+                    <span class="tree-name">@node.Name</span>
+                </div>
+                @if (expanded && node.Children != null)
+                {
+                    <ul class="tree-list tree-nested">
+                        @foreach (var child in node.Children)
+                        {
+                            @TreeNodeItem(child)
+                        }
+                    </ul>
+                }
+            </li>
+        }
+        else
+        {
+            var isActive = node.Path == ActiveFilePath;
+            var isModified = ModifiedFiles?.Contains(node.Path) == true;
+            <li class="tree-node tree-file">
+                <div class="tree-node-label @(isActive ? "active" : "")"
+                     @onclick="() => SelectFile(node.Path)"
+                     @oncontextmenu="(e) => HandleNodeContextMenu(e, node)"
+                     @oncontextmenu:preventDefault="true"
+                     title="@node.Path">
+                    <span class="tree-arrow-spacer"></span>
+                    <i class="bi @GetFileIcon(node.Name) tree-icon text-muted"></i>
+                    <span class="tree-name">@node.Name</span>
+                    @if (isModified)
+                    {
+                        <span class="tree-modified-dot" title="Modified"></span>
+                    }
+                </div>
+            </li>
+        }
+    };
+}
+
+<style>
+    .ide-file-tree {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        font-size: 13px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .ide-file-tree-filter {
+        padding: 6px 8px;
+        border-bottom: 1px solid #1e1e1e;
+    }
+
+    .ide-file-tree-filter .input-group-text {
+        background: #3c3c3c;
+        border-color: #3c3c3c;
+        color: #858585;
+        padding: 2px 6px;
+    }
+
+    .ide-file-tree-filter .form-control {
+        font-size: 12px;
+        background: #3c3c3c;
+        border-color: #3c3c3c;
+        color: #cccccc;
+        padding: 2px 6px;
+        height: 24px;
+    }
+
+    .ide-file-tree-filter .form-control::placeholder {
+        color: #858585;
+    }
+
+    .ide-file-tree-filter .form-control:focus {
+        border-color: #0078d4;
+        box-shadow: none;
+        background: #3c3c3c;
+    }
+
+    .ide-file-tree-content {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 2px 0;
+    }
+
+    .ide-file-tree-content::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .ide-file-tree-content::-webkit-scrollbar-thumb {
+        background: rgba(121, 121, 121, 0.4);
+        min-height: 30px;
+    }
+
+    .ide-file-tree-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(121, 121, 121, 0.7);
+    }
+
+    .ide-file-tree-content::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .tree-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .tree-nested {
+        padding-left: 12px;
+    }
+
+    .tree-node-label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 1px 8px;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        height: 22px;
+        color: #cccccc;
+    }
+
+    .tree-node-label:hover {
+        background: #2a2d2e;
+    }
+
+    .tree-node-label.active {
+        background: #094771;
+        color: #ffffff;
+    }
+
+    .tree-node-label.active .text-muted,
+    .tree-node-label.active .text-warning {
+        color: #ffffff !important;
+    }
+
+    .tree-arrow {
+        font-size: 10px;
+        width: 16px;
+        text-align: center;
+        flex-shrink: 0;
+        color: #858585;
+    }
+
+    .tree-arrow-spacer {
+        width: 16px;
+        flex-shrink: 0;
+    }
+
+    .tree-icon {
+        font-size: 14px;
+        flex-shrink: 0;
+        color: #858585;
+    }
+
+    .tree-folder .tree-icon {
+        color: #dcb67a;
+    }
+
+    .tree-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .tree-modified-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #e2b93d;
+        margin-left: auto;
+        flex-shrink: 0;
+    }
+
+    .ide-context-menu-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 9998;
+    }
+
+    .ide-context-menu {
+        min-width: 180px;
+        font-size: 13px;
+        background: #252526;
+        border: 1px solid #454545;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        border-radius: 4px;
+        padding: 4px 0;
+    }
+
+    .ide-context-menu .dropdown-item {
+        color: #cccccc;
+        padding: 4px 20px;
+        font-size: 13px;
+    }
+
+    .ide-context-menu .dropdown-item:hover {
+        background: #094771;
+        color: #ffffff;
+    }
+
+    .ide-context-menu .dropdown-divider {
+        border-color: #454545;
+        margin: 4px 0;
+    }
+
+    /* Light mode overrides */
+    [data-bs-theme="light"] .ide-file-tree-filter {
+        border-bottom-color: #e0e0e0;
+    }
+
+    [data-bs-theme="light"] .ide-file-tree-filter .input-group-text,
+    [data-bs-theme="light"] .ide-file-tree-filter .form-control {
+        background: #ffffff;
+        border-color: #cecece;
+        color: #333333;
+    }
+
+    [data-bs-theme="light"] .ide-file-tree-filter .form-control::placeholder {
+        color: #999999;
+    }
+
+    [data-bs-theme="light"] .tree-node-label {
+        color: #333333;
+    }
+
+    [data-bs-theme="light"] .tree-node-label:hover {
+        background: #e8e8e8;
+    }
+
+    [data-bs-theme="light"] .tree-node-label.active {
+        background: #0060c0;
+        color: #ffffff;
+    }
+
+    [data-bs-theme="light"] .ide-context-menu {
+        background: #f8f8f8;
+        border-color: #c8c8c8;
+    }
+
+    [data-bs-theme="light"] .ide-context-menu .dropdown-item {
+        color: #333333;
+    }
+
+    [data-bs-theme="light"] .ide-context-menu .dropdown-item:hover {
+        background: #0060c0;
+        color: #ffffff;
+    }
+</style>

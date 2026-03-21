@@ -1,0 +1,245 @@
+@using MyPersonalGit.Data
+
+<div class="ide-commit-panel">
+    <button class="ide-commit-toggle" @onclick="() => isExpanded = !isExpanded">
+        <i class="bi @(isExpanded ? "bi-chevron-down" : "bi-chevron-up") me-1"></i>
+        Source Control
+        @if (Changes != null && Changes.Count > 0)
+        {
+            <span class="badge bg-primary rounded-pill ms-2">@Changes.Count</span>
+        }
+    </button>
+
+    @if (isExpanded)
+    {
+        <div class="ide-commit-body">
+            <div class="ide-commit-changes">
+                @if (Changes == null || Changes.Count == 0)
+                {
+                    <div class="text-muted small px-3 py-2">
+                        <i class="bi bi-check-circle me-1"></i>No changes to commit
+                    </div>
+                }
+                else
+                {
+                    <div class="px-2 py-1">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="small fw-semibold">Changed Files</span>
+                            <button class="btn btn-sm btn-link p-0 text-decoration-none small" @onclick="ToggleSelectAll">
+                                @(allSelected ? "Deselect All" : "Select All")
+                            </button>
+                        </div>
+                        @foreach (var change in Changes)
+                        {
+                            var isSelected = selectedPaths.Contains(change.Path);
+                            <div class="ide-commit-file d-flex align-items-center gap-2 px-1 py-1">
+                                <input type="checkbox" class="form-check-input m-0" checked="@isSelected"
+                                       @onchange="(e) => ToggleFileSelection(change.Path, (bool)(e.Value ?? false))" />
+                                <span class="ide-commit-action badge @GetActionBadgeClass(change.Action)">
+                                    @change.Action[0]
+                                </span>
+                                <span class="small text-truncate flex-grow-1" title="@change.Path">@change.Path</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="ide-commit-form px-2 py-2 border-top">
+                <textarea class="form-control form-control-sm mb-2" rows="2" placeholder="Commit message..."
+                          @bind="commitMessage" @bind:event="oninput"
+                          disabled="@IsCommitting"></textarea>
+                <button class="btn btn-sm btn-success w-100"
+                        disabled="@(!CanCommit)"
+                        @onclick="HandleCommitClick">
+                    @if (IsCommitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                        <span>Committing...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-check-lg me-1"></i>
+                        <span>Commit @(selectedPaths.Count) file(s)</span>
+                    }
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<FileChange>? Changes { get; set; }
+    [Parameter] public EventCallback<(string message, List<FileChange> changes)> OnCommit { get; set; }
+    [Parameter] public bool IsCommitting { get; set; }
+
+    private bool isExpanded;
+    private string commitMessage = "";
+    private HashSet<string> selectedPaths = new();
+
+    private bool allSelected => Changes != null && Changes.Count > 0 && Changes.All(c => selectedPaths.Contains(c.Path));
+    private bool CanCommit => !IsCommitting && !string.IsNullOrWhiteSpace(commitMessage) && selectedPaths.Count > 0;
+
+    protected override void OnParametersSet()
+    {
+        if (Changes != null)
+        {
+            // Auto-select new changes
+            foreach (var change in Changes)
+            {
+                selectedPaths.Add(change.Path);
+            }
+            // Remove selections for paths no longer in changes
+            selectedPaths.IntersectWith(Changes.Select(c => c.Path));
+
+            // Auto-expand if there are changes
+            if (Changes.Count > 0 && !isExpanded)
+                isExpanded = true;
+        }
+    }
+
+    private void ToggleFileSelection(string path, bool selected)
+    {
+        if (selected)
+            selectedPaths.Add(path);
+        else
+            selectedPaths.Remove(path);
+    }
+
+    private void ToggleSelectAll()
+    {
+        if (Changes == null) return;
+        if (allSelected)
+            selectedPaths.Clear();
+        else
+            selectedPaths = Changes.Select(c => c.Path).ToHashSet();
+    }
+
+    private async Task HandleCommitClick()
+    {
+        if (Changes == null || !CanCommit) return;
+
+        var selectedChanges = Changes.Where(c => selectedPaths.Contains(c.Path)).ToList();
+        await OnCommit.InvokeAsync((commitMessage, selectedChanges));
+        commitMessage = "";
+        selectedPaths.Clear();
+    }
+
+    private string GetActionBadgeClass(string action) => action.ToLowerInvariant() switch
+    {
+        "add" => "bg-success",
+        "modify" => "bg-warning text-dark",
+        "delete" => "bg-danger",
+        "rename" => "bg-info text-dark",
+        _ => "bg-secondary"
+    };
+}
+
+<style>
+    .ide-commit-panel {
+        display: flex;
+        flex-direction: column;
+        background: #252526;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .ide-commit-toggle {
+        display: flex;
+        align-items: center;
+        padding: 6px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: #252526;
+        border: none;
+        border-top: 1px solid #1e1e1e;
+        cursor: pointer;
+        color: #cccccc;
+    }
+
+    .ide-commit-toggle:hover {
+        background: #2a2d2e;
+    }
+
+    .ide-commit-body {
+        max-height: 250px;
+        overflow-y: auto;
+    }
+
+    .ide-commit-changes {
+        max-height: 150px;
+        overflow-y: auto;
+    }
+
+    .ide-commit-file {
+        font-size: 13px;
+    }
+
+    .ide-commit-file:hover {
+        background: #2a2d2e;
+        border-radius: 0;
+    }
+
+    .ide-commit-action {
+        font-size: 10px;
+        font-weight: 700;
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    .ide-commit-form {
+        border-top-color: #1e1e1e !important;
+    }
+
+    .ide-commit-form textarea {
+        font-size: 13px;
+        resize: none;
+        background: #3c3c3c;
+        border-color: #3c3c3c;
+        color: #cccccc;
+    }
+
+    .ide-commit-form textarea:focus {
+        background: #3c3c3c;
+        border-color: #0078d4;
+        box-shadow: none;
+        color: #cccccc;
+    }
+
+    .ide-commit-form textarea::placeholder {
+        color: #858585;
+    }
+
+    .ide-commit-form .form-check-input {
+        background-color: #3c3c3c;
+        border-color: #6b6b6b;
+    }
+
+    .ide-commit-form .form-check-input:checked {
+        background-color: #0078d4;
+        border-color: #0078d4;
+    }
+
+    /* Light mode */
+    [data-bs-theme="light"] .ide-commit-panel {
+        background: #f3f3f3;
+    }
+
+    [data-bs-theme="light"] .ide-commit-toggle {
+        background: #f3f3f3;
+        border-top-color: #e0e0e0;
+        color: #333333;
+    }
+
+    [data-bs-theme="light"] .ide-commit-form textarea {
+        background: #ffffff;
+        border-color: #cecece;
+        color: #333333;
+    }
+</style>

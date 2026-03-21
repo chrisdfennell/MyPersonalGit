@@ -1,0 +1,107 @@
+@inherits LayoutComponentBase
+@using MyPersonalGit.Data
+@using MyPersonalGit.Services
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject CurrentUserService UserService
+@inject IWebIdeService WebIdeService
+
+<div class="ide-layout">
+    <div class="ide-topbar">
+        <a href="@BackUrl" class="ide-topbar-back" title="Back to repository">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <span class="ide-topbar-repo fw-semibold">@RepoName</span>
+        <div class="ide-topbar-branch dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle py-0 px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-git me-1"></i>@CurrentBranch
+            </button>
+            <ul class="dropdown-menu dropdown-menu-start">
+                @foreach (var branch in Branches)
+                {
+                    <li>
+                        <button class="dropdown-item small @(branch == CurrentBranch ? "active" : "")" @onclick="() => OnBranchChanged(branch)">
+                            @branch
+                        </button>
+                    </li>
+                }
+            </ul>
+        </div>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            @if (UserService.IsLoggedIn)
+            {
+                <span class="text-muted small">@UserService.Username</span>
+            }
+            <button class="btn btn-sm btn-link text-muted p-0" @onclick="ToggleTheme" title="Toggle theme">
+                <i class="bi @(currentTheme == "dark" ? "bi-sun-fill" : "bi-moon-fill")"></i>
+            </button>
+        </div>
+    </div>
+    <div class="ide-body">
+        @Body
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private string RepoName = "";
+    private string CurrentBranch = "main";
+    private List<string> Branches = new();
+    private string currentTheme = "light";
+
+    private string BackUrl => $"/repo/{RepoName}";
+
+    protected override void OnInitialized()
+    {
+        // Extract repo name from the current URL
+        var uri = new Uri(Navigation.Uri);
+        var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        // URL pattern: /repo/{RepoName}/ide/...
+        if (segments.Length >= 2 && segments[0] == "repo")
+        {
+            RepoName = segments[1];
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                currentTheme = await JS.InvokeAsync<string>("themeHelper.get");
+                // Load branches
+                if (!string.IsNullOrEmpty(RepoName))
+                {
+                    var tree = await WebIdeService.GetFullTreeAsync(RepoName, "main");
+                    // We'll get branches from the cascading value set by the page
+                }
+                StateHasChanged();
+            }
+            catch { }
+        }
+    }
+
+    // Called by the WebIde page to set branch info
+    public void SetBranchInfo(string branch, List<string> branches)
+    {
+        CurrentBranch = branch;
+        Branches = branches;
+        StateHasChanged();
+    }
+
+    private void OnBranchChanged(string branch)
+    {
+        CurrentBranch = branch;
+        Navigation.NavigateTo($"/repo/{RepoName}/ide?branch={branch}", forceLoad: false);
+    }
+
+    private async Task ToggleTheme()
+    {
+        currentTheme = currentTheme == "dark" ? "light" : "dark";
+        await JS.InvokeVoidAsync("themeHelper.set", currentTheme);
+    }
+}

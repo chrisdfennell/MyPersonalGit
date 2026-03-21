@@ -1,0 +1,186 @@
+<div class="ide-tab-bar">
+    @if (Tabs == null || Tabs.Count == 0)
+    {
+        <div class="ide-tab-empty text-muted small px-3 py-1">
+            <i class="bi bi-window-stack me-1"></i>No files open
+        </div>
+    }
+    else
+    {
+        <div class="ide-tab-scroll">
+            @foreach (var tab in Tabs)
+            {
+                var isActive = tab.FilePath == ActiveTabPath;
+                <div class="ide-tab @(isActive ? "active" : "")" title="@tab.FilePath" @onclick="() => OnTabSelected.InvokeAsync(tab.FilePath)">
+                    <i class="bi @GetFileIcon(tab.FileName) me-1" style="font-size: 0.75rem;"></i>
+                    <span class="ide-tab-name">@tab.FileName</span>
+                    @if (tab.IsDirty)
+                    {
+                        <span class="ide-tab-dirty" title="Unsaved changes"></span>
+                    }
+                    <button class="ide-tab-close" @onclick="() => CloseTab(tab.FilePath)" @onclick:stopPropagation="true" title="Close">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<OpenTab>? Tabs { get; set; }
+    [Parameter] public string? ActiveTabPath { get; set; }
+    [Parameter] public EventCallback<string> OnTabSelected { get; set; }
+    [Parameter] public EventCallback<string> OnTabClosed { get; set; }
+
+    private async Task CloseTab(string filePath)
+    {
+        await OnTabClosed.InvokeAsync(filePath);
+    }
+
+    private string GetFileIcon(string name)
+    {
+        var ext = System.IO.Path.GetExtension(name).ToLowerInvariant();
+        return ext switch
+        {
+            ".cs" or ".js" or ".ts" or ".py" or ".rb" or ".go" or ".rs" or ".java" or
+            ".cpp" or ".c" or ".h" or ".jsx" or ".tsx" or ".razor" => "bi-file-earmark-code",
+            ".html" or ".htm" or ".xml" => "bi-filetype-html",
+            ".css" or ".scss" => "bi-filetype-css",
+            ".json" => "bi-filetype-json",
+            ".md" => "bi-filetype-md",
+            _ => "bi-file-earmark"
+        };
+    }
+
+    public class OpenTab
+    {
+        public string FilePath { get; set; } = "";
+        public string FileName { get; set; } = "";
+        public bool IsDirty { get; set; }
+        public string OriginalContent { get; set; } = "";
+    }
+}
+
+<style>
+    .ide-tab-bar {
+        display: flex;
+        align-items: stretch;
+        background: #252526;
+        min-height: 35px;
+        overflow: hidden;
+    }
+
+    .ide-tab-empty {
+        display: flex;
+        align-items: center;
+        color: #858585;
+        font-size: 13px;
+    }
+
+    .ide-tab-scroll {
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: thin;
+    }
+
+    .ide-tab-scroll::-webkit-scrollbar {
+        height: 3px;
+    }
+
+    .ide-tab-scroll::-webkit-scrollbar-thumb {
+        background: rgba(121, 121, 121, 0.4);
+    }
+
+    .ide-tab {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 12px;
+        height: 35px;
+        font-size: 13px;
+        cursor: pointer;
+        white-space: nowrap;
+        border-right: 1px solid #1e1e1e;
+        color: #969696;
+        min-width: 0;
+        flex-shrink: 0;
+        background: #2d2d2d;
+        border-top: 2px solid transparent;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .ide-tab:hover {
+        color: #cccccc;
+        background: #2d2d2d;
+    }
+
+    .ide-tab.active {
+        color: #ffffff;
+        background: #1e1e1e;
+        border-top-color: #0078d4;
+    }
+
+    .ide-tab-name {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ide-tab-dirty {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #e2b93d;
+        flex-shrink: 0;
+    }
+
+    .ide-tab-close {
+        background: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+        font-size: 16px;
+        line-height: 1;
+        color: #969696;
+        opacity: 0;
+        cursor: pointer;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+    }
+
+    .ide-tab:hover .ide-tab-close,
+    .ide-tab.active .ide-tab-close {
+        opacity: 1;
+    }
+
+    .ide-tab-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+    }
+
+    /* Light mode */
+    [data-bs-theme="light"] .ide-tab-bar {
+        background: #ececec;
+    }
+
+    [data-bs-theme="light"] .ide-tab {
+        background: #d9d9d9;
+        border-right-color: #e0e0e0;
+        color: #666666;
+    }
+
+    [data-bs-theme="light"] .ide-tab.active {
+        background: #ffffff;
+        color: #333333;
+    }
+
+    [data-bs-theme="light"] .ide-tab:hover {
+        color: #333333;
+    }
+</style>
