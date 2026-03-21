@@ -37,20 +37,25 @@ public class WorkflowService : IWorkflowService
     public async Task<List<WorkflowRun>> GetWorkflowRunsAsync(string repoName)
     {
         using var db = _dbFactory.CreateDbContext();
+        // Match both "MyRepo" and "MyRepo.git" variants
+        var alt = repoName.EndsWith(".git", StringComparison.OrdinalIgnoreCase)
+            ? repoName[..^4] : repoName + ".git";
         return await db.WorkflowRuns
             .Include(r => r.Jobs)
                 .ThenInclude(j => j.Steps)
-            .Where(r => r.RepoName == repoName)
+            .Where(r => r.RepoName == repoName || r.RepoName == alt)
             .ToListAsync();
     }
 
     public async Task<WorkflowRun?> GetWorkflowRunAsync(string repoName, int runId)
     {
         using var db = _dbFactory.CreateDbContext();
+        var alt = repoName.EndsWith(".git", StringComparison.OrdinalIgnoreCase)
+            ? repoName[..^4] : repoName + ".git";
         return await db.WorkflowRuns
             .Include(r => r.Jobs)
                 .ThenInclude(j => j.Steps)
-            .FirstOrDefaultAsync(r => r.RepoName == repoName && r.Id == runId);
+            .FirstOrDefaultAsync(r => (r.RepoName == repoName || r.RepoName == alt) && r.Id == runId);
     }
 
     public async Task<WorkflowRun> CreateWorkflowRunAsync(
@@ -81,11 +86,11 @@ public class WorkflowService : IWorkflowService
     public async Task<bool> UpdateWorkflowRunAsync(string repoName, int runId, Action<WorkflowRun> updateAction)
     {
         using var db = _dbFactory.CreateDbContext();
-
+        var (name, alt2) = RepoNameVariants(repoName);
         var run = await db.WorkflowRuns
             .Include(r => r.Jobs)
                 .ThenInclude(j => j.Steps)
-            .FirstOrDefaultAsync(r => r.RepoName == repoName && r.Id == runId);
+            .FirstOrDefaultAsync(r => (r.RepoName == name || r.RepoName == alt2) && r.Id == runId);
 
         if (run == null)
             return false;
@@ -398,9 +403,10 @@ public class WorkflowService : IWorkflowService
     public async Task CancelWorkflowRunAsync(string repoName, int runId)
     {
         using var db = _dbFactory.CreateDbContext();
+        var (name, alt2) = RepoNameVariants(repoName);
         var run = await db.WorkflowRuns
             .Include(r => r.Jobs).ThenInclude(j => j.Steps)
-            .FirstOrDefaultAsync(r => r.Id == runId && r.RepoName == repoName);
+            .FirstOrDefaultAsync(r => r.Id == runId && (r.RepoName == name || r.RepoName == alt2));
 
         if (run == null) return;
         if (run.Status != WorkflowStatus.Queued && run.Status != WorkflowStatus.InProgress) return;
@@ -426,9 +432,10 @@ public class WorkflowService : IWorkflowService
     public async Task<WorkflowRun?> RerunWorkflowRunAsync(string repoName, int runId)
     {
         using var db = _dbFactory.CreateDbContext();
+        var (name, alt2) = RepoNameVariants(repoName);
         var original = await db.WorkflowRuns
             .Include(r => r.Jobs).ThenInclude(j => j.Steps)
-            .FirstOrDefaultAsync(r => r.Id == runId && r.RepoName == repoName);
+            .FirstOrDefaultAsync(r => r.Id == runId && (r.RepoName == name || r.RepoName == alt2));
 
         if (original == null) return null;
 
@@ -692,7 +699,8 @@ public class WorkflowService : IWorkflowService
     public async Task<List<Webhook>> GetWebhooksAsync(string repoName)
     {
         using var db = _dbFactory.CreateDbContext();
-        return await db.Webhooks.Where(w => w.RepoName == repoName).ToListAsync();
+        var (name, alt2) = RepoNameVariants(repoName);
+        return await db.Webhooks.Where(w => w.RepoName == name || w.RepoName == alt2).ToListAsync();
     }
 
     public async Task<Webhook> CreateWebhookAsync(string repoName, string url, string secret, List<string> events)
@@ -820,6 +828,14 @@ public class WorkflowService : IWorkflowService
 
         _logger.LogInformation("Webhook delivery {DeliveryId} redelivered to {Url}", deliveryId, webhook.Url);
         return true;
+    }
+
+    /// <summary>Returns both "name" and "name.git" variants for flexible DB matching.</summary>
+    private static (string name, string alt) RepoNameVariants(string repoName)
+    {
+        var alt = repoName.EndsWith(".git", StringComparison.OrdinalIgnoreCase)
+            ? repoName[..^4] : repoName + ".git";
+        return (repoName, alt);
     }
 
     private static string ComputeSignature(string payload, string secret)
