@@ -143,7 +143,7 @@
     private void OnBranchChanged(string branch)
     {
         CurrentBranch = branch;
-        Navigation.NavigateTo($"/repo/{RepoName}/ide?branch={branch}", forceLoad: false);
+        Navigation.NavigateTo($"/repo/{RepoName}/ide?branch={branch}", forceLoad: true);
     }
 
     private async Task ToggleTheme()
