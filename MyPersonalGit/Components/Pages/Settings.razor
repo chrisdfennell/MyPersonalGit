@@ -1,6 +1,5 @@
 @page "/settings"
 @page "/settings/{Tab}"
-@using System.Net.Http.Json
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
@@ -18,6 +17,7 @@
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
+@inject IWebHostEnvironment WebHostEnv
 @rendermode InteractiveServer
 
 <PageTitle>@L["Settings_Title"] - MyPersonalGit</PageTitle>
@@ -1051,34 +1051,25 @@ else
                 return;
             }
 
-            using var content = new MultipartFormDataContent();
-            using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
-            using var ms = new MemoryStream();
-            await stream.CopyToAsync(ms);
-            ms.Position = 0;
+            var uploadsDir = Path.Combine(WebHostEnv.WebRootPath, "uploads", "avatars");
+            Directory.CreateDirectory(uploadsDir);
 
-            content.Add(new StreamContent(ms), "file", file.Name);
+            // Delete any existing avatar for this user
+            foreach (var existing in Directory.GetFiles(uploadsDir, $"{UserService.Username}.*"))
+                File.Delete(existing);
 
-            using var http = new HttpClient { BaseAddress = new Uri(Navigation.BaseUri) };
-            // Forward the user's auth cookie
-            var cookies = string.Empty;
-            try { cookies = await JS.InvokeAsync<string>("eval", "document.cookie"); } catch { }
-            if (!string.IsNullOrEmpty(cookies))
-                http.DefaultRequestHeaders.Add("Cookie", cookies);
+            var ext = Path.GetExtension(file.Name).ToLowerInvariant();
+            if (string.IsNullOrEmpty(ext)) ext = ".png";
+            var safeFilename = $"{UserService.Username}{ext}";
+            var filePath = Path.Combine(uploadsDir, safeFilename);
 
-            var response = await http.PostAsync("api/v1/user/avatar", content);
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<AvatarUploadResult>();
-                if (result != null)
-                {
-                    UserProfileData.AvatarUrl = result.Avatar_url;
-                }
-            }
-            else
-            {
-                avatarUploadError = "Upload failed. Please try again.";
-            }
+            await using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            await using var fs = new FileStream(filePath, FileMode.Create);
+            await stream.CopyToAsync(fs);
+
+            var avatarUrl = $"/uploads/avatars/{safeFilename}?v={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+            UserProfileData.AvatarUrl = avatarUrl;
+            await ProfileService.SaveProfileAsync(UserProfileData);
         }
         catch (Exception ex)
         {
@@ -1090,8 +1081,6 @@ else
             StateHasChanged();
         }
     }
-
-    private record AvatarUploadResult(string Avatar_url);
 
     private Task ChangePassword()
     {
