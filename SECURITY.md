@@ -11,7 +11,7 @@
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-Instead, please report them by emailing **security@fennellfamily.org** or by opening a private advisory on GitHub:
+Instead, please report them by emailing **chrisdfennell@gmail.com** or by opening a private advisory on GitHub:
 
 1. Go to the [Security tab](https://github.com/ChrisDFennell/MyPersonalGit/security)
 2. Click **Report a vulnerability**
