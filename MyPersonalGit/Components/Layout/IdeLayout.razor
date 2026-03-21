@@ -6,6 +6,8 @@
 @inject NavigationManager Navigation
 @inject CurrentUserService UserService
 @inject IWebIdeService WebIdeService
+@inject IAdminService AdminService
+@inject IConfiguration Config
 
 <div class="ide-layout">
     <div class="ide-topbar">
@@ -83,18 +85,59 @@
                 }
 
                 currentTheme = await JS.InvokeAsync<string>("themeHelper.get");
+
+                // Parse current branch from query string
+                var uri = new Uri(Navigation.Uri);
+                var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+                var branchParam = query["branch"];
+                if (!string.IsNullOrEmpty(branchParam))
+                    CurrentBranch = branchParam;
+
+                // Load branch list
+                if (!string.IsNullOrEmpty(RepoName))
+                {
+                    await LoadBranches();
+                }
+
                 StateHasChanged();
             }
             catch { }
         }
     }
 
-    // Called by the WebIde page to set branch info
-    public void SetBranchInfo(string branch, List<string> branches)
+    private async Task LoadBranches()
     {
-        CurrentBranch = branch;
-        Branches = branches;
-        StateHasChanged();
+        var systemSettings = await AdminService.GetSystemSettingsAsync();
+        var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot)
+            ? systemSettings.ProjectRoot
+            : Config["Git:ProjectRoot"] ?? Config["Git:ReposPath"] ?? "/repos";
+
+        Branches = await Task.Run(() =>
+        {
+            var repoPath = System.IO.Path.Combine(projectRoot, RepoName);
+            if (!LibGit2Sharp.Repository.IsValid(repoPath))
+            {
+                repoPath = repoPath + ".git";
+                if (!LibGit2Sharp.Repository.IsValid(repoPath))
+                    repoPath = System.IO.Path.Combine(projectRoot, RepoName, RepoName + ".git");
+            }
+            try
+            {
+                using var repo = new LibGit2Sharp.Repository(repoPath);
+                return repo.Branches
+                    .Where(b => !b.IsRemote)
+                    .Select(b => b.FriendlyName)
+                    .OrderBy(b => b)
+                    .ToList();
+            }
+            catch
+            {
+                return new List<string> { "main" };
+            }
+        });
+
+        if (!Branches.Contains(CurrentBranch) && Branches.Count > 0)
+            CurrentBranch = Branches[0];
     }
 
     private void OnBranchChanged(string branch)
