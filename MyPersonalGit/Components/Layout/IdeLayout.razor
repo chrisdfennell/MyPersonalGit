@@ -72,13 +72,17 @@
         {
             try
             {
-                currentTheme = await JS.InvokeAsync<string>("themeHelper.get");
-                // Load branches
-                if (!string.IsNullOrEmpty(RepoName))
+                // Initialize user session from localStorage (same as MainLayout)
+                if (!UserService.IsLoggedIn)
                 {
-                    var tree = await WebIdeService.GetFullTreeAsync(RepoName, "main");
-                    // We'll get branches from the cascading value set by the page
+                    var sessionId = await JS.InvokeAsync<string>("sessionHelper.get", "sessionId");
+                    if (!string.IsNullOrEmpty(sessionId))
+                    {
+                        await UserService.InitializeFromSessionAsync(sessionId);
+                    }
                 }
+
+                currentTheme = await JS.InvokeAsync<string>("themeHelper.get");
                 StateHasChanged();
             }
             catch { }
