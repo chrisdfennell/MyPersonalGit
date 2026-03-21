@@ -22,17 +22,19 @@ public static class TerminalWebSocketHandler
                 return;
             }
 
-            // Verify user is authenticated via cookie session
+            // Verify user is authenticated via cookie or query param
             var authService = context.RequestServices.GetRequiredService<IAuthService>();
-            var sessionCookie = context.Request.Cookies["session"];
-            if (string.IsNullOrEmpty(sessionCookie))
+            var sessionId = context.Request.Cookies["session"];
+            if (string.IsNullOrEmpty(sessionId))
+                sessionId = context.Request.Query["session"].FirstOrDefault();
+            if (string.IsNullOrEmpty(sessionId))
             {
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsync("Unauthorized.");
                 return;
             }
 
-            var user = await authService.GetUserBySessionAsync(sessionCookie);
+            var user = await authService.GetUserBySessionAsync(sessionId);
             if (user == null)
             {
                 context.Response.StatusCode = 401;
