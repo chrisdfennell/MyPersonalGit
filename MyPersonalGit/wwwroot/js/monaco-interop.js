@@ -813,6 +813,45 @@
             if (editor) {
                 editor.trigger('keyboard', 'editor.action.startFindReplaceAction');
             }
+        },
+
+        /**
+         * Register a cursor position change callback.
+         * @param {string} editorId - The editor instance ID.
+         * @param {object} dotNetObjRef - .NET object reference.
+         * @param {string} methodName - .NET method name to invoke with {lineNumber, column, selectionLength}.
+         */
+        onDidChangeCursorPosition: function (editorId, dotNetObjRef, methodName) {
+            var editor = _editors[editorId];
+            if (!editor) return;
+
+            editor.onDidChangeCursorPosition(function (e) {
+                var selection = editor.getSelection();
+                var selectionLength = 0;
+                if (selection && !selection.isEmpty()) {
+                    var model = editor.getModel();
+                    if (model) {
+                        var text = model.getValueInRange(selection);
+                        selectionLength = text.length;
+                    }
+                }
+                try {
+                    dotNetObjRef.invokeMethodAsync(methodName, e.position.lineNumber, e.position.column, selectionLength);
+                } catch (ex) { }
+            });
+        },
+
+        /**
+         * Get the language ID of the current model.
+         * @param {string} editorId - The editor instance ID.
+         * @returns {string|null} The language ID.
+         */
+        getLanguageId: function (editorId) {
+            var editor = _editors[editorId];
+            if (!editor) return null;
+            var model = editor.getModel();
+            if (!model) return null;
+            return model.getLanguageId();
         }
     };
 
