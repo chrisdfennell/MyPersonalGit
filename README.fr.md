@@ -81,6 +81,7 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Épinglage et verrouillage d'issues** — Épinglez les issues importantes en haut de la liste et verrouillez les conversations pour empêcher les commentaires supplémentaires
 - **Édition et suppression de commentaires** — Modifiez ou supprimez vos propres commentaires sur les issues et pull requests avec indicateur « (modifié) »
 - **Résolution des conflits de fusion** — Résolvez les conflits de fusion directement dans le navigateur avec un éditeur visuel affichant les vues base/ours/theirs, des boutons d'acceptation rapide et la validation des marqueurs de conflit
+- **Squash Commit Message** — Personnalisez le message de commit lors du squash-merge d'une pull request
 - **Discussions** — Conversations en fil à la GitHub Discussions par dépôt avec catégories (Général, Q&A, Annonces, Idées, Show & Tell, Sondages), épinglage/verrouillage, marquer comme réponse et votes positifs
 - **Suggestions de revue de code** — Le mode « Suggérer des modifications » dans les reviews inline de PRs permet aux reviewers de proposer des remplacements de code directement dans le diff
 - **Image Diff** — Comparaison d'images côte à côte dans les pull requests avec curseur d'opacité pour le diff visuel des images modifiées (PNG, JPG, GIF, SVG, WebP)
@@ -91,6 +92,8 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Auto-Merge** — Activez la fusion automatique sur les pull requests pour fusionner automatiquement lorsque toutes les vérifications de statut requises sont passées et les revues approuvées
 - **Cherry-Pick / Revert via UI** — Sélectionnez n'importe quel commit vers une autre branche ou annulez un commit, directement ou en tant que nouveau pull request, depuis l'interface web
 - **Transfer Issues** — Déplacez des issues entre dépôts en préservant le titre, le corps, les commentaires, les labels correspondants et en liant l'original avec une note de transfert
+- **Saved Replies** — Enregistrez des réponses prédéfinies et insérez-les rapidement lors de la rédaction de commentaires sur les issues ou pull requests
+- **Batch Issue Operations** — Sélectionnez plusieurs issues et fermez-les ou rouvrez-les en masse depuis la liste des issues
 - **CODEOWNERS** — Attribution automatique des reviewers de PR en fonction des chemins de fichiers avec application optionnelle exigeant l'approbation CODEOWNERS avant la fusion
 - **Modèles de dépôt** — Créez de nouveaux dépôts à partir de modèles avec copie automatique des fichiers, labels, modèles d'issues et règles de protection de branches
 - **Brouillons d'issues et modèles d'issues** — Créez des brouillons d'issues (travail en cours) et définissez des modèles d'issues réutilisables (rapport de bug, demande de fonctionnalité) par dépôt avec labels par défaut
@@ -182,7 +185,7 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Dependabot-Style Auto-Update PRs** — Vérifie automatiquement les dépendances obsolètes et crée des pull requests pour les mettre à jour. Prend en charge les écosystèmes NuGet, npm et PyPI. Planification configurable (quotidienne/hebdomadaire/mensuelle) et limite de PRs ouvertes par dépôt
 - **Repository Insights (Traffic)** — Suivez les compteurs de clone/fetch, les vues de pages, les visiteurs uniques, les principaux référents et les chemins de contenu populaires. Graphiques de trafic dans l'onglet Insights avec résumés sur 14 jours. Agrégation quotidienne avec rétention de 90 jours. Les adresses IP sont hachées pour la confidentialité
 - **Mode sombre** — Support complet du mode sombre/clair avec un bouton de basculement dans l'en-tête
-- **Multi-langue / i18n** — Localisation complète sur les 29 pages avec 920 clés de ressources. Livré avec 11 langues : anglais, espagnol, français, allemand, japonais, coréen, chinois (simplifié), portugais, russe, italien et turc. Sélecteur de langue dans l'en-tête. Ajoutez-en d'autres en créant des fichiers `SharedResource.{locale}.resx`
+- **Multi-langue / i18n** — Localisation complète sur les 30 pages avec 930 clés de ressources. Livré avec 11 langues : anglais, espagnol, français, allemand, japonais, coréen, chinois (simplifié), portugais, russe, italien et turc. Sélecteur de langue dans l'en-tête. Ajoutez-en d'autres en créant des fichiers `SharedResource.{locale}.resx`
 - **Swagger / OpenAPI** — Documentation interactive de l'API à `/swagger` avec tous les endpoints REST découvrables et testables
 - **Open Graph Meta Tags** — Les pages de dépôts, d'issues et de PRs incluent og:title et og:description pour des aperçus de liens enrichis dans Slack, Discord et les réseaux sociaux
 - **Mermaid Diagrams** — Rendu de diagrammes Mermaid dans les fichiers Markdown (organigrammes, diagrammes de séquence, diagrammes de Gantt, etc.)
@@ -190,6 +193,7 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **CSV/TSV Viewer** — Les fichiers CSV et TSV sont affichés sous forme de tableaux formatés et triables au lieu de texte brut
 - **Keyboard Shortcuts** — Appuyez sur `?` pour afficher une fenêtre d'aide des raccourcis. `/` met le focus sur la recherche, `g i` va aux Issues, `g p` aux Pull Requests, `g h` à l'Accueil, `g n` aux Notifications
 - **Health Check Endpoint** — `/health` retourne du JSON avec l'état de connectivité de la base de données pour la surveillance Docker/Kubernetes
+- **Sitemap.xml** — Sitemap XML dynamique à `/sitemap.xml` listant tous les dépôts publics pour l'indexation par les moteurs de recherche
 - **Line Linking** — Cliquez sur les numéros de ligne dans le visualiseur de fichiers pour générer des URLs partageables `#L42` avec mise en surbrillance de la ligne au chargement
 - **File Download** — Téléchargez des fichiers individuels depuis le visualiseur de fichiers avec les en-têtes Content-Disposition appropriés
 - **Jupyter Notebook Rendering** — Les fichiers `.ipynb` sont affichés comme des notebooks formatés avec cellules de code, Markdown, sorties et images en ligne

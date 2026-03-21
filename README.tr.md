@@ -81,6 +81,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Sorun Sabitleme ve Kilitleme** — Önemli sorunları listenin üstüne sabitleyin ve daha fazla yorumu önlemek için konuşmaları kilitleyin
 - **Yorum Düzenleme ve Silme** — Sorunlar ve pull request'lerdeki kendi yorumlarınızı "(düzenlendi)" göstergesiyle düzenleyin veya silin
 - **Birleştirme Çakışması Çözümü** — Base/ours/theirs görünümleri, hızlı kabul düğmeleri ve çakışma işaretçisi doğrulaması ile tarayıcıda doğrudan birleştirme çakışmalarını çözün
+- **Squash Commit Message** — Bir pull request'i squash-merge yaparken commit mesajını özelleştirin
 - **Tartışmalar** — Kategoriler (Genel, Soru-Cevap, Duyurular, Fikirler, Göster ve Anlat, Anketler), sabitleme/kilitleme, yanıt olarak işaretleme ve oylama ile depo başına GitHub Discussions tarzı zincirleme konuşmalar
 - **Kod İnceleme Önerileri** — PR satır içi incelemelerinde "Değişiklik öner" modu, incelemecilerin doğrudan fark içinde kod değişikliği önermesine olanak tanır
 - **Image Diff** — Pull request'lerde değiştirilen görsellerin (PNG, JPG, GIF, SVG, WebP) görsel karşılaştırması için opaklık kaydırıcısı ile yan yana görsel karşılaştırma
@@ -91,6 +92,8 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Auto-Merge** — Pull request'lerde otomatik birleştirmeyi etkinleştirerek tüm gerekli durum kontrolleri geçtiğinde ve incelemeler onaylandığında otomatik birleştirme
 - **Cherry-Pick / Revert via UI** — Web arayüzünden herhangi bir commit'i başka bir dala cherry-pick yapın veya bir commit'i doğrudan ya da yeni bir pull request olarak geri alın
 - **Transfer Issues** — Başlığı, gövdeyi, yorumları, eşleşen etiketleri koruyarak ve orijinali bir transfer notu ile bağlayarak sorunları depolar arasında taşıyın
+- **Saved Replies** — Hazır yanıtları kaydedin ve sorunlara veya pull request'lere yorum yaparken hızlıca ekleyin
+- **Batch Issue Operations** — Birden fazla sorun seçin ve sorun listesinden toplu olarak kapatın veya yeniden açın
 - **CODEOWNERS** — Birleştirme öncesi CODEOWNERS onayı gerektirme seçeneğiyle dosya yollarına göre PR incelemecilerini otomatik atama
 - **Depo Şablonları** — Dosyaların, etiketlerin, sorun şablonlarının ve dal koruma kurallarının otomatik kopyalanması ile şablonlardan yeni depolar oluşturun
 - **Taslak Sorunlar ve Sorun Şablonları** — Taslak sorunlar (devam eden çalışma) oluşturun ve varsayılan etiketlerle depo başına yeniden kullanılabilir sorun şablonları (hata raporu, özellik isteği) tanımlayın
@@ -182,7 +185,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Dependabot-Style Auto-Update PRs** — Eski bağımlılıkları otomatik olarak kontrol eder ve güncellemek için pull request'ler oluşturur. NuGet, npm ve PyPI ekosistemlerini destekler. Yapılandırılabilir zamanlama (günlük/haftalık/aylık) ve depo başına açık PR limiti
 - **Repository Insights (Traffic)** — Klonlama/çekme sayılarını, sayfa görüntülemelerini, benzersiz ziyaretçileri, en iyi yönlendiricileri ve popüler içerik yollarını takip edin. Insights sekmesinde 14 günlük özetlerle trafik grafikleri. 90 gün saklama süresi ile günlük toplama. Gizlilik için IP adresleri karma yapılır
 - **Karanlık Mod** — Başlıkta bir geçiş düğmesiyle tam karanlık/aydınlık mod desteği
-- **Çoklu Dil / i18n** — 920 kaynak anahtarı ile tüm 29 sayfada tam yerelleştirme. 11 dil ile birlikte gelir: İngilizce, İspanyolca, Fransızca, Almanca, Japonca, Korece, Çince (Basitleştirilmiş), Portekizce, Rusça, İtalyanca ve Türkçe. `SharedResource.{locale}.resx` dosyaları oluşturarak daha fazla dil ekleyin. Başlıktaki dil seçici ile geçiş yapın
+- **Çoklu Dil / i18n** — 930 kaynak anahtarı ile tüm 30 sayfada tam yerelleştirme. 11 dil ile birlikte gelir: İngilizce, İspanyolca, Fransızca, Almanca, Japonca, Korece, Çince (Basitleştirilmiş), Portekizce, Rusça, İtalyanca ve Türkçe. `SharedResource.{locale}.resx` dosyaları oluşturarak daha fazla dil ekleyin. Başlıktaki dil seçici ile geçiş yapın
 - **Swagger / OpenAPI** — `/swagger` adresinde etkileşimli API belgeleri; tüm REST uç noktaları keşfedilebilir ve test edilebilir
 - **Open Graph Meta Tags** — Depo, sorun ve PR sayfaları, Slack, Discord ve sosyal medyada zengin bağlantı önizlemeleri için og:title ve og:description içerir
 - **Mermaid Diyagramları** — Markdown dosyalarında Mermaid diyagram oluşturma (akış şemaları, sıralama diyagramları, Gantt grafikleri vb.)
@@ -190,6 +193,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **CSV/TSV Görüntüleyici** — CSV ve TSV dosyaları düz metin yerine biçimlendirilmiş, sıralanabilir tablolar olarak görüntülenir
 - **Keyboard Shortcuts** — Kısayol yardım modalı için `?` tuşuna basın. `/` aramaya odaklanır, `g i` Sorunlara, `g p` Pull Request'lere, `g h` Ana Sayfaya, `g n` Bildirimlere gider
 - **Health Check Endpoint** — `/health` Docker/Kubernetes izlemesi için veritabanı bağlantı durumunu içeren JSON döndürür
+- **Sitemap.xml** — `/sitemap.xml` adresinde arama motoru indekslemesi için tüm genel depoları listeleyen dinamik XML site haritası
 - **Line Linking** — Dosya görüntüleyicide satır numaralarına tıklayarak yüklemede satır vurgulama ile paylaşılabilir `#L42` URL'leri oluşturun
 - **File Download** — Uygun Content-Disposition başlıkları ile dosya görüntüleyiciden tek tek dosya indirin
 - **Jupyter Notebook Görüntüleme** — `.ipynb` dosyaları kod hücreleri, Markdown, çıktılar ve satır içi görsellerle biçimlendirilmiş not defterleri olarak görüntülenir

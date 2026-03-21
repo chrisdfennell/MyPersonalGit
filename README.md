@@ -64,7 +64,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Repository Mirroring** — Mirror repositories to/from external Git remotes
 - **Compare View** — Compare branches with ahead/behind commit counts and full diff rendering
 - **Language Stats** — GitHub-style language breakdown bar on each repository page
-- **Branch Protection** — Configurable rules for required reviews, status checks, force-push prevention, and CODEOWNERS approval enforcement
+- **Branch Protection** — Configurable rules for required reviews, status checks, force-push prevention, required linear history (rebase-only), and CODEOWNERS approval enforcement
 - **Signed Commits Required** — Branch protection rule to require all commits be GPG-signed before merging
 - **Tag Protection** — Protect tags from deletion, force updates, and unauthorized creation with glob pattern matching and per-user allow lists
 - **Commit Signature Verification** — GPG signature verification on commits and annotated tags with "Verified" / "Signed" badges in the UI
@@ -73,6 +73,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Explore** — Browse all accessible repositories with search, sort, and topic filtering
 - **Autolink References** — Auto-convert `#123` to issue links, plus configurable custom patterns (e.g., `JIRA-456` → external URLs) per repository
 - **Search** — Full-text search across repositories, issues, PRs, and code
+- **Blame View** — Line-by-line authorship tracking with commit details for every line in a file
 - **License Detection** — Automatically detects LICENSE files and identifies common licenses (MIT, Apache-2.0, GPL, BSD, ISC, MPL, Unlicense) with a badge in the repository sidebar
 
 ### Collaboration
@@ -81,6 +82,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Issue Pinning & Locking** — Pin important issues to the top of the list and lock conversations to prevent further comments
 - **Comment Editing & Deletion** — Edit or delete your own comments on issues and pull requests with "(edited)" indicator
 - **Merge Conflict Resolution** — Resolve merge conflicts directly in the browser with a visual editor showing base/ours/theirs views, quick accept buttons, and conflict marker validation
+- **Squash Commit Message** — Customize the commit message when squash-merging a pull request
 - **Discussions** — GitHub Discussions-style threaded conversations per repository with categories (General, Q&A, Announcements, Ideas, Show & Tell, Polls), pin/lock, mark as answer, and upvoting
 - **Code Review Suggestions** — "Suggest changes" mode in PR inline reviews lets reviewers propose code replacements directly in the diff
 - **Image Diff** — Side-by-side image comparison in pull requests with opacity slider for visual diffing of changed images (PNG, JPG, GIF, SVG, WebP)
@@ -91,6 +93,8 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Auto-Merge** — Enable auto-merge on pull requests to automatically merge when all required status checks pass and reviews are approved
 - **Cherry-Pick / Revert via UI** — Cherry-pick any commit to another branch or revert a commit, either directly or as a new pull request, from the web interface
 - **Transfer Issues** — Move issues between repositories, preserving title, body, comments, matching labels, and linking the original with a transfer note
+- **Saved Replies** — Save canned responses and quickly insert them when commenting on issues or pull requests
+- **Batch Issue Operations** — Select multiple issues and close or reopen them in bulk from the issue list
 - **CODEOWNERS** — Auto-assign PR reviewers based on file paths with optional enforcement requiring CODEOWNERS approval before merge
 - **Repository Templates** — Create new repositories from templates with automatic copying of files, labels, issue templates, and branch protection rules
 - **Draft Issues & Issue Templates** — Create draft issues (work-in-progress) and define reusable issue templates (bug report, feature request) per repository with default labels
@@ -101,6 +105,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Organizations & Teams** — Create organizations with members and teams, assign team permissions to repositories
 - **Granular Permissions** — Five-tier permission model (Read, Triage, Write, Maintain, Admin) for fine-grained access control on repositories
 - **Milestones** — Track issue progress toward milestones with progress bars and due dates
+- **Time Tracking** — Log time entries on issues with start/stop timers and manual duration entry
 - **Commit Comments** — Comment on individual commits with optional file/line references
 - **Repository Topics** — Tag repositories with topics for discovery and filtering on the Explore page
 - **Activity Pulse** — Weekly summary page per repository showing PRs merged, issues opened/closed, commits, top contributors, and active branches over the last 7 days
@@ -187,13 +192,14 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Customizable Footer Pages** — Terms of Service, Privacy Policy, Documentation, and Contact pages with Markdown content editable from Admin > Settings
 - **User Profiles** — Contribution heatmap, activity feed, and stats per user
 - **Personal Access Tokens** — Token-based API authentication with configurable scopes and optional route-level restrictions (glob patterns like `/api/packages/**` to limit token access to specific API paths)
+- **Deploy Keys** — Repository-scoped SSH keys for CI/CD and automation, with read-only or read-write access per key
 - **Backup & Restore** — Export and import server data
 - **Security Scanning** — Real dependency vulnerability scanning powered by the [OSV.dev](https://osv.dev/) database. Automatically extracts dependencies from `.csproj` (NuGet), `package.json` (npm), `requirements.txt` (PyPI), `Cargo.toml` (Rust), `Gemfile` (Ruby), `composer.json` (PHP), `go.mod` (Go), `pom.xml` (Maven/Java), and `pubspec.yaml` (Dart/Flutter), then checks each against known CVEs. Reports severity, fixed versions, and advisory links. Plus manual security advisories with draft/publish/close workflow
 - **Secret Scanning** — Automatically scans every push for leaked credentials (AWS keys, GitHub/GitLab tokens, Slack tokens, private keys, API keys, JWTs, connection strings, and more). 20 built-in patterns with full regex support. Full repository scan on demand. Alerts with resolve/false-positive workflow. Custom patterns configurable via API
 - **Dependabot-Style Auto-Update PRs** — Automatically check for outdated dependencies and create pull requests to update them. Supports NuGet, npm, and PyPI ecosystems. Configurable schedule (daily/weekly/monthly) and open PR limit per repository
 - **Repository Insights (Traffic)** — Track clone/fetch counts, page views, unique visitors, top referrers, and popular content paths. Traffic charts in the Insights tab with 14-day summaries. Daily aggregation with 90-day retention. IP addresses are hashed for privacy
 - **Dark Mode** — Full dark/light mode support with a toggle in the header
-- **Multi-Language / i18n** — Full localization across all 29 pages with 920 resource keys. Ships with 11 languages: English, Spanish, French, German, Japanese, Korean, Chinese (Simplified), Portuguese, Russian, Italian, and Turkish. Language picker in the header. Add more by creating `SharedResource.{locale}.resx` files
+- **Multi-Language / i18n** — Full localization across all 30 pages with 930 resource keys. Ships with 11 languages: English, Spanish, French, German, Japanese, Korean, Chinese (Simplified), Portuguese, Russian, Italian, and Turkish. Language picker in the header. Add more by creating `SharedResource.{locale}.resx` files
 - **Swagger / OpenAPI** — Interactive API documentation at `/swagger` with all REST endpoints discoverable and testable
 - **Open Graph Meta Tags** — Repository, issue, and PR pages include og:title and og:description for rich link previews in Slack, Discord, and social media
 - **Mermaid Diagrams** — Mermaid diagram rendering in Markdown files (flowcharts, sequence diagrams, Gantt charts, etc.)
@@ -201,8 +207,11 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **CSV/TSV Viewer** — CSV and TSV files render as formatted, sortable tables instead of raw text
 - **Keyboard Shortcuts** — Press `?` for a shortcuts help modal. `/` focuses search, `g i` goes to Issues, `g p` to Pull Requests, `g h` to Home, `g n` to Notifications
 - **Health Check Endpoint** — `/health` returns JSON with database connectivity status for Docker/Kubernetes monitoring
+- **Sitemap.xml** — Dynamic XML sitemap at `/sitemap.xml` listing all public repositories for search engine indexing
 - **Line Linking** — Click line numbers in file viewer to generate shareable `#L42` URLs with line highlighting on load
 - **File Download** — Download individual files from the file viewer with proper Content-Disposition headers
+- **Rate Limit Headers** — API responses include `X-RateLimit-Limit` and `X-RateLimit-Reset` headers so clients can track their remaining quota
+- **Notification Auto-Refresh** — The notification bell badge auto-updates every 60 seconds without requiring a page refresh
 - **Jupyter Notebook Rendering** — `.ipynb` files render as formatted notebooks with code cells, Markdown, outputs, and inline images
 - **Repository Transfer** — Transfer repository ownership to another user or organization from repository Settings
 - **Default Branch Configuration** — Change the default branch per repository from the Settings tab

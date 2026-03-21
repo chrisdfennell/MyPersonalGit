@@ -997,4 +997,12 @@
   <data name="Release_NotesPlaceholder" xml:space="preserve"><value>Notas da versão (Markdown)</value></data>
   <data name="Release_Draft" xml:space="preserve"><value>Rascunho</value></data>
   <data name="Release_PreRelease" xml:space="preserve"><value>Pré-lançamento</value></data>
+
+  <!-- Saved replies / Batch / Squash -->
+  <data name="SavedReply_Insert" xml:space="preserve"><value>Respostas salvas</value></data>
+  <data name="Issues_BatchSelect" xml:space="preserve"><value>Seleção em lote</value></data>
+  <data name="Issues_Selected" xml:space="preserve"><value>selecionados</value></data>
+  <data name="Issues_CloseSelected" xml:space="preserve"><value>Fechar selecionados</value></data>
+  <data name="Issues_ReopenSelected" xml:space="preserve"><value>Reabrir selecionados</value></data>
+  <data name="PR_SquashMessagePlaceholder" xml:space="preserve"><value>Mensagem de squash commit personalizada (opcional)</value></data>
 </root>

@@ -12,7 +12,7 @@ public interface IPullRequestService
     Task<List<PullRequest>> GetPullRequestsAsync(string repoName);
     Task<PullRequest?> GetPullRequestAsync(string repoName, int number);
     Task<PullRequest> CreatePullRequestAsync(string repoName, string title, string? body, string author, string sourceBranch, string targetBranch, bool isDraft = false);
-    Task<(bool Success, string? Error)> MergePullRequestAsync(string repoName, int number, string mergedBy, MergeStrategy strategy = MergeStrategy.MergeCommit);
+    Task<(bool Success, string? Error)> MergePullRequestAsync(string repoName, int number, string mergedBy, MergeStrategy strategy = MergeStrategy.MergeCommit, string? squashMessage = null);
     Task<bool> ClosePullRequestAsync(string repoName, int number);
     Task<bool> AddReviewAsync(string repoName, int number, string author, ReviewState state, string? body = null);
     Task<(bool CanMerge, string? Reason)> CanMergeAsync(string repoName, int number);
@@ -345,7 +345,7 @@ public class PullRequestService : IPullRequestService
         }
     }
 
-    public async Task<(bool Success, string? Error)> MergePullRequestAsync(string repoName, int number, string mergedBy, MergeStrategy strategy = MergeStrategy.MergeCommit)
+    public async Task<(bool Success, string? Error)> MergePullRequestAsync(string repoName, int number, string mergedBy, MergeStrategy strategy = MergeStrategy.MergeCommit, string? squashMessage = null)
     {
         using var db = _dbFactory.CreateDbContext();
 
@@ -523,7 +523,9 @@ public class PullRequestService : IPullRequestService
                     };
                     var commits = repo.Commits.QueryBy(filter).ToList();
                     var messages = string.Join("\n", commits.Select(c => $"* {c.MessageShort}"));
-                    var msg = $"{pr.Title} (#{pr.Number})\n\n{messages}";
+                    var msg = !string.IsNullOrWhiteSpace(squashMessage)
+                        ? squashMessage
+                        : $"{pr.Title} (#{pr.Number})\n\n{messages}";
 
                     var squashSettings = await _adminService.GetSystemSettingsAsync();
                     string? signedSha = null;

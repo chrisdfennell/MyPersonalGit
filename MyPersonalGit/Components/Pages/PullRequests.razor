@@ -18,6 +18,7 @@
 @inject ICodeOwnersService CodeOwnersService
 @inject IConflictResolutionService ConflictService
 @inject ICherryPickRevertService CherryPickRevertService
+@inject ISavedReplyService SavedReplyService
 @inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
@@ -125,6 +126,10 @@
                                     <option value="@MergeStrategy.Squash">@L["PR_SquashAndMerge"]</option>
                                     <option value="@MergeStrategy.Rebase">@L["PR_RebaseAndMerge"]</option>
                                 </select>
+                                @if (selectedStrategy == MergeStrategy.Squash)
+                                {
+                                    <input type="text" class="form-control form-control-sm" style="max-width: 400px;" @bind="squashCommitMessage" placeholder="@L["PR_SquashMessagePlaceholder"]" />
+                                }
                                 <button class="btn btn-success btn-sm" @onclick="MergePR" disabled="@(!canMerge || isMerging)">
                                     @if (isMerging)
                                     {
@@ -391,6 +396,20 @@
                                         <strong>@L["PR_ReviewChanges"]</strong>
                                     </div>
                                     <div class="card-body">
+                                        @if (savedReplies.Any())
+                                        {
+                                            <div class="dropdown mb-2">
+                                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-bookmark me-1"></i> @L["SavedReply_Insert"]
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    @foreach (var reply in savedReplies)
+                                                    {
+                                                        <li><button class="dropdown-item small" @onclick="() => reviewBody = reply.Body">@reply.Title</button></li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        }
                                         <textarea class="form-control mb-2" rows="4" @bind="reviewBody" placeholder="@L["PR_LeaveReviewComment"]"></textarea>
                                         <div class="btn-group">
                                             <button class="btn btn-success btn-sm" @onclick='() => SubmitReview(ReviewState.Approved)'>
@@ -1042,6 +1061,8 @@
 
     // Merge state
     private MergeStrategy selectedStrategy = MergeStrategy.MergeCommit;
+    private List<SavedReply> savedReplies = new();
+    private string squashCommitMessage = "";
     private bool canMerge;
     private string? mergeReason;
     private string mergeError = "";
@@ -1156,6 +1177,10 @@
         await LoadPRs();
         await LoadBranches();
         LoadPRTemplate();
+        if (UserService.IsLoggedIn)
+        {
+            try { savedReplies = await SavedReplyService.GetRepliesAsync(UserService.Username); } catch { }
+        }
         if (currentPR != null)
         {
             LoadPRCommitsAndDiff();
@@ -1333,7 +1358,8 @@
 
         try
         {
-            var (success, error) = await PRService.MergePullRequestAsync(RepoName, Number.Value, UserService.Username, selectedStrategy);
+            var customMsg = selectedStrategy == MergeStrategy.Squash && !string.IsNullOrWhiteSpace(squashCommitMessage) ? squashCommitMessage : null;
+            var (success, error) = await PRService.MergePullRequestAsync(RepoName, Number.Value, UserService.Username, selectedStrategy, customMsg);
             if (!success)
             {
                 mergeError = error ?? "Merge failed";

@@ -81,6 +81,7 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **Fissaggio e Blocco Issue** — Fissa issue importanti in cima alla lista e blocca le conversazioni per impedire ulteriori commenti
 - **Modifica ed Eliminazione Commenti** — Modifica o elimina i tuoi commenti su issue e pull request con indicatore "(modificato)"
 - **Risoluzione Conflitti di Merge** — Risolvi i conflitti di merge direttamente nel browser con un editor visuale che mostra viste base/ours/theirs, pulsanti di accettazione rapida e validazione dei marcatori di conflitto
+- **Squash Commit Message** — Personalizza il messaggio di commit quando fai squash-merge di una pull request
 - **Discussioni** — Conversazioni threaded in stile GitHub Discussions per repository con categorie (Generale, Q&A, Annunci, Idee, Mostra e Racconta, Sondaggi), fissa/blocca, segna come risposta e upvoting
 - **Suggerimenti di Code Review** — La modalità "Suggerisci modifiche" nelle review inline delle PR permette ai revisori di proporre sostituzioni di codice direttamente nel diff
 - **Image Diff** — Confronto di immagini affiancato nelle pull request con cursore di opacità per il diff visivo delle immagini modificate (PNG, JPG, GIF, SVG, WebP)
@@ -91,6 +92,8 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **Auto-Merge** — Abilita l'auto-merge sulle pull request per unire automaticamente quando tutti i controlli di stato richiesti sono superati e le review approvate
 - **Cherry-Pick / Revert via UI** — Seleziona qualsiasi commit verso un altro branch o ripristina un commit, direttamente o come nuova pull request, dall'interfaccia web
 - **Transfer Issues** — Sposta le issue tra repository, preservando titolo, corpo, commenti, label corrispondenti e collegando l'originale con una nota di trasferimento
+- **Saved Replies** — Salva risposte predefinite e inseriscile rapidamente quando commenti su issue o pull request
+- **Batch Issue Operations** — Seleziona più issue e chiudile o riaprile in blocco dalla lista delle issue
 - **CODEOWNERS** — Assegnazione automatica dei revisori PR basata sui percorsi dei file con applicazione opzionale che richiede l'approvazione CODEOWNERS prima del merge
 - **Template di Repository** — Crea nuovi repository da template con copia automatica di file, label, template di issue e regole di branch protection
 - **Bozze di Issue e Template di Issue** — Crea bozze di issue (work-in-progress) e definisci template di issue riutilizzabili (segnalazione bug, richiesta funzionalità) per repository con label predefinite
@@ -182,7 +185,7 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **Dependabot-Style Auto-Update PRs** — Controlla automaticamente le dipendenze obsolete e crea pull request per aggiornarle. Supporta gli ecosistemi NuGet, npm e PyPI. Programmazione configurabile (giornaliera/settimanale/mensile) e limite di PR aperte per repository
 - **Repository Insights (Traffic)** — Monitora conteggi di clone/fetch, visualizzazioni di pagina, visitatori unici, principali referrer e percorsi di contenuto popolari. Grafici del traffico nella scheda Insights con riepiloghi a 14 giorni. Aggregazione giornaliera con conservazione di 90 giorni. Gli indirizzi IP sono sottoposti a hash per la privacy
 - **Dark Mode** — Supporto completo dark/light mode con toggle nell'intestazione
-- **Multilingua / i18n** — Localizzazione completa su tutte le 29 pagine con 920 chiavi di risorsa. Viene fornito con 11 lingue: inglese, spagnolo, francese, tedesco, giapponese, coreano, cinese (semplificato), portoghese, russo, italiano e turco. Selettore della lingua nell'intestazione. Aggiungi altre lingue creando file `SharedResource.{locale}.resx`
+- **Multilingua / i18n** — Localizzazione completa su tutte le 30 pagine con 930 chiavi di risorsa. Viene fornito con 11 lingue: inglese, spagnolo, francese, tedesco, giapponese, coreano, cinese (semplificato), portoghese, russo, italiano e turco. Selettore della lingua nell'intestazione. Aggiungi altre lingue creando file `SharedResource.{locale}.resx`
 - **Swagger / OpenAPI** — Documentazione API interattiva su `/swagger` con tutti gli endpoint REST individuabili e testabili
 - **Open Graph Meta Tags** — Le pagine di repository, issue e PR includono og:title e og:description per anteprime di link arricchite in Slack, Discord e social media
 - **Mermaid Diagrams** — Rendering di diagrammi Mermaid nei file Markdown (diagrammi di flusso, diagrammi di sequenza, diagrammi di Gantt, ecc.)
@@ -190,6 +193,7 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **CSV/TSV Viewer** — I file CSV e TSV vengono visualizzati come tabelle formattate e ordinabili invece di testo grezzo
 - **Keyboard Shortcuts** — Premi `?` per una finestra di aiuto delle scorciatoie. `/` mette il focus sulla ricerca, `g i` va alle Issue, `g p` alle Pull Request, `g h` alla Home, `g n` alle Notifiche
 - **Health Check Endpoint** — `/health` restituisce JSON con lo stato di connettività del database per il monitoraggio Docker/Kubernetes
+- **Sitemap.xml** — Sitemap XML dinamica a `/sitemap.xml` che elenca tutti i repository pubblici per l'indicizzazione dei motori di ricerca
 - **Line Linking** — Clicca sui numeri di riga nel visualizzatore di file per generare URL condivisibili `#L42` con evidenziazione della riga al caricamento
 - **File Download** — Scarica singoli file dal visualizzatore di file con intestazioni Content-Disposition appropriate
 - **Jupyter Notebook Rendering** — I file `.ipynb` vengono visualizzati come notebook formattati con celle di codice, Markdown, output e immagini inline

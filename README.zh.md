@@ -81,6 +81,7 @@
 - **Issue 置顶与锁定** — 将重要 Issue 置顶到列表顶部，锁定对话以防止进一步评论
 - **评论编辑与删除** — 编辑或删除您在 Issue 和 Pull Request 上的评论，显示"(已编辑)"标识
 - **合并冲突解决** — 直接在浏览器中使用可视化编辑器解决合并冲突，显示 base/ours/theirs 视图、快速接受按钮和冲突标记验证
+- **Squash Commit Message** — 在压缩合并 Pull Request 时自定义提交消息
 - **讨论** — GitHub Discussions 风格的每仓库分类线程对话（常规、问答、公告、想法、展示、投票），支持置顶/锁定、标记为答案和点赞
 - **代码审查建议** — PR 内联审查中的"建议更改"模式允许审查者直接在差异中提出代码替换
 - **Image Diff** — Pull Request 中的并排图片比较，带有不透明度滑块，用于已更改图片（PNG、JPG、GIF、SVG、WebP）的视觉差异对比
@@ -91,6 +92,8 @@
 - **Auto-Merge** — 在 Pull Request 上启用自动合并，当所有必需的状态检查通过且审查已批准时自动合并
 - **Cherry-Pick / Revert via UI** — 从 Web 界面将任何提交 Cherry-pick 到另一个分支，或直接或作为新的 Pull Request 还原提交
 - **Transfer Issues** — 在仓库之间移动 Issue，保留标题、正文、评论、匹配的标签，并在原始 Issue 上创建带有转移说明的链接
+- **Saved Replies** — 保存预设回复，在评论 Issue 或 Pull Request 时快速插入
+- **Batch Issue Operations** — 选择多个 Issue，从 Issue 列表中批量关闭或重新打开
 - **CODEOWNERS** — 根据文件路径自动分配 PR 审查者，可选强制要求 CODEOWNERS 在合并前审批
 - **仓库模板** — 从模板创建新仓库，自动复制文件、标签、Issue 模板和分支保护规则
 - **草稿 Issue 与 Issue 模板** — 创建草稿 Issue（进行中的工作），为每个仓库定义可重用的 Issue 模板（Bug 报告、功能请求），支持默认标签
@@ -182,7 +185,7 @@
 - **Dependabot-Style Auto-Update PRs** — 自动检查过时的依赖项并创建 Pull Request 进行更新。支持 NuGet、npm 和 PyPI 生态系统。可配置的计划（每日/每周/每月）以及每个仓库的开放 PR 限制
 - **Repository Insights (Traffic)** — 跟踪克隆/拉取计数、页面浏览量、独立访客、热门来源和热门内容路径。Insights 选项卡中的流量图表包含 14 天摘要。每日聚合，保留 90 天。IP 地址经过哈希处理以保护隐私
 - **深色模式** — 完整的深色/浅色模式支持，在页头有切换开关
-- **多语言 / i18n** — 所有 29 个页面的完整本地化，共 920 个资源键。内置 11 种语言：英语、西班牙语、法语、德语、日语、韩语、简体中文、葡萄牙语、俄语、意大利语和土耳其语。通过创建 `SharedResource.{locale}.resx` 文件添加更多语言。页头的语言选择器可切换语言
+- **多语言 / i18n** — 所有 30 个页面的完整本地化，共 930 个资源键。内置 11 种语言：英语、西班牙语、法语、德语、日语、韩语、简体中文、葡萄牙语、俄语、意大利语和土耳其语。通过创建 `SharedResource.{locale}.resx` 文件添加更多语言。页头的语言选择器可切换语言
 - **Swagger / OpenAPI** — 在 `/swagger` 提供交互式 API 文档，所有 REST 端点均可发现和测试
 - **Open Graph Meta Tags** — 仓库、Issue 和 PR 页面包含 og:title 和 og:description，用于在 Slack、Discord 和社交媒体中显示丰富的链接预览
 - **Mermaid 图表** — 在 Markdown 文件中渲染 Mermaid 图表（流程图、时序图、甘特图等）
@@ -190,6 +193,7 @@
 - **CSV/TSV 查看器** — CSV 和 TSV 文件以格式化、可排序的表格呈现，而非原始文本
 - **Keyboard Shortcuts** — 按 `?` 显示快捷键帮助模态框。`/` 聚焦搜索，`g i` 跳转到 Issue，`g p` 跳转到 Pull Request，`g h` 跳转到首页，`g n` 跳转到通知
 - **Health Check Endpoint** — `/health` 返回包含数据库连接状态的 JSON，用于 Docker/Kubernetes 监控
+- **Sitemap.xml** — `/sitemap.xml` 处的动态 XML 站点地图，列出所有公开仓库以供搜索引擎索引
 - **Line Linking** — 在文件查看器中点击行号生成可分享的 `#L42` URL，加载时高亮显示对应行
 - **File Download** — 使用正确的 Content-Disposition 头从文件查看器下载单个文件
 - **Jupyter Notebook 渲染** — `.ipynb` 文件以格式化的笔记本形式呈现，包含代码单元格、Markdown、输出和内联图片
