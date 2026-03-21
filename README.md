@@ -950,6 +950,10 @@ MyPersonalGit.Tests/
 dotnet test
 ```
 
+## Contributing
+
+Contributions are welcome! Please read the [Contributing Guide](CONTRIBUTING.md) for details on setting up the development environment, code style, and how to submit pull requests.
+
 ## License
 
 MIT
