@@ -73,22 +73,42 @@ public static class TerminalWebSocketHandler
     private static async Task HandleTerminalSession(WebSocket ws, string workingDirectory, CancellationToken cancellationToken)
     {
         var isWindows = OperatingSystem.IsWindows();
-        var shellPath = isWindows ? "cmd.exe" : "/bin/bash";
-        var shellArgs = isWindows ? "" : "--login";
+        var actualWorkDir = Directory.Exists(workingDirectory) ? workingDirectory : Environment.CurrentDirectory;
 
-        var psi = new ProcessStartInfo
+        ProcessStartInfo psi;
+
+        if (isWindows)
         {
-            FileName = shellPath,
-            Arguments = shellArgs,
-            WorkingDirectory = Directory.Exists(workingDirectory) ? workingDirectory : Environment.CurrentDirectory,
-            UseShellExecute = false,
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8
-        };
+            psi = new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = "",
+                WorkingDirectory = actualWorkDir,
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
+            };
+        }
+        else
+        {
+            // Use 'script' to create a pseudo-TTY so bash behaves interactively
+            // script -q /dev/null spawns a shell with a real PTY
+            psi = new ProcessStartInfo
+            {
+                FileName = "/usr/bin/script",
+                Arguments = "-q -c /bin/bash /dev/null",
+                WorkingDirectory = actualWorkDir,
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+        }
 
         // Set TERM for better compatibility
         psi.Environment["TERM"] = "xterm-256color";
