@@ -47,7 +47,8 @@
             {
                 <IdeSearchPanel RepoName="@RepoName"
                                 Branch="@currentBranch"
-                                OnResultSelected="HandleSearchResultSelected" />
+                                OnResultSelected="HandleSearchResultSelected"
+                                OnReplace="HandleSearchReplace" />
             }
             else if (sidebarMode == "sourcecontrol")
             {
@@ -98,6 +99,12 @@
                        OnTabClosed="HandleTabClosed" />
             @if (openTabs.Count > 0)
             {
+                <button class="ide-action-btn @(isBlameActive ? "active" : "")" @onclick="ToggleBlame" title="@(isBlameActive ? "Hide Git Blame" : "Show Git Blame")">
+                    <i class="bi bi-person-lines-fill"></i>
+                </button>
+                <button class="ide-action-btn" @onclick="ShowFileHistory" title="File History">
+                    <i class="bi bi-clock-history"></i>
+                </button>
                 <button class="ide-split-btn" @onclick="ToggleSplitEditor" title="@(isSplit ? "Close Split" : "Split Editor")">
                     <i class="bi @(isSplit ? "bi-layout-sidebar-reverse" : "bi-layout-split")"></i>
                 </button>
@@ -119,7 +126,7 @@
                 <h5 class="fw-light opacity-50">Web IDE</h5>
                 <p class="small opacity-50">Open a file from the explorer or press <kbd>Ctrl+P</kbd> to get started</p>
                 <div class="mt-3 small opacity-50">
-                    <p class="mb-1"><kbd>Ctrl+S</kbd> Save &middot; <kbd>Ctrl+Shift+F</kbd> Search &middot; <kbd>Ctrl+P</kbd> Quick Open &middot; <kbd>Ctrl+`</kbd> Terminal</p>
+                    <p class="mb-1"><kbd>Ctrl+S</kbd> Save &middot; <kbd>Ctrl+Shift+P</kbd> Commands &middot; <kbd>Ctrl+P</kbd> Quick Open &middot; <kbd>Ctrl+`</kbd> Terminal</p>
                 </div>
             </div>
         }
@@ -148,7 +155,7 @@
         }
     </div>
 
-    <div class="ide-bottom-panel">
+    <div class="ide-bottom-panel @(showHistory ? "expanded" : "")">
         <div class="ide-bottom-tabs">
             <button class="ide-bottom-tab @(bottomPanelMode == "commits" ? "active" : "")" @onclick='() => bottomPanelMode = "commits"'>
                 <i class="bi bi-git me-1"></i>Commits
@@ -156,6 +163,15 @@
             <button class="ide-bottom-tab @(bottomPanelMode == "terminal" ? "active" : "")" @onclick="ToggleTerminal">
                 <i class="bi bi-terminal me-1"></i>Terminal
             </button>
+            @if (showHistory)
+            {
+                <button class="ide-bottom-tab @(bottomPanelMode == "history" ? "active" : "")" @onclick='() => bottomPanelMode = "history"'>
+                    <i class="bi bi-clock-history me-1"></i>History
+                    <button class="btn btn-sm btn-link text-muted p-0 ms-1" @onclick="CloseHistory" @onclick:stopPropagation="true">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </button>
+            }
         </div>
         @if (bottomPanelMode == "commits")
         {
@@ -169,6 +185,43 @@
                 <IdeTerminal RepoName="@RepoName" IsVisible="@(bottomPanelMode == "terminal")" />
             </div>
         }
+        else if (bottomPanelMode == "history" && showHistory)
+        {
+            <div class="ide-history-panel">
+                <div class="ide-history-header px-3 py-1">
+                    <i class="bi bi-clock-history me-1"></i>
+                    <span class="small fw-semibold">History: @(activeTabPath != null ? System.IO.Path.GetFileName(activeTabPath) : "")</span>
+                </div>
+                @if (isLoadingHistory)
+                {
+                    <div class="text-center py-3">
+                        <span class="spinner-border spinner-border-sm text-muted"></span>
+                    </div>
+                }
+                else if (fileHistory.Count == 0)
+                {
+                    <div class="text-muted small px-3 py-2">No history found</div>
+                }
+                else
+                {
+                    <div class="ide-history-list">
+                        @foreach (var entry in fileHistory)
+                        {
+                            <div class="ide-history-entry px-3 py-2">
+                                <div class="d-flex align-items-center">
+                                    <code class="text-info me-2">@entry.ShortSha</code>
+                                    <span class="small fw-semibold text-truncate">@entry.Message</span>
+                                </div>
+                                <div class="small text-muted mt-1">
+                                    <i class="bi bi-person me-1"></i>@entry.Author
+                                    <span class="ms-2"><i class="bi bi-calendar me-1"></i>@entry.Date.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
     </div>
 </div>
 
@@ -177,6 +230,14 @@
     <IdeQuickOpen TreeNodes="treeNodes"
                   OnFileSelected="HandleFileSelected"
                   OnClose="() => { showQuickOpen = false; StateHasChanged(); }" />
+}
+
+@if (showCommandPalette)
+{
+    <IdeCommandPalette HasActiveFile="@(activeTabPath != null)"
+                       IsBlameActive="@isBlameActive"
+                       OnCommand="HandleCommand"
+                       OnClose="() => { showCommandPalette = false; StateHasChanged(); }" />
 }
 
 @code {
@@ -200,7 +261,7 @@
     // Split editor state
     private bool isSplit;
     private string? splitEditorId;
-    private int activePane = 1; // 1 = left/main, 2 = right/split
+    private int activePane = 1;
     private string? splitActiveTabPath;
 
     // Bottom panel state
@@ -209,10 +270,21 @@
     // Quick open state
     private bool showQuickOpen;
 
+    // Command palette state
+    private bool showCommandPalette;
+
     // Diff view state
     private bool showDiffView;
     private string? diffFilePath;
     private string? diffEditorId;
+
+    // Blame state
+    private bool isBlameActive;
+
+    // File history state
+    private bool showHistory;
+    private bool isLoadingHistory;
+    private List<FileHistoryEntry> fileHistory = new();
 
     // Settings
     private EditorSettings? currentSettings;
@@ -224,7 +296,6 @@
     {
         try
         {
-            // Parse branch from query string
             var uri = new Uri(Navigation.Uri);
             var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
             var branchParam = query["branch"];
@@ -233,7 +304,6 @@
 
             treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
 
-            // Load branch list from the repo
             var systemSettings = await AdminService.GetSystemSettingsAsync();
             var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot)
                 ? systemSettings.ProjectRoot
@@ -286,13 +356,9 @@
             {
                 dotNetRef = DotNetObjectReference.Create(this);
 
-                // Load Monaco from CDN first
                 await JS.InvokeVoidAsync("monacoInterop.init");
-
-                // Load saved settings
                 await LoadSavedSettings();
 
-                // Initialize Monaco editor
                 var theme = await JS.InvokeAsync<string>("themeHelper.get");
                 var monacoTheme = theme == "dark" ? "vs-dark" : "vs";
 
@@ -305,16 +371,13 @@
 
                 editorId = await JS.InvokeAsync<string>("monacoInterop.createEditor", "monaco-container", editorOptions);
 
-                // Apply full settings if available
                 if (currentSettings != null)
                 {
                     await ApplySettingsToEditor(editorId);
                 }
 
-                // Register content change callback
                 await JS.InvokeVoidAsync("monacoInterop.onDidChangeContent", editorId, dotNetRef, "OnEditorContentChanged");
 
-                // Auto-open file if specified in route
                 if (!string.IsNullOrEmpty(FilePath))
                 {
                     await HandleFileSelected(FilePath);
@@ -322,7 +385,6 @@
             }
             catch (Exception ex)
             {
-                // Monaco not loaded yet - will retry
                 Console.WriteLine($"Monaco init error: {ex.Message}");
             }
         }
@@ -362,13 +424,11 @@
 
     private async Task HandleFileSelected(string path)
     {
-        // Close diff view if open
         if (showDiffView)
         {
             await CloseDiffView();
         }
 
-        // Check if already open
         var existingTab = openTabs.FirstOrDefault(t => t.FilePath == path);
         if (existingTab != null)
         {
@@ -378,11 +438,9 @@
 
         try
         {
-            // Load file content
             var fileContent = await WebIdeService.GetFileContentAsync(RepoName, currentBranch, path);
             fileContents[path] = fileContent.Content;
 
-            // Create tab
             var tab = new OpenTab
             {
                 FilePath = path,
@@ -392,10 +450,9 @@
             };
             openTabs.Add(tab);
 
-            // Open in editor
             activeTabPath = path;
             StateHasChanged();
-            await Task.Delay(50); // Let Blazor re-render so monaco-container becomes visible
+            await Task.Delay(50);
 
             if (editorId != null)
             {
@@ -403,6 +460,12 @@
                 var isReadOnly = !UserService.IsLoggedIn;
                 await JS.InvokeVoidAsync("monacoInterop.openFile", editorId, path, fileContent.Content, isReadOnly);
                 await JS.InvokeVoidAsync("monacoInterop.layout", editorId);
+
+                // Re-apply blame if active
+                if (isBlameActive)
+                {
+                    await LoadBlameForCurrentFile();
+                }
             }
         }
         catch (Exception ex)
@@ -418,7 +481,6 @@
 
     private async Task SwitchToTab(string path)
     {
-        // Determine which editor to use based on active pane
         var targetEditorId = activePane == 2 && isSplit ? splitEditorId : editorId;
 
         if (targetEditorId != null && fileContents.ContainsKey(path))
@@ -431,12 +493,17 @@
         else
             activeTabPath = path;
 
+        // Re-apply blame if active
+        if (isBlameActive && editorId != null)
+        {
+            await LoadBlameForCurrentFile();
+        }
+
         StateHasChanged();
     }
 
     private async Task HandleTabClosed(string path)
     {
-        // Save current content if dirty
         if (editorId != null && modifiedFiles.Contains(path))
         {
             try
@@ -461,7 +528,6 @@
         modifiedFiles.Remove(path);
         fileContents.Remove(path);
 
-        // Switch to adjacent tab
         if (activeTabPath == path)
         {
             if (openTabs.Count > 0)
@@ -472,6 +538,10 @@
             else
             {
                 activeTabPath = null;
+                if (isBlameActive)
+                {
+                    isBlameActive = false;
+                }
             }
         }
 
@@ -488,7 +558,6 @@
 
         try
         {
-            // Get latest content from Monaco for all modified files
             var commitChanges = new List<FileChange>();
             foreach (var change in args.changes)
             {
@@ -516,7 +585,6 @@
                 commitChanges
             );
 
-            // Reset dirty state for committed files
             foreach (var change in commitChanges)
             {
                 modifiedFiles.Remove(change.Path);
@@ -528,7 +596,6 @@
                 }
             }
 
-            // Refresh tree
             treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
             UpdatePendingChanges();
         }
@@ -561,8 +628,6 @@
 
             treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
             StateHasChanged();
-
-            // Open the new file
             await HandleFileSelected(newPath);
         }
         catch { }
@@ -578,7 +643,6 @@
             if (string.IsNullOrWhiteSpace(folderName)) return;
 
             var newPath = string.IsNullOrEmpty(folderPath) ? folderName : $"{folderPath}/{folderName}";
-            // Create a .gitkeep file to create the folder
             var keepPath = $"{newPath}/.gitkeep";
 
             await WebIdeService.CreateFileAsync(
@@ -606,7 +670,6 @@
                 UserService.Username, $"{UserService.Username}@personalgit.local"
             );
 
-            // Close tab if open
             var tab = openTabs.FirstOrDefault(t => t.FilePath == path);
             if (tab != null)
             {
@@ -636,7 +699,6 @@
                 UserService.Username, $"{UserService.Username}@personalgit.local"
             );
 
-            // Update tab if the renamed file was open
             var tab = openTabs.FirstOrDefault(t => t.FilePath == args.oldPath);
             if (tab != null)
             {
@@ -645,7 +707,6 @@
                 if (activeTabPath == args.oldPath)
                     activeTabPath = newFullPath;
 
-                // Update content dictionary
                 if (fileContents.TryGetValue(args.oldPath, out var content))
                 {
                     fileContents.Remove(args.oldPath);
@@ -666,7 +727,6 @@
     {
         await HandleFileSelected(args.filePath);
 
-        // Reveal the line in the editor
         if (editorId != null)
         {
             try
@@ -680,11 +740,77 @@
         StateHasChanged();
     }
 
+    private async Task HandleSearchReplace((string search, string replace, string? filePath) args)
+    {
+        if (!UserService.IsLoggedIn) return;
+
+        var filesToReplace = new List<string>();
+        if (args.filePath != null)
+        {
+            filesToReplace.Add(args.filePath);
+        }
+        else
+        {
+            // Collect all unique file paths from current search results (we need to load them)
+            // The search panel will have triggered a search, so we need to get the affected files
+            // Do a search to find all affected files
+            var results = await WebIdeService.SearchFilesAsync(RepoName, currentBranch, args.search);
+            filesToReplace = results.Select(r => r.FilePath).Distinct().ToList();
+        }
+
+        foreach (var file in filesToReplace)
+        {
+            // Ensure file is loaded
+            if (!fileContents.ContainsKey(file))
+            {
+                try
+                {
+                    var fc = await WebIdeService.GetFileContentAsync(RepoName, currentBranch, file);
+                    fileContents[file] = fc.Content;
+
+                    // Add to open tabs if not already
+                    if (!openTabs.Any(t => t.FilePath == file))
+                    {
+                        openTabs.Add(new OpenTab
+                        {
+                            FilePath = file,
+                            FileName = System.IO.Path.GetFileName(file),
+                            IsDirty = false,
+                            OriginalContent = fc.Content
+                        });
+                    }
+                }
+                catch { continue; }
+            }
+
+            // Do the replacement
+            var content = fileContents[file];
+            var newContent = content.Replace(args.search, args.replace, StringComparison.OrdinalIgnoreCase);
+            if (content != newContent)
+            {
+                fileContents[file] = newContent;
+                modifiedFiles.Add(file);
+
+                var tab = openTabs.FirstOrDefault(t => t.FilePath == file);
+                if (tab != null) tab.IsDirty = true;
+
+                // Update Monaco model if it exists
+                try
+                {
+                    await JS.InvokeAsync<int>("monacoInterop.replaceInModel", file, args.search, args.replace);
+                }
+                catch { }
+            }
+        }
+
+        UpdatePendingChanges();
+        StateHasChanged();
+    }
+
     private async Task HandleBranchChanged(string newBranch)
     {
         currentBranch = newBranch;
 
-        // Close all tabs
         if (editorId != null)
         {
             foreach (var tab in openTabs.ToList())
@@ -699,8 +825,8 @@
         modifiedFiles.Clear();
         fileContents.Clear();
         pendingChanges.Clear();
+        isBlameActive = false;
 
-        // Reload tree
         isLoading = true;
         StateHasChanged();
 
@@ -725,7 +851,6 @@
         var tab = openTabs.FirstOrDefault(t => t.FilePath == filePath);
         if (tab == null) return;
 
-        // Update cached content
         if (editorId != null)
         {
             try
@@ -761,6 +886,137 @@
             .ToList();
     }
 
+    // ---- Command Palette ----
+
+    private async Task HandleCommand(string commandId)
+    {
+        switch (commandId)
+        {
+            case "quickOpen":
+                showQuickOpen = true;
+                break;
+            case "search":
+                sidebarMode = "search";
+                break;
+            case "toggleTerminal":
+                ToggleTerminal();
+                break;
+            case "splitEditor":
+                await ToggleSplitEditor();
+                break;
+            case "toggleTheme":
+                await JS.InvokeVoidAsync("themeHelper.toggle");
+                break;
+            case "toggleBlame":
+                await ToggleBlame();
+                break;
+            case "fileHistory":
+                await ShowFileHistory();
+                break;
+            case "findReplace":
+                if (editorId != null)
+                    await JS.InvokeVoidAsync("monacoInterop.triggerFindReplace", editorId);
+                break;
+            case "closeTab":
+                if (activeTabPath != null)
+                    await HandleTabClosed(activeTabPath);
+                break;
+            case "closeAllTabs":
+                foreach (var tab in openTabs.ToList())
+                    await HandleTabClosed(tab.FilePath);
+                break;
+            case "sourceControl":
+                sidebarMode = "sourcecontrol";
+                break;
+            case "settings":
+                sidebarMode = "settings";
+                break;
+            case "explorer":
+                sidebarMode = "files";
+                break;
+        }
+        StateHasChanged();
+    }
+
+    // ---- Blame ----
+
+    private async Task ToggleBlame()
+    {
+        if (isBlameActive)
+        {
+            isBlameActive = false;
+            if (editorId != null)
+            {
+                try { await JS.InvokeVoidAsync("monacoInterop.clearBlameDecorations", editorId); }
+                catch { }
+            }
+        }
+        else
+        {
+            isBlameActive = true;
+            await LoadBlameForCurrentFile();
+        }
+        StateHasChanged();
+    }
+
+    private async Task LoadBlameForCurrentFile()
+    {
+        if (activeTabPath == null || editorId == null) return;
+
+        try
+        {
+            var blameData = await WebIdeService.GetFileBlameAsync(RepoName, currentBranch, activeTabPath);
+            var jsBlameData = blameData.Select(h => new
+            {
+                startLine = h.StartLine,
+                endLine = h.EndLine,
+                commitSha = h.CommitSha,
+                author = h.Author,
+                date = h.Date.ToString("o"),
+                message = h.Message
+            }).ToArray();
+
+            await JS.InvokeVoidAsync("monacoInterop.setBlameDecorations", editorId, jsBlameData);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load blame: {ex.Message}");
+        }
+    }
+
+    // ---- File History ----
+
+    private async Task ShowFileHistory()
+    {
+        if (activeTabPath == null) return;
+
+        showHistory = true;
+        bottomPanelMode = "history";
+        isLoadingHistory = true;
+        StateHasChanged();
+
+        try
+        {
+            fileHistory = await WebIdeService.GetFileHistoryAsync(RepoName, currentBranch, activeTabPath);
+        }
+        catch
+        {
+            fileHistory = new();
+        }
+        finally
+        {
+            isLoadingHistory = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CloseHistory()
+    {
+        showHistory = false;
+        bottomPanelMode = "commits";
+        fileHistory.Clear();
+    }
+
     // ---- Split Editor ----
 
     private async Task ToggleSplitEditor()
@@ -781,7 +1037,7 @@
 
         isSplit = true;
         StateHasChanged();
-        await Task.Delay(50); // Let Blazor render the split container
+        await Task.Delay(50);
 
         try
         {
@@ -794,26 +1050,22 @@
             splitEditorId = await JS.InvokeAsync<string>("monacoInterop.createSplitEditor",
                 "monaco-container", editorId, editorOptions);
 
-            // Apply settings to the new split editor
             if (currentSettings != null && splitEditorId != null)
             {
                 await ApplySettingsToEditor(splitEditorId);
             }
 
-            // Register content change callback for split editor
             if (splitEditorId != null && dotNetRef != null)
             {
                 await JS.InvokeVoidAsync("monacoInterop.onDidChangeContent", splitEditorId, dotNetRef, "OnEditorContentChanged");
             }
 
-            // If there's an active file, open it in the split pane too
             if (activeTabPath != null && fileContents.ContainsKey(activeTabPath))
             {
                 splitActiveTabPath = activeTabPath;
                 await JS.InvokeVoidAsync("monacoInterop.openFile", splitEditorId, activeTabPath, fileContents[activeTabPath], !UserService.IsLoggedIn);
             }
 
-            // Re-layout both editors
             await JS.InvokeVoidAsync("monacoInterop.layout", editorId);
             await JS.InvokeVoidAsync("monacoInterop.layout", splitEditorId);
         }
@@ -841,7 +1093,6 @@
         activePane = 1;
         StateHasChanged();
 
-        // Re-layout main editor
         if (editorId != null)
         {
             await Task.Delay(50);
@@ -859,17 +1110,15 @@
 
     private async Task OpenDiffView(string filePath)
     {
-        // Close any existing diff view
         await CloseDiffView();
 
         diffFilePath = filePath;
         showDiffView = true;
         StateHasChanged();
-        await Task.Delay(50); // Let Blazor render the diff container
+        await Task.Delay(50);
 
         try
         {
-            // Get original content from the committed version
             var originalContent = "";
             var tab = openTabs.FirstOrDefault(t => t.FilePath == filePath);
             if (tab != null)
@@ -886,7 +1135,6 @@
                 catch { }
             }
 
-            // Get current (modified) content
             var modifiedContent = fileContents.GetValueOrDefault(filePath, originalContent);
 
             diffEditorId = await JS.InvokeAsync<string>("monacoInterop.createDiffEditor",
@@ -922,12 +1170,18 @@
         bottomPanelMode = bottomPanelMode == "terminal" ? "commits" : "terminal";
     }
 
-    // ---- Quick Open ----
+    // ---- Quick Open & Key Handling ----
 
     private void HandleGlobalKeyDown(KeyboardEventArgs e)
     {
+        // Ctrl+Shift+P: Command Palette
+        if (e.CtrlKey && e.ShiftKey && e.Key == "P")
+        {
+            showCommandPalette = !showCommandPalette;
+            StateHasChanged();
+        }
         // Ctrl+P: Quick Open
-        if (e.CtrlKey && e.Key == "p")
+        else if (e.CtrlKey && !e.ShiftKey && e.Key == "p")
         {
             showQuickOpen = !showQuickOpen;
             StateHasChanged();
@@ -936,6 +1190,12 @@
         else if (e.CtrlKey && e.Key == "`")
         {
             ToggleTerminal();
+            StateHasChanged();
+        }
+        // Ctrl+Shift+F: Focus search
+        else if (e.CtrlKey && e.ShiftKey && e.Key == "F")
+        {
+            sidebarMode = "search";
             StateHasChanged();
         }
     }
@@ -951,21 +1211,18 @@
 
     public async ValueTask DisposeAsync()
     {
-        // Dispose diff editor
         if (diffEditorId != null)
         {
             try { await JS.InvokeVoidAsync("monacoInterop.disposeDiffEditor", diffEditorId); }
             catch { }
         }
 
-        // Dispose split editor
         if (splitEditorId != null)
         {
             try { await JS.InvokeVoidAsync("monacoInterop.closeSplitEditor", splitEditorId, "monaco-container"); }
             catch { }
         }
 
-        // Dispose main editor
         if (editorId != null)
         {
             try

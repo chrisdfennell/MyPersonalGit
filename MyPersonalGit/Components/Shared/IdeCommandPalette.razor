@@ -1,0 +1,119 @@
+<div class="ide-command-palette-overlay" @onclick="HandleOverlayClick" @onkeydown="HandleKeyDown">
+    <div class="ide-command-palette-dialog" @onclick:stopPropagation="true">
+        <div class="ide-command-palette-input-wrapper">
+            <i class="bi bi-chevron-right me-2 text-muted"></i>
+            <input type="text" class="ide-command-palette-input" placeholder="Type a command..."
+                   @ref="inputRef" @bind="filter" @bind:event="oninput" @onkeydown="HandleKeyDown" />
+        </div>
+        <div class="ide-command-palette-results">
+            @if (FilteredCommands.Count == 0)
+            {
+                <div class="ide-command-palette-empty">No matching commands</div>
+            }
+            else
+            {
+                @for (int i = 0; i < FilteredCommands.Count; i++)
+                {
+                    var cmd = FilteredCommands[i];
+                    var idx = i;
+                    <div class="ide-command-palette-item @(idx == selectedIndex ? "selected" : "")"
+                         @onclick="() => ExecuteCommand(cmd)">
+                        <i class="bi @cmd.Icon me-2"></i>
+                        <span>@cmd.Label</span>
+                        @if (!string.IsNullOrEmpty(cmd.Shortcut))
+                        {
+                            <span class="ide-command-palette-shortcut ms-auto">@cmd.Shortcut</span>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<string> OnCommand { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public bool HasActiveFile { get; set; }
+    [Parameter] public bool IsBlameActive { get; set; }
+
+    private ElementReference inputRef;
+    private string filter = "";
+    private int selectedIndex;
+
+    public record CommandItem(string Id, string Label, string Icon, string? Shortcut = null, bool RequiresFile = false);
+
+    private List<CommandItem> AllCommands => new()
+    {
+        new("quickOpen", "Quick Open File", "bi-folder2-open", "Ctrl+P"),
+        new("search", "Search in Files", "bi-search", "Ctrl+Shift+F"),
+        new("toggleTerminal", "Toggle Terminal", "bi-terminal", "Ctrl+`"),
+        new("splitEditor", "Toggle Split Editor", "bi-layout-split", null, true),
+        new("toggleTheme", "Toggle Theme (Light/Dark)", "bi-circle-half"),
+        new("toggleBlame", IsBlameActive ? "Hide Git Blame" : "Show Git Blame", "bi-person-lines-fill", null, true),
+        new("fileHistory", "Show File History", "bi-clock-history", null, true),
+        new("findReplace", "Find and Replace in Editor", "bi-arrow-left-right", "Ctrl+H", true),
+        new("closeTab", "Close Current Tab", "bi-x-lg", null, true),
+        new("closeAllTabs", "Close All Tabs", "bi-x-square"),
+        new("sourceControl", "Open Source Control", "bi-git"),
+        new("settings", "Open Settings", "bi-gear"),
+        new("explorer", "Open File Explorer", "bi-files"),
+    };
+
+    private List<CommandItem> FilteredCommands
+    {
+        get
+        {
+            var available = AllCommands.Where(c => !c.RequiresFile || HasActiveFile).ToList();
+            if (string.IsNullOrWhiteSpace(filter)) return available;
+            return available
+                .Where(c => c.Label.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try { await inputRef.FocusAsync(); } catch { }
+        }
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        var cmds = FilteredCommands;
+        if (e.Key == "ArrowDown")
+        {
+            selectedIndex = (selectedIndex + 1) % Math.Max(cmds.Count, 1);
+        }
+        else if (e.Key == "ArrowUp")
+        {
+            selectedIndex = selectedIndex <= 0 ? Math.Max(cmds.Count - 1, 0) : selectedIndex - 1;
+        }
+        else if (e.Key == "Enter" && cmds.Count > 0 && selectedIndex < cmds.Count)
+        {
+            _ = ExecuteCommand(cmds[selectedIndex]);
+        }
+        else if (e.Key == "Escape")
+        {
+            _ = OnClose.InvokeAsync();
+        }
+        else
+        {
+            // Reset selection on filter change
+            selectedIndex = 0;
+        }
+    }
+
+    private async Task ExecuteCommand(CommandItem cmd)
+    {
+        await OnClose.InvokeAsync();
+        await OnCommand.InvokeAsync(cmd.Id);
+    }
+
+    private async Task HandleOverlayClick()
+    {
+        await OnClose.InvokeAsync();
+    }
+}
