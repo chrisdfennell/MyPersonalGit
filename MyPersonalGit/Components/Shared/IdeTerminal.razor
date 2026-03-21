@@ -51,7 +51,24 @@
             // Build WebSocket URL
             var baseUri = new Uri(Navigation.BaseUri);
             var wsScheme = baseUri.Scheme == "https" ? "wss" : "ws";
-            var sessionId = UserService.SessionId ?? "";
+
+            // Get session from CurrentUserService first, fallback to reading localStorage directly
+            var sessionId = UserService.SessionId;
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                try
+                {
+                    sessionId = await JS.InvokeAsync<string?>("localStorage.getItem", "sessionId");
+                }
+                catch { }
+            }
+
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                Console.WriteLine("Terminal: No session ID available");
+                return;
+            }
+
             var wsUrl = $"{wsScheme}://{baseUri.Host}:{baseUri.Port}/ws/terminal/{RepoName}?session={Uri.EscapeDataString(sessionId)}";
 
             await JS.InvokeVoidAsync("ideTerminal.init", _containerId, wsUrl);
