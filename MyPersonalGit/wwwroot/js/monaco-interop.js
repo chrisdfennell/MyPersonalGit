@@ -864,6 +864,7 @@
     window.ideTerminal = {
         /**
          * Dynamically load xterm.js and the fit addon from CDN.
+         * Temporarily hides AMD define to prevent conflicts with Monaco's loader.
          */
         loadXterm: function () {
             if (window.Terminal) return Promise.resolve();
@@ -875,6 +876,10 @@
                 link.href = 'https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css';
                 document.head.appendChild(link);
 
+                // Temporarily hide AMD define so xterm uses global export instead
+                var savedDefine = window.define;
+                window.define = undefined;
+
                 // Load xterm.js
                 var script = document.createElement('script');
                 script.src = 'https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js';
@@ -883,14 +888,18 @@
                     var fitScript = document.createElement('script');
                     fitScript.src = 'https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js';
                     fitScript.onload = function () {
+                        // Restore AMD define
+                        window.define = savedDefine;
                         resolve();
                     };
                     fitScript.onerror = function () {
+                        window.define = savedDefine;
                         reject(new Error('Failed to load xterm fit addon'));
                     };
                     document.head.appendChild(fitScript);
                 };
                 script.onerror = function () {
+                    window.define = savedDefine;
                     reject(new Error('Failed to load xterm.js'));
                 };
                 document.head.appendChild(script);
