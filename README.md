@@ -71,6 +71,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Repository Labels** — Manage labels with custom colors per repository; labels are automatically copied when creating repos from templates
 - **AGit Flow** — Push-to-review workflow: `git push origin HEAD:refs/for/main` creates a pull request without forking or creating remote branches. Updates existing open PRs on subsequent pushes
 - **Explore** — Browse all accessible repositories with search, sort, and topic filtering
+- **Star from Explore** — Star and unstar repositories directly from the Explore page without opening each repo
 - **Autolink References** — Auto-convert `#123` to issue links, plus configurable custom patterns (e.g., `JIRA-456` → external URLs) per repository
 - **Search** — Full-text search across repositories, issues, PRs, and code
 - **Blame View** — Line-by-line authorship tracking with commit details for every line in a file
@@ -81,8 +82,10 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Issue Dependencies** — Define "blocked by" and "blocks" relationships between issues with circular dependency detection
 - **Issue Pinning & Locking** — Pin important issues to the top of the list and lock conversations to prevent further comments
 - **Comment Editing & Deletion** — Edit or delete your own comments on issues and pull requests with "(edited)" indicator
+- **@Mention Notifications** — @mention users in comments to send them a direct notification
 - **Merge Conflict Resolution** — Resolve merge conflicts directly in the browser with a visual editor showing base/ours/theirs views, quick accept buttons, and conflict marker validation
 - **Squash Commit Message** — Customize the commit message when squash-merging a pull request
+- **Branch Delete After Merge** — Option to automatically delete the source branch after merging a pull request, enabled by default
 - **Discussions** — GitHub Discussions-style threaded conversations per repository with categories (General, Q&A, Announcements, Ideas, Show & Tell, Polls), pin/lock, mark as answer, and upvoting
 - **Code Review Suggestions** — "Suggest changes" mode in PR inline reviews lets reviewers propose code replacements directly in the diff
 - **Image Diff** — Side-by-side image comparison in pull requests with opacity slider for visual diffing of changed images (PNG, JPG, GIF, SVG, WebP)
@@ -91,6 +94,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Diff Syntax Highlighting** — Language-aware syntax coloring in pull request and compare diffs via Prism.js
 - **Reaction Emoji** — React to issues, PRs, discussions, and comments with thumbs up/down, heart, laugh, hooray, confused, rocket, and eyes
 - **Auto-Merge** — Enable auto-merge on pull requests to automatically merge when all required status checks pass and reviews are approved
+- **CI Status on PR List** — Pull request list shows green/red/yellow CI status icons next to each PR title
 - **Cherry-Pick / Revert via UI** — Cherry-pick any commit to another branch or revert a commit, either directly or as a new pull request, from the web interface
 - **Transfer Issues** — Move issues between repositories, preserving title, body, comments, matching labels, and linking the original with a transfer note
 - **Saved Replies** — Save canned responses and quickly insert them when commenting on issues or pull requests
@@ -98,6 +102,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **CODEOWNERS** — Auto-assign PR reviewers based on file paths with optional enforcement requiring CODEOWNERS approval before merge
 - **Repository Templates** — Create new repositories from templates with automatic copying of files, labels, issue templates, and branch protection rules
 - **Draft Issues & Issue Templates** — Create draft issues (work-in-progress) and define reusable issue templates (bug report, feature request) per repository with default labels
+- **PR Template** — Automatically pre-fill pull request descriptions from `.github/PULL_REQUEST_TEMPLATE.md`
 - **Release Editing** — Edit release titles, descriptions, and draft/pre-release flags after creation
 - **Wiki** — Markdown-based wiki pages per repository with revision history
 - **Projects** — Kanban boards with drag-and-drop cards for organizing work
@@ -191,6 +196,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Admin Dashboard** — System settings (including database provider, SSH server, LDAP/AD, footer pages), user management, audit logs, and statistics
 - **Customizable Footer Pages** — Terms of Service, Privacy Policy, Documentation, and Contact pages with Markdown content editable from Admin > Settings
 - **User Profiles** — Contribution heatmap, activity feed, and stats per user
+- **Gravatar Avatars** — User avatars throughout the UI use Gravatar identicons based on username, with automatic fallback
 - **Personal Access Tokens** — Token-based API authentication with configurable scopes and optional route-level restrictions (glob patterns like `/api/packages/**` to limit token access to specific API paths)
 - **Deploy Keys** — Repository-scoped SSH keys for CI/CD and automation, with read-only or read-write access per key
 - **Backup & Restore** — Export and import server data

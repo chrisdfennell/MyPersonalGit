@@ -158,6 +158,16 @@ public class PullRequestService : IPullRequestService
         db.PullRequests.Add(pr);
         await db.SaveChangesAsync();
 
+        // Notify requested reviewers
+        foreach (var reviewer in pr.Reviewers)
+        {
+            await _notificationService.CreateNotificationAsync(
+                reviewer, NotificationType.PullRequestReview,
+                $"Review requested on PR #{pr.Number}",
+                $"{author} requested your review on: {title}",
+                repoName, $"/repo/{repoName}/pulls/{pr.Number}");
+        }
+
         _logger.LogInformation("PR #{Number} created in {RepoName} by {Author}", pr.Number, repoName, author);
 
         await _activityService.RecordActivityAsync(author, "opened_pr", repoName, $"{author} opened PR #{pr.Number}: {title}", $"/repo/{repoName}/pulls/{pr.Number}");

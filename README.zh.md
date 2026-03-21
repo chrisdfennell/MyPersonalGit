@@ -71,6 +71,7 @@
 - **仓库标签** — 管理每个仓库的自定义颜色标签；从模板创建仓库时自动复制标签
 - **AGit 工作流** — 推送审查工作流：`git push origin HEAD:refs/for/main` 无需 Fork 或创建远程分支即可创建 Pull Request。后续推送自动更新已有的开放 PR
 - **探索** — 浏览所有可访问的仓库，支持搜索、排序和主题过滤
+- **Star from Explore** — 直接从探索页面为仓库加星和取消加星，无需打开每个仓库
 - **Autolink References** — 自动将 `#123` 转换为 Issue 链接，并支持按仓库配置自定义模式（例如 `JIRA-456` → 外部 URL）
 - **搜索** — 跨仓库、Issue、PR 和代码的全文搜索
 - **License Detection** — 自动检测 LICENSE 文件并识别常见许可证（MIT、Apache-2.0、GPL、BSD、ISC、MPL、Unlicense），在仓库侧边栏显示徽章
@@ -80,8 +81,10 @@
 - **Issue 依赖** — 定义 Issue 之间的"被阻塞"和"阻塞"关系，支持循环依赖检测
 - **Issue 置顶与锁定** — 将重要 Issue 置顶到列表顶部，锁定对话以防止进一步评论
 - **评论编辑与删除** — 编辑或删除您在 Issue 和 Pull Request 上的评论，显示"(已编辑)"标识
+- **@Mention Notifications** — 在评论中 @提及用户以向他们发送直接通知
 - **合并冲突解决** — 直接在浏览器中使用可视化编辑器解决合并冲突，显示 base/ours/theirs 视图、快速接受按钮和冲突标记验证
 - **Squash Commit Message** — 在压缩合并 Pull Request 时自定义提交消息
+- **Branch Delete After Merge** — 合并 Pull Request 后自动删除源分支的选项，默认启用
 - **讨论** — GitHub Discussions 风格的每仓库分类线程对话（常规、问答、公告、想法、展示、投票），支持置顶/锁定、标记为答案和点赞
 - **代码审查建议** — PR 内联审查中的"建议更改"模式允许审查者直接在差异中提出代码替换
 - **Image Diff** — Pull Request 中的并排图片比较，带有不透明度滑块，用于已更改图片（PNG、JPG、GIF、SVG、WebP）的视觉差异对比
@@ -90,6 +93,7 @@
 - **Diff 语法高亮** — 通过 Prism.js 在 Pull Request 和比较 diff 中实现语言感知的语法着色
 - **表情反应** — 对 Issue、PR、讨论和评论使用表情反应：赞/踩、爱心、笑脸、庆祝、困惑、火箭和关注
 - **Auto-Merge** — 在 Pull Request 上启用自动合并，当所有必需的状态检查通过且审查已批准时自动合并
+- **CI Status on PR List** — Pull Request 列表在每个 PR 标题旁显示绿色/红色/黄色 CI 状态图标
 - **Cherry-Pick / Revert via UI** — 从 Web 界面将任何提交 Cherry-pick 到另一个分支，或直接或作为新的 Pull Request 还原提交
 - **Transfer Issues** — 在仓库之间移动 Issue，保留标题、正文、评论、匹配的标签，并在原始 Issue 上创建带有转移说明的链接
 - **Saved Replies** — 保存预设回复，在评论 Issue 或 Pull Request 时快速插入
@@ -97,6 +101,7 @@
 - **CODEOWNERS** — 根据文件路径自动分配 PR 审查者，可选强制要求 CODEOWNERS 在合并前审批
 - **仓库模板** — 从模板创建新仓库，自动复制文件、标签、Issue 模板和分支保护规则
 - **草稿 Issue 与 Issue 模板** — 创建草稿 Issue（进行中的工作），为每个仓库定义可重用的 Issue 模板（Bug 报告、功能请求），支持默认标签
+- **PR Template** — 从 `.github/PULL_REQUEST_TEMPLATE.md` 自动预填 Pull Request 描述
 - **Release Editing** — 创建后编辑发布的标题、描述和草稿/预发布标志
 - **Wiki** — 基于 Markdown 的每仓库 Wiki 页面，带有修订历史
 - **项目** — 带有拖放卡片的看板，用于组织工作
@@ -178,6 +183,7 @@
 - **管理后台** — 系统设置（包括数据库提供商、SSH 服务器、LDAP/AD、页脚页面）、用户管理、审计日志和统计
 - **自定义页脚页面** — 服务条款、隐私政策、文档和联系页面，支持从管理 > 设置中编辑 Markdown 内容
 - **用户资料** — 每用户的贡献热力图、活动源和统计
+- **Gravatar Avatars** — 整个界面中的用户头像使用基于用户名的 Gravatar 身份图标，支持自动回退
 - **个人访问令牌** — 基于令牌的 API 认证，支持可配置作用域和可选的路由级限制（glob 模式如 `/api/packages/**` 限制令牌访问特定 API 路径）
 - **备份与恢复** — 导出和导入服务器数据
 - **安全扫描** — 由 [OSV.dev](https://osv.dev/) 数据库驱动的真实依赖漏洞扫描。自动从 `.csproj`（NuGet）、`package.json`（npm）、`requirements.txt`（PyPI）、`Cargo.toml`（Rust）、`Gemfile`（Ruby）、`composer.json`（PHP）、`go.mod`（Go）、`pom.xml`（Maven/Java）和 `pubspec.yaml`（Dart/Flutter）提取依赖项，然后对照已知 CVE 进行检查。报告严重性、修复版本和咨询链接。另外还有手动安全公告的草稿/发布/关闭工作流

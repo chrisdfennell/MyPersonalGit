@@ -1005,4 +1005,7 @@
   <data name="Issues_CloseSelected" xml:space="preserve"><value>Ausgewählte schließen</value></data>
   <data name="Issues_ReopenSelected" xml:space="preserve"><value>Ausgewählte wiedereröffnen</value></data>
   <data name="PR_SquashMessagePlaceholder" xml:space="preserve"><value>Benutzerdefinierte Squash-Commit-Nachricht (optional)</value></data>
+
+  <!-- Branch delete -->
+  <data name="PR_DeleteBranchAfterMerge" xml:space="preserve"><value>Quellbranch nach dem Zusammenführen löschen</value></data>
 </root>

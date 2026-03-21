@@ -91,9 +91,7 @@
                     </div>
                     <div class="dropdown">
                         <button class="btn btn-link text-white text-decoration-none p-0 d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <div class="gh-avatar rounded-circle bg-secondary border border-white border-opacity-25 d-flex align-items-center justify-content-center text-white" style="width: 24px; height: 24px;">
-                                <i class="bi bi-person-fill" style="font-size: 0.8rem;"></i>
-                            </div>
+                            <img src="@GetAvatarUrl(UserService.Username, 24)" alt="@UserService.Username" class="rounded-circle border border-white border-opacity-25" style="width: 24px; height: 24px;" />
                             <i class="bi bi-caret-down-fill ms-1 text-white text-opacity-75" style="font-size: 0.6rem;"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
@@ -426,6 +424,15 @@
     {
         currentTheme = currentTheme == "dark" ? "light" : "dark";
         await JS.InvokeVoidAsync("themeHelper.set", currentTheme);
+    }
+
+    private static string GetAvatarUrl(string username, int size = 32)
+    {
+        // Gravatar hash from username (or email if available)
+        var input = (username ?? "anonymous").Trim().ToLowerInvariant();
+        var hash = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(input));
+        var hex = Convert.ToHexString(hash).ToLowerInvariant();
+        return $"https://www.gravatar.com/avatar/{hex}?s={size}&d=identicon";
     }
 
     [JSInvokable]

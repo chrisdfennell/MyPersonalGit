@@ -1005,4 +1005,7 @@
   <data name="Issues_CloseSelected" xml:space="preserve"><value>선택 항목 닫기</value></data>
   <data name="Issues_ReopenSelected" xml:space="preserve"><value>선택 항목 다시 열기</value></data>
   <data name="PR_SquashMessagePlaceholder" xml:space="preserve"><value>사용자 정의 스쿼시 커밋 메시지 (선택 사항)</value></data>
+
+  <!-- Branch delete -->
+  <data name="PR_DeleteBranchAfterMerge" xml:space="preserve"><value>병합 후 소스 브랜치 삭제</value></data>
 </root>

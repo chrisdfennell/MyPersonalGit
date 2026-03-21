@@ -71,6 +71,7 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Repository Labels** — Verwalten Sie Labels mit benutzerdefinierten Farben pro Repository; Labels werden automatisch kopiert, wenn Repos aus Vorlagen erstellt werden
 - **AGit Flow** — Push-to-Review-Workflow: `git push origin HEAD:refs/for/main` erstellt einen Pull Request, ohne zu forken oder Remote-Branches zu erstellen. Aktualisiert bestehende offene PRs bei nachfolgenden Pushes
 - **Entdecken** — Durchsuchen Sie alle zugänglichen Repositories mit Suche, Sortierung und Topic-Filterung
+- **Star from Explore** — Repositories direkt von der Entdecken-Seite mit Stern markieren und entmarkieren, ohne jedes Repo öffnen zu müssen
 - **Autolink References** — Automatische Umwandlung von `#123` in Issue-Links sowie konfigurierbare benutzerdefinierte Muster (z. B. `JIRA-456` → externe URLs) pro Repository
 - **Suche** — Volltextsuche über Repositories, Issues, PRs und Code
 - **License Detection** — Erkennt automatisch LICENSE-Dateien und identifiziert gängige Lizenzen (MIT, Apache-2.0, GPL, BSD, ISC, MPL, Unlicense) mit einem Badge in der Repository-Seitenleiste
@@ -80,8 +81,10 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Issue-Abhängigkeiten** — Definieren Sie "blockiert durch"- und "blockiert"-Beziehungen zwischen Issues mit Erkennung zirkulärer Abhängigkeiten
 - **Issue-Pinning & -Sperrung** — Pinnen Sie wichtige Issues an den Anfang der Liste und sperren Sie Konversationen, um weitere Kommentare zu verhindern
 - **Kommentare bearbeiten & löschen** — Bearbeiten oder löschen Sie Ihre eigenen Kommentare bei Issues und Pull Requests mit "(bearbeitet)"-Anzeige
+- **@Mention Notifications** — @erwähnen Sie Benutzer in Kommentaren, um ihnen eine direkte Benachrichtigung zu senden
 - **Merge-Konfliktlösung** — Lösen Sie Merge-Konflikte direkt im Browser mit einem visuellen Editor, der Base/Ours/Theirs-Ansichten, Schnellauswahl-Buttons und Konfliktmarker-Validierung zeigt
 - **Squash Commit Message** — Passen Sie die Commit-Nachricht beim Squash-Merge eines Pull Requests an
+- **Branch Delete After Merge** — Option zum automatischen Löschen des Quellbranches nach dem Zusammenführen eines Pull Requests, standardmäßig aktiviert
 - **Diskussionen** — GitHub-Discussions-ähnliche Thread-Konversationen pro Repository mit Kategorien (Allgemein, Fragen & Antworten, Ankündigungen, Ideen, Zeig & Erzähl, Umfragen), Pinnen/Sperren, als Antwort markieren und Upvoting
 - **Code-Review-Vorschläge** — Der "Änderungen vorschlagen"-Modus in PR-Inline-Reviews ermöglicht es Reviewern, Code-Ersetzungen direkt im Diff vorzuschlagen
 - **Image Diff** — Seite-an-Seite-Bildvergleich in Pull Requests mit Opazitätsregler für visuelles Diffing geänderter Bilder (PNG, JPG, GIF, SVG, WebP)
@@ -90,6 +93,7 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Diff-Syntaxhervorhebung** — Sprachbewusste Syntaxfärbung in Pull-Request- und Vergleichs-Diffs über Prism.js
 - **Reaktions-Emoji** — Reagieren Sie auf Issues, PRs, Diskussionen und Kommentare mit Daumen hoch/runter, Herz, Lachen, Hurra, Verwirrt, Rakete und Augen
 - **Auto-Merge** — Aktivieren Sie Auto-Merge bei Pull Requests, um automatisch zusammenzuführen, wenn alle erforderlichen Status-Checks bestanden und Reviews genehmigt sind
+- **CI Status on PR List** — Die Pull-Request-Liste zeigt grüne/rote/gelbe CI-Statusicons neben jedem PR-Titel
 - **Cherry-Pick / Revert via UI** — Wählen Sie beliebige Commits für einen anderen Branch aus oder machen Sie einen Commit rückgängig, entweder direkt oder als neuer Pull Request, über die Web-Oberfläche
 - **Transfer Issues** — Verschieben Sie Issues zwischen Repositories unter Beibehaltung von Titel, Text, Kommentaren, passenden Labels und Verlinkung des Originals mit einem Transferhinweis
 - **Saved Replies** — Speichern Sie vorgefertigte Antworten und fügen Sie diese schnell beim Kommentieren von Issues oder Pull Requests ein
@@ -97,6 +101,7 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **CODEOWNERS** — Automatische Zuweisung von PR-Reviewern basierend auf Dateipfaden mit optionaler Durchsetzung, die CODEOWNERS-Genehmigung vor dem Merge erfordert
 - **Repository-Vorlagen** — Erstellen Sie neue Repositories aus Vorlagen mit automatischem Kopieren von Dateien, Labels, Issue-Vorlagen und Branch-Protection-Regeln
 - **Entwurfs-Issues & Issue-Vorlagen** — Erstellen Sie Entwurfs-Issues (Work-in-Progress) und definieren Sie wiederverwendbare Issue-Vorlagen (Bug-Report, Feature-Request) pro Repository mit Standard-Labels
+- **PR Template** — Pull-Request-Beschreibungen automatisch aus `.github/PULL_REQUEST_TEMPLATE.md` vorausfüllen
 - **Release Editing** — Bearbeiten Sie Release-Titel, Beschreibungen und Entwurf-/Vorabversion-Flags nach der Erstellung
 - **Wiki** — Markdown-basierte Wiki-Seiten pro Repository mit Revisionshistorie
 - **Projekte** — Kanban-Boards mit Drag-and-Drop-Karten zur Arbeitsorganisation
@@ -178,6 +183,7 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Admin-Dashboard** — Systemeinstellungen (einschließlich Datenbankanbieter, SSH-Server, LDAP/AD, Footer-Seiten), Benutzerverwaltung, Audit-Logs und Statistiken
 - **Anpassbare Footer-Seiten** — Nutzungsbedingungen, Datenschutzrichtlinie, Dokumentation und Kontaktseiten mit Markdown-Inhalten, bearbeitbar unter Admin > Einstellungen
 - **Benutzerprofile** — Beitrags-Heatmap, Aktivitäts-Feed und Statistiken pro Benutzer
+- **Gravatar Avatars** — Benutzer-Avatare in der gesamten Oberfläche verwenden Gravatar-Identicons basierend auf dem Benutzernamen, mit automatischem Fallback
 - **Persönliche Zugriffstoken** — Token-basierte API-Authentifizierung mit konfigurierbaren Geltungsbereichen und optionalen routenspezifischen Einschränkungen (Glob-Patterns wie `/api/packages/**` zur Beschränkung des Token-Zugriffs auf bestimmte API-Pfade)
 - **Backup & Wiederherstellung** — Exportieren und importieren Sie Serverdaten
 - **Sicherheitsscanning** — Echte Schwachstellenanalyse von Abhängigkeiten, basierend auf der [OSV.dev](https://osv.dev/)-Datenbank. Extrahiert automatisch Abhängigkeiten aus `.csproj` (NuGet), `package.json` (npm), `requirements.txt` (PyPI), `Cargo.toml` (Rust), `Gemfile` (Ruby), `composer.json` (PHP), `go.mod` (Go), `pom.xml` (Maven/Java) und `pubspec.yaml` (Dart/Flutter) und prüft jede gegen bekannte CVEs. Berichtet Schweregrad, behobene Versionen und Advisory-Links. Plus manuelle Sicherheitshinweise mit Entwurf/Veröffentlichung/Schließen-Workflow

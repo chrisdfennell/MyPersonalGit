@@ -1004,4 +1004,7 @@
 
   <!-- Squash merge -->
   <data name="PR_SquashMessagePlaceholder" xml:space="preserve"><value>Custom squash commit message (optional)</value></data>
+
+  <!-- Branch delete after merge -->
+  <data name="PR_DeleteBranchAfterMerge" xml:space="preserve"><value>Delete source branch after merge</value></data>
 </root>

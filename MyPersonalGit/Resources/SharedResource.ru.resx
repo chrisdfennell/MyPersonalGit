@@ -1005,4 +1005,7 @@
   <data name="Issues_CloseSelected" xml:space="preserve"><value>Закрыть выбранные</value></data>
   <data name="Issues_ReopenSelected" xml:space="preserve"><value>Переоткрыть выбранные</value></data>
   <data name="PR_SquashMessagePlaceholder" xml:space="preserve"><value>Пользовательское сообщение squash-коммита (необязательно)</value></data>
+
+  <!-- Branch delete -->
+  <data name="PR_DeleteBranchAfterMerge" xml:space="preserve"><value>Удалить исходную ветку после слияния</value></data>
 </root>

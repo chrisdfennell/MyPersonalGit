@@ -1005,4 +1005,7 @@
   <data name="Issues_CloseSelected" xml:space="preserve"><value>Seçilenleri kapat</value></data>
   <data name="Issues_ReopenSelected" xml:space="preserve"><value>Seçilenleri yeniden aç</value></data>
   <data name="PR_SquashMessagePlaceholder" xml:space="preserve"><value>Özel squash commit mesajı (isteğe bağlı)</value></data>
+
+  <!-- Branch delete -->
+  <data name="PR_DeleteBranchAfterMerge" xml:space="preserve"><value>Birleştirmeden sonra kaynak dalı sil</value></data>
 </root>
