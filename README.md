@@ -73,6 +73,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Explore** — Browse all accessible repositories with search, sort, and topic filtering
 - **Autolink References** — Auto-convert `#123` to issue links, plus configurable custom patterns (e.g., `JIRA-456` → external URLs) per repository
 - **Search** — Full-text search across repositories, issues, PRs, and code
+- **License Detection** — Automatically detects LICENSE files and identifies common licenses (MIT, Apache-2.0, GPL, BSD, ISC, MPL, Unlicense) with a badge in the repository sidebar
 
 ### Collaboration
 - **Issues & Pull Requests** — Create, comment on, close/reopen issues and PRs with labels, multiple assignees, due dates, and reviews. Merge PRs with merge commit, squash, or rebase strategies. Web-based merge conflict resolution with side-by-side diff view
@@ -93,6 +94,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **CODEOWNERS** — Auto-assign PR reviewers based on file paths with optional enforcement requiring CODEOWNERS approval before merge
 - **Repository Templates** — Create new repositories from templates with automatic copying of files, labels, issue templates, and branch protection rules
 - **Draft Issues & Issue Templates** — Create draft issues (work-in-progress) and define reusable issue templates (bug report, feature request) per repository with default labels
+- **Release Editing** — Edit release titles, descriptions, and draft/pre-release flags after creation
 - **Wiki** — Markdown-based wiki pages per repository with revision history
 - **Projects** — Kanban boards with drag-and-drop cards for organizing work
 - **Snippets** — Share code snippets (like GitHub Gists) with syntax highlighting and multiple files
@@ -101,6 +103,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Milestones** — Track issue progress toward milestones with progress bars and due dates
 - **Commit Comments** — Comment on individual commits with optional file/line references
 - **Repository Topics** — Tag repositories with topics for discovery and filtering on the Explore page
+- **Activity Pulse** — Weekly summary page per repository showing PRs merged, issues opened/closed, commits, top contributors, and active branches over the last 7 days
 
 ### CI/CD & DevOps
 - **CI/CD Runner** — Define workflows in `.github/workflows/*.yml` and run them in Docker containers. Auto-triggers on push and pull request events
@@ -190,11 +193,16 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Dependabot-Style Auto-Update PRs** — Automatically check for outdated dependencies and create pull requests to update them. Supports NuGet, npm, and PyPI ecosystems. Configurable schedule (daily/weekly/monthly) and open PR limit per repository
 - **Repository Insights (Traffic)** — Track clone/fetch counts, page views, unique visitors, top referrers, and popular content paths. Traffic charts in the Insights tab with 14-day summaries. Daily aggregation with 90-day retention. IP addresses are hashed for privacy
 - **Dark Mode** — Full dark/light mode support with a toggle in the header
-- **Multi-Language / i18n** — Full localization across all 28 pages with 836 resource keys. Ships with 11 languages: English, Spanish, French, German, Japanese, Korean, Chinese (Simplified), Portuguese, Russian, Italian, and Turkish. Language picker in the header. Add more by creating `SharedResource.{locale}.resx` files
+- **Multi-Language / i18n** — Full localization across all 29 pages with 920 resource keys. Ships with 11 languages: English, Spanish, French, German, Japanese, Korean, Chinese (Simplified), Portuguese, Russian, Italian, and Turkish. Language picker in the header. Add more by creating `SharedResource.{locale}.resx` files
 - **Swagger / OpenAPI** — Interactive API documentation at `/swagger` with all REST endpoints discoverable and testable
+- **Open Graph Meta Tags** — Repository, issue, and PR pages include og:title and og:description for rich link previews in Slack, Discord, and social media
 - **Mermaid Diagrams** — Mermaid diagram rendering in Markdown files (flowcharts, sequence diagrams, Gantt charts, etc.)
 - **Math Rendering** — LaTeX/KaTeX math expressions in Markdown (`$inline$` and `$$display$$` syntax)
 - **CSV/TSV Viewer** — CSV and TSV files render as formatted, sortable tables instead of raw text
+- **Keyboard Shortcuts** — Press `?` for a shortcuts help modal. `/` focuses search, `g i` goes to Issues, `g p` to Pull Requests, `g h` to Home, `g n` to Notifications
+- **Health Check Endpoint** — `/health` returns JSON with database connectivity status for Docker/Kubernetes monitoring
+- **Line Linking** — Click line numbers in file viewer to generate shareable `#L42` URLs with line highlighting on load
+- **File Download** — Download individual files from the file viewer with proper Content-Disposition headers
 - **Jupyter Notebook Rendering** — `.ipynb` files render as formatted notebooks with code cells, Markdown, outputs, and inline images
 - **Repository Transfer** — Transfer repository ownership to another user or organization from repository Settings
 - **Default Branch Configuration** — Change the default branch per repository from the Settings tab

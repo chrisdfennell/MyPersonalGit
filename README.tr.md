@@ -73,6 +73,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Keşfet** — Arama, sıralama ve konu filtreleme ile erişilebilir tüm depoları görüntüleyin
 - **Autolink References** — `#123` ifadesini otomatik olarak sorun bağlantılarına dönüştürün, ayrıca depo başına yapılandırılabilir özel kalıplar (örn. `JIRA-456` → harici URL'ler) desteği
 - **Arama** — Depolar, sorunlar, PR'lar ve kod genelinde tam metin arama
+- **License Detection** — LICENSE dosyalarını otomatik olarak algılar ve yaygın lisansları (MIT, Apache-2.0, GPL, BSD, ISC, MPL, Unlicense) depo kenar çubuğundaki bir rozetle tanımlar
 
 ### İş Birliği
 - **Sorunlar ve Pull Request'ler** — Etiketler, çoklu atananlar, bitiş tarihleri ve incelemelerle sorun ve PR oluşturun, yorum yapın, kapatın/yeniden açın. PR'ları merge commit, squash veya rebase stratejileriyle birleştirin. Yan yana fark görünümü ile web tabanlı birleştirme çakışması çözümü
@@ -93,6 +94,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **CODEOWNERS** — Birleştirme öncesi CODEOWNERS onayı gerektirme seçeneğiyle dosya yollarına göre PR incelemecilerini otomatik atama
 - **Depo Şablonları** — Dosyaların, etiketlerin, sorun şablonlarının ve dal koruma kurallarının otomatik kopyalanması ile şablonlardan yeni depolar oluşturun
 - **Taslak Sorunlar ve Sorun Şablonları** — Taslak sorunlar (devam eden çalışma) oluşturun ve varsayılan etiketlerle depo başına yeniden kullanılabilir sorun şablonları (hata raporu, özellik isteği) tanımlayın
+- **Release Editing** — Oluşturulduktan sonra sürüm başlıklarını, açıklamalarını ve taslak/ön sürüm bayraklarını düzenleyin
 - **Wiki** — Revizyon geçmişi ile depo başına Markdown tabanlı wiki sayfaları
 - **Projeler** — İş organizasyonu için sürükle-bırak kartlarla Kanban panoları
 - **Snippet'ler** — Söz dizimi vurgulama ve çoklu dosyalarla kod parçacıkları paylaşın (GitHub Gists gibi)
@@ -101,6 +103,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Kilometre Taşları** — İlerleme çubukları ve bitiş tarihleri ile sorun ilerlemesini kilometre taşlarına göre izleyin
 - **Commit Yorumları** — İsteğe bağlı dosya/satır referansları ile bireysel commitlere yorum yapın
 - **Depo Konuları** — Keşfet sayfasında bulma ve filtreleme için depoları konularla etiketleyin
+- **Activity Pulse** — Depo başına haftalık özet sayfası; son 7 günde birleştirilen PR'lar, açılan/kapatılan sorunlar, commitler, en çok katkıda bulunanlar ve aktif dalları gösterir
 
 ### CI/CD ve DevOps
 - **CI/CD Runner** — `.github/workflows/*.yml` dosyalarında iş akışlarını tanımlayın ve Docker container'larında çalıştırın. Push ve pull request olaylarında otomatik tetikleme
@@ -179,11 +182,16 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Dependabot-Style Auto-Update PRs** — Eski bağımlılıkları otomatik olarak kontrol eder ve güncellemek için pull request'ler oluşturur. NuGet, npm ve PyPI ekosistemlerini destekler. Yapılandırılabilir zamanlama (günlük/haftalık/aylık) ve depo başına açık PR limiti
 - **Repository Insights (Traffic)** — Klonlama/çekme sayılarını, sayfa görüntülemelerini, benzersiz ziyaretçileri, en iyi yönlendiricileri ve popüler içerik yollarını takip edin. Insights sekmesinde 14 günlük özetlerle trafik grafikleri. 90 gün saklama süresi ile günlük toplama. Gizlilik için IP adresleri karma yapılır
 - **Karanlık Mod** — Başlıkta bir geçiş düğmesiyle tam karanlık/aydınlık mod desteği
-- **Çoklu Dil / i18n** — 836 kaynak anahtarı ile tüm 28 sayfada tam yerelleştirme. 11 dil ile birlikte gelir: İngilizce, İspanyolca, Fransızca, Almanca, Japonca, Korece, Çince (Basitleştirilmiş), Portekizce, Rusça, İtalyanca ve Türkçe. `SharedResource.{locale}.resx` dosyaları oluşturarak daha fazla dil ekleyin. Başlıktaki dil seçici ile geçiş yapın
+- **Çoklu Dil / i18n** — 920 kaynak anahtarı ile tüm 29 sayfada tam yerelleştirme. 11 dil ile birlikte gelir: İngilizce, İspanyolca, Fransızca, Almanca, Japonca, Korece, Çince (Basitleştirilmiş), Portekizce, Rusça, İtalyanca ve Türkçe. `SharedResource.{locale}.resx` dosyaları oluşturarak daha fazla dil ekleyin. Başlıktaki dil seçici ile geçiş yapın
 - **Swagger / OpenAPI** — `/swagger` adresinde etkileşimli API belgeleri; tüm REST uç noktaları keşfedilebilir ve test edilebilir
+- **Open Graph Meta Tags** — Depo, sorun ve PR sayfaları, Slack, Discord ve sosyal medyada zengin bağlantı önizlemeleri için og:title ve og:description içerir
 - **Mermaid Diyagramları** — Markdown dosyalarında Mermaid diyagram oluşturma (akış şemaları, sıralama diyagramları, Gantt grafikleri vb.)
 - **Matematik Oluşturma** — Markdown'da LaTeX/KaTeX matematik ifadeleri (`$inline$` ve `$$display$$` söz dizimi)
 - **CSV/TSV Görüntüleyici** — CSV ve TSV dosyaları düz metin yerine biçimlendirilmiş, sıralanabilir tablolar olarak görüntülenir
+- **Keyboard Shortcuts** — Kısayol yardım modalı için `?` tuşuna basın. `/` aramaya odaklanır, `g i` Sorunlara, `g p` Pull Request'lere, `g h` Ana Sayfaya, `g n` Bildirimlere gider
+- **Health Check Endpoint** — `/health` Docker/Kubernetes izlemesi için veritabanı bağlantı durumunu içeren JSON döndürür
+- **Line Linking** — Dosya görüntüleyicide satır numaralarına tıklayarak yüklemede satır vurgulama ile paylaşılabilir `#L42` URL'leri oluşturun
+- **File Download** — Uygun Content-Disposition başlıkları ile dosya görüntüleyiciden tek tek dosya indirin
 - **Jupyter Notebook Görüntüleme** — `.ipynb` dosyaları kod hücreleri, Markdown, çıktılar ve satır içi görsellerle biçimlendirilmiş not defterleri olarak görüntülenir
 - **Depo Transferi** — Depo ayarlarından depo sahipliğini başka bir kullanıcıya veya kuruluşa aktarma
 - **Varsayılan Dal Yapılandırması** — Ayarlar sekmesinden depo başına varsayılan dalı değiştirme

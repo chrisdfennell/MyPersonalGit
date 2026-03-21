@@ -949,4 +949,52 @@
   <data name="Issues_ContributingAlert" xml:space="preserve"><value>イシューを送信する前に、コントリビューションガイドラインをお読みください。</value></data>
   <data name="Issues_ViewContributing" xml:space="preserve"><value>コントリビューションガイドラインを見る</value></data>
   <data name="Repo_Download" xml:space="preserve"><value>ダウンロード</value></data>
+
+  <!-- Pulse page -->
+  <data name="Pulse_Title" xml:space="preserve"><value>パルス</value></data>
+  <data name="Pulse_Last7Days" xml:space="preserve"><value>パルス — 過去7日間</value></data>
+  <data name="Pulse_PRsMerged" xml:space="preserve"><value>マージされたPR</value></data>
+  <data name="Pulse_IssuesOpened" xml:space="preserve"><value>作成されたイシュー</value></data>
+  <data name="Pulse_IssuesClosed" xml:space="preserve"><value>クローズされたイシュー</value></data>
+  <data name="Pulse_Commits" xml:space="preserve"><value>コミット</value></data>
+  <data name="Pulse_TopContributors" xml:space="preserve"><value>今週のトップコントリビューター</value></data>
+  <data name="Pulse_Contributor" xml:space="preserve"><value>コントリビューター</value></data>
+  <data name="Pulse_ActiveBranches" xml:space="preserve"><value>アクティブなブランチ</value></data>
+  <data name="Pulse_Branch" xml:space="preserve"><value>ブランチ</value></data>
+  <data name="Pulse_LastCommit" xml:space="preserve"><value>最終コミット</value></data>
+  <data name="Pulse_Ahead" xml:space="preserve"><value>先行</value></data>
+  <data name="Pulse_RecentActivity" xml:space="preserve"><value>最近のアクティビティ</value></data>
+  <data name="Pulse_NoActivity" xml:space="preserve"><value>過去7日間のアクティビティはありません。</value></data>
+
+  <!-- Keyboard shortcuts -->
+  <data name="Shortcuts_Title" xml:space="preserve"><value>キーボードショートカット</value></data>
+  <data name="Shortcuts_FocusSearch" xml:space="preserve"><value>検索にフォーカス</value></data>
+  <data name="Shortcuts_ShowHelp" xml:space="preserve"><value>このヘルプを表示</value></data>
+  <data name="Shortcuts_GoHome" xml:space="preserve"><value>ホームへ移動</value></data>
+  <data name="Shortcuts_GoIssues" xml:space="preserve"><value>イシューへ移動</value></data>
+  <data name="Shortcuts_GoPRs" xml:space="preserve"><value>プルリクエストへ移動</value></data>
+  <data name="Shortcuts_GoActions" xml:space="preserve"><value>アクションへ移動</value></data>
+  <data name="Shortcuts_GoSettings" xml:space="preserve"><value>設定へ移動</value></data>
+  <data name="Shortcuts_GoNotifications" xml:space="preserve"><value>通知へ移動</value></data>
+  <data name="Shortcuts_CloseModal" xml:space="preserve"><value>モーダルを閉じる / 入力を解除</value></data>
+
+  <!-- Dependabot settings -->
+  <data name="Depbot_Title" xml:space="preserve"><value>Dependabot — 自動依存関係更新</value></data>
+  <data name="Depbot_Description" xml:space="preserve"><value>古い依存関係を自動的にチェックし、更新用のプルリクエストを作成します。</value></data>
+  <data name="Depbot_Ecosystem" xml:space="preserve"><value>エコシステム</value></data>
+  <data name="Depbot_Schedule" xml:space="preserve"><value>スケジュール</value></data>
+  <data name="Depbot_Enabled" xml:space="preserve"><value>有効</value></data>
+  <data name="Depbot_LastRun" xml:space="preserve"><value>最終実行</value></data>
+  <data name="Depbot_Active" xml:space="preserve"><value>アクティブ</value></data>
+  <data name="Depbot_Disabled" xml:space="preserve"><value>無効</value></data>
+  <data name="Depbot_Never" xml:space="preserve"><value>未実行</value></data>
+  <data name="Depbot_Daily" xml:space="preserve"><value>毎日</value></data>
+  <data name="Depbot_Weekly" xml:space="preserve"><value>毎週</value></data>
+  <data name="Depbot_Monthly" xml:space="preserve"><value>毎月</value></data>
+  <data name="Depbot_Enable" xml:space="preserve"><value>有効化</value></data>
+
+  <!-- Release editing -->
+  <data name="Release_NotesPlaceholder" xml:space="preserve"><value>リリースノート（Markdown）</value></data>
+  <data name="Release_Draft" xml:space="preserve"><value>ドラフト</value></data>
+  <data name="Release_PreRelease" xml:space="preserve"><value>プレリリース</value></data>
 </root>

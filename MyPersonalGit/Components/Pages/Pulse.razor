@@ -25,7 +25,7 @@
                 <ol class="breadcrumb mb-0 h4">
                     <li class="breadcrumb-item"><a href="/" class="text-decoration-none">@L["Nav_Repositories"]</a></li>
                     <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
-                    <li class="breadcrumb-item active fw-bold" aria-current="page">Pulse</li>
+                    <li class="breadcrumb-item active fw-bold" aria-current="page">@L["Pulse_Title"]</li>
                 </ol>
             </nav>
         </div>
@@ -34,7 +34,7 @@
 
 <div class="container-xl px-3">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-activity me-2"></i>Pulse — last 7 days</h4>
+        <h4 class="mb-0"><i class="bi bi-activity me-2"></i>@L["Pulse_Last7Days"]</h4>
         <span class="text-muted small">@startDate.ToString("MMM dd") – @endDate.ToString("MMM dd, yyyy")</span>
     </div>
 
@@ -43,7 +43,7 @@
             <div class="card text-center border shadow-sm">
                 <div class="card-body py-3">
                     <div class="h2 mb-0 text-primary">@prsMerged</div>
-                    <small class="text-muted">PRs merged</small>
+                    <small class="text-muted">@L["Pulse_PRsMerged"]</small>
                 </div>
             </div>
         </div>
@@ -51,7 +51,7 @@
             <div class="card text-center border shadow-sm">
                 <div class="card-body py-3">
                     <div class="h2 mb-0 text-success">@issuesOpened</div>
-                    <small class="text-muted">Issues opened</small>
+                    <small class="text-muted">@L["Pulse_IssuesOpened"]</small>
                 </div>
             </div>
         </div>
@@ -59,7 +59,7 @@
             <div class="card text-center border shadow-sm">
                 <div class="card-body py-3">
                     <div class="h2 mb-0 text-danger">@issuesClosed</div>
-                    <small class="text-muted">Issues closed</small>
+                    <small class="text-muted">@L["Pulse_IssuesClosed"]</small>
                 </div>
             </div>
         </div>
@@ -67,7 +67,7 @@
             <div class="card text-center border shadow-sm">
                 <div class="card-body py-3">
                     <div class="h2 mb-0 text-info">@commitCount</div>
-                    <small class="text-muted">Commits</small>
+                    <small class="text-muted">@L["Pulse_Commits"]</small>
                 </div>
             </div>
         </div>
@@ -77,11 +77,11 @@
     {
         <div class="card border shadow-sm mb-4">
             <div class="card-header bg-light-subtle py-2 small fw-bold">
-                <i class="bi bi-people me-1"></i> Top contributors this week
+                <i class="bi bi-people me-1"></i> @L["Pulse_TopContributors"]
             </div>
             <div class="card-body p-0">
                 <table class="table table-sm mb-0">
-                    <thead><tr><th>Contributor</th><th class="text-end">Commits</th></tr></thead>
+                    <thead><tr><th>@L["Pulse_Contributor"]</th><th class="text-end">@L["Pulse_Commits"]</th></tr></thead>
                     <tbody>
                         @foreach (var (name, count) in topContributors)
                         {
@@ -97,11 +97,11 @@
     {
         <div class="card border shadow-sm mb-4">
             <div class="card-header bg-light-subtle py-2 small fw-bold">
-                <i class="bi bi-diagram-2 me-1"></i> Active branches
+                <i class="bi bi-diagram-2 me-1"></i> @L["Pulse_ActiveBranches"]
             </div>
             <div class="card-body p-0">
                 <table class="table table-sm mb-0">
-                    <thead><tr><th>Branch</th><th>Last commit</th><th class="text-end">Ahead</th></tr></thead>
+                    <thead><tr><th>@L["Pulse_Branch"]</th><th>@L["Pulse_LastCommit"]</th><th class="text-end">@L["Pulse_Ahead"]</th></tr></thead>
                     <tbody>
                         @foreach (var branch in activeBranches)
                         {
@@ -121,7 +121,7 @@
     {
         <div class="card border shadow-sm mb-4">
             <div class="card-header bg-light-subtle py-2 small fw-bold">
-                <i class="bi bi-clock-history me-1"></i> Recent activity
+                <i class="bi bi-clock-history me-1"></i> @L["Pulse_RecentActivity"]
             </div>
             <div class="list-group list-group-flush">
                 @foreach (var activity in recentActivity)
@@ -143,7 +143,7 @@
     {
         <div class="text-center py-5 text-muted">
             <i class="bi bi-activity display-4 d-block mb-3"></i>
-            <p>No activity in the last 7 days.</p>
+            <p>@L["Pulse_NoActivity"]</p>
         </div>
     }
 </div>

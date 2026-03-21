@@ -120,21 +120,21 @@
             <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation="true">
                 <div class="modal-content">
                     <div class="modal-header py-2">
-                        <h5 class="modal-title"><i class="bi bi-keyboard me-2"></i>Keyboard Shortcuts</h5>
+                        <h5 class="modal-title"><i class="bi bi-keyboard me-2"></i>@L["Shortcuts_Title"]</h5>
                         <button class="btn-close" @onclick="() => showShortcutsHelp = false"></button>
                     </div>
                     <div class="modal-body">
                         <table class="table table-sm mb-0">
                             <tbody>
-                                <tr><td><kbd>/</kbd></td><td>Focus search</td></tr>
-                                <tr><td><kbd>?</kbd></td><td>Show this help</td></tr>
-                                <tr><td><kbd>g</kbd> <kbd>h</kbd></td><td>Go to Home</td></tr>
-                                <tr><td><kbd>g</kbd> <kbd>i</kbd></td><td>Go to Issues</td></tr>
-                                <tr><td><kbd>g</kbd> <kbd>p</kbd></td><td>Go to Pull Requests</td></tr>
-                                <tr><td><kbd>g</kbd> <kbd>a</kbd></td><td>Go to Actions</td></tr>
-                                <tr><td><kbd>g</kbd> <kbd>s</kbd></td><td>Go to Settings</td></tr>
-                                <tr><td><kbd>g</kbd> <kbd>n</kbd></td><td>Go to Notifications</td></tr>
-                                <tr><td><kbd>Esc</kbd></td><td>Close modal / blur input</td></tr>
+                                <tr><td><kbd>/</kbd></td><td>@L["Shortcuts_FocusSearch"]</td></tr>
+                                <tr><td><kbd>?</kbd></td><td>@L["Shortcuts_ShowHelp"]</td></tr>
+                                <tr><td><kbd>g</kbd> <kbd>h</kbd></td><td>@L["Shortcuts_GoHome"]</td></tr>
+                                <tr><td><kbd>g</kbd> <kbd>i</kbd></td><td>@L["Shortcuts_GoIssues"]</td></tr>
+                                <tr><td><kbd>g</kbd> <kbd>p</kbd></td><td>@L["Shortcuts_GoPRs"]</td></tr>
+                                <tr><td><kbd>g</kbd> <kbd>a</kbd></td><td>@L["Shortcuts_GoActions"]</td></tr>
+                                <tr><td><kbd>g</kbd> <kbd>s</kbd></td><td>@L["Shortcuts_GoSettings"]</td></tr>
+                                <tr><td><kbd>g</kbd> <kbd>n</kbd></td><td>@L["Shortcuts_GoNotifications"]</td></tr>
+                                <tr><td><kbd>Esc</kbd></td><td>@L["Shortcuts_CloseModal"]</td></tr>
                             </tbody>
                         </table>
                     </div>
