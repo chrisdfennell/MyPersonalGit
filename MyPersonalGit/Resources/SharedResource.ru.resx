@@ -949,4 +949,52 @@
   <data name="Issues_ContributingAlert" xml:space="preserve"><value>Пожалуйста, прочитайте руководство по внесению вклада перед созданием issue.</value></data>
   <data name="Issues_ViewContributing" xml:space="preserve"><value>Просмотреть руководство</value></data>
   <data name="Repo_Download" xml:space="preserve"><value>Скачать</value></data>
+
+  <!-- Pulse page -->
+  <data name="Pulse_Title" xml:space="preserve"><value>Пульс</value></data>
+  <data name="Pulse_Last7Days" xml:space="preserve"><value>Пульс — последние 7 дней</value></data>
+  <data name="Pulse_PRsMerged" xml:space="preserve"><value>Слитые PR</value></data>
+  <data name="Pulse_IssuesOpened" xml:space="preserve"><value>Открытые issues</value></data>
+  <data name="Pulse_IssuesClosed" xml:space="preserve"><value>Закрытые issues</value></data>
+  <data name="Pulse_Commits" xml:space="preserve"><value>Коммиты</value></data>
+  <data name="Pulse_TopContributors" xml:space="preserve"><value>Лучшие участники на этой неделе</value></data>
+  <data name="Pulse_Contributor" xml:space="preserve"><value>Участник</value></data>
+  <data name="Pulse_ActiveBranches" xml:space="preserve"><value>Активные ветки</value></data>
+  <data name="Pulse_Branch" xml:space="preserve"><value>Ветка</value></data>
+  <data name="Pulse_LastCommit" xml:space="preserve"><value>Последний коммит</value></data>
+  <data name="Pulse_Ahead" xml:space="preserve"><value>Впереди</value></data>
+  <data name="Pulse_RecentActivity" xml:space="preserve"><value>Последняя активность</value></data>
+  <data name="Pulse_NoActivity" xml:space="preserve"><value>Нет активности за последние 7 дней.</value></data>
+
+  <!-- Keyboard shortcuts -->
+  <data name="Shortcuts_Title" xml:space="preserve"><value>Горячие клавиши</value></data>
+  <data name="Shortcuts_FocusSearch" xml:space="preserve"><value>Фокус на поиске</value></data>
+  <data name="Shortcuts_ShowHelp" xml:space="preserve"><value>Показать справку</value></data>
+  <data name="Shortcuts_GoHome" xml:space="preserve"><value>Перейти на главную</value></data>
+  <data name="Shortcuts_GoIssues" xml:space="preserve"><value>Перейти к issues</value></data>
+  <data name="Shortcuts_GoPRs" xml:space="preserve"><value>Перейти к pull requests</value></data>
+  <data name="Shortcuts_GoActions" xml:space="preserve"><value>Перейти к actions</value></data>
+  <data name="Shortcuts_GoSettings" xml:space="preserve"><value>Перейти к настройкам</value></data>
+  <data name="Shortcuts_GoNotifications" xml:space="preserve"><value>Перейти к уведомлениям</value></data>
+  <data name="Shortcuts_CloseModal" xml:space="preserve"><value>Закрыть модальное окно</value></data>
+
+  <!-- Dependabot settings -->
+  <data name="Depbot_Title" xml:space="preserve"><value>Dependabot — Автоматическое обновление зависимостей</value></data>
+  <data name="Depbot_Description" xml:space="preserve"><value>Автоматически проверять устаревшие зависимости и создавать pull requests для обновления.</value></data>
+  <data name="Depbot_Ecosystem" xml:space="preserve"><value>Экосистема</value></data>
+  <data name="Depbot_Schedule" xml:space="preserve"><value>Расписание</value></data>
+  <data name="Depbot_Enabled" xml:space="preserve"><value>Включено</value></data>
+  <data name="Depbot_LastRun" xml:space="preserve"><value>Последний запуск</value></data>
+  <data name="Depbot_Active" xml:space="preserve"><value>Активен</value></data>
+  <data name="Depbot_Disabled" xml:space="preserve"><value>Отключён</value></data>
+  <data name="Depbot_Never" xml:space="preserve"><value>Никогда</value></data>
+  <data name="Depbot_Daily" xml:space="preserve"><value>Ежедневно</value></data>
+  <data name="Depbot_Weekly" xml:space="preserve"><value>Еженедельно</value></data>
+  <data name="Depbot_Monthly" xml:space="preserve"><value>Ежемесячно</value></data>
+  <data name="Depbot_Enable" xml:space="preserve"><value>Включить</value></data>
+
+  <!-- Release editing -->
+  <data name="Release_NotesPlaceholder" xml:space="preserve"><value>Заметки к выпуску (Markdown)</value></data>
+  <data name="Release_Draft" xml:space="preserve"><value>Черновик</value></data>
+  <data name="Release_PreRelease" xml:space="preserve"><value>Пре-релиз</value></data>
 </root>

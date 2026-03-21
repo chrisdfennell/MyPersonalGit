@@ -73,6 +73,7 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Explorer** — Parcourez tous les dépôts accessibles avec recherche, tri et filtrage par sujet
 - **Autolink References** — Conversion automatique de `#123` en liens vers les issues, ainsi que des motifs personnalisés configurables (par ex., `JIRA-456` → URLs externes) par dépôt
 - **Recherche** — Recherche plein texte dans les dépôts, issues, PRs et le code
+- **License Detection** — Détecte automatiquement les fichiers LICENSE et identifie les licences courantes (MIT, Apache-2.0, GPL, BSD, ISC, MPL, Unlicense) avec un badge dans la barre latérale du dépôt
 
 ### Collaboration
 - **Issues et Pull Requests** — Créez, commentez, fermez/rouvrez des issues et PRs avec labels, assignés multiples, dates d'échéance et reviews. Fusionnez les PRs avec les stratégies merge commit, squash ou rebase. Résolution des conflits de fusion via le web avec vue diff côte à côte
@@ -93,6 +94,7 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **CODEOWNERS** — Attribution automatique des reviewers de PR en fonction des chemins de fichiers avec application optionnelle exigeant l'approbation CODEOWNERS avant la fusion
 - **Modèles de dépôt** — Créez de nouveaux dépôts à partir de modèles avec copie automatique des fichiers, labels, modèles d'issues et règles de protection de branches
 - **Brouillons d'issues et modèles d'issues** — Créez des brouillons d'issues (travail en cours) et définissez des modèles d'issues réutilisables (rapport de bug, demande de fonctionnalité) par dépôt avec labels par défaut
+- **Release Editing** — Modifiez les titres, descriptions et indicateurs brouillon/pré-release des releases après leur création
 - **Wiki** — Pages wiki en Markdown par dépôt avec historique des révisions
 - **Projets** — Tableaux Kanban avec cartes glisser-déposer pour organiser le travail
 - **Snippets** — Partagez des extraits de code (comme les Gists GitHub) avec coloration syntaxique et fichiers multiples
@@ -101,6 +103,7 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Jalons** — Suivez la progression des issues vers des jalons avec barres de progression et dates d'échéance
 - **Commentaires de commits** — Commentez des commits individuels avec références optionnelles de fichier/ligne
 - **Sujets de dépôt** — Taguez les dépôts avec des sujets pour la découverte et le filtrage sur la page Explorer
+- **Activity Pulse** — Page de résumé hebdomadaire par dépôt affichant les PRs fusionnées, les issues ouvertes/fermées, les commits, les principaux contributeurs et les branches actives au cours des 7 derniers jours
 
 ### CI/CD et DevOps
 - **Runner CI/CD** — Définissez des workflows dans `.github/workflows/*.yml` et exécutez-les dans des conteneurs Docker. Déclenchement automatique sur les événements push et pull request
@@ -179,11 +182,16 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Dependabot-Style Auto-Update PRs** — Vérifie automatiquement les dépendances obsolètes et crée des pull requests pour les mettre à jour. Prend en charge les écosystèmes NuGet, npm et PyPI. Planification configurable (quotidienne/hebdomadaire/mensuelle) et limite de PRs ouvertes par dépôt
 - **Repository Insights (Traffic)** — Suivez les compteurs de clone/fetch, les vues de pages, les visiteurs uniques, les principaux référents et les chemins de contenu populaires. Graphiques de trafic dans l'onglet Insights avec résumés sur 14 jours. Agrégation quotidienne avec rétention de 90 jours. Les adresses IP sont hachées pour la confidentialité
 - **Mode sombre** — Support complet du mode sombre/clair avec un bouton de basculement dans l'en-tête
-- **Multi-langue / i18n** — Localisation complète sur les 28 pages avec 836 clés de ressources. Livré avec 11 langues : anglais, espagnol, français, allemand, japonais, coréen, chinois (simplifié), portugais, russe, italien et turc. Sélecteur de langue dans l'en-tête. Ajoutez-en d'autres en créant des fichiers `SharedResource.{locale}.resx`
+- **Multi-langue / i18n** — Localisation complète sur les 29 pages avec 920 clés de ressources. Livré avec 11 langues : anglais, espagnol, français, allemand, japonais, coréen, chinois (simplifié), portugais, russe, italien et turc. Sélecteur de langue dans l'en-tête. Ajoutez-en d'autres en créant des fichiers `SharedResource.{locale}.resx`
 - **Swagger / OpenAPI** — Documentation interactive de l'API à `/swagger` avec tous les endpoints REST découvrables et testables
+- **Open Graph Meta Tags** — Les pages de dépôts, d'issues et de PRs incluent og:title et og:description pour des aperçus de liens enrichis dans Slack, Discord et les réseaux sociaux
 - **Mermaid Diagrams** — Rendu de diagrammes Mermaid dans les fichiers Markdown (organigrammes, diagrammes de séquence, diagrammes de Gantt, etc.)
 - **Math Rendering** — Expressions mathématiques LaTeX/KaTeX dans le Markdown (syntaxe `$inline$` et `$$display$$`)
 - **CSV/TSV Viewer** — Les fichiers CSV et TSV sont affichés sous forme de tableaux formatés et triables au lieu de texte brut
+- **Keyboard Shortcuts** — Appuyez sur `?` pour afficher une fenêtre d'aide des raccourcis. `/` met le focus sur la recherche, `g i` va aux Issues, `g p` aux Pull Requests, `g h` à l'Accueil, `g n` aux Notifications
+- **Health Check Endpoint** — `/health` retourne du JSON avec l'état de connectivité de la base de données pour la surveillance Docker/Kubernetes
+- **Line Linking** — Cliquez sur les numéros de ligne dans le visualiseur de fichiers pour générer des URLs partageables `#L42` avec mise en surbrillance de la ligne au chargement
+- **File Download** — Téléchargez des fichiers individuels depuis le visualiseur de fichiers avec les en-têtes Content-Disposition appropriés
 - **Jupyter Notebook Rendering** — Les fichiers `.ipynb` sont affichés comme des notebooks formatés avec cellules de code, Markdown, sorties et images en ligne
 - **Repository Transfer** — Transférez la propriété du dépôt à un autre utilisateur ou organisation depuis les Paramètres du dépôt
 - **Default Branch Configuration** — Changez la branche par défaut par dépôt depuis l'onglet Paramètres

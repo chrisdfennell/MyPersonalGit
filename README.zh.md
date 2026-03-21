@@ -73,6 +73,7 @@
 - **探索** — 浏览所有可访问的仓库，支持搜索、排序和主题过滤
 - **Autolink References** — 自动将 `#123` 转换为 Issue 链接，并支持按仓库配置自定义模式（例如 `JIRA-456` → 外部 URL）
 - **搜索** — 跨仓库、Issue、PR 和代码的全文搜索
+- **License Detection** — 自动检测 LICENSE 文件并识别常见许可证（MIT、Apache-2.0、GPL、BSD、ISC、MPL、Unlicense），在仓库侧边栏显示徽章
 
 ### 协作
 - **Issue 与 Pull Request** — 创建、评论、关闭/重新打开 Issue 和 PR，支持标签、多个指派人、截止日期和审查。使用合并提交、压缩或变基策略合并 PR。基于 Web 的合并冲突解决，支持并排差异视图
@@ -93,6 +94,7 @@
 - **CODEOWNERS** — 根据文件路径自动分配 PR 审查者，可选强制要求 CODEOWNERS 在合并前审批
 - **仓库模板** — 从模板创建新仓库，自动复制文件、标签、Issue 模板和分支保护规则
 - **草稿 Issue 与 Issue 模板** — 创建草稿 Issue（进行中的工作），为每个仓库定义可重用的 Issue 模板（Bug 报告、功能请求），支持默认标签
+- **Release Editing** — 创建后编辑发布的标题、描述和草稿/预发布标志
 - **Wiki** — 基于 Markdown 的每仓库 Wiki 页面，带有修订历史
 - **项目** — 带有拖放卡片的看板，用于组织工作
 - **代码片段** — 分享代码片段（类似 GitHub Gists），支持语法高亮和多文件
@@ -101,6 +103,7 @@
 - **里程碑** — 使用进度条和截止日期跟踪 Issue 的里程碑进度
 - **提交评论** — 对单个提交进行评论，可选文件/行引用
 - **仓库主题** — 为仓库添加主题标签，用于在探索页面发现和过滤
+- **Activity Pulse** — 每个仓库的每周摘要页面，显示过去7天内合并的PR、打开/关闭的Issue、提交、顶级贡献者和活跃分支
 
 ### CI/CD 与 DevOps
 - **CI/CD 运行器** — 在 `.github/workflows/*.yml` 中定义工作流并在 Docker 容器中运行。在 push 和 pull request 事件时自动触发
@@ -179,11 +182,16 @@
 - **Dependabot-Style Auto-Update PRs** — 自动检查过时的依赖项并创建 Pull Request 进行更新。支持 NuGet、npm 和 PyPI 生态系统。可配置的计划（每日/每周/每月）以及每个仓库的开放 PR 限制
 - **Repository Insights (Traffic)** — 跟踪克隆/拉取计数、页面浏览量、独立访客、热门来源和热门内容路径。Insights 选项卡中的流量图表包含 14 天摘要。每日聚合，保留 90 天。IP 地址经过哈希处理以保护隐私
 - **深色模式** — 完整的深色/浅色模式支持，在页头有切换开关
-- **多语言 / i18n** — 所有 28 个页面的完整本地化，共 836 个资源键。内置 11 种语言：英语、西班牙语、法语、德语、日语、韩语、简体中文、葡萄牙语、俄语、意大利语和土耳其语。通过创建 `SharedResource.{locale}.resx` 文件添加更多语言。页头的语言选择器可切换语言
+- **多语言 / i18n** — 所有 29 个页面的完整本地化，共 920 个资源键。内置 11 种语言：英语、西班牙语、法语、德语、日语、韩语、简体中文、葡萄牙语、俄语、意大利语和土耳其语。通过创建 `SharedResource.{locale}.resx` 文件添加更多语言。页头的语言选择器可切换语言
 - **Swagger / OpenAPI** — 在 `/swagger` 提供交互式 API 文档，所有 REST 端点均可发现和测试
+- **Open Graph Meta Tags** — 仓库、Issue 和 PR 页面包含 og:title 和 og:description，用于在 Slack、Discord 和社交媒体中显示丰富的链接预览
 - **Mermaid 图表** — 在 Markdown 文件中渲染 Mermaid 图表（流程图、时序图、甘特图等）
 - **数学公式渲染** — Markdown 中的 LaTeX/KaTeX 数学表达式（`$inline$` 和 `$$display$$` 语法）
 - **CSV/TSV 查看器** — CSV 和 TSV 文件以格式化、可排序的表格呈现，而非原始文本
+- **Keyboard Shortcuts** — 按 `?` 显示快捷键帮助模态框。`/` 聚焦搜索，`g i` 跳转到 Issue，`g p` 跳转到 Pull Request，`g h` 跳转到首页，`g n` 跳转到通知
+- **Health Check Endpoint** — `/health` 返回包含数据库连接状态的 JSON，用于 Docker/Kubernetes 监控
+- **Line Linking** — 在文件查看器中点击行号生成可分享的 `#L42` URL，加载时高亮显示对应行
+- **File Download** — 使用正确的 Content-Disposition 头从文件查看器下载单个文件
 - **Jupyter Notebook 渲染** — `.ipynb` 文件以格式化的笔记本形式呈现，包含代码单元格、Markdown、输出和内联图片
 - **仓库转移** — 从仓库设置中将仓库所有权转移给其他用户或组织
 - **默认分支配置** — 从设置选项卡更改每个仓库的默认分支

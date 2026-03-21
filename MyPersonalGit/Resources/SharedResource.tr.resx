@@ -949,4 +949,52 @@
   <data name="Issues_ContributingAlert" xml:space="preserve"><value>Bir konu göndermeden önce lütfen katkı kurallarını okuyun.</value></data>
   <data name="Issues_ViewContributing" xml:space="preserve"><value>Katkı kurallarını görüntüle</value></data>
   <data name="Repo_Download" xml:space="preserve"><value>İndir</value></data>
+
+  <!-- Pulse page -->
+  <data name="Pulse_Title" xml:space="preserve"><value>Nabız</value></data>
+  <data name="Pulse_Last7Days" xml:space="preserve"><value>Nabız — son 7 gün</value></data>
+  <data name="Pulse_PRsMerged" xml:space="preserve"><value>Birleştirilen PR'ler</value></data>
+  <data name="Pulse_IssuesOpened" xml:space="preserve"><value>Açılan konular</value></data>
+  <data name="Pulse_IssuesClosed" xml:space="preserve"><value>Kapatılan konular</value></data>
+  <data name="Pulse_Commits" xml:space="preserve"><value>Commitler</value></data>
+  <data name="Pulse_TopContributors" xml:space="preserve"><value>Bu haftanın en iyi katkıda bulunanları</value></data>
+  <data name="Pulse_Contributor" xml:space="preserve"><value>Katkıda bulunan</value></data>
+  <data name="Pulse_ActiveBranches" xml:space="preserve"><value>Aktif dallar</value></data>
+  <data name="Pulse_Branch" xml:space="preserve"><value>Dal</value></data>
+  <data name="Pulse_LastCommit" xml:space="preserve"><value>Son commit</value></data>
+  <data name="Pulse_Ahead" xml:space="preserve"><value>İleride</value></data>
+  <data name="Pulse_RecentActivity" xml:space="preserve"><value>Son aktivite</value></data>
+  <data name="Pulse_NoActivity" xml:space="preserve"><value>Son 7 günde aktivite yok.</value></data>
+
+  <!-- Keyboard shortcuts -->
+  <data name="Shortcuts_Title" xml:space="preserve"><value>Klavye kısayolları</value></data>
+  <data name="Shortcuts_FocusSearch" xml:space="preserve"><value>Aramayı odakla</value></data>
+  <data name="Shortcuts_ShowHelp" xml:space="preserve"><value>Bu yardımı göster</value></data>
+  <data name="Shortcuts_GoHome" xml:space="preserve"><value>Ana sayfaya git</value></data>
+  <data name="Shortcuts_GoIssues" xml:space="preserve"><value>Konulara git</value></data>
+  <data name="Shortcuts_GoPRs" xml:space="preserve"><value>Pull request'lere git</value></data>
+  <data name="Shortcuts_GoActions" xml:space="preserve"><value>Aksiyonlara git</value></data>
+  <data name="Shortcuts_GoSettings" xml:space="preserve"><value>Ayarlara git</value></data>
+  <data name="Shortcuts_GoNotifications" xml:space="preserve"><value>Bildirimlere git</value></data>
+  <data name="Shortcuts_CloseModal" xml:space="preserve"><value>Modalı kapat / odağı kaldır</value></data>
+
+  <!-- Dependabot settings -->
+  <data name="Depbot_Title" xml:space="preserve"><value>Dependabot — Otomatik bağımlılık güncellemeleri</value></data>
+  <data name="Depbot_Description" xml:space="preserve"><value>Güncel olmayan bağımlılıkları otomatik olarak kontrol edin ve güncellemek için pull request oluşturun.</value></data>
+  <data name="Depbot_Ecosystem" xml:space="preserve"><value>Ekosistem</value></data>
+  <data name="Depbot_Schedule" xml:space="preserve"><value>Zamanlama</value></data>
+  <data name="Depbot_Enabled" xml:space="preserve"><value>Etkin</value></data>
+  <data name="Depbot_LastRun" xml:space="preserve"><value>Son çalıştırma</value></data>
+  <data name="Depbot_Active" xml:space="preserve"><value>Aktif</value></data>
+  <data name="Depbot_Disabled" xml:space="preserve"><value>Devre dışı</value></data>
+  <data name="Depbot_Never" xml:space="preserve"><value>Hiçbir zaman</value></data>
+  <data name="Depbot_Daily" xml:space="preserve"><value>Günlük</value></data>
+  <data name="Depbot_Weekly" xml:space="preserve"><value>Haftalık</value></data>
+  <data name="Depbot_Monthly" xml:space="preserve"><value>Aylık</value></data>
+  <data name="Depbot_Enable" xml:space="preserve"><value>Etkinleştir</value></data>
+
+  <!-- Release editing -->
+  <data name="Release_NotesPlaceholder" xml:space="preserve"><value>Sürüm notları (Markdown)</value></data>
+  <data name="Release_Draft" xml:space="preserve"><value>Taslak</value></data>
+  <data name="Release_PreRelease" xml:space="preserve"><value>Ön sürüm</value></data>
 </root>

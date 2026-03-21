@@ -949,4 +949,52 @@
   <data name="Issues_ContributingAlert" xml:space="preserve"><value>请在提交议题前阅读贡献指南。</value></data>
   <data name="Issues_ViewContributing" xml:space="preserve"><value>查看贡献指南</value></data>
   <data name="Repo_Download" xml:space="preserve"><value>下载</value></data>
+
+  <!-- Pulse page -->
+  <data name="Pulse_Title" xml:space="preserve"><value>脉搏</value></data>
+  <data name="Pulse_Last7Days" xml:space="preserve"><value>脉搏 — 过去7天</value></data>
+  <data name="Pulse_PRsMerged" xml:space="preserve"><value>已合并的PR</value></data>
+  <data name="Pulse_IssuesOpened" xml:space="preserve"><value>已创建的议题</value></data>
+  <data name="Pulse_IssuesClosed" xml:space="preserve"><value>已关闭的议题</value></data>
+  <data name="Pulse_Commits" xml:space="preserve"><value>提交</value></data>
+  <data name="Pulse_TopContributors" xml:space="preserve"><value>本周顶级贡献者</value></data>
+  <data name="Pulse_Contributor" xml:space="preserve"><value>贡献者</value></data>
+  <data name="Pulse_ActiveBranches" xml:space="preserve"><value>活跃分支</value></data>
+  <data name="Pulse_Branch" xml:space="preserve"><value>分支</value></data>
+  <data name="Pulse_LastCommit" xml:space="preserve"><value>最后提交</value></data>
+  <data name="Pulse_Ahead" xml:space="preserve"><value>领先</value></data>
+  <data name="Pulse_RecentActivity" xml:space="preserve"><value>最近活动</value></data>
+  <data name="Pulse_NoActivity" xml:space="preserve"><value>过去7天没有活动。</value></data>
+
+  <!-- Keyboard shortcuts -->
+  <data name="Shortcuts_Title" xml:space="preserve"><value>键盘快捷键</value></data>
+  <data name="Shortcuts_FocusSearch" xml:space="preserve"><value>聚焦搜索</value></data>
+  <data name="Shortcuts_ShowHelp" xml:space="preserve"><value>显示帮助</value></data>
+  <data name="Shortcuts_GoHome" xml:space="preserve"><value>转到主页</value></data>
+  <data name="Shortcuts_GoIssues" xml:space="preserve"><value>转到议题</value></data>
+  <data name="Shortcuts_GoPRs" xml:space="preserve"><value>转到拉取请求</value></data>
+  <data name="Shortcuts_GoActions" xml:space="preserve"><value>转到操作</value></data>
+  <data name="Shortcuts_GoSettings" xml:space="preserve"><value>转到设置</value></data>
+  <data name="Shortcuts_GoNotifications" xml:space="preserve"><value>转到通知</value></data>
+  <data name="Shortcuts_CloseModal" xml:space="preserve"><value>关闭弹窗 / 取消焦点</value></data>
+
+  <!-- Dependabot settings -->
+  <data name="Depbot_Title" xml:space="preserve"><value>Dependabot — 自动依赖更新</value></data>
+  <data name="Depbot_Description" xml:space="preserve"><value>自动检查过时的依赖并创建拉取请求进行更新。</value></data>
+  <data name="Depbot_Ecosystem" xml:space="preserve"><value>生态系统</value></data>
+  <data name="Depbot_Schedule" xml:space="preserve"><value>计划</value></data>
+  <data name="Depbot_Enabled" xml:space="preserve"><value>已启用</value></data>
+  <data name="Depbot_LastRun" xml:space="preserve"><value>上次运行</value></data>
+  <data name="Depbot_Active" xml:space="preserve"><value>活跃</value></data>
+  <data name="Depbot_Disabled" xml:space="preserve"><value>已禁用</value></data>
+  <data name="Depbot_Never" xml:space="preserve"><value>从未</value></data>
+  <data name="Depbot_Daily" xml:space="preserve"><value>每天</value></data>
+  <data name="Depbot_Weekly" xml:space="preserve"><value>每周</value></data>
+  <data name="Depbot_Monthly" xml:space="preserve"><value>每月</value></data>
+  <data name="Depbot_Enable" xml:space="preserve"><value>启用</value></data>
+
+  <!-- Release editing -->
+  <data name="Release_NotesPlaceholder" xml:space="preserve"><value>发布说明（Markdown）</value></data>
+  <data name="Release_Draft" xml:space="preserve"><value>草稿</value></data>
+  <data name="Release_PreRelease" xml:space="preserve"><value>预发布</value></data>
 </root>

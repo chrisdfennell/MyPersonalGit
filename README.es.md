@@ -73,6 +73,7 @@ Un servidor Git autoalojado con una interfaz web similar a GitHub, construido co
 - **Explorar** — Navega todos los repositorios accesibles con busqueda, ordenamiento y filtrado por temas
 - **Autolink References** — Convierte automaticamente `#123` en enlaces a issues, ademas de patrones personalizados configurables (por ejemplo, `JIRA-456` → URLs externas) por repositorio
 - **Busqueda** — Busqueda de texto completo en repositorios, issues, PRs y codigo
+- **License Detection** — Detecta automaticamente archivos LICENSE e identifica licencias comunes (MIT, Apache-2.0, GPL, BSD, ISC, MPL, Unlicense) con una insignia en la barra lateral del repositorio
 
 ### Colaboracion
 - **Issues y Pull Requests** — Crea, comenta, cierra/reabre issues y PRs con etiquetas, multiples asignados, fechas de vencimiento y revisiones. Fusiona PRs con estrategias de merge commit, squash o rebase. Resolucion de conflictos de merge basada en web con vista de diff lado a lado
@@ -93,6 +94,7 @@ Un servidor Git autoalojado con una interfaz web similar a GitHub, construido co
 - **CODEOWNERS** — Asignacion automatica de revisores de PRs basada en rutas de archivos con aplicacion opcional que requiere aprobacion de CODEOWNERS antes del merge
 - **Plantillas de Repositorio** — Crea nuevos repositorios a partir de plantillas con copia automatica de archivos, etiquetas, plantillas de issues y reglas de proteccion de ramas
 - **Issues en Borrador y Plantillas de Issues** — Crea issues en borrador (trabajo en progreso) y define plantillas reutilizables de issues (reporte de errores, solicitud de funcionalidad) por repositorio con etiquetas predeterminadas
+- **Release Editing** — Edita titulos, descripciones y banderas de borrador/pre-lanzamiento de releases despues de su creacion
 - **Wiki** — Paginas wiki basadas en Markdown por repositorio con historial de revisiones
 - **Proyectos** — Tableros Kanban con tarjetas arrastrables para organizar el trabajo
 - **Snippets** — Comparte fragmentos de codigo (como GitHub Gists) con resaltado de sintaxis y multiples archivos
@@ -101,6 +103,7 @@ Un servidor Git autoalojado con una interfaz web similar a GitHub, construido co
 - **Hitos** — Realiza seguimiento del progreso de issues hacia hitos con barras de progreso y fechas de vencimiento
 - **Comentarios en Commits** — Comenta en commits individuales con referencias opcionales a archivo/linea
 - **Temas de Repositorio** — Etiqueta repositorios con temas para descubrimiento y filtrado en la pagina Explorar
+- **Activity Pulse** — Pagina de resumen semanal por repositorio que muestra PRs fusionados, issues abiertos/cerrados, commits, principales contribuidores y ramas activas en los ultimos 7 dias
 
 ### CI/CD y DevOps
 - **Runner de CI/CD** — Define flujos de trabajo en `.github/workflows/*.yml` y ejecutalos en contenedores Docker. Se activa automaticamente en eventos de push y pull request
@@ -179,11 +182,16 @@ Un servidor Git autoalojado con una interfaz web similar a GitHub, construido co
 - **Dependabot-Style Auto-Update PRs** — Verifica automaticamente dependencias desactualizadas y crea pull requests para actualizarlas. Soporta ecosistemas NuGet, npm y PyPI. Programacion configurable (diario/semanal/mensual) y limite de PRs abiertas por repositorio
 - **Repository Insights (Traffic)** — Rastrea conteos de clonacion/fetch, vistas de paginas, visitantes unicos, principales referentes y rutas de contenido populares. Graficos de trafico en la pestana Insights con resumenes de 14 dias. Agregacion diaria con retencion de 90 dias. Las direcciones IP se hashean para privacidad
 - **Modo Oscuro** — Soporte completo de modo oscuro/claro con un boton en el encabezado
-- **Multi-Idioma / i18n** — Localizacion completa en las 28 paginas con 836 claves de recursos. Incluye 11 idiomas: ingles, espanol, frances, aleman, japones, coreano, chino (simplificado), portugues, ruso, italiano y turco. Selector de idioma en el encabezado. Agrega mas creando archivos `SharedResource.{locale}.resx`
+- **Multi-Idioma / i18n** — Localizacion completa en las 29 paginas con 920 claves de recursos. Incluye 11 idiomas: ingles, espanol, frances, aleman, japones, coreano, chino (simplificado), portugues, ruso, italiano y turco. Selector de idioma en el encabezado. Agrega mas creando archivos `SharedResource.{locale}.resx`
 - **Swagger / OpenAPI** — Documentacion interactiva de la API en `/swagger` con todos los endpoints REST descubribles y comprobables
+- **Open Graph Meta Tags** — Las paginas de repositorios, issues y PRs incluyen og:title y og:description para vistas previas enriquecidas de enlaces en Slack, Discord y redes sociales
 - **Mermaid Diagrams** — Renderizado de diagramas Mermaid en archivos Markdown (diagramas de flujo, diagramas de secuencia, diagramas de Gantt, etc.)
 - **Math Rendering** — Expresiones matematicas LaTeX/KaTeX en Markdown (sintaxis `$inline$` y `$$display$$`)
 - **CSV/TSV Viewer** — Los archivos CSV y TSV se renderizan como tablas formateadas y ordenables en lugar de texto sin formato
+- **Keyboard Shortcuts** — Presiona `?` para un modal de ayuda de atajos. `/` enfoca la busqueda, `g i` va a Issues, `g p` a Pull Requests, `g h` a Inicio, `g n` a Notificaciones
+- **Health Check Endpoint** — `/health` devuelve JSON con el estado de conectividad de la base de datos para monitoreo de Docker/Kubernetes
+- **Line Linking** — Haz clic en los numeros de linea en el visor de archivos para generar URLs compartibles `#L42` con resaltado de linea al cargar
+- **File Download** — Descarga archivos individuales desde el visor de archivos con encabezados Content-Disposition apropiados
 - **Jupyter Notebook Rendering** — Los archivos `.ipynb` se renderizan como notebooks formateados con celdas de codigo, Markdown, salidas e imagenes en linea
 - **Repository Transfer** — Transfiere la propiedad del repositorio a otro usuario u organizacion desde la Configuracion del repositorio
 - **Default Branch Configuration** — Cambia la rama predeterminada por repositorio desde la pestana de Configuracion

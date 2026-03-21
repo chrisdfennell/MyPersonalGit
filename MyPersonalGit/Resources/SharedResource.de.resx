@@ -949,4 +949,52 @@
   <data name="Issues_ContributingAlert" xml:space="preserve"><value>Bitte lesen Sie die Beitragsrichtlinien, bevor Sie ein Issue erstellen.</value></data>
   <data name="Issues_ViewContributing" xml:space="preserve"><value>Beitragsrichtlinien anzeigen</value></data>
   <data name="Repo_Download" xml:space="preserve"><value>Herunterladen</value></data>
+
+  <!-- Pulse page -->
+  <data name="Pulse_Title" xml:space="preserve"><value>Pulse</value></data>
+  <data name="Pulse_Last7Days" xml:space="preserve"><value>Pulse — letzte 7 Tage</value></data>
+  <data name="Pulse_PRsMerged" xml:space="preserve"><value>PRs zusammengeführt</value></data>
+  <data name="Pulse_IssuesOpened" xml:space="preserve"><value>Issues eröffnet</value></data>
+  <data name="Pulse_IssuesClosed" xml:space="preserve"><value>Issues geschlossen</value></data>
+  <data name="Pulse_Commits" xml:space="preserve"><value>Commits</value></data>
+  <data name="Pulse_TopContributors" xml:space="preserve"><value>Top-Beitragende diese Woche</value></data>
+  <data name="Pulse_Contributor" xml:space="preserve"><value>Beitragender</value></data>
+  <data name="Pulse_ActiveBranches" xml:space="preserve"><value>Aktive Branches</value></data>
+  <data name="Pulse_Branch" xml:space="preserve"><value>Branch</value></data>
+  <data name="Pulse_LastCommit" xml:space="preserve"><value>Letzter Commit</value></data>
+  <data name="Pulse_Ahead" xml:space="preserve"><value>Voraus</value></data>
+  <data name="Pulse_RecentActivity" xml:space="preserve"><value>Letzte Aktivität</value></data>
+  <data name="Pulse_NoActivity" xml:space="preserve"><value>Keine Aktivität in den letzten 7 Tagen.</value></data>
+
+  <!-- Keyboard shortcuts -->
+  <data name="Shortcuts_Title" xml:space="preserve"><value>Tastenkürzel</value></data>
+  <data name="Shortcuts_FocusSearch" xml:space="preserve"><value>Suche fokussieren</value></data>
+  <data name="Shortcuts_ShowHelp" xml:space="preserve"><value>Diese Hilfe anzeigen</value></data>
+  <data name="Shortcuts_GoHome" xml:space="preserve"><value>Zur Startseite</value></data>
+  <data name="Shortcuts_GoIssues" xml:space="preserve"><value>Zu Issues</value></data>
+  <data name="Shortcuts_GoPRs" xml:space="preserve"><value>Zu Pull Requests</value></data>
+  <data name="Shortcuts_GoActions" xml:space="preserve"><value>Zu Actions</value></data>
+  <data name="Shortcuts_GoSettings" xml:space="preserve"><value>Zu Einstellungen</value></data>
+  <data name="Shortcuts_GoNotifications" xml:space="preserve"><value>Zu Benachrichtigungen</value></data>
+  <data name="Shortcuts_CloseModal" xml:space="preserve"><value>Modal schließen / Eingabe verlassen</value></data>
+
+  <!-- Dependabot settings -->
+  <data name="Depbot_Title" xml:space="preserve"><value>Dependabot — Automatische Abhängigkeitsaktualisierungen</value></data>
+  <data name="Depbot_Description" xml:space="preserve"><value>Automatisch nach veralteten Abhängigkeiten suchen und Pull Requests zur Aktualisierung erstellen.</value></data>
+  <data name="Depbot_Ecosystem" xml:space="preserve"><value>Ökosystem</value></data>
+  <data name="Depbot_Schedule" xml:space="preserve"><value>Zeitplan</value></data>
+  <data name="Depbot_Enabled" xml:space="preserve"><value>Aktiviert</value></data>
+  <data name="Depbot_LastRun" xml:space="preserve"><value>Letzter Lauf</value></data>
+  <data name="Depbot_Active" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="Depbot_Disabled" xml:space="preserve"><value>Deaktiviert</value></data>
+  <data name="Depbot_Never" xml:space="preserve"><value>Nie</value></data>
+  <data name="Depbot_Daily" xml:space="preserve"><value>Täglich</value></data>
+  <data name="Depbot_Weekly" xml:space="preserve"><value>Wöchentlich</value></data>
+  <data name="Depbot_Monthly" xml:space="preserve"><value>Monatlich</value></data>
+  <data name="Depbot_Enable" xml:space="preserve"><value>Aktivieren</value></data>
+
+  <!-- Release editing -->
+  <data name="Release_NotesPlaceholder" xml:space="preserve"><value>Versionshinweise (Markdown)</value></data>
+  <data name="Release_Draft" xml:space="preserve"><value>Entwurf</value></data>
+  <data name="Release_PreRelease" xml:space="preserve"><value>Vorabversion</value></data>
 </root>
