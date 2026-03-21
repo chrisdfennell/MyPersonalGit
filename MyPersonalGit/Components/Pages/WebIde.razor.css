@@ -1,7 +1,7 @@
 .ide-container {
     display: grid;
     grid-template-columns: auto 1fr;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto auto 1fr auto auto;
     height: calc(100vh - 40px);
     overflow: hidden;
     background: #1e1e1e;
@@ -11,7 +11,7 @@
 
 /* Sidebar */
 .ide-sidebar {
-    grid-row: 1 / 4;
+    grid-row: 1 / -1;
     display: flex;
     width: 280px;
     min-width: 200px;
@@ -606,6 +606,175 @@
     background: rgba(255, 255, 255, 0.05) !important;
 }
 
+/* Breadcrumbs */
+.ide-breadcrumbs {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    padding: 2px 12px;
+    background: #252526;
+    border-bottom: 1px solid #1e1e1e;
+    font-size: 0.75rem;
+    overflow: hidden;
+    white-space: nowrap;
+    min-height: 22px;
+}
+
+.ide-breadcrumb {
+    color: #858585;
+    cursor: pointer;
+    padding: 1px 3px;
+    border-radius: 3px;
+    transition: color 0.1s, background 0.1s;
+}
+
+.ide-breadcrumb:hover {
+    color: #cccccc;
+    background: #3c3c3c;
+}
+
+.ide-breadcrumb.active {
+    color: #cccccc;
+    cursor: default;
+}
+
+.ide-breadcrumb.active:hover {
+    background: none;
+}
+
+.ide-breadcrumb-sep {
+    color: #555555;
+    font-size: 0.55rem;
+    margin: 0 2px;
+}
+
+/* Status Bar */
+.ide-status-bar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #007acc;
+    color: #ffffff;
+    font-size: 0.7rem;
+    height: 22px;
+    padding: 0 8px;
+    z-index: 10;
+}
+
+.ide-status-left,
+.ide-status-right {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.ide-status-item {
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    height: 22px;
+    white-space: nowrap;
+}
+
+.ide-status-btn {
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: inherit;
+    font-size: inherit;
+    transition: background 0.1s;
+}
+
+.ide-status-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* Shortcut Help Overlay */
+::deep .ide-shortcut-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+::deep .ide-shortcut-dialog {
+    width: 480px;
+    max-width: 90vw;
+    max-height: 80vh;
+    background: #252526;
+    border: 1px solid #3c3c3c;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+::deep .ide-shortcut-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #3c3c3c;
+    font-size: 0.9rem;
+}
+
+::deep .ide-shortcut-body {
+    padding: 12px 16px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+::deep .ide-shortcut-section {
+    margin-bottom: 16px;
+}
+
+::deep .ide-shortcut-section:last-child {
+    margin-bottom: 0;
+}
+
+::deep .ide-shortcut-section-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #858585;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #333333;
+}
+
+::deep .ide-shortcut-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 0.8rem;
+}
+
+::deep .ide-shortcut-row kbd {
+    background: #3c3c3c;
+    border: 1px solid #555555;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 0.75rem;
+    font-family: inherit;
+    color: #cccccc;
+    min-width: 80px;
+    text-align: center;
+}
+
+::deep .ide-shortcut-row span {
+    color: #cccccc;
+}
+
 /* ============ Light mode overrides ============ */
 ::deep [data-bs-theme="light"] .ide-container {
     background: #ffffff;
@@ -750,4 +919,42 @@
 
 :global([data-bs-theme="light"] .ide-blame-line-odd) {
     background: rgba(0, 0, 0, 0.04) !important;
+}
+
+::deep [data-bs-theme="light"] .ide-breadcrumbs {
+    background: #f3f3f3;
+    border-bottom-color: #e0e0e0;
+}
+
+::deep [data-bs-theme="light"] .ide-breadcrumb {
+    color: #666666;
+}
+
+::deep [data-bs-theme="light"] .ide-breadcrumb:hover {
+    color: #333333;
+    background: #e0e0e0;
+}
+
+::deep [data-bs-theme="light"] .ide-breadcrumb.active {
+    color: #333333;
+}
+
+::deep [data-bs-theme="light"] .ide-shortcut-dialog {
+    background: #ffffff;
+    border-color: #d0d0d0;
+}
+
+::deep [data-bs-theme="light"] .ide-shortcut-row kbd {
+    background: #e8e8e8;
+    border-color: #cccccc;
+    color: #333333;
+}
+
+::deep [data-bs-theme="light"] .ide-shortcut-row span {
+    color: #333333;
+}
+
+::deep [data-bs-theme="light"] .ide-shortcut-section-title {
+    color: #888888;
+    border-bottom-color: #e0e0e0;
 }

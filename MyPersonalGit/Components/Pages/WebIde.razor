@@ -112,6 +112,19 @@
         </div>
     </div>
 
+    @if (activeTabPath != null && !showDiffView)
+    {
+        <div class="ide-breadcrumbs">
+            <span class="ide-breadcrumb" @onclick='() => sidebarMode = "files"'>@RepoName</span>
+            @foreach (var segment in GetBreadcrumbSegments(activeTabPath))
+            {
+                <i class="bi bi-chevron-right ide-breadcrumb-sep"></i>
+                <span class="ide-breadcrumb @(segment.IsLast ? "active" : "")"
+                      @onclick="() => { if (!segment.IsLast) HandleBreadcrumbClick(segment.Path); }">@segment.Name</span>
+            }
+        </div>
+    }
+
     <div class="ide-editor">
         @if (isLoading)
         {
@@ -126,7 +139,7 @@
                 <h5 class="fw-light opacity-50">Web IDE</h5>
                 <p class="small opacity-50">Open a file from the explorer or press <kbd>Ctrl+P</kbd> to get started</p>
                 <div class="mt-3 small opacity-50">
-                    <p class="mb-1"><kbd>Ctrl+S</kbd> Save &middot; <kbd>Ctrl+Shift+P</kbd> Commands &middot; <kbd>Ctrl+P</kbd> Quick Open &middot; <kbd>Ctrl+`</kbd> Terminal</p>
+                    <p class="mb-1"><kbd>Ctrl+Shift+P</kbd> Commands &middot; <kbd>Ctrl+P</kbd> Quick Open &middot; <kbd>Ctrl+`</kbd> Terminal &middot; <kbd>?</kbd> Shortcuts</p>
                 </div>
             </div>
         }
@@ -223,6 +236,43 @@
             </div>
         }
     </div>
+
+    <div class="ide-status-bar">
+        <div class="ide-status-left">
+            <span class="ide-status-item" title="Branch">
+                <i class="bi bi-git me-1"></i>@currentBranch
+            </span>
+            @if (modifiedFiles.Count > 0)
+            {
+                <span class="ide-status-item text-warning" title="Unsaved changes">
+                    <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>@modifiedFiles.Count change(s)
+                </span>
+            }
+        </div>
+        <div class="ide-status-right">
+            @if (activeTabPath != null)
+            {
+                <span class="ide-status-item" title="Cursor position">
+                    Ln @cursorLine, Col @cursorColumn
+                </span>
+                @if (selectionLength > 0)
+                {
+                    <span class="ide-status-item" title="Selection">
+                        (@selectionLength selected)
+                    </span>
+                }
+                <span class="ide-status-item" title="Language">
+                    @GetLanguageDisplayName(activeTabPath)
+                </span>
+                <span class="ide-status-item" title="Encoding">
+                    UTF-8
+                </span>
+            }
+            <button class="ide-status-item ide-status-btn" @onclick="() => { showShortcutHelp = true; StateHasChanged(); }" title="Keyboard Shortcuts">
+                <i class="bi bi-keyboard me-1"></i>Shortcuts
+            </button>
+        </div>
+    </div>
 </div>
 
 @if (showQuickOpen)
@@ -238,6 +288,11 @@
                        IsBlameActive="@isBlameActive"
                        OnCommand="HandleCommand"
                        OnClose="() => { showCommandPalette = false; StateHasChanged(); }" />
+}
+
+@if (showShortcutHelp)
+{
+    <IdeShortcutHelp OnClose="() => { showShortcutHelp = false; StateHasChanged(); }" />
 }
 
 @code {
@@ -272,6 +327,14 @@
 
     // Command palette state
     private bool showCommandPalette;
+
+    // Shortcut help state
+    private bool showShortcutHelp;
+
+    // Status bar cursor state
+    private int cursorLine = 1;
+    private int cursorColumn = 1;
+    private int selectionLength;
 
     // Diff view state
     private bool showDiffView;
@@ -377,6 +440,7 @@
                 }
 
                 await JS.InvokeVoidAsync("monacoInterop.onDidChangeContent", editorId, dotNetRef, "OnEditorContentChanged");
+                await JS.InvokeVoidAsync("monacoInterop.onDidChangeCursorPosition", editorId, dotNetRef, "OnCursorPositionChanged");
 
                 if (!string.IsNullOrEmpty(FilePath))
                 {
@@ -846,6 +910,15 @@
     }
 
     [JSInvokable]
+    public Task OnCursorPositionChanged(int line, int column, int selection)
+    {
+        cursorLine = line;
+        cursorColumn = column;
+        selectionLength = selection;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
     public async Task OnEditorContentChanged(string filePath)
     {
         var tab = openTabs.FirstOrDefault(t => t.FilePath == filePath);
@@ -933,6 +1006,9 @@
                 break;
             case "explorer":
                 sidebarMode = "files";
+                break;
+            case "showShortcuts":
+                showShortcutHelp = true;
                 break;
         }
         StateHasChanged();
@@ -1198,6 +1274,79 @@
             sidebarMode = "search";
             StateHasChanged();
         }
+        // ?: Show shortcut help (only when no modals open and not typing in editor)
+        else if (e.Key == "?" && !e.CtrlKey && !e.AltKey && openTabs.Count == 0)
+        {
+            showShortcutHelp = !showShortcutHelp;
+            StateHasChanged();
+        }
+    }
+
+    // ---- Breadcrumbs ----
+
+    private record BreadcrumbSegment(string Name, string Path, bool IsLast);
+
+    private List<BreadcrumbSegment> GetBreadcrumbSegments(string filePath)
+    {
+        var parts = filePath.Replace("\\", "/").Split('/');
+        var segments = new List<BreadcrumbSegment>();
+        for (int i = 0; i < parts.Length; i++)
+        {
+            var path = string.Join("/", parts.Take(i + 1));
+            segments.Add(new BreadcrumbSegment(parts[i], path, i == parts.Length - 1));
+        }
+        return segments;
+    }
+
+    private void HandleBreadcrumbClick(string folderPath)
+    {
+        // Expand folder in file tree
+        sidebarMode = "files";
+        StateHasChanged();
+    }
+
+    // ---- Language Display ----
+
+    private static string GetLanguageDisplayName(string path)
+    {
+        var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+        return ext switch
+        {
+            ".cs" => "C#",
+            ".js" => "JavaScript",
+            ".jsx" => "JavaScript (JSX)",
+            ".ts" => "TypeScript",
+            ".tsx" => "TypeScript (TSX)",
+            ".py" => "Python",
+            ".rb" => "Ruby",
+            ".go" => "Go",
+            ".rs" => "Rust",
+            ".java" => "Java",
+            ".kt" => "Kotlin",
+            ".swift" => "Swift",
+            ".c" => "C",
+            ".cpp" or ".cc" or ".cxx" => "C++",
+            ".h" or ".hpp" => "C/C++ Header",
+            ".html" or ".htm" => "HTML",
+            ".css" => "CSS",
+            ".scss" => "SCSS",
+            ".less" => "Less",
+            ".json" => "JSON",
+            ".xml" or ".csproj" or ".svg" => "XML",
+            ".yaml" or ".yml" => "YAML",
+            ".md" => "Markdown",
+            ".sql" => "SQL",
+            ".sh" or ".bash" => "Shell",
+            ".ps1" => "PowerShell",
+            ".dockerfile" => "Dockerfile",
+            ".razor" or ".cshtml" => "Razor",
+            ".php" => "PHP",
+            ".lua" => "Lua",
+            ".r" => "R",
+            ".toml" => "TOML",
+            ".ini" or ".cfg" => "INI",
+            _ => ext.TrimStart('.').ToUpperInvariant()
+        };
     }
 
     // ---- Settings ----
