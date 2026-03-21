@@ -1,0 +1,203 @@
+@using MyPersonalGit.Data
+
+<div class="ide-quick-open-overlay" @onclick="HandleOverlayClick" @onkeydown="HandleKeyDown">
+    <div class="ide-quick-open-dialog" @onclick:stopPropagation="true">
+        <div class="ide-quick-open-input-wrapper">
+            <i class="bi bi-search me-2 text-muted"></i>
+            <input @ref="searchInput"
+                   type="text"
+                   class="ide-quick-open-input"
+                   placeholder="Search files by name..."
+                   @bind-value="searchQuery"
+                   @bind-value:event="oninput"
+                   @onkeydown="HandleKeyDown"
+                   autocomplete="off" />
+        </div>
+        <div class="ide-quick-open-results">
+            @if (filteredFiles.Count == 0 && !string.IsNullOrEmpty(searchQuery))
+            {
+                <div class="ide-quick-open-empty">
+                    <i class="bi bi-inbox me-1"></i>No matching files found
+                </div>
+            }
+            else
+            {
+                @for (var i = 0; i < filteredFiles.Count && i < MaxResults; i++)
+                {
+                    var file = filteredFiles[i];
+                    var isSelected = i == selectedIndex;
+                    var index = i;
+                    <div class="ide-quick-open-item @(isSelected ? "selected" : "")"
+                         @onclick="() => SelectFile(file.Path)"
+                         @onmouseover="() => selectedIndex = index">
+                        <i class="bi @GetFileIcon(file.Name) me-2" style="font-size: 0.8rem; opacity: 0.7;"></i>
+                        <span class="ide-quick-open-filename">@file.Name</span>
+                        <span class="ide-quick-open-filepath">@file.Path</span>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<TreeNode>? TreeNodes { get; set; }
+    [Parameter] public EventCallback<string> OnFileSelected { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private const int MaxResults = 20;
+    private string searchQuery = "";
+    private int selectedIndex;
+    private List<FileEntry> allFiles = new();
+    private List<FileEntry> filteredFiles = new();
+    private ElementReference searchInput;
+
+    private record FileEntry(string Name, string Path);
+
+    protected override void OnInitialized()
+    {
+        // Flatten tree to file list
+        if (TreeNodes != null)
+        {
+            FlattenTree(TreeNodes, allFiles);
+        }
+        filteredFiles = allFiles.Take(MaxResults).ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await searchInput.FocusAsync();
+            }
+            catch { }
+        }
+    }
+
+    // Track last query to detect changes from oninput binding
+    private string _lastQuery = "";
+
+    protected override void OnParametersSet()
+    {
+        if (searchQuery != _lastQuery)
+        {
+            _lastQuery = searchQuery;
+            selectedIndex = 0;
+            FilterFiles();
+        }
+    }
+
+    private void FilterFiles()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            filteredFiles = allFiles.Take(MaxResults).ToList();
+            return;
+        }
+
+        var query = searchQuery.ToLowerInvariant();
+        filteredFiles = allFiles
+            .Where(f => FuzzyMatch(f.Path.ToLowerInvariant(), query) || FuzzyMatch(f.Name.ToLowerInvariant(), query))
+            .OrderByDescending(f => ScoreMatch(f, query))
+            .Take(MaxResults)
+            .ToList();
+    }
+
+    private static bool FuzzyMatch(string text, string pattern)
+    {
+        int patternIdx = 0;
+        for (int i = 0; i < text.Length && patternIdx < pattern.Length; i++)
+        {
+            if (text[i] == pattern[patternIdx])
+                patternIdx++;
+        }
+        return patternIdx == pattern.Length;
+    }
+
+    private static int ScoreMatch(FileEntry file, string query)
+    {
+        var name = file.Name.ToLowerInvariant();
+        var path = file.Path.ToLowerInvariant();
+        int score = 0;
+
+        // Exact name contains is best
+        if (name.Contains(query)) score += 100;
+        // Name starts with query
+        if (name.StartsWith(query)) score += 50;
+        // Path contains query
+        if (path.Contains(query)) score += 25;
+        // Shorter paths are better
+        score -= path.Length;
+
+        return score;
+    }
+
+    private static void FlattenTree(List<TreeNode> nodes, List<FileEntry> files)
+    {
+        foreach (var node in nodes)
+        {
+            if (node.Type == "blob")
+            {
+                files.Add(new FileEntry(node.Name, node.Path));
+            }
+            else if (node.Children != null)
+            {
+                FlattenTree(node.Children, files);
+            }
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "Escape":
+                await OnClose.InvokeAsync();
+                break;
+            case "ArrowDown":
+                if (filteredFiles.Count > 0)
+                    selectedIndex = (selectedIndex + 1) % Math.Min(filteredFiles.Count, MaxResults);
+                break;
+            case "ArrowUp":
+                if (filteredFiles.Count > 0)
+                    selectedIndex = (selectedIndex - 1 + Math.Min(filteredFiles.Count, MaxResults)) % Math.Min(filteredFiles.Count, MaxResults);
+                break;
+            case "Enter":
+                if (filteredFiles.Count > 0 && selectedIndex < filteredFiles.Count)
+                {
+                    await SelectFile(filteredFiles[selectedIndex].Path);
+                }
+                break;
+        }
+    }
+
+    private async Task SelectFile(string path)
+    {
+        await OnFileSelected.InvokeAsync(path);
+        await OnClose.InvokeAsync();
+    }
+
+    private void HandleOverlayClick()
+    {
+        OnClose.InvokeAsync();
+    }
+
+    private static string GetFileIcon(string name)
+    {
+        var ext = System.IO.Path.GetExtension(name).ToLowerInvariant();
+        return ext switch
+        {
+            ".cs" or ".js" or ".ts" or ".py" or ".rb" or ".go" or ".rs" or ".java" or
+            ".cpp" or ".c" or ".h" or ".jsx" or ".tsx" or ".razor" => "bi-file-earmark-code",
+            ".html" or ".htm" or ".xml" => "bi-filetype-html",
+            ".css" or ".scss" => "bi-filetype-css",
+            ".json" => "bi-filetype-json",
+            ".md" => "bi-filetype-md",
+            ".yml" or ".yaml" => "bi-filetype-yml",
+            ".png" or ".jpg" or ".gif" or ".svg" => "bi-file-earmark-image",
+            _ => "bi-file-earmark"
+        };
+    }
+}

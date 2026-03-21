@@ -1,0 +1,75 @@
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<div class="ide-terminal-container">
+    <div id="@_containerId" class="ide-terminal-xterm"></div>
+</div>
+
+@code {
+    [Parameter] public string RepoName { get; set; } = "";
+    [Parameter] public bool IsVisible { get; set; }
+
+    private string _containerId = "ide-terminal-" + Guid.NewGuid().ToString("N")[..8];
+    private bool _initialized;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Load xterm.js from CDN
+            await JS.InvokeVoidAsync("ideTerminal.loadXterm");
+        }
+
+        if (IsVisible && !_initialized)
+        {
+            await InitTerminal();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible && !_initialized)
+        {
+            // Will be handled in OnAfterRenderAsync
+        }
+        else if (IsVisible && _initialized)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("ideTerminal.fit", _containerId);
+            }
+            catch { }
+        }
+    }
+
+    private async Task InitTerminal()
+    {
+        try
+        {
+            // Build WebSocket URL
+            var baseUri = new Uri(Navigation.BaseUri);
+            var wsScheme = baseUri.Scheme == "https" ? "wss" : "ws";
+            var wsUrl = $"{wsScheme}://{baseUri.Host}:{baseUri.Port}/ws/terminal/{RepoName}";
+
+            await JS.InvokeVoidAsync("ideTerminal.init", _containerId, wsUrl);
+            _initialized = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Terminal init error: {ex.Message}");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_initialized)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("ideTerminal.dispose", _containerId);
+            }
+            catch { }
+        }
+    }
+}

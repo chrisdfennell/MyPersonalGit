@@ -5,6 +5,7 @@ using MyPersonalGit.Services;
 using MyPersonalGit.Services.SshServer;
 using MyPersonalGit.Components;
 using MyPersonalGit.Data;
+using MyPersonalGit.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -605,6 +606,9 @@ app.UseRequestLocalization(options =>
     options.ApplyCurrentCultureToResponseHeaders = true;
 });
 
+// WebSocket support for integrated terminal
+app.UseWebSockets();
+
 // Use standard .NET 8 static file middleware
 app.UseStaticFiles();
 app.UseAntiforgery();
@@ -666,6 +670,9 @@ app.MapGet("/sitemap.xml", async (IDbContextFactory<AppDbContext> dbFactory, Htt
 });
 
 app.MapControllers();
+
+// Integrated terminal WebSocket endpoint
+app.MapTerminalWebSocket();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

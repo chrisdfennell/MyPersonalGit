@@ -534,6 +534,310 @@
             if (editor) {
                 editor.focus();
             }
+        },
+
+        /**
+         * Update editor options at runtime (for settings panel).
+         * @param {string} editorId - The editor instance ID.
+         * @param {object} options - Monaco editor options to update.
+         */
+        updateEditorOptions: function (editorId, options) {
+            var editor = _editors[editorId];
+            if (editor) {
+                editor.updateOptions(options);
+            }
+        },
+
+        /**
+         * Create a second editor in a split container alongside the main editor.
+         * @param {string} containerId - The parent container for the split layout.
+         * @param {string} originalEditorId - The ID of the existing editor.
+         * @param {object} options - Editor creation options.
+         * @returns {string} The new split editor ID.
+         */
+        createSplitEditor: function (containerId, originalEditorId, options) {
+            options = options || {};
+
+            var parentContainer = document.getElementById(containerId);
+            if (!parentContainer) {
+                throw new Error('Container element not found: ' + containerId);
+            }
+
+            // The parent should already have a split layout via CSS.
+            // Look for the split container div.
+            var splitContainer = document.getElementById(containerId + '-split');
+            if (!splitContainer) {
+                splitContainer = document.createElement('div');
+                splitContainer.id = containerId + '-split';
+                splitContainer.style.cssText = 'width: 100%; height: 100%;';
+                parentContainer.appendChild(splitContainer);
+            }
+
+            _editorCounter++;
+            var editorId = 'editor_' + _editorCounter;
+
+            var monacoTheme = getCurrentTheme();
+
+            var editor = monaco.editor.create(splitContainer, {
+                theme: monacoTheme,
+                fontSize: options.fontSize || 14,
+                minimap: { enabled: options.minimap !== false },
+                wordWrap: options.wordWrap || 'off',
+                automaticLayout: true,
+                scrollBeyondLastLine: false,
+                renderWhitespace: options.renderWhitespace || 'selection',
+                bracketPairColorization: { enabled: true },
+                guides: { bracketPairs: true },
+                smoothScrolling: true,
+                cursorBlinking: 'smooth',
+                cursorSmoothCaretAnimation: 'on',
+                padding: { top: 8 }
+            });
+
+            _editors[editorId] = editor;
+            return editorId;
+        },
+
+        /**
+         * Close a split editor and remove its container.
+         * @param {string} editorId - The split editor instance ID.
+         * @param {string} containerId - The parent container ID.
+         */
+        closeSplitEditor: function (editorId, containerId) {
+            // Dispose the editor
+            var editor = _editors[editorId];
+            if (editor) {
+                editor.dispose();
+                delete _editors[editorId];
+            }
+
+            // Dispose change callback
+            if (_changeCallbacks[editorId]) {
+                _changeCallbacks[editorId].dispose();
+                delete _changeCallbacks[editorId];
+            }
+
+            // Remove the split container element
+            var splitContainer = document.getElementById(containerId + '-split');
+            if (splitContainer) {
+                splitContainer.remove();
+            }
+        },
+
+        /**
+         * Create a Monaco diff editor.
+         * @param {string} containerId - DOM element ID for the diff editor container.
+         * @param {string} originalContent - The original (left side) content.
+         * @param {string} modifiedContent - The modified (right side) content.
+         * @param {string} filePath - The file path (for language detection).
+         * @returns {string} A diff editor ID.
+         */
+        createDiffEditor: function (containerId, originalContent, modifiedContent, filePath) {
+            var container = document.getElementById(containerId);
+            if (!container) {
+                throw new Error('Container element not found: ' + containerId);
+            }
+
+            _editorCounter++;
+            var diffEditorId = 'diff_' + _editorCounter;
+
+            var language = detectLanguage(filePath);
+            var uri = filePathToUri(filePath);
+
+            var originalModel = monaco.editor.createModel(originalContent, language);
+            var modifiedModel = monaco.editor.createModel(modifiedContent, language);
+
+            var diffEditor = monaco.editor.createDiffEditor(container, {
+                theme: getCurrentTheme(),
+                automaticLayout: true,
+                readOnly: true,
+                renderSideBySide: true,
+                scrollBeyondLastLine: false,
+                minimap: { enabled: false },
+                padding: { top: 8 }
+            });
+
+            diffEditor.setModel({
+                original: originalModel,
+                modified: modifiedModel
+            });
+
+            // Store for cleanup — use a special prefix to distinguish from regular editors
+            _editors[diffEditorId] = diffEditor;
+            _models[diffEditorId + '_original'] = originalModel;
+            _models[diffEditorId + '_modified'] = modifiedModel;
+
+            return diffEditorId;
+        },
+
+        /**
+         * Dispose a diff editor and its models.
+         * @param {string} diffEditorId - The diff editor instance ID.
+         */
+        disposeDiffEditor: function (diffEditorId) {
+            var editor = _editors[diffEditorId];
+            if (editor) {
+                editor.dispose();
+                delete _editors[diffEditorId];
+            }
+
+            // Clean up the models
+            var origModel = _models[diffEditorId + '_original'];
+            if (origModel && !origModel.isDisposed()) origModel.dispose();
+            delete _models[diffEditorId + '_original'];
+
+            var modModel = _models[diffEditorId + '_modified'];
+            if (modModel && !modModel.isDisposed()) modModel.dispose();
+            delete _models[diffEditorId + '_modified'];
+        },
+
+        /**
+         * Get the original (committed) content for a file.
+         * @param {string} filePath - The file path.
+         * @returns {string|null} The original content, or null.
+         */
+        getOriginalContent: function (filePath) {
+            return _originalContent[filePath] || null;
+        }
+    };
+
+    // ============================================================
+    // Terminal (xterm.js) interop
+    // ============================================================
+    var _terminals = {};
+    var _terminalWs = {};
+
+    window.ideTerminal = {
+        /**
+         * Dynamically load xterm.js and the fit addon from CDN.
+         */
+        loadXterm: function () {
+            if (window.Terminal) return Promise.resolve();
+
+            return new Promise(function (resolve, reject) {
+                // Load CSS
+                var link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css';
+                document.head.appendChild(link);
+
+                // Load xterm.js
+                var script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js';
+                script.onload = function () {
+                    // Load fit addon
+                    var fitScript = document.createElement('script');
+                    fitScript.src = 'https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js';
+                    fitScript.onload = function () {
+                        resolve();
+                    };
+                    fitScript.onerror = function () {
+                        reject(new Error('Failed to load xterm fit addon'));
+                    };
+                    document.head.appendChild(fitScript);
+                };
+                script.onerror = function () {
+                    reject(new Error('Failed to load xterm.js'));
+                };
+                document.head.appendChild(script);
+            });
+        },
+
+        /**
+         * Initialize a terminal in the given container and connect via WebSocket.
+         * @param {string} containerId - The DOM element ID.
+         * @param {string} wsUrl - The WebSocket URL for the terminal backend.
+         */
+        init: async function (containerId, wsUrl) {
+            // Ensure xterm is loaded
+            await window.ideTerminal.loadXterm();
+
+            var container = document.getElementById(containerId);
+            if (!container) {
+                throw new Error('Terminal container not found: ' + containerId);
+            }
+
+            // Create terminal
+            var term = new Terminal({
+                cursorBlink: true,
+                fontSize: 13,
+                fontFamily: "'Cascadia Code', 'Fira Code', 'Consolas', monospace",
+                theme: {
+                    background: '#1e1e1e',
+                    foreground: '#cccccc',
+                    cursor: '#ffffff',
+                    selectionBackground: '#264f78'
+                },
+                allowProposedApi: true
+            });
+
+            var fitAddon = new FitAddon.FitAddon();
+            term.loadAddon(fitAddon);
+
+            term.open(container);
+            fitAddon.fit();
+
+            _terminals[containerId] = { terminal: term, fitAddon: fitAddon };
+
+            // Connect WebSocket
+            try {
+                var ws = new WebSocket(wsUrl);
+                _terminalWs[containerId] = ws;
+
+                ws.onopen = function () {
+                    term.writeln('\x1b[32mTerminal connected.\x1b[0m\r\n');
+                };
+
+                ws.onmessage = function (event) {
+                    term.write(event.data);
+                };
+
+                ws.onclose = function () {
+                    term.writeln('\r\n\x1b[31mTerminal session ended.\x1b[0m');
+                };
+
+                ws.onerror = function () {
+                    term.writeln('\r\n\x1b[31mWebSocket connection error.\x1b[0m');
+                };
+
+                // Send user input to WebSocket
+                term.onData(function (data) {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(data);
+                    }
+                });
+            } catch (e) {
+                term.writeln('\x1b[31mFailed to connect: ' + e.message + '\x1b[0m');
+            }
+        },
+
+        /**
+         * Fit the terminal to its container.
+         * @param {string} containerId - The DOM element ID.
+         */
+        fit: function (containerId) {
+            var t = _terminals[containerId];
+            if (t && t.fitAddon) {
+                t.fitAddon.fit();
+            }
+        },
+
+        /**
+         * Dispose a terminal and close its WebSocket.
+         * @param {string} containerId - The DOM element ID.
+         */
+        dispose: function (containerId) {
+            var ws = _terminalWs[containerId];
+            if (ws) {
+                try { ws.close(); } catch (e) { }
+                delete _terminalWs[containerId];
+            }
+
+            var t = _terminals[containerId];
+            if (t && t.terminal) {
+                t.terminal.dispose();
+                delete _terminals[containerId];
+            }
         }
     };
 })();
