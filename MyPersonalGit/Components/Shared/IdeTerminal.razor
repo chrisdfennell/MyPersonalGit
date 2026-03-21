@@ -1,5 +1,6 @@
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
+@inject MyPersonalGit.Services.CurrentUserService UserService
 @implements IAsyncDisposable
 
 <div class="ide-terminal-container">
@@ -50,7 +51,8 @@
             // Build WebSocket URL
             var baseUri = new Uri(Navigation.BaseUri);
             var wsScheme = baseUri.Scheme == "https" ? "wss" : "ws";
-            var wsUrl = $"{wsScheme}://{baseUri.Host}:{baseUri.Port}/ws/terminal/{RepoName}";
+            var sessionId = UserService.SessionId ?? "";
+            var wsUrl = $"{wsScheme}://{baseUri.Host}:{baseUri.Port}/ws/terminal/{RepoName}?session={Uri.EscapeDataString(sessionId)}";
 
             await JS.InvokeVoidAsync("ideTerminal.init", _containerId, wsUrl);
             _initialized = true;

@@ -911,8 +911,9 @@
                     term.writeln('\r\n\x1b[31mTerminal session ended.\x1b[0m');
                 };
 
-                ws.onerror = function () {
+                ws.onerror = function (e) {
                     term.writeln('\r\n\x1b[31mWebSocket connection error.\x1b[0m');
+                    console.error('Terminal WebSocket error:', e);
                 };
 
                 // Send user input to WebSocket
