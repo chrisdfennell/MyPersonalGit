@@ -1,0 +1,442 @@
+@page "/stats"
+@page "/repo/{RepoName}/stats"
+@using LibGit2Sharp
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using GitRepository = LibGit2Sharp.Repository
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IAdminService AdminService
+@inject IConfiguration Config
+@inject IStringLocalizer<SharedResource> L
+@rendermode InteractiveServer
+
+<PageTitle>@(string.IsNullOrEmpty(RepoName) ? "Platform Stats" : $"Stats · {RepoName}") · Personal Git</PageTitle>
+
+<div class="container-xl px-3 py-4">
+    @if (!string.IsNullOrEmpty(RepoName))
+    {
+        <div class="d-flex align-items-center mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 h4">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">@L["Nav_Repositories"]</a></li>
+                    <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
+                    <li class="breadcrumb-item active fw-bold">Stats</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-3 col-6">
+                <div class="card text-center border shadow-sm">
+                    <div class="card-body py-3">
+                        <div class="h2 fw-bold text-primary mb-0">@totalLines.ToString("N0")</div>
+                        <small class="text-muted">Lines of code</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card text-center border shadow-sm">
+                    <div class="card-body py-3">
+                        <div class="h2 fw-bold text-success mb-0">@totalFiles.ToString("N0")</div>
+                        <small class="text-muted">Files</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card text-center border shadow-sm">
+                    <div class="card-body py-3">
+                        <div class="h2 fw-bold text-info mb-0">@commitCount.ToString("N0")</div>
+                        <small class="text-muted">Commits</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card text-center border shadow-sm">
+                    <div class="card-body py-3">
+                        <div class="h2 fw-bold text-warning mb-0">@contributorCount</div>
+                        <small class="text-muted">Contributors</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-3 col-6">
+                <div class="card text-center border shadow-sm">
+                    <div class="card-body py-3">
+                        <div class="h3 fw-bold mb-0">@branchCount</div>
+                        <small class="text-muted">Branches</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card text-center border shadow-sm">
+                    <div class="card-body py-3">
+                        <div class="h3 fw-bold mb-0">@tagCount</div>
+                        <small class="text-muted">Tags</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card text-center border shadow-sm">
+                    <div class="card-body py-3">
+                        <div class="h3 fw-bold mb-0">@repoIssueCount</div>
+                        <small class="text-muted">Issues</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card text-center border shadow-sm">
+                    <div class="card-body py-3">
+                        <div class="h3 fw-bold mb-0">@repoPRCount</div>
+                        <small class="text-muted">Pull Requests</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (languageBreakdown.Any())
+        {
+            <div class="card border shadow-sm mb-4">
+                <div class="card-header bg-light-subtle py-2 fw-bold small">
+                    <i class="bi bi-code-slash me-1"></i> Languages
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-3" style="height: 12px;">
+                        @foreach (var lang in languageBreakdown)
+                        {
+                            <div class="progress-bar" style="width: @lang.Percentage.ToString("F1")%; background-color: @lang.Color;" title="@lang.Name @lang.Percentage.ToString("F1")%"></div>
+                        }
+                    </div>
+                    <div class="d-flex flex-wrap gap-3">
+                        @foreach (var lang in languageBreakdown)
+                        {
+                            <div class="d-flex align-items-center gap-1 small">
+                                <span class="rounded-circle d-inline-block" style="width: 10px; height: 10px; background-color: @lang.Color;"></span>
+                                <strong>@lang.Name</strong>
+                                <span class="text-muted">@lang.Percentage.ToString("F1")%</span>
+                                <span class="text-muted">(@lang.Lines.ToString("N0") lines)</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (fileTypeBreakdown.Any())
+        {
+            <div class="card border shadow-sm mb-4">
+                <div class="card-header bg-light-subtle py-2 fw-bold small">
+                    <i class="bi bi-file-earmark me-1"></i> File Types
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th class="ps-3">Extension</th><th class="text-end">Files</th><th class="text-end pe-3">Lines</th></tr></thead>
+                        <tbody>
+                            @foreach (var ft in fileTypeBreakdown.Take(15))
+                            {
+                                <tr>
+                                    <td class="ps-3"><code>@ft.Extension</code></td>
+                                    <td class="text-end">@ft.FileCount</td>
+                                    <td class="text-end pe-3">@ft.LineCount.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+        @if (topContributors.Any())
+        {
+            <div class="card border shadow-sm mb-4">
+                <div class="card-header bg-light-subtle py-2 fw-bold small">
+                    <i class="bi bi-people me-1"></i> Top Contributors
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th class="ps-3">Name</th><th class="text-end">Commits</th><th class="text-end text-success">Additions</th><th class="text-end text-danger pe-3">Deletions</th></tr></thead>
+                        <tbody>
+                            @foreach (var c in topContributors)
+                            {
+                                <tr>
+                                    <td class="ps-3">
+                                        <img src="@GetGravatarUrl(c.Name, 20)" class="rounded-circle me-1" style="width:20px;height:20px;" />
+                                        @c.Name
+                                    </td>
+                                    <td class="text-end">@c.Commits</td>
+                                    <td class="text-end text-success">+@c.Additions.ToString("N0")</td>
+                                    <td class="text-end text-danger pe-3">-@c.Deletions.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        @* Platform-level stats *@
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold mb-2"><i class="bi bi-bar-chart-line me-2"></i>Platform Stats</h1>
+            <p class="text-muted lead">Live statistics for this Personal Git instance</p>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-3 col-6">
+                <div class="card text-center border shadow-sm h-100">
+                    <div class="card-body py-4">
+                        <div class="display-6 fw-bold text-primary">@platformRepoCount</div>
+                        <small class="text-muted">Repositories</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card text-center border shadow-sm h-100">
+                    <div class="card-body py-4">
+                        <div class="display-6 fw-bold text-success">@platformUserCount</div>
+                        <small class="text-muted">Users</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card text-center border shadow-sm h-100">
+                    <div class="card-body py-4">
+                        <div class="display-6 fw-bold text-info">@platformIssueCount</div>
+                        <small class="text-muted">Issues</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card text-center border shadow-sm h-100">
+                    <div class="card-body py-4">
+                        <div class="display-6 fw-bold text-warning">@platformPRCount</div>
+                        <small class="text-muted">Pull Requests</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4 col-6">
+                <div class="card text-center border shadow-sm">
+                    <div class="card-body py-3">
+                        <div class="h3 fw-bold mb-0">@platformReleaseCount</div>
+                        <small class="text-muted">Releases</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-6">
+                <div class="card text-center border shadow-sm">
+                    <div class="card-body py-3">
+                        <div class="h3 fw-bold mb-0">@platformOrgCount</div>
+                        <small class="text-muted">Organizations</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-6">
+                <div class="card text-center border shadow-sm">
+                    <div class="card-body py-3">
+                        <div class="h3 fw-bold mb-0">@platformWorkflowCount</div>
+                        <small class="text-muted">Workflow Runs</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center text-muted small mt-5">
+            <p>Powered by <strong>ASP.NET Core 10</strong> · <strong>Blazor Server</strong> · <strong>Entity Framework Core</strong> · <strong>LibGit2Sharp</strong></p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string? RepoName { get; set; }
+
+    // Repo-level stats
+    private long totalLines, totalFiles;
+    private int commitCount, contributorCount, branchCount, tagCount;
+    private int repoIssueCount, repoPRCount;
+    private List<LangStat> languageBreakdown = new();
+    private List<FileTypeStat> fileTypeBreakdown = new();
+    private List<ContributorStat> topContributors = new();
+
+    // Platform-level stats
+    private int platformRepoCount, platformUserCount, platformIssueCount, platformPRCount;
+    private int platformReleaseCount, platformOrgCount, platformWorkflowCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(RepoName))
+            await LoadRepoStats();
+        else
+            await LoadPlatformStats();
+    }
+
+    private async Task LoadRepoStats()
+    {
+        using var db = DbFactory.CreateDbContext();
+        var repoAlt = RepoName!.EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? RepoName[..^4] : RepoName + ".git";
+        repoIssueCount = await db.Issues.CountAsync(i => i.RepoName == RepoName || i.RepoName == repoAlt);
+        repoPRCount = await db.PullRequests.CountAsync(p => p.RepoName == RepoName || p.RepoName == repoAlt);
+
+        var systemSettings = await AdminService.GetSystemSettingsAsync();
+        var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot) ? systemSettings.ProjectRoot : Config["Git:ProjectRoot"] ?? "/repos";
+        var repoPath = System.IO.Path.Combine(projectRoot, RepoName);
+        if (!GitRepository.IsValid(repoPath)) repoPath += ".git";
+        if (!GitRepository.IsValid(repoPath)) return;
+
+        try
+        {
+            using var repo = new GitRepository(repoPath);
+            branchCount = repo.Branches.Where(b => !b.IsRemote).Count();
+            tagCount = repo.Tags.Count();
+
+            if (repo.Head?.Tip == null) return;
+
+            // Count commits and contributors
+            var contributors = new Dictionary<string, ContributorStat>(StringComparer.OrdinalIgnoreCase);
+            var filter = new CommitFilter { IncludeReachableFrom = repo.Refs, SortBy = CommitSortStrategies.Time };
+            foreach (var commit in repo.Commits.QueryBy(filter))
+            {
+                commitCount++;
+                var name = commit.Author.Name;
+                if (!contributors.ContainsKey(name))
+                    contributors[name] = new ContributorStat { Name = name };
+                contributors[name].Commits++;
+
+                try
+                {
+                    var parent = commit.Parents.FirstOrDefault();
+                    if (parent != null)
+                    {
+                        var changes = repo.Diff.Compare<PatchStats>(parent.Tree, commit.Tree);
+                        contributors[name].Additions += changes.TotalLinesAdded;
+                        contributors[name].Deletions += changes.TotalLinesDeleted;
+                    }
+                }
+                catch { }
+            }
+            contributorCount = contributors.Count;
+            topContributors = contributors.Values.OrderByDescending(c => c.Commits).Take(10).ToList();
+
+            // Count files, lines, and language breakdown
+            var langLines = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+            var fileTypes = new Dictionary<string, FileTypeStat>(StringComparer.OrdinalIgnoreCase);
+            CountTree(repo.Head.Tip.Tree, langLines, fileTypes);
+            totalFiles = fileTypes.Values.Sum(f => f.FileCount);
+            totalLines = fileTypes.Values.Sum(f => f.LineCount);
+
+            fileTypeBreakdown = fileTypes.Values.OrderByDescending(f => f.LineCount).ToList();
+
+            // Language breakdown with colors
+            var langTotal = langLines.Values.Sum();
+            if (langTotal > 0)
+            {
+                languageBreakdown = langLines
+                    .OrderByDescending(l => l.Value)
+                    .Take(10)
+                    .Select(l => new LangStat
+                    {
+                        Name = l.Key,
+                        Lines = l.Value,
+                        Percentage = l.Value * 100.0 / langTotal,
+                        Color = GetLanguageColor(l.Key)
+                    })
+                    .ToList();
+            }
+        }
+        catch { }
+    }
+
+    private static void CountTree(Tree tree, Dictionary<string, long> langLines, Dictionary<string, FileTypeStat> fileTypes)
+    {
+        foreach (var entry in tree)
+        {
+            if (entry.TargetType == TreeEntryTargetType.Tree)
+            {
+                CountTree((Tree)entry.Target, langLines, fileTypes);
+            }
+            else if (entry.TargetType == TreeEntryTargetType.Blob)
+            {
+                var blob = (Blob)entry.Target;
+                if (blob.IsBinary || blob.Size > 500_000) continue;
+
+                var ext = System.IO.Path.GetExtension(entry.Name).ToLowerInvariant();
+                if (string.IsNullOrEmpty(ext)) ext = "(no extension)";
+
+                long lineCount = 0;
+                try
+                {
+                    using var reader = new System.IO.StreamReader(blob.GetContentStream());
+                    while (reader.ReadLine() != null) lineCount++;
+                }
+                catch { }
+
+                if (!fileTypes.ContainsKey(ext))
+                    fileTypes[ext] = new FileTypeStat { Extension = ext };
+                fileTypes[ext].FileCount++;
+                fileTypes[ext].LineCount += lineCount;
+
+                var lang = ExtToLanguage(ext);
+                if (lang != null)
+                {
+                    langLines[lang] = langLines.GetValueOrDefault(lang) + lineCount;
+                }
+            }
+        }
+    }
+
+    private async Task LoadPlatformStats()
+    {
+        using var db = DbFactory.CreateDbContext();
+        platformRepoCount = await db.Repositories.CountAsync();
+        platformUserCount = await db.Users.CountAsync();
+        platformIssueCount = await db.Issues.CountAsync();
+        platformPRCount = await db.PullRequests.CountAsync();
+        platformReleaseCount = await db.Releases.CountAsync();
+        platformOrgCount = await db.Organizations.CountAsync();
+        platformWorkflowCount = await db.WorkflowRuns.CountAsync();
+    }
+
+    private static string? ExtToLanguage(string ext) => ext switch
+    {
+        ".cs" => "C#", ".razor" => "Razor", ".js" => "JavaScript", ".ts" => "TypeScript",
+        ".py" => "Python", ".java" => "Java", ".go" => "Go", ".rs" => "Rust",
+        ".rb" => "Ruby", ".php" => "PHP", ".swift" => "Swift", ".kt" => "Kotlin",
+        ".c" or ".h" => "C", ".cpp" or ".cc" or ".hpp" => "C++",
+        ".css" or ".scss" or ".less" => "CSS", ".html" or ".htm" => "HTML",
+        ".json" => "JSON", ".xml" or ".csproj" or ".resx" => "XML",
+        ".yml" or ".yaml" => "YAML", ".md" or ".markdown" => "Markdown",
+        ".sh" or ".bash" => "Shell", ".ps1" => "PowerShell",
+        ".sql" => "SQL", ".r" => "R", ".dart" => "Dart",
+        _ => null
+    };
+
+    private static string GetLanguageColor(string lang) => lang switch
+    {
+        "C#" => "#178600", "JavaScript" => "#f1e05a", "TypeScript" => "#3178c6",
+        "Python" => "#3572A5", "Java" => "#b07219", "Go" => "#00ADD8",
+        "Rust" => "#dea584", "Ruby" => "#701516", "PHP" => "#4F5D95",
+        "CSS" => "#563d7c", "HTML" => "#e34c26", "Razor" => "#512BD4",
+        "C" => "#555555", "C++" => "#f34b7d", "Shell" => "#89e051",
+        "Markdown" => "#083fa1", "JSON" => "#292929", "XML" => "#0060ac",
+        "YAML" => "#cb171e", "SQL" => "#e38c00", "Dart" => "#00B4AB",
+        "Swift" => "#F05138", "Kotlin" => "#A97BFF", "R" => "#198CE7",
+        _ => "#8b949e"
+    };
+
+    private static string GetGravatarUrl(string name, int size = 20)
+    {
+        var hash = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(name.Trim().ToLowerInvariant()));
+        return $"https://www.gravatar.com/avatar/{Convert.ToHexString(hash).ToLowerInvariant()}?s={size}&d=identicon";
+    }
+
+    private class LangStat { public string Name { get; set; } = ""; public long Lines { get; set; } public double Percentage { get; set; } public string Color { get; set; } = ""; }
+    private class FileTypeStat { public string Extension { get; set; } = ""; public int FileCount { get; set; } public long LineCount { get; set; } }
+    private class ContributorStat { public string Name { get; set; } = ""; public int Commits { get; set; } public int Additions { get; set; } public int Deletions { get; set; } }
+}
