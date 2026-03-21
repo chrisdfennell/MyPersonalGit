@@ -997,4 +997,12 @@
   <data name="Release_NotesPlaceholder" xml:space="preserve"><value>Заметки к выпуску (Markdown)</value></data>
   <data name="Release_Draft" xml:space="preserve"><value>Черновик</value></data>
   <data name="Release_PreRelease" xml:space="preserve"><value>Пре-релиз</value></data>
+
+  <!-- Saved replies / Batch / Squash -->
+  <data name="SavedReply_Insert" xml:space="preserve"><value>Сохранённые ответы</value></data>
+  <data name="Issues_BatchSelect" xml:space="preserve"><value>Групповой выбор</value></data>
+  <data name="Issues_Selected" xml:space="preserve"><value>выбрано</value></data>
+  <data name="Issues_CloseSelected" xml:space="preserve"><value>Закрыть выбранные</value></data>
+  <data name="Issues_ReopenSelected" xml:space="preserve"><value>Переоткрыть выбранные</value></data>
+  <data name="PR_SquashMessagePlaceholder" xml:space="preserve"><value>Пользовательское сообщение squash-коммита (необязательно)</value></data>
 </root>

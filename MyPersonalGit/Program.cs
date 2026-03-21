@@ -139,6 +139,7 @@ builder.Services.AddSingleton<IAGitFlowService, AGitFlowService>();
 builder.Services.AddSingleton<IWebAuthnService, WebAuthnService>();
 builder.Services.AddSingleton<IGitHooksService, GitHooksService>();
 builder.Services.AddSingleton<IAutolinkService, AutolinkService>();
+builder.Services.AddSingleton<ISavedReplyService, SavedReplyService>();
 builder.Services.AddSingleton<ISecretScanService, SecretScanService>();
 builder.Services.AddSingleton<ICherryPickRevertService, CherryPickRevertService>();
 builder.Services.AddSingleton<IRepositoryTrafficService, RepositoryTrafficService>();
@@ -484,6 +485,17 @@ using (var scope = app.Services.CreateScope())
     db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_IssueTransfers_FromRepoName_FromIssueNumber"" ON ""IssueTransfers"" (""FromRepoName"", ""FromIssueNumber"");");
     db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_IssueTransfers_ToRepoName_ToIssueNumber"" ON ""IssueTransfers"" (""ToRepoName"", ""ToIssueNumber"");");
 
+    // SavedReplies table
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""SavedReplies"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""Username"" TEXT NOT NULL,
+            ""Title"" TEXT NOT NULL,
+            ""Body"" TEXT NOT NULL,
+            ""CreatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_SavedReplies_Username"" ON ""SavedReplies"" (""Username"");");
+
     // WorkflowJobs.Environment column
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""WorkflowJobs"" ADD COLUMN ""Environment"" TEXT NULL;"); } catch { }
 
@@ -629,6 +641,26 @@ app.MapGet("/health", async (IDbContextFactory<AppDbContext> dbFactory) =>
     {
         return Results.Json(new { status = "unhealthy", timestamp = DateTime.UtcNow, database = "disconnected" }, statusCode: 503);
     }
+});
+
+// Dynamic sitemap for SEO
+app.MapGet("/sitemap.xml", async (IDbContextFactory<AppDbContext> dbFactory, HttpContext ctx) =>
+{
+    using var db = dbFactory.CreateDbContext();
+    var repos = await db.Repositories.Where(r => !r.IsPrivate).ToListAsync();
+    var host = $"{ctx.Request.Scheme}://{ctx.Request.Host}";
+
+    var sb = new System.Text.StringBuilder();
+    sb.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+    sb.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
+    sb.AppendLine($"  <url><loc>{host}/</loc><changefreq>daily</changefreq></url>");
+    sb.AppendLine($"  <url><loc>{host}/explore</loc><changefreq>daily</changefreq></url>");
+    foreach (var repo in repos)
+    {
+        sb.AppendLine($"  <url><loc>{host}/repo/{repo.Name}</loc><lastmod>{repo.CreatedAt:yyyy-MM-dd}</lastmod></url>");
+    }
+    sb.AppendLine("</urlset>");
+    return Results.Content(sb.ToString(), "application/xml");
 });
 
 app.MapControllers();

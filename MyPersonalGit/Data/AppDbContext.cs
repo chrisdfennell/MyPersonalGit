@@ -197,6 +197,9 @@ public class AppDbContext : DbContext
     // Issue Transfers
     public DbSet<IssueTransfer> IssueTransfers => Set<IssueTransfer>();
 
+    // Saved Replies
+    public DbSet<SavedReply> SavedReplies => Set<SavedReply>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Shared JSON value converters + comparers for List<string> and string[]
@@ -727,6 +730,12 @@ public class AppDbContext : DbContext
         {
             e.HasIndex(t => new { t.FromRepoName, t.FromIssueNumber });
             e.HasIndex(t => new { t.ToRepoName, t.ToIssueNumber });
+        });
+
+        // --- SavedReply ---
+        modelBuilder.Entity<SavedReply>(e =>
+        {
+            e.HasIndex(r => r.Username);
         });
     }
 }

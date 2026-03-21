@@ -997,4 +997,12 @@
   <data name="Release_NotesPlaceholder" xml:space="preserve"><value>发布说明（Markdown）</value></data>
   <data name="Release_Draft" xml:space="preserve"><value>草稿</value></data>
   <data name="Release_PreRelease" xml:space="preserve"><value>预发布</value></data>
+
+  <!-- Saved replies / Batch / Squash -->
+  <data name="SavedReply_Insert" xml:space="preserve"><value>已保存的回复</value></data>
+  <data name="Issues_BatchSelect" xml:space="preserve"><value>批量选择</value></data>
+  <data name="Issues_Selected" xml:space="preserve"><value>已选择</value></data>
+  <data name="Issues_CloseSelected" xml:space="preserve"><value>关闭所选</value></data>
+  <data name="Issues_ReopenSelected" xml:space="preserve"><value>重新打开所选</value></data>
+  <data name="PR_SquashMessagePlaceholder" xml:space="preserve"><value>自定义压缩提交消息（可选）</value></data>
 </root>
