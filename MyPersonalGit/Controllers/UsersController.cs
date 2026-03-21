@@ -11,11 +11,56 @@ public class UsersController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly IUserProfileService _profileService;
+    private readonly IWebHostEnvironment _env;
 
-    public UsersController(IAuthService authService, IUserProfileService profileService)
+    public UsersController(IAuthService authService, IUserProfileService profileService, IWebHostEnvironment env)
     {
         _authService = authService;
         _profileService = profileService;
+        _env = env;
+    }
+
+    [HttpPost("user/avatar")]
+    [RequestSizeLimit(5 * 1024 * 1024)] // 5 MB
+    public async Task<IActionResult> UploadAvatar(IFormFile file)
+    {
+        var username = User.Identity?.Name;
+        if (string.IsNullOrEmpty(username))
+            return Unauthorized(new { error = "Not authenticated" });
+
+        if (file == null || file.Length == 0)
+            return BadRequest(new { error = "No file provided" });
+
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+        if (!allowedTypes.Contains(file.ContentType.ToLowerInvariant()))
+            return BadRequest(new { error = "Only JPEG, PNG, GIF, and WebP images are allowed" });
+
+        var uploadsDir = Path.Combine(_env.WebRootPath, "uploads", "avatars");
+        Directory.CreateDirectory(uploadsDir);
+
+        // Delete any existing avatar for this user
+        foreach (var existing in Directory.GetFiles(uploadsDir, $"{username}.*"))
+            System.IO.File.Delete(existing);
+
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (string.IsNullOrEmpty(ext)) ext = ".png";
+        var safeFilename = $"{username}{ext}";
+        var filePath = Path.Combine(uploadsDir, safeFilename);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+            await file.CopyToAsync(stream);
+
+        var avatarUrl = $"/uploads/avatars/{safeFilename}?v={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+
+        // Update the user's profile with the new avatar URL
+        var profile = await _profileService.GetProfileAsync(username);
+        if (profile != null)
+        {
+            profile.AvatarUrl = avatarUrl;
+            await _profileService.SaveProfileAsync(profile);
+        }
+
+        return Ok(new { avatar_url = avatarUrl });
     }
 
     [HttpGet("user")]
