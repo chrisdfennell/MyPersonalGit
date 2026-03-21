@@ -974,6 +974,15 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            try
+            {
+                webAuthnSupported = await JS.InvokeAsync<bool>("webAuthn.isSupported");
+                StateHasChanged();
+            }
+            catch { }
+        }
         if (ShowTwoFactorSetup && !string.IsNullOrEmpty(TwoFactorSetupUri))
         {
             try { await JS.InvokeVoidAsync("generateQRCode", "qrcode-2fa", TwoFactorSetupUri); } catch { }
@@ -1012,7 +1021,6 @@ else
         }
         enabledOAuthProviders = await OAuthService.GetEnabledProvidersAsync();
         webAuthnCredentials = await WebAuthnService.GetCredentialsAsync(UserService.Username);
-        try { webAuthnSupported = await JS.InvokeAsync<bool>("webAuthn.isSupported"); } catch { }
         try { userSecrets = await SecretsService.GetUserSecretsAsync(UserService.Username); } catch { userSecrets = new(); }
     }
 
