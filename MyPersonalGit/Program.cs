@@ -147,6 +147,7 @@ builder.Services.AddSingleton<IRepositoryTrafficService, RepositoryTrafficServic
 builder.Services.AddHostedService<TrafficAggregationService>();
 builder.Services.AddSingleton<IEnvironmentService, EnvironmentService>();
 builder.Services.AddSingleton<IDependencyUpdateService, DependencyUpdateService>();
+builder.Services.AddSingleton<IWebIdeService, WebIdeService>();
 builder.Services.AddHostedService<DependencyUpdateSchedulerService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddLocalization();

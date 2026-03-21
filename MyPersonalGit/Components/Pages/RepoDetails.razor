@@ -114,6 +114,12 @@ else
                             @if (repoForkCount > 0) { <span class="badge bg-secondary bg-opacity-10 text-body ms-1">@repoForkCount</span> }
                         </button>
                     }
+                    @if (UserService.IsLoggedIn && !repoIsArchived)
+                    {
+                        <a href="/repo/@RepoName/ide" class="btn btn-light btn-sm border px-3">
+                            <i class="bi bi-braces me-1"></i>IDE
+                        </a>
+                    }
                     <div class="dropdown">
                         <button class="btn btn-gh-primary btn-sm shadow-sm px-3" type="button" @onclick="() => showCloneDropdown = !showCloneDropdown">
                             <i class="bi bi-download me-1"></i> Code <i class="bi bi-caret-down-fill ms-1" style="font-size: 10px;"></i>
@@ -342,6 +348,7 @@ else
                             @if (UserService.IsLoggedIn)
                             {
                                 <button class="btn btn-light btn-sm border" @onclick="EnterEditMode"><i class="bi bi-pencil me-1"></i> @L["Repo_Edit"]</button>
+                                <a href="/repo/@RepoName/ide/@Path" class="btn btn-light btn-sm border"><i class="bi bi-braces me-1"></i>IDE</a>
                             }
                             <button class="btn btn-light btn-sm border" @onclick="ViewFileHistory"><i class="bi bi-clock-history me-1"></i> @L["Repo_History"]</button>
                             <a href="/blame/@repoOwner/@RepoName/@currentBranch/@Path" class="btn btn-light btn-sm border"><i class="bi bi-person-lines-fill me-1"></i> @L["Repo_Blame"]</a>
