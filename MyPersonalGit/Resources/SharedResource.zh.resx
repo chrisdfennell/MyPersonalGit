@@ -1005,4 +1005,7 @@
   <data name="Issues_CloseSelected" xml:space="preserve"><value>关闭所选</value></data>
   <data name="Issues_ReopenSelected" xml:space="preserve"><value>重新打开所选</value></data>
   <data name="PR_SquashMessagePlaceholder" xml:space="preserve"><value>自定义压缩提交消息（可选）</value></data>
+
+  <!-- Branch delete -->
+  <data name="PR_DeleteBranchAfterMerge" xml:space="preserve"><value>合并后删除源分支</value></data>
 </root>

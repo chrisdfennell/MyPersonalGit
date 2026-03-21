@@ -7,6 +7,7 @@
 @using Markdig
 @using Markdig.Syntax
 @using Markdig.Syntax.Inlines
+@using Microsoft.EntityFrameworkCore
 @using Microsoft.Extensions.Localization
 @using MyPersonalGit.Resources
 @inject IPullRequestService PRService
@@ -19,6 +20,7 @@
 @inject IConflictResolutionService ConflictService
 @inject ICherryPickRevertService CherryPickRevertService
 @inject ISavedReplyService SavedReplyService
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
@@ -154,6 +156,10 @@
                                         <i class="bi bi-pencil me-1"></i> @L["PR_ConvertToDraft"]
                                     </button>
                                 }
+                            </div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" @bind="deleteBranchAfterMerge" id="deleteBranch" />
+                                <label class="form-check-label small" for="deleteBranch">@L["PR_DeleteBranchAfterMerge"]</label>
                             </div>
                             <div class="d-flex align-items-center gap-2 mt-2">
                                 @if (currentPR.AutoMergeEnabled)
@@ -907,6 +913,10 @@
                                     {
                                         <span class="badge bg-primary" style="font-size: 10px;">@label</span>
                                     }
+                                    @if (pr.State == PullRequestState.Open && prStatusIcons.TryGetValue(pr.Number, out var statusIcon))
+                                    {
+                                        <i class="bi @statusIcon ms-1" style="font-size: 12px;"></i>
+                                    }
                                 </div>
                                 <small class="text-muted">
                                     #@pr.Number opened @FormatDate(pr.CreatedAt) by @pr.Author
@@ -1063,6 +1073,8 @@
     private MergeStrategy selectedStrategy = MergeStrategy.MergeCommit;
     private List<SavedReply> savedReplies = new();
     private string squashCommitMessage = "";
+    private bool deleteBranchAfterMerge = true;
+    private Dictionary<int, string> prStatusIcons = new();
     private bool canMerge;
     private string? mergeReason;
     private string mergeError = "";
@@ -1202,6 +1214,33 @@
         {
             currentPR = await PRService.GetPullRequestAsync(RepoName, Number.Value);
         }
+
+        // Load CI status icons for open PRs
+        prStatusIcons.Clear();
+        try
+        {
+            using var db = DbFactory.CreateDbContext();
+            var repoAlt = RepoName.EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? RepoName[..^4] : RepoName + ".git";
+            foreach (var pr in prs.Where(p => p.State == PullRequestState.Open))
+            {
+                var latestStatus = await db.CommitStatuses
+                    .Where(s => (s.RepoName == RepoName || s.RepoName == repoAlt))
+                    .OrderByDescending(s => s.UpdatedAt)
+                    .FirstOrDefaultAsync();
+
+                if (latestStatus != null)
+                {
+                    prStatusIcons[pr.Number] = latestStatus.State switch
+                    {
+                        CommitStatusState.Success => "bi-check-circle-fill text-success",
+                        CommitStatusState.Failure or CommitStatusState.Error => "bi-x-circle-fill text-danger",
+                        CommitStatusState.Pending => "bi-clock text-warning",
+                        _ => ""
+                    };
+                }
+            }
+        }
+        catch { }
     }
 
     private void LoadPRTemplate()
@@ -1366,6 +1405,25 @@
             }
             else
             {
+                // Auto-delete source branch if checkbox was checked
+                if (deleteBranchAfterMerge && currentPR != null)
+                {
+                    try
+                    {
+                        var systemSettings = await AdminService.GetSystemSettingsAsync();
+                        var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot) ? systemSettings.ProjectRoot : Config["Git:ProjectRoot"] ?? "/repos";
+                        var repoPath = System.IO.Path.Combine(projectRoot, RepoName);
+                        if (!LibGit2Sharp.Repository.IsValid(repoPath)) repoPath += ".git";
+                        if (LibGit2Sharp.Repository.IsValid(repoPath))
+                        {
+                            using var repo = new LibGit2Sharp.Repository(repoPath);
+                            var branch = repo.Branches[currentPR.SourceBranch];
+                            if (branch != null && !branch.IsCurrentRepositoryHead)
+                                repo.Branches.Remove(branch);
+                        }
+                    }
+                    catch { }
+                }
                 await LoadPRs();
                 LoadPRCommitsAndDiff();
             }

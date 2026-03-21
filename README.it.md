@@ -71,6 +71,7 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **Label dei Repository** — Gestisci label con colori personalizzati per repository; le label vengono copiate automaticamente quando si creano repo da template
 - **AGit Flow** — Workflow push-to-review: `git push origin HEAD:refs/for/main` crea una pull request senza forkare o creare branch remoti. Aggiorna PR aperte esistenti nei push successivi
 - **Esplora** — Sfoglia tutti i repository accessibili con ricerca, ordinamento e filtro per topic
+- **Star from Explore** — Aggiungi e rimuovi stelle ai repository direttamente dalla pagina Esplora senza aprire ogni repo
 - **Autolink References** — Conversione automatica di `#123` in link alle issue, più pattern personalizzati configurabili (es. `JIRA-456` → URL esterni) per repository
 - **Ricerca** — Ricerca full-text su repository, issue, PR e codice
 - **License Detection** — Rileva automaticamente i file LICENSE e identifica le licenze comuni (MIT, Apache-2.0, GPL, BSD, ISC, MPL, Unlicense) con un badge nella barra laterale del repository
@@ -80,8 +81,10 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **Dipendenze tra Issue** — Definisci relazioni "bloccato da" e "blocca" tra issue con rilevamento dipendenze circolari
 - **Fissaggio e Blocco Issue** — Fissa issue importanti in cima alla lista e blocca le conversazioni per impedire ulteriori commenti
 - **Modifica ed Eliminazione Commenti** — Modifica o elimina i tuoi commenti su issue e pull request con indicatore "(modificato)"
+- **@Mention Notifications** — @menziona gli utenti nei commenti per inviare loro una notifica diretta
 - **Risoluzione Conflitti di Merge** — Risolvi i conflitti di merge direttamente nel browser con un editor visuale che mostra viste base/ours/theirs, pulsanti di accettazione rapida e validazione dei marcatori di conflitto
 - **Squash Commit Message** — Personalizza il messaggio di commit quando fai squash-merge di una pull request
+- **Branch Delete After Merge** — Opzione per eliminare automaticamente il branch sorgente dopo l'unione di una pull request, abilitata per impostazione predefinita
 - **Discussioni** — Conversazioni threaded in stile GitHub Discussions per repository con categorie (Generale, Q&A, Annunci, Idee, Mostra e Racconta, Sondaggi), fissa/blocca, segna come risposta e upvoting
 - **Suggerimenti di Code Review** — La modalità "Suggerisci modifiche" nelle review inline delle PR permette ai revisori di proporre sostituzioni di codice direttamente nel diff
 - **Image Diff** — Confronto di immagini affiancato nelle pull request con cursore di opacità per il diff visivo delle immagini modificate (PNG, JPG, GIF, SVG, WebP)
@@ -90,6 +93,7 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **Evidenziazione sintassi nei Diff** — Colorazione della sintassi in base al linguaggio nei diff delle pull request e delle comparazioni tramite Prism.js
 - **Emoji di Reazione** — Reagisci a issue, PR, discussioni e commenti con pollice su/giù, cuore, risata, evviva, confuso, razzo e occhi
 - **Auto-Merge** — Abilita l'auto-merge sulle pull request per unire automaticamente quando tutti i controlli di stato richiesti sono superati e le review approvate
+- **CI Status on PR List** — La lista delle pull request mostra icone di stato CI verdi/rosse/gialle accanto a ogni titolo di PR
 - **Cherry-Pick / Revert via UI** — Seleziona qualsiasi commit verso un altro branch o ripristina un commit, direttamente o come nuova pull request, dall'interfaccia web
 - **Transfer Issues** — Sposta le issue tra repository, preservando titolo, corpo, commenti, label corrispondenti e collegando l'originale con una nota di trasferimento
 - **Saved Replies** — Salva risposte predefinite e inseriscile rapidamente quando commenti su issue o pull request
@@ -97,6 +101,7 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **CODEOWNERS** — Assegnazione automatica dei revisori PR basata sui percorsi dei file con applicazione opzionale che richiede l'approvazione CODEOWNERS prima del merge
 - **Template di Repository** — Crea nuovi repository da template con copia automatica di file, label, template di issue e regole di branch protection
 - **Bozze di Issue e Template di Issue** — Crea bozze di issue (work-in-progress) e definisci template di issue riutilizzabili (segnalazione bug, richiesta funzionalità) per repository con label predefinite
+- **PR Template** — Pre-compila automaticamente le descrizioni delle pull request da `.github/PULL_REQUEST_TEMPLATE.md`
 - **Release Editing** — Modifica titoli, descrizioni e flag bozza/pre-release delle release dopo la creazione
 - **Wiki** — Pagine wiki basate su Markdown per repository con cronologia delle revisioni
 - **Progetti** — Board Kanban con schede drag-and-drop per organizzare il lavoro
@@ -178,6 +183,7 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **Pannello Admin** — Impostazioni di sistema (inclusi provider di database, server SSH, LDAP/AD, pagine footer), gestione utenti, log di audit e statistiche
 - **Pagine Footer Personalizzabili** — Termini di servizio, Informativa sulla privacy, Documentazione e pagine Contatti con contenuto Markdown modificabile da Admin > Impostazioni
 - **Profili Utente** — Heatmap dei contributi, feed attività e statistiche per utente
+- **Gravatar Avatars** — Gli avatar utente in tutta l'interfaccia utilizzano identicon Gravatar basati sul nome utente, con fallback automatico
 - **Token di Accesso Personale** — Autenticazione API basata su token con ambiti configurabili e restrizioni opzionali a livello di route (pattern glob come `/api/packages/**` per limitare l'accesso del token a percorsi API specifici)
 - **Backup e Ripristino** — Esporta e importa dati del server
 - **Scansione di Sicurezza** — Scansione reale delle vulnerabilità delle dipendenze basata sul database [OSV.dev](https://osv.dev/). Estrae automaticamente le dipendenze da `.csproj` (NuGet), `package.json` (npm), `requirements.txt` (PyPI), `Cargo.toml` (Rust), `Gemfile` (Ruby), `composer.json` (PHP), `go.mod` (Go), `pom.xml` (Maven/Java) e `pubspec.yaml` (Dart/Flutter), quindi verifica ciascuna contro CVE noti. Riporta gravità, versioni corrette e link agli advisory. Più advisory di sicurezza manuali con workflow bozza/pubblicazione/chiusura

@@ -2,6 +2,7 @@
 @using System.IO
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
+@using Microsoft.EntityFrameworkCore
 @using MyPersonalGit.Services
 @using Microsoft.Extensions.Localization
 @using MyPersonalGit.Resources
@@ -10,6 +11,7 @@
 @inject IAdminService AdminService
 @inject ICollaboratorService CollaboratorService
 @inject CurrentUserService UserService
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
@@ -108,8 +110,16 @@
                                 </div>
                             }
                         </div>
-                        <div class="d-flex gap-3 text-muted small ms-3">
-                            @if (repo.Stars > 0)
+                        <div class="d-flex gap-3 text-muted small ms-3 align-items-center">
+                            @if (UserService.IsLoggedIn)
+                            {
+                                <button class="btn btn-sm @(starredRepos.Contains(repo.Name) ? "btn-warning" : "btn-outline-secondary") py-0 px-1"
+                                        @onclick="() => ToggleStarExplore(repo.Name)" @onclick:preventDefault="true" @onclick:stopPropagation="true"
+                                        style="font-size: 11px;">
+                                    <i class="bi @(starredRepos.Contains(repo.Name) ? "bi-star-fill" : "bi-star") me-1"></i>@repo.Stars
+                                </button>
+                            }
+                            else if (repo.Stars > 0)
                             {
                                 <span><i class="bi bi-star-fill text-warning me-1"></i>@repo.Stars</span>
                             }
@@ -140,10 +150,49 @@
     private string searchQuery = "";
     private string sortBy = "updated";
     private string? selectedTopic;
+    private HashSet<string> starredRepos = new();
 
     protected override async Task OnInitializedAsync()
     {
         await LoadRepositories();
+        if (UserService.IsLoggedIn)
+        {
+            try
+            {
+                using var db = DbFactory.CreateDbContext();
+                starredRepos = (await db.RepositoryStars
+                    .Where(s => s.Username == UserService.Username)
+                    .Select(s => s.RepoName)
+                    .ToListAsync()).ToHashSet();
+            }
+            catch { }
+        }
+    }
+
+    private async Task ToggleStarExplore(string repoName)
+    {
+        if (!UserService.IsLoggedIn) return;
+        try
+        {
+            using var db = DbFactory.CreateDbContext();
+            var existing = await db.RepositoryStars.FirstOrDefaultAsync(s => s.RepoName == repoName && s.Username == UserService.Username);
+            var repo = await db.Repositories.FirstOrDefaultAsync(r => r.Name == repoName);
+            if (existing != null)
+            {
+                db.RepositoryStars.Remove(existing);
+                if (repo != null) repo.Stars = Math.Max(0, repo.Stars - 1);
+                starredRepos.Remove(repoName);
+            }
+            else
+            {
+                db.RepositoryStars.Add(new RepositoryStar { RepoName = repoName, Username = UserService.Username, StarredAt = DateTime.UtcNow });
+                if (repo != null) repo.Stars++;
+                starredRepos.Add(repoName);
+            }
+            await db.SaveChangesAsync();
+            await LoadRepositories();
+        }
+        catch { }
     }
 
     private async Task LoadRepositories()

@@ -1005,4 +1005,7 @@
   <data name="Issues_CloseSelected" xml:space="preserve"><value>Fermer la sélection</value></data>
   <data name="Issues_ReopenSelected" xml:space="preserve"><value>Réouvrir la sélection</value></data>
   <data name="PR_SquashMessagePlaceholder" xml:space="preserve"><value>Message de commit squash personnalisé (optionnel)</value></data>
+
+  <!-- Branch delete -->
+  <data name="PR_DeleteBranchAfterMerge" xml:space="preserve"><value>Supprimer la branche source après la fusion</value></data>
 </root>

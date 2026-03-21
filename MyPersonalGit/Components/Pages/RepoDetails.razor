@@ -5007,7 +5007,8 @@ else
         _ => "#8b949e"
     };
 
-    private void ViewFileHistory() { activeTab = "commits"; LoadRepoData(); }
+    private string? fileHistoryPath;
+    private void ViewFileHistory() { fileHistoryPath = Path; activeTab = "commits"; LoadRepoData(); }
     private void ClearFileFilter() { Path = null; activeTab = "commits"; LoadRepoData(); }
     private void SwitchBranch(string name) { currentBranch = name; Path = null; activeTab = "code"; showBranchDropdown = false; LoadRepoData(); }
     private void EnterEditMode() { editingContent = fileContent; commitMessage = $"Update {System.IO.Path.GetFileName(Path)}"; editorMode = "edit"; activeTab = "edit"; }

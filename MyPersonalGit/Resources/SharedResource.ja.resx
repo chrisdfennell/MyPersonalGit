@@ -1005,4 +1005,7 @@
   <data name="Issues_CloseSelected" xml:space="preserve"><value>選択を閉じる</value></data>
   <data name="Issues_ReopenSelected" xml:space="preserve"><value>選択を再開</value></data>
   <data name="PR_SquashMessagePlaceholder" xml:space="preserve"><value>カスタムスカッシュコミットメッセージ（任意）</value></data>
+
+  <!-- Branch delete -->
+  <data name="PR_DeleteBranchAfterMerge" xml:space="preserve"><value>マージ後にソースブランチを削除</value></data>
 </root>

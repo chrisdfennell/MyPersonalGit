@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using MyPersonalGit.Models;
 
@@ -137,6 +138,24 @@ public class IssueService : IIssueService
             repoName,
             $"/repo/{repoName}/issues/{number}"
         );
+
+        // Detect @mentions and notify mentioned users
+        var mentions = Regex.Matches(body, @"@([a-zA-Z0-9_-]+)")
+            .Select(m => m.Groups[1].Value)
+            .Where(u => !u.Equals(author, StringComparison.OrdinalIgnoreCase))
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+        foreach (var mentioned in mentions)
+        {
+            var user = await db.Users.FirstOrDefaultAsync(u => u.Username == mentioned);
+            if (user != null)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    mentioned, NotificationType.Mention,
+                    $"Mentioned in issue #{number}",
+                    $"{author} mentioned you: {body[..Math.Min(100, body.Length)]}...",
+                    repoName, $"/repo/{repoName}/issues/{number}");
+            }
+        }
 
         return true;
     }

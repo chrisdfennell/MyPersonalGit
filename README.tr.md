@@ -71,6 +71,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Depo Etiketleri** — Depo başına özel renklerle etiket yönetimi; şablonlardan depo oluştururken etiketler otomatik olarak kopyalanır
 - **AGit Flow** — Push-to-review iş akışı: `git push origin HEAD:refs/for/main` fork yapmadan veya uzak dal oluşturmadan bir pull request oluşturur. Sonraki push'larda mevcut açık PR'ları günceller
 - **Keşfet** — Arama, sıralama ve konu filtreleme ile erişilebilir tüm depoları görüntüleyin
+- **Star from Explore** — Her depoyu açmadan Keşfet sayfasından doğrudan depolara yıldız ekleyin ve kaldırın
 - **Autolink References** — `#123` ifadesini otomatik olarak sorun bağlantılarına dönüştürün, ayrıca depo başına yapılandırılabilir özel kalıplar (örn. `JIRA-456` → harici URL'ler) desteği
 - **Arama** — Depolar, sorunlar, PR'lar ve kod genelinde tam metin arama
 - **License Detection** — LICENSE dosyalarını otomatik olarak algılar ve yaygın lisansları (MIT, Apache-2.0, GPL, BSD, ISC, MPL, Unlicense) depo kenar çubuğundaki bir rozetle tanımlar
@@ -80,8 +81,10 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Sorun Bağımlılıkları** — Döngüsel bağımlılık tespiti ile sorunlar arasında "engelleyen" ve "engellenen" ilişkilerini tanımlayın
 - **Sorun Sabitleme ve Kilitleme** — Önemli sorunları listenin üstüne sabitleyin ve daha fazla yorumu önlemek için konuşmaları kilitleyin
 - **Yorum Düzenleme ve Silme** — Sorunlar ve pull request'lerdeki kendi yorumlarınızı "(düzenlendi)" göstergesiyle düzenleyin veya silin
+- **@Mention Notifications** — Yorumlarda kullanıcıları @bahsederek onlara doğrudan bildirim gönderin
 - **Birleştirme Çakışması Çözümü** — Base/ours/theirs görünümleri, hızlı kabul düğmeleri ve çakışma işaretçisi doğrulaması ile tarayıcıda doğrudan birleştirme çakışmalarını çözün
 - **Squash Commit Message** — Bir pull request'i squash-merge yaparken commit mesajını özelleştirin
+- **Branch Delete After Merge** — Bir pull request birleştirildikten sonra kaynak dalı otomatik olarak silme seçeneği, varsayılan olarak etkin
 - **Tartışmalar** — Kategoriler (Genel, Soru-Cevap, Duyurular, Fikirler, Göster ve Anlat, Anketler), sabitleme/kilitleme, yanıt olarak işaretleme ve oylama ile depo başına GitHub Discussions tarzı zincirleme konuşmalar
 - **Kod İnceleme Önerileri** — PR satır içi incelemelerinde "Değişiklik öner" modu, incelemecilerin doğrudan fark içinde kod değişikliği önermesine olanak tanır
 - **Image Diff** — Pull request'lerde değiştirilen görsellerin (PNG, JPG, GIF, SVG, WebP) görsel karşılaştırması için opaklık kaydırıcısı ile yan yana görsel karşılaştırma
@@ -90,6 +93,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Diff Söz Dizimi Vurgulama** — Prism.js aracılığıyla pull request ve karşılaştırma diff'lerinde dile duyarlı söz dizimi renklendirmesi
 - **Emoji Tepkileri** — Sorunlara, PR'lara, tartışmalara ve yorumlara beğeni/beğenmeme, kalp, gülen, kutlama, şaşkınlık, roket ve göz tepkileri
 - **Auto-Merge** — Pull request'lerde otomatik birleştirmeyi etkinleştirerek tüm gerekli durum kontrolleri geçtiğinde ve incelemeler onaylandığında otomatik birleştirme
+- **CI Status on PR List** — Pull request listesi her PR başlığının yanında yeşil/kırmızı/sarı CI durum simgeleri gösterir
 - **Cherry-Pick / Revert via UI** — Web arayüzünden herhangi bir commit'i başka bir dala cherry-pick yapın veya bir commit'i doğrudan ya da yeni bir pull request olarak geri alın
 - **Transfer Issues** — Başlığı, gövdeyi, yorumları, eşleşen etiketleri koruyarak ve orijinali bir transfer notu ile bağlayarak sorunları depolar arasında taşıyın
 - **Saved Replies** — Hazır yanıtları kaydedin ve sorunlara veya pull request'lere yorum yaparken hızlıca ekleyin
@@ -97,6 +101,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **CODEOWNERS** — Birleştirme öncesi CODEOWNERS onayı gerektirme seçeneğiyle dosya yollarına göre PR incelemecilerini otomatik atama
 - **Depo Şablonları** — Dosyaların, etiketlerin, sorun şablonlarının ve dal koruma kurallarının otomatik kopyalanması ile şablonlardan yeni depolar oluşturun
 - **Taslak Sorunlar ve Sorun Şablonları** — Taslak sorunlar (devam eden çalışma) oluşturun ve varsayılan etiketlerle depo başına yeniden kullanılabilir sorun şablonları (hata raporu, özellik isteği) tanımlayın
+- **PR Template** — `.github/PULL_REQUEST_TEMPLATE.md` dosyasından pull request açıklamalarını otomatik olarak önceden doldurma
 - **Release Editing** — Oluşturulduktan sonra sürüm başlıklarını, açıklamalarını ve taslak/ön sürüm bayraklarını düzenleyin
 - **Wiki** — Revizyon geçmişi ile depo başına Markdown tabanlı wiki sayfaları
 - **Projeler** — İş organizasyonu için sürükle-bırak kartlarla Kanban panoları
@@ -178,6 +183,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Yönetici Paneli** — Sistem ayarları (veritabanı sağlayıcı, SSH sunucusu, LDAP/AD, alt bilgi sayfaları dahil), kullanıcı yönetimi, denetim günlükleri ve istatistikler
 - **Özelleştirilebilir Alt Bilgi Sayfaları** — Admin > Settings'den düzenlenebilir Markdown içerikli Kullanım Koşulları, Gizlilik Politikası, Dokümantasyon ve İletişim sayfaları
 - **Kullanıcı Profilleri** — Kullanıcı başına katkı ısı haritası, etkinlik akışı ve istatistikler
+- **Gravatar Avatars** — Arayüz genelindeki kullanıcı avatarları, kullanıcı adına dayalı Gravatar identicon'ları kullanır, otomatik yedek desteğiyle
 - **Kişisel Erişim Belirteçleri** — Yapılandırılabilir kapsamlar ve isteğe bağlı rota düzeyinde kısıtlamalarla (belirteç erişimini belirli API yollarına sınırlamak için `/api/packages/**` gibi glob kalıpları) belirteç tabanlı API kimlik doğrulaması
 - **Yedekleme ve Geri Yükleme** — Sunucu verilerini dışa ve içe aktarma
 - **Güvenlik Taraması** — [OSV.dev](https://osv.dev/) veritabanı destekli gerçek bağımlılık güvenlik açığı taraması. `.csproj` (NuGet), `package.json` (npm), `requirements.txt` (PyPI), `Cargo.toml` (Rust), `Gemfile` (Ruby), `composer.json` (PHP), `go.mod` (Go), `pom.xml` (Maven/Java) ve `pubspec.yaml` (Dart/Flutter) dosyalarından bağımlılıkları otomatik çıkarır, ardından her birini bilinen CVE'lere karşı kontrol eder. Önem derecesi, düzeltilmiş sürümler ve danışma bağlantıları raporlar. Ayrıca taslak/yayınla/kapat iş akışıyla manuel güvenlik danışmaları

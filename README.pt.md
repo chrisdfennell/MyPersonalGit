@@ -71,6 +71,7 @@ Um servidor Git auto-hospedado com interface web semelhante ao GitHub, construí
 - **Labels de Repositório** — Gerencie labels com cores personalizadas por repositório; labels são automaticamente copiadas ao criar repositórios a partir de templates
 - **AGit Flow** — Fluxo de trabalho push-to-review: `git push origin HEAD:refs/for/main` cria um pull request sem fazer fork ou criar branches remotos. Pushes subsequentes atualizam PRs abertos existentes
 - **Explorar** — Navegue por todos os repositórios acessíveis com busca, ordenação e filtragem por tópicos
+- **Star from Explore** — Adicione e remova estrelas de repositórios diretamente da página Explorar sem abrir cada repositório
 - **Autolink References** — Converte automaticamente `#123` em links de issues, além de padrões personalizados configuráveis (por exemplo, `JIRA-456` → URLs externas) por repositório
 - **Busca** — Busca de texto completo em repositórios, issues, PRs e código
 - **License Detection** — Detecta automaticamente arquivos LICENSE e identifica licenças comuns (MIT, Apache-2.0, GPL, BSD, ISC, MPL, Unlicense) com um badge na barra lateral do repositório
@@ -80,8 +81,10 @@ Um servidor Git auto-hospedado com interface web semelhante ao GitHub, construí
 - **Dependências de Issues** — Defina relacionamentos "bloqueado por" e "bloqueia" entre issues com detecção de dependências circulares
 - **Fixação e Bloqueio de Issues** — Fixe issues importantes no topo da lista e bloqueie conversas para impedir comentários adicionais
 - **Edição e Exclusão de Comentários** — Edite ou exclua seus próprios comentários em issues e pull requests com indicador "(editado)"
+- **@Mention Notifications** — @mencione usuários em comentários para enviar-lhes uma notificação direta
 - **Resolução de Conflitos de Merge** — Resolva conflitos de merge diretamente no navegador com um editor visual mostrando visualizações base/nosso/deles, botões de aceitação rápida e validação de marcadores de conflito
 - **Squash Commit Message** — Personalize a mensagem de commit ao fazer squash-merge de um pull request
+- **Branch Delete After Merge** — Opção para excluir automaticamente o branch de origem após mesclar um pull request, habilitada por padrão
 - **Discussões** — Conversas encadeadas por repositório no estilo GitHub Discussions com categorias (Geral, Perguntas e Respostas, Anúncios, Ideias, Mostra e Conta, Enquetes), fixar/bloquear, marcar como resposta e votos positivos
 - **Sugestões de Revisão de Código** — Modo "Sugerir alterações" em revisões inline de PR permite que revisores proponham substituições de código diretamente no diff
 - **Image Diff** — Comparação de imagens lado a lado em pull requests com controle deslizante de opacidade para diff visual de imagens alteradas (PNG, JPG, GIF, SVG, WebP)
@@ -90,6 +93,7 @@ Um servidor Git auto-hospedado com interface web semelhante ao GitHub, construí
 - **Destaque de sintaxe em Diffs** — Coloração de sintaxe baseada em linguagem em diffs de pull requests e comparações via Prism.js
 - **Reações com Emoji** — Reaja a issues, PRs, discussões e comentários com polegar para cima/baixo, coração, risada, comemoração, confuso, foguete e olhos
 - **Auto-Merge** — Ative o auto-merge em pull requests para mesclar automaticamente quando todas as verificações de status obrigatórias passarem e as revisões forem aprovadas
+- **CI Status on PR List** — A lista de pull requests mostra ícones de status CI verdes/vermelhos/amarelos ao lado de cada título de PR
 - **Cherry-Pick / Revert via UI** — Faça cherry-pick de qualquer commit para outro branch ou reverta um commit, diretamente ou como um novo pull request, pela interface web
 - **Transfer Issues** — Mova issues entre repositórios, preservando título, corpo, comentários, labels correspondentes e vinculando o original com uma nota de transferência
 - **Saved Replies** — Salve respostas predefinidas e insira-as rapidamente ao comentar em issues ou pull requests
@@ -97,6 +101,7 @@ Um servidor Git auto-hospedado com interface web semelhante ao GitHub, construí
 - **CODEOWNERS** — Atribuição automática de revisores de PR com base em caminhos de arquivo com aplicação opcional exigindo aprovação do CODEOWNERS antes do merge
 - **Templates de Repositório** — Crie novos repositórios a partir de templates com cópia automática de arquivos, labels, templates de issues e regras de proteção de branch
 - **Issues Rascunho e Templates de Issues** — Crie issues rascunho (trabalho em andamento) e defina templates de issues reutilizáveis (relatório de bug, solicitação de recurso) por repositório com labels padrão
+- **PR Template** — Preencha automaticamente as descrições de pull requests a partir de `.github/PULL_REQUEST_TEMPLATE.md`
 - **Release Editing** — Edite títulos, descrições e flags de rascunho/pré-lançamento de releases após a criação
 - **Wiki** — Páginas wiki baseadas em Markdown por repositório com histórico de revisões
 - **Projetos** — Quadros Kanban com cartões arrastar e soltar para organizar o trabalho
@@ -178,6 +183,7 @@ Um servidor Git auto-hospedado com interface web semelhante ao GitHub, construí
 - **Painel Admin** — Configurações do sistema (incluindo provedor de banco de dados, servidor SSH, LDAP/AD, páginas de rodapé), gerenciamento de usuários, logs de auditoria e estatísticas
 - **Páginas de Rodapé Personalizáveis** — Termos de Serviço, Política de Privacidade, Documentação e páginas de Contato com conteúdo Markdown editável em Admin > Configurações
 - **Perfis de Usuário** — Mapa de calor de contribuições, feed de atividade e estatísticas por usuário
+- **Gravatar Avatars** — Avatares de usuário em toda a interface usam identicons Gravatar baseados no nome de usuário, com fallback automático
 - **Tokens de Acesso Pessoal** — Autenticação de API baseada em tokens com escopos configuráveis e restrições opcionais no nível de rota (padrões glob como `/api/packages/**` para limitar o acesso do token a caminhos de API específicos)
 - **Backup e Restauração** — Exporte e importe dados do servidor
 - **Varredura de Segurança** — Varredura real de vulnerabilidades de dependências alimentada pelo banco de dados [OSV.dev](https://osv.dev/). Extrai automaticamente dependências de `.csproj` (NuGet), `package.json` (npm), `requirements.txt` (PyPI), `Cargo.toml` (Rust), `Gemfile` (Ruby), `composer.json` (PHP), `go.mod` (Go), `pom.xml` (Maven/Java) e `pubspec.yaml` (Dart/Flutter), verificando cada uma contra CVEs conhecidos. Reporta severidade, versões corrigidas e links de consultoria. Além de consultoria de segurança manual com fluxo de trabalho rascunho/publicar/fechar
