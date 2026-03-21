@@ -6,6 +6,7 @@
 @using MyPersonalGit.Services
 @using MyPersonalGit.Components.Shared
 @using static MyPersonalGit.Components.Shared.IdeTabBar
+@using static MyPersonalGit.Components.Shared.IdeSettingsPanel
 @inject IWebIdeService WebIdeService
 @inject IJSRuntime JS
 @inject IConfiguration Config
@@ -14,7 +15,7 @@
 @inject IAdminService AdminService
 @implements IAsyncDisposable
 
-<div class="ide-container">
+<div class="ide-container" @onkeydown="HandleGlobalKeyDown" tabindex="0" @ref="ideContainerRef">
     <div class="ide-sidebar">
         <div class="ide-sidebar-tabs">
             <button class="ide-sidebar-tab @(sidebarMode == "files" ? "active" : "")" @onclick='() => sidebarMode = "files"' title="Explorer">
@@ -22,6 +23,12 @@
             </button>
             <button class="ide-sidebar-tab @(sidebarMode == "search" ? "active" : "")" @onclick='() => sidebarMode = "search"' title="Search">
                 <i class="bi bi-search"></i>
+            </button>
+            <button class="ide-sidebar-tab @(sidebarMode == "sourcecontrol" ? "active" : "")" @onclick='() => sidebarMode = "sourcecontrol"' title="Source Control">
+                <i class="bi bi-git"></i>
+            </button>
+            <button class="ide-sidebar-tab @(sidebarMode == "settings" ? "active" : "")" @onclick='() => sidebarMode = "settings"' title="Settings" style="margin-top: auto;">
+                <i class="bi bi-gear"></i>
             </button>
         </div>
         <div class="ide-sidebar-content">
@@ -36,20 +43,66 @@
                              OnDeletePath="HandleDeletePath"
                              OnRenamePath="HandleRenamePath" />
             }
-            else
+            else if (sidebarMode == "search")
             {
                 <IdeSearchPanel RepoName="@RepoName"
                                 Branch="@currentBranch"
                                 OnResultSelected="HandleSearchResultSelected" />
             }
+            else if (sidebarMode == "sourcecontrol")
+            {
+                <div class="ide-source-control">
+                    <div class="ide-sc-header px-3 py-2">
+                        <span class="small fw-semibold">Source Control</span>
+                        @if (modifiedFiles.Count > 0)
+                        {
+                            <span class="badge bg-primary rounded-pill ms-2">@modifiedFiles.Count</span>
+                        }
+                    </div>
+                    @if (modifiedFiles.Count == 0)
+                    {
+                        <div class="text-muted small px-3 py-2">
+                            <i class="bi bi-check-circle me-1"></i>No changes
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="ide-sc-files">
+                            @foreach (var filePath in modifiedFiles)
+                            {
+                                var fileName = System.IO.Path.GetFileName(filePath);
+                                <div class="ide-sc-file" @onclick="() => OpenDiffView(filePath)" title="Click to view diff">
+                                    <i class="bi bi-file-earmark-diff me-2 text-warning"></i>
+                                    <span class="ide-sc-filename">@fileName</span>
+                                    <span class="ide-sc-filepath text-muted ms-2">@filePath</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else if (sidebarMode == "settings")
+            {
+                <IdeSettingsPanel EditorId="@editorId"
+                                  SplitEditorId="@splitEditorId"
+                                  OnSettingsChanged="HandleSettingsChanged" />
+            }
         </div>
     </div>
 
     <div class="ide-tabs">
-        <IdeTabBar Tabs="openTabs"
-                   ActiveTabPath="@activeTabPath"
-                   OnTabSelected="HandleTabSelected"
-                   OnTabClosed="HandleTabClosed" />
+        <div class="ide-tabs-row">
+            <IdeTabBar Tabs="openTabs"
+                       ActiveTabPath="@activeTabPath"
+                       OnTabSelected="HandleTabSelected"
+                       OnTabClosed="HandleTabClosed" />
+            @if (openTabs.Count > 0)
+            {
+                <button class="ide-split-btn" @onclick="ToggleSplitEditor" title="@(isSplit ? "Close Split" : "Split Editor")">
+                    <i class="bi @(isSplit ? "bi-layout-sidebar-reverse" : "bi-layout-split")"></i>
+                </button>
+            }
+        </div>
     </div>
 
     <div class="ide-editor">
@@ -59,26 +112,72 @@
                 <span class="spinner-border spinner-border-sm me-2"></span>Loading...
             </div>
         }
-        else if (openTabs.Count == 0)
+        else if (openTabs.Count == 0 && !showDiffView)
         {
             <div class="ide-welcome d-flex flex-column align-items-center justify-content-center h-100 text-muted">
                 <i class="bi bi-braces display-3 mb-3 opacity-25"></i>
                 <h5 class="fw-light opacity-50">Web IDE</h5>
                 <p class="small opacity-50">Select a file from the tree to begin editing</p>
                 <div class="mt-3 small opacity-50">
-                    <p class="mb-1"><kbd>Ctrl+S</kbd> Save &middot; <kbd>Ctrl+Shift+F</kbd> Search</p>
+                    <p class="mb-1"><kbd>Ctrl+S</kbd> Save &middot; <kbd>Ctrl+Shift+F</kbd> Search &middot; <kbd>Ctrl+P</kbd> Quick Open &middot; <kbd>Ctrl+`</kbd> Terminal</p>
                 </div>
             </div>
         }
-        <div id="monaco-container" style="width: 100%; height: 100%; @(openTabs.Count == 0 ? "display: none;" : "")"></div>
+
+        @if (showDiffView)
+        {
+            <div class="ide-diff-header px-3 py-1">
+                <i class="bi bi-file-earmark-diff me-2"></i>
+                <span class="small">Diff: @diffFilePath</span>
+                <button class="btn btn-sm btn-link text-muted ms-auto p-0" @onclick="CloseDiffView">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div id="diff-editor-container" style="width: 100%; flex: 1;"></div>
+        }
+        else
+        {
+            <div class="ide-editor-panes @(isSplit ? "split" : "")" style="@(openTabs.Count == 0 ? "display: none;" : "")">
+                <div id="monaco-container" class="ide-pane" @onclick="() => SetActivePane(1)"></div>
+                @if (isSplit)
+                {
+                    <div class="ide-pane-divider"></div>
+                    <div id="monaco-container-split" class="ide-pane" @onclick="() => SetActivePane(2)"></div>
+                }
+            </div>
+        }
     </div>
 
     <div class="ide-bottom-panel">
-        <IdeCommitPanel Changes="pendingChanges"
-                        OnCommit="HandleCommit"
-                        IsCommitting="isCommitting" />
+        <div class="ide-bottom-tabs">
+            <button class="ide-bottom-tab @(bottomPanelMode == "commits" ? "active" : "")" @onclick='() => bottomPanelMode = "commits"'>
+                <i class="bi bi-git me-1"></i>Commits
+            </button>
+            <button class="ide-bottom-tab @(bottomPanelMode == "terminal" ? "active" : "")" @onclick="ToggleTerminal">
+                <i class="bi bi-terminal me-1"></i>Terminal
+            </button>
+        </div>
+        @if (bottomPanelMode == "commits")
+        {
+            <IdeCommitPanel Changes="pendingChanges"
+                            OnCommit="HandleCommit"
+                            IsCommitting="isCommitting" />
+        }
+        else if (bottomPanelMode == "terminal")
+        {
+            <div class="ide-terminal-wrapper" style="height: 200px;">
+                <IdeTerminal RepoName="@RepoName" IsVisible="@(bottomPanelMode == "terminal")" />
+            </div>
+        }
     </div>
 </div>
+
+@if (showQuickOpen)
+{
+    <IdeQuickOpen TreeNodes="treeNodes"
+                  OnFileSelected="HandleFileSelected"
+                  OnClose="() => { showQuickOpen = false; StateHasChanged(); }" />
+}
 
 @code {
     [Parameter] public string RepoName { get; set; } = "";
@@ -97,6 +196,29 @@
     private string? editorId;
     private List<FileChange> pendingChanges = new();
     private DotNetObjectReference<WebIde>? dotNetRef;
+
+    // Split editor state
+    private bool isSplit;
+    private string? splitEditorId;
+    private int activePane = 1; // 1 = left/main, 2 = right/split
+    private string? splitActiveTabPath;
+
+    // Bottom panel state
+    private string bottomPanelMode = "commits";
+
+    // Quick open state
+    private bool showQuickOpen;
+
+    // Diff view state
+    private bool showDiffView;
+    private string? diffFilePath;
+    private string? diffEditorId;
+
+    // Settings
+    private EditorSettings? currentSettings;
+
+    // Element reference for keyboard events
+    private ElementReference ideContainerRef;
 
     protected override async Task OnInitializedAsync()
     {
@@ -167,12 +289,27 @@
                 // Load Monaco from CDN first
                 await JS.InvokeVoidAsync("monacoInterop.init");
 
+                // Load saved settings
+                await LoadSavedSettings();
+
                 // Initialize Monaco editor
                 var theme = await JS.InvokeAsync<string>("themeHelper.get");
                 var monacoTheme = theme == "dark" ? "vs-dark" : "vs";
 
-                editorId = await JS.InvokeAsync<string>("monacoInterop.createEditor", "monaco-container",
-                    new { theme = monacoTheme, fontSize = 14, minimap = true });
+                var editorOptions = new Dictionary<string, object>
+                {
+                    { "theme", monacoTheme },
+                    { "fontSize", currentSettings?.FontSize ?? 14 },
+                    { "minimap", currentSettings?.MinimapEnabled ?? true }
+                };
+
+                editorId = await JS.InvokeAsync<string>("monacoInterop.createEditor", "monaco-container", editorOptions);
+
+                // Apply full settings if available
+                if (currentSettings != null)
+                {
+                    await ApplySettingsToEditor(editorId);
+                }
 
                 // Register content change callback
                 await JS.InvokeVoidAsync("monacoInterop.onDidChangeContent", editorId, dotNetRef, "OnEditorContentChanged");
@@ -191,8 +328,46 @@
         }
     }
 
+    private async Task LoadSavedSettings()
+    {
+        try
+        {
+            var saved = await JS.InvokeAsync<string?>("localStorage.getItem", "ide-settings");
+            if (!string.IsNullOrEmpty(saved))
+            {
+                currentSettings = System.Text.Json.JsonSerializer.Deserialize<EditorSettings>(saved);
+            }
+        }
+        catch { }
+    }
+
+    private async Task ApplySettingsToEditor(string targetEditorId)
+    {
+        if (currentSettings == null) return;
+        try
+        {
+            var options = new
+            {
+                fontSize = currentSettings.FontSize,
+                tabSize = currentSettings.TabSize,
+                wordWrap = currentSettings.WordWrap,
+                minimap = new { enabled = currentSettings.MinimapEnabled },
+                lineNumbers = currentSettings.LineNumbers ? "on" : "off",
+                renderWhitespace = currentSettings.RenderWhitespace
+            };
+            await JS.InvokeVoidAsync("monacoInterop.updateEditorOptions", targetEditorId, options);
+        }
+        catch { }
+    }
+
     private async Task HandleFileSelected(string path)
     {
+        // Close diff view if open
+        if (showDiffView)
+        {
+            await CloseDiffView();
+        }
+
         // Check if already open
         var existingTab = openTabs.FirstOrDefault(t => t.FilePath == path);
         if (existingTab != null)
@@ -243,11 +418,19 @@
 
     private async Task SwitchToTab(string path)
     {
-        if (editorId != null && fileContents.ContainsKey(path))
+        // Determine which editor to use based on active pane
+        var targetEditorId = activePane == 2 && isSplit ? splitEditorId : editorId;
+
+        if (targetEditorId != null && fileContents.ContainsKey(path))
         {
-            await JS.InvokeVoidAsync("monacoInterop.openFile", editorId, path, fileContents[path], !UserService.IsLoggedIn);
+            await JS.InvokeVoidAsync("monacoInterop.openFile", targetEditorId, path, fileContents[path], !UserService.IsLoggedIn);
         }
-        activeTabPath = path;
+
+        if (activePane == 2 && isSplit)
+            splitActiveTabPath = path;
+        else
+            activeTabPath = path;
+
         StateHasChanged();
     }
 
@@ -578,8 +761,211 @@
             .ToList();
     }
 
+    // ---- Split Editor ----
+
+    private async Task ToggleSplitEditor()
+    {
+        if (isSplit)
+        {
+            await CloseSplitEditor();
+        }
+        else
+        {
+            await OpenSplitEditor();
+        }
+    }
+
+    private async Task OpenSplitEditor()
+    {
+        if (isSplit || editorId == null) return;
+
+        isSplit = true;
+        StateHasChanged();
+        await Task.Delay(50); // Let Blazor render the split container
+
+        try
+        {
+            var editorOptions = new Dictionary<string, object>
+            {
+                { "fontSize", currentSettings?.FontSize ?? 14 },
+                { "minimap", currentSettings?.MinimapEnabled ?? true }
+            };
+
+            splitEditorId = await JS.InvokeAsync<string>("monacoInterop.createSplitEditor",
+                "monaco-container", editorId, editorOptions);
+
+            // Apply settings to the new split editor
+            if (currentSettings != null && splitEditorId != null)
+            {
+                await ApplySettingsToEditor(splitEditorId);
+            }
+
+            // Register content change callback for split editor
+            if (splitEditorId != null && dotNetRef != null)
+            {
+                await JS.InvokeVoidAsync("monacoInterop.onDidChangeContent", splitEditorId, dotNetRef, "OnEditorContentChanged");
+            }
+
+            // If there's an active file, open it in the split pane too
+            if (activeTabPath != null && fileContents.ContainsKey(activeTabPath))
+            {
+                splitActiveTabPath = activeTabPath;
+                await JS.InvokeVoidAsync("monacoInterop.openFile", splitEditorId, activeTabPath, fileContents[activeTabPath], !UserService.IsLoggedIn);
+            }
+
+            // Re-layout both editors
+            await JS.InvokeVoidAsync("monacoInterop.layout", editorId);
+            await JS.InvokeVoidAsync("monacoInterop.layout", splitEditorId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Split editor error: {ex.Message}");
+            isSplit = false;
+            splitEditorId = null;
+        }
+    }
+
+    private async Task CloseSplitEditor()
+    {
+        if (!isSplit || splitEditorId == null) return;
+
+        try
+        {
+            await JS.InvokeVoidAsync("monacoInterop.closeSplitEditor", splitEditorId, "monaco-container");
+        }
+        catch { }
+
+        splitEditorId = null;
+        splitActiveTabPath = null;
+        isSplit = false;
+        activePane = 1;
+        StateHasChanged();
+
+        // Re-layout main editor
+        if (editorId != null)
+        {
+            await Task.Delay(50);
+            try { await JS.InvokeVoidAsync("monacoInterop.layout", editorId); }
+            catch { }
+        }
+    }
+
+    private void SetActivePane(int pane)
+    {
+        activePane = pane;
+    }
+
+    // ---- Diff View ----
+
+    private async Task OpenDiffView(string filePath)
+    {
+        // Close any existing diff view
+        await CloseDiffView();
+
+        diffFilePath = filePath;
+        showDiffView = true;
+        StateHasChanged();
+        await Task.Delay(50); // Let Blazor render the diff container
+
+        try
+        {
+            // Get original content from the committed version
+            var originalContent = "";
+            var tab = openTabs.FirstOrDefault(t => t.FilePath == filePath);
+            if (tab != null)
+            {
+                originalContent = tab.OriginalContent ?? "";
+            }
+            else
+            {
+                try
+                {
+                    var fileData = await WebIdeService.GetFileContentAsync(RepoName, currentBranch, filePath);
+                    originalContent = fileData.Content;
+                }
+                catch { }
+            }
+
+            // Get current (modified) content
+            var modifiedContent = fileContents.GetValueOrDefault(filePath, originalContent);
+
+            diffEditorId = await JS.InvokeAsync<string>("monacoInterop.createDiffEditor",
+                "diff-editor-container", originalContent, modifiedContent, filePath);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Diff editor error: {ex.Message}");
+            showDiffView = false;
+        }
+    }
+
+    private async Task CloseDiffView()
+    {
+        if (diffEditorId != null)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("monacoInterop.disposeDiffEditor", diffEditorId);
+            }
+            catch { }
+            diffEditorId = null;
+        }
+        showDiffView = false;
+        diffFilePath = null;
+        StateHasChanged();
+    }
+
+    // ---- Terminal ----
+
+    private void ToggleTerminal()
+    {
+        bottomPanelMode = bottomPanelMode == "terminal" ? "commits" : "terminal";
+    }
+
+    // ---- Quick Open ----
+
+    private void HandleGlobalKeyDown(KeyboardEventArgs e)
+    {
+        // Ctrl+P: Quick Open
+        if (e.CtrlKey && e.Key == "p")
+        {
+            showQuickOpen = !showQuickOpen;
+            StateHasChanged();
+        }
+        // Ctrl+` (backtick): Toggle Terminal
+        else if (e.CtrlKey && e.Key == "`")
+        {
+            ToggleTerminal();
+            StateHasChanged();
+        }
+    }
+
+    // ---- Settings ----
+
+    private void HandleSettingsChanged(EditorSettings settings)
+    {
+        currentSettings = settings;
+    }
+
+    // ---- Dispose ----
+
     public async ValueTask DisposeAsync()
     {
+        // Dispose diff editor
+        if (diffEditorId != null)
+        {
+            try { await JS.InvokeVoidAsync("monacoInterop.disposeDiffEditor", diffEditorId); }
+            catch { }
+        }
+
+        // Dispose split editor
+        if (splitEditorId != null)
+        {
+            try { await JS.InvokeVoidAsync("monacoInterop.closeSplitEditor", splitEditorId, "monaco-container"); }
+            catch { }
+        }
+
+        // Dispose main editor
         if (editorId != null)
         {
             try

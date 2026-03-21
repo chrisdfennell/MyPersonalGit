@@ -1,0 +1,162 @@
+@inject IJSRuntime JS
+
+<div class="ide-settings-panel">
+    <div class="ide-settings-header">
+        <i class="bi bi-gear me-2"></i>Editor Settings
+    </div>
+    <div class="ide-settings-body">
+        <div class="ide-settings-group">
+            <label class="ide-settings-label">Font Size</label>
+            <div class="d-flex align-items-center gap-2">
+                <input type="range" class="form-range flex-grow-1" min="10" max="24" step="1"
+                       @bind-value="fontSize" @bind-value:event="oninput" @onchange="ApplySettings" />
+                <span class="ide-settings-value">@fontSize px</span>
+            </div>
+        </div>
+
+        <div class="ide-settings-group">
+            <label class="ide-settings-label">Tab Size</label>
+            <div class="d-flex gap-2">
+                @foreach (var size in new[] { 2, 4, 8 })
+                {
+                    <button class="btn btn-sm @(tabSize == size ? "btn-primary" : "btn-outline-secondary")"
+                            @onclick="() => { tabSize = size; ApplySettings(); }">
+                        @size
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="ide-settings-group">
+            <label class="ide-settings-label">Word Wrap</label>
+            <select class="form-select form-select-sm" @bind="wordWrap" @bind:after="ApplySettings">
+                <option value="off">Off</option>
+                <option value="on">On</option>
+                <option value="wordWrapColumn">Word Wrap Column</option>
+            </select>
+        </div>
+
+        <div class="ide-settings-group">
+            <label class="ide-settings-label">Minimap</label>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" @bind="minimapEnabled" @bind:after="ApplySettings" />
+                <label class="form-check-label small">@(minimapEnabled ? "Visible" : "Hidden")</label>
+            </div>
+        </div>
+
+        <div class="ide-settings-group">
+            <label class="ide-settings-label">Line Numbers</label>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" @bind="lineNumbers" @bind:after="ApplySettings" />
+                <label class="form-check-label small">@(lineNumbers ? "On" : "Off")</label>
+            </div>
+        </div>
+
+        <div class="ide-settings-group">
+            <label class="ide-settings-label">Render Whitespace</label>
+            <select class="form-select form-select-sm" @bind="renderWhitespace" @bind:after="ApplySettings">
+                <option value="none">None</option>
+                <option value="boundary">Boundary</option>
+                <option value="selection">Selection</option>
+                <option value="all">All</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? EditorId { get; set; }
+    [Parameter] public string? SplitEditorId { get; set; }
+    [Parameter] public EventCallback<EditorSettings> OnSettingsChanged { get; set; }
+
+    private int fontSize = 14;
+    private int tabSize = 4;
+    private string wordWrap = "off";
+    private bool minimapEnabled = true;
+    private bool lineNumbers = true;
+    private string renderWhitespace = "selection";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Load settings from localStorage
+            try
+            {
+                var saved = await JS.InvokeAsync<string?>("localStorage.getItem", "ide-settings");
+                if (!string.IsNullOrEmpty(saved))
+                {
+                    var settings = System.Text.Json.JsonSerializer.Deserialize<EditorSettings>(saved);
+                    if (settings != null)
+                    {
+                        fontSize = settings.FontSize;
+                        tabSize = settings.TabSize;
+                        wordWrap = settings.WordWrap;
+                        minimapEnabled = settings.MinimapEnabled;
+                        lineNumbers = settings.LineNumbers;
+                        renderWhitespace = settings.RenderWhitespace;
+                        StateHasChanged();
+                    }
+                }
+            }
+            catch { }
+        }
+    }
+
+    private async void ApplySettings()
+    {
+        var settings = new EditorSettings
+        {
+            FontSize = fontSize,
+            TabSize = tabSize,
+            WordWrap = wordWrap,
+            MinimapEnabled = minimapEnabled,
+            LineNumbers = lineNumbers,
+            RenderWhitespace = renderWhitespace
+        };
+
+        // Save to localStorage
+        try
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(settings);
+            await JS.InvokeVoidAsync("localStorage.setItem", "ide-settings", json);
+        }
+        catch { }
+
+        // Apply to editors via JS interop
+        try
+        {
+            var options = new
+            {
+                fontSize = settings.FontSize,
+                tabSize = settings.TabSize,
+                wordWrap = settings.WordWrap,
+                minimap = new { enabled = settings.MinimapEnabled },
+                lineNumbers = settings.LineNumbers ? "on" : "off",
+                renderWhitespace = settings.RenderWhitespace
+            };
+
+            if (!string.IsNullOrEmpty(EditorId))
+            {
+                await JS.InvokeVoidAsync("monacoInterop.updateEditorOptions", EditorId, options);
+            }
+            if (!string.IsNullOrEmpty(SplitEditorId))
+            {
+                await JS.InvokeVoidAsync("monacoInterop.updateEditorOptions", SplitEditorId, options);
+            }
+        }
+        catch { }
+
+        await OnSettingsChanged.InvokeAsync(settings);
+    }
+
+    public class EditorSettings
+    {
+        public int FontSize { get; set; } = 14;
+        public int TabSize { get; set; } = 4;
+        public string WordWrap { get; set; } = "off";
+        public bool MinimapEnabled { get; set; } = true;
+        public bool LineNumbers { get; set; } = true;
+        public string RenderWhitespace { get; set; } = "selection";
+    }
+}
