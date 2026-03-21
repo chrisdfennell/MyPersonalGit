@@ -447,6 +447,165 @@
     min-height: 200px;
 }
 
+/* Action buttons in tab bar (blame, history) */
+.ide-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: none;
+    color: #858585;
+    cursor: pointer;
+    flex-shrink: 0;
+    border-radius: 3px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.ide-action-btn:hover {
+    color: #ffffff;
+    background: #3c3c3c;
+}
+
+.ide-action-btn.active {
+    color: #4fc1ff;
+    background: #2a2d2e;
+}
+
+/* Command Palette */
+::deep .ide-command-palette-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    padding-top: 60px;
+}
+
+::deep .ide-command-palette-dialog {
+    width: 560px;
+    max-width: 90vw;
+    max-height: 400px;
+    background: #252526;
+    border: 1px solid #3c3c3c;
+    border-radius: 6px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+::deep .ide-command-palette-input-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #3c3c3c;
+}
+
+::deep .ide-command-palette-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: #cccccc;
+    font-size: 0.95rem;
+    font-family: inherit;
+}
+
+::deep .ide-command-palette-input::placeholder {
+    color: #666666;
+}
+
+::deep .ide-command-palette-results {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+}
+
+::deep .ide-command-palette-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.1s;
+}
+
+::deep .ide-command-palette-item:hover,
+::deep .ide-command-palette-item.selected {
+    background: #04395e;
+}
+
+::deep .ide-command-palette-shortcut {
+    color: #858585;
+    font-size: 0.75rem;
+    font-family: monospace;
+}
+
+::deep .ide-command-palette-empty {
+    padding: 16px;
+    text-align: center;
+    color: #858585;
+    font-size: 0.85rem;
+}
+
+/* File History panel */
+.ide-history-panel {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.ide-history-header {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #3c3c3c;
+    flex-shrink: 0;
+}
+
+.ide-history-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.ide-history-entry {
+    border-bottom: 1px solid #2d2d2d;
+    font-size: 0.8rem;
+    transition: background 0.1s;
+}
+
+.ide-history-entry:hover {
+    background: #2a2d2e;
+}
+
+/* Bottom panel expanded for history */
+.ide-bottom-panel.expanded {
+    max-height: 350px;
+}
+
+/* Blame annotation styles (global for Monaco) */
+:global(.ide-blame-annotation) {
+    color: #858585 !important;
+    font-size: 0.75em !important;
+    font-style: italic !important;
+    opacity: 0.7;
+    padding-right: 16px !important;
+}
+
+:global(.ide-blame-line-even) {
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
+:global(.ide-blame-line-odd) {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
 /* ============ Light mode overrides ============ */
 ::deep [data-bs-theme="light"] .ide-container {
     background: #ffffff;
@@ -547,4 +706,48 @@
 ::deep [data-bs-theme="light"] .ide-settings-body .btn-outline-secondary {
     color: #333333;
     border-color: #cccccc;
+}
+
+::deep [data-bs-theme="light"] .ide-action-btn {
+    color: #666666;
+}
+
+::deep [data-bs-theme="light"] .ide-action-btn:hover {
+    color: #333333;
+    background: #e0e0e0;
+}
+
+::deep [data-bs-theme="light"] .ide-action-btn.active {
+    color: #0078d4;
+    background: #e8e8e8;
+}
+
+::deep [data-bs-theme="light"] .ide-command-palette-dialog {
+    background: #ffffff;
+    border-color: #d0d0d0;
+}
+
+::deep [data-bs-theme="light"] .ide-command-palette-input {
+    color: #333333;
+}
+
+::deep [data-bs-theme="light"] .ide-command-palette-item:hover,
+::deep [data-bs-theme="light"] .ide-command-palette-item.selected {
+    background: #e0e8f0;
+}
+
+::deep [data-bs-theme="light"] .ide-history-entry:hover {
+    background: #e8e8e8;
+}
+
+:global([data-bs-theme="light"] .ide-blame-annotation) {
+    color: #999999 !important;
+}
+
+:global([data-bs-theme="light"] .ide-blame-line-even) {
+    background: rgba(0, 0, 0, 0.02) !important;
+}
+
+:global([data-bs-theme="light"] .ide-blame-line-odd) {
+    background: rgba(0, 0, 0, 0.04) !important;
 }

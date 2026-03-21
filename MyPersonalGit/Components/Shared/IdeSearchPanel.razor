@@ -4,6 +4,9 @@
 <div class="ide-search-panel">
     <div class="ide-search-header px-2 py-1 border-bottom">
         <span class="small fw-semibold"><i class="bi bi-search me-1"></i>Search</span>
+        <button class="btn btn-sm btn-link text-muted p-0 ms-auto" @onclick="ToggleReplace" title="Toggle Replace">
+            <i class="bi @(showReplace ? "bi-chevron-down" : "bi-chevron-right")"></i>
+        </button>
     </div>
 
     <div class="ide-search-inputs px-2 py-2">
@@ -15,6 +18,17 @@
                 <i class="bi bi-search"></i>
             </button>
         </div>
+        @if (showReplace)
+        {
+            <div class="input-group input-group-sm mb-1">
+                <input type="text" class="form-control" placeholder="Replace with..."
+                       @bind="replaceText" @bind:event="oninput" />
+                <button class="btn btn-outline-secondary" @onclick="ReplaceAll" disabled="@(isSearching || results == null || results.Count == 0)"
+                        title="Replace All">
+                    <i class="bi bi-arrow-repeat"></i>
+                </button>
+            </div>
+        }
         <input type="text" class="form-control form-control-sm" placeholder="File extension filter (e.g. .cs)"
                @bind="extFilter" @bind:event="oninput" />
     </div>
@@ -27,6 +41,12 @@
                 <span class="text-muted small ms-1">Searching...</span>
             </div>
         }
+        else if (replaceMessage != null)
+        {
+            <div class="text-success small px-3 py-2">
+                <i class="bi bi-check-circle me-1"></i>@replaceMessage
+            </div>
+        }
         else if (hasSearched && (results == null || results.Count == 0))
         {
             <div class="text-muted small px-3 py-2">
@@ -35,21 +55,42 @@
         }
         else if (results != null && results.Count > 0)
         {
-            <div class="small px-2 py-1 text-muted border-bottom">
-                @results.Count result(s) found
+            <div class="small px-2 py-1 text-muted border-bottom d-flex align-items-center">
+                <span>@results.Count result(s) in @groupedResults.Count file(s)</span>
+                @if (showReplace && !string.IsNullOrEmpty(replaceText))
+                {
+                    <button class="btn btn-sm btn-link text-warning p-0 ms-auto" @onclick="ReplaceAll" title="Replace All">
+                        Replace All
+                    </button>
+                }
             </div>
-            @foreach (var result in results.Take(200))
+            @foreach (var group in groupedResults)
             {
-                <div class="ide-search-result px-2 py-1" @onclick="() => SelectResult(result)" title="@result.FilePath:@result.LineNumber">
-                    <div class="ide-search-result-path text-truncate">
+                <div class="ide-search-file-group">
+                    <div class="ide-search-file-header px-2 py-1 d-flex align-items-center">
                         <i class="bi bi-file-earmark-code me-1"></i>
-                        <span class="fw-semibold">@GetFileName(result.FilePath)</span>
-                        <span class="text-muted ms-1">@GetDirectory(result.FilePath)</span>
-                        <span class="text-muted">:@result.LineNumber</span>
+                        <span class="fw-semibold">@GetFileName(group.Key)</span>
+                        <span class="text-muted ms-1 small">@GetDirectory(group.Key)</span>
+                        <span class="badge bg-secondary ms-auto rounded-pill">@group.Count()</span>
+                        @if (showReplace && !string.IsNullOrEmpty(replaceText))
+                        {
+                            <button class="btn btn-sm btn-link text-warning p-0 ms-2" @onclick="() => ReplaceInFile(group.Key)"
+                                    title="Replace all in this file">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </button>
+                        }
                     </div>
-                    <div class="ide-search-result-line font-monospace">
-                        @HighlightMatch(result.LineContent)
-                    </div>
+                    @foreach (var result in group.Take(50))
+                    {
+                        <div class="ide-search-result px-2 py-1" @onclick="() => SelectResult(result)" title="@result.FilePath:@result.LineNumber">
+                            <div class="ide-search-result-path text-truncate">
+                                <span class="text-muted">:@result.LineNumber</span>
+                            </div>
+                            <div class="ide-search-result-line font-monospace">
+                                @HighlightMatch(result.LineContent)
+                            </div>
+                        </div>
+                    }
                 </div>
             }
         }
@@ -60,12 +101,24 @@
     [Parameter] public string RepoName { get; set; } = "";
     [Parameter] public string Branch { get; set; } = "main";
     [Parameter] public EventCallback<(string filePath, int lineNumber)> OnResultSelected { get; set; }
+    [Parameter] public EventCallback<(string search, string replace, string? filePath)> OnReplace { get; set; }
 
     private string searchQuery = "";
+    private string replaceText = "";
     private string extFilter = "";
     private bool isSearching;
     private bool hasSearched;
+    private bool showReplace;
+    private string? replaceMessage;
     private List<SearchResult>? results;
+
+    private ILookup<string, SearchResult> groupedResults =>
+        (results ?? new List<SearchResult>()).ToLookup(r => r.FilePath);
+
+    private void ToggleReplace()
+    {
+        showReplace = !showReplace;
+    }
 
     private async Task HandleSearchKeyDown(KeyboardEventArgs e)
     {
@@ -79,6 +132,7 @@
 
         isSearching = true;
         hasSearched = true;
+        replaceMessage = null;
         StateHasChanged();
 
         try
@@ -100,6 +154,25 @@
     private async Task SelectResult(SearchResult result)
     {
         await OnResultSelected.InvokeAsync((result.FilePath, result.LineNumber));
+    }
+
+    private async Task ReplaceInFile(string filePath)
+    {
+        if (string.IsNullOrEmpty(searchQuery) || replaceText == null) return;
+        await OnReplace.InvokeAsync((searchQuery, replaceText, filePath));
+        replaceMessage = $"Replaced in {GetFileName(filePath)}";
+        // Re-search to refresh results
+        await ExecuteSearch();
+    }
+
+    private async Task ReplaceAll()
+    {
+        if (string.IsNullOrEmpty(searchQuery) || replaceText == null || results == null) return;
+        await OnReplace.InvokeAsync((searchQuery, replaceText, null));
+        var fileCount = groupedResults.Count;
+        replaceMessage = $"Replaced in {fileCount} file(s)";
+        // Re-search to refresh results
+        await ExecuteSearch();
     }
 
     private static string GetFileName(string path) => System.IO.Path.GetFileName(path);
@@ -144,13 +217,26 @@
         border-top: 1px solid var(--bs-border-color);
     }
 
+    .ide-search-header {
+        display: flex;
+        align-items: center;
+    }
+
     .ide-search-inputs .form-control {
         font-size: 0.75rem;
     }
 
     .ide-search-results {
         overflow-y: auto;
-        max-height: 300px;
+        flex: 1;
+    }
+
+    .ide-search-file-header {
+        font-size: 0.75rem;
+        background: var(--bs-tertiary-bg);
+        position: sticky;
+        top: 0;
+        z-index: 1;
     }
 
     .ide-search-result {

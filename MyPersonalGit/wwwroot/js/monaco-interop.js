@@ -698,6 +698,121 @@
          */
         getOriginalContent: function (filePath) {
             return _originalContent[filePath] || null;
+        },
+
+        /**
+         * Set blame decorations on an editor.
+         * @param {string} editorId - The editor instance ID.
+         * @param {Array} blameData - Array of {startLine, endLine, commitSha, author, date, message}.
+         */
+        setBlameDecorations: function (editorId, blameData) {
+            var editor = _editors[editorId];
+            if (!editor) return;
+
+            // Clear previous blame decorations
+            if (editor._blameDecorations) {
+                editor.removeDecorations(editor._blameDecorations);
+            }
+
+            if (!blameData || blameData.length === 0) {
+                editor._blameDecorations = [];
+                return;
+            }
+
+            var decorations = [];
+            for (var i = 0; i < blameData.length; i++) {
+                var hunk = blameData[i];
+                var dateStr = new Date(hunk.date).toLocaleDateString();
+                var label = hunk.commitSha + ' ' + hunk.author + ', ' + dateStr + ' \u2014 ' + hunk.message;
+
+                // Only show annotation on the first line of each hunk
+                decorations.push({
+                    range: new monaco.Range(hunk.startLine, 1, hunk.startLine, 1),
+                    options: {
+                        isWholeLine: false,
+                        before: {
+                            content: ' ' + label + ' ',
+                            inlineClassName: 'ide-blame-annotation',
+                            cursorStops: monaco.editor.InjectedTextCursorStops.None
+                        }
+                    }
+                });
+
+                // Add background to all lines in the hunk (alternating colors)
+                var bgClass = i % 2 === 0 ? 'ide-blame-line-even' : 'ide-blame-line-odd';
+                for (var line = hunk.startLine; line <= hunk.endLine; line++) {
+                    decorations.push({
+                        range: new monaco.Range(line, 1, line, 1),
+                        options: {
+                            isWholeLine: true,
+                            className: bgClass
+                        }
+                    });
+                }
+            }
+
+            editor._blameDecorations = editor.createDecorationsCollection(decorations).getRanges ? [] :
+                editor.deltaDecorations([], decorations);
+
+            // Use the newer API if available, fallback to deltaDecorations
+            try {
+                var collection = editor.createDecorationsCollection(decorations);
+                editor._blameDecorationsCollection = collection;
+                editor._blameDecorations = [];
+            } catch (e) {
+                editor._blameDecorations = editor.deltaDecorations([], decorations);
+            }
+        },
+
+        /**
+         * Clear blame decorations from an editor.
+         * @param {string} editorId - The editor instance ID.
+         */
+        clearBlameDecorations: function (editorId) {
+            var editor = _editors[editorId];
+            if (!editor) return;
+
+            if (editor._blameDecorationsCollection) {
+                editor._blameDecorationsCollection.clear();
+                editor._blameDecorationsCollection = null;
+            }
+            if (editor._blameDecorations && editor._blameDecorations.length > 0) {
+                editor.deltaDecorations(editor._blameDecorations, []);
+                editor._blameDecorations = [];
+            }
+        },
+
+        /**
+         * Replace all occurrences in a model.
+         * @param {string} filePath - The file path of the model.
+         * @param {string} search - The search string.
+         * @param {string} replace - The replacement string.
+         * @returns {number} Number of replacements made.
+         */
+        replaceInModel: function (filePath, search, replace) {
+            var model = _models[filePath];
+            if (!model || model.isDisposed()) return 0;
+
+            var content = model.getValue();
+            var count = 0;
+            var regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            var newContent = content.replace(regex, function () { count++; return replace; });
+
+            if (count > 0) {
+                model.setValue(newContent);
+            }
+            return count;
+        },
+
+        /**
+         * Trigger Monaco's built-in find/replace widget.
+         * @param {string} editorId - The editor instance ID.
+         */
+        triggerFindReplace: function (editorId) {
+            var editor = _editors[editorId];
+            if (editor) {
+                editor.trigger('keyboard', 'editor.action.startFindReplaceAction');
+            }
         }
     };
 

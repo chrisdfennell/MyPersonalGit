@@ -9,6 +9,8 @@ public record FileContent(string Path, string Content, string Language);
 public record FileChange(string Path, string Content, string Action, string? OldPath = null);
 public record CommitRequest(string Branch, string Message, List<FileChange> Changes);
 public record SearchResult(string FilePath, int LineNumber, string LineContent, string Context);
+public record BlameHunk(int StartLine, int EndLine, string CommitSha, string Author, DateTimeOffset Date, string Message);
+public record FileHistoryEntry(string Sha, string ShortSha, string Author, string Email, DateTimeOffset Date, string Message);
 
 public interface IWebIdeService
 {
@@ -20,6 +22,8 @@ public interface IWebIdeService
     Task DeletePathAsync(string repoName, string branch, string path, string username, string email);
     Task RenamePathAsync(string repoName, string branch, string oldPath, string newPath, string username, string email);
     Task<List<SearchResult>> SearchFilesAsync(string repoName, string branch, string query, string? fileExtFilter = null);
+    Task<List<BlameHunk>> GetFileBlameAsync(string repoName, string branch, string path);
+    Task<List<FileHistoryEntry>> GetFileHistoryAsync(string repoName, string branch, string path);
 }
 
 public class WebIdeService : IWebIdeService
@@ -419,6 +423,85 @@ public class WebIdeService : IWebIdeService
                 }
             }
         }
+    }
+
+    public async Task<List<BlameHunk>> GetFileBlameAsync(string repoName, string branch, string path)
+    {
+        var repoPath = await GetRepoPathAsync(repoName);
+        return await Task.Run(() =>
+        {
+            using var repo = new Repository(repoPath);
+            var targetBranch = ResolveBranch(repo, branch);
+            if (targetBranch?.Tip == null)
+                return new List<BlameHunk>();
+
+            try
+            {
+                var blameResult = repo.Blame(path, new BlameOptions
+                {
+                    StartingAt = targetBranch.Tip
+                });
+
+                return blameResult.Select(h => new BlameHunk(
+                    h.FinalStartLineNumber,
+                    h.FinalStartLineNumber + h.LineCount - 1,
+                    h.FinalCommit.Sha[..7],
+                    h.FinalCommit.Author.Name,
+                    h.FinalCommit.Author.When,
+                    h.FinalCommit.MessageShort
+                )).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to blame {Path} in {Repo}/{Branch}", path, repoName, branch);
+                return new List<BlameHunk>();
+            }
+        });
+    }
+
+    public async Task<List<FileHistoryEntry>> GetFileHistoryAsync(string repoName, string branch, string path)
+    {
+        var repoPath = await GetRepoPathAsync(repoName);
+        return await Task.Run(() =>
+        {
+            using var repo = new Repository(repoPath);
+            var targetBranch = ResolveBranch(repo, branch);
+            if (targetBranch?.Tip == null)
+                return new List<FileHistoryEntry>();
+
+            var results = new List<FileHistoryEntry>();
+            foreach (var commit in repo.Commits.QueryBy(new CommitFilter
+            {
+                IncludeReachableFrom = targetBranch.Tip,
+                SortBy = CommitSortStrategies.Time
+            }))
+            {
+                if (results.Count >= 50) break;
+
+                var entry = commit[path];
+                if (entry == null) continue;
+
+                var parent = commit.Parents.FirstOrDefault();
+                if (parent == null)
+                {
+                    // Initial commit that contains this file
+                    results.Add(new FileHistoryEntry(
+                        commit.Sha, commit.Sha[..7], commit.Author.Name,
+                        commit.Author.Email, commit.Author.When, commit.MessageShort));
+                }
+                else
+                {
+                    var parentEntry = parent[path];
+                    if (parentEntry == null || parentEntry.Target.Sha != entry.Target.Sha)
+                    {
+                        results.Add(new FileHistoryEntry(
+                            commit.Sha, commit.Sha[..7], commit.Author.Name,
+                            commit.Author.Email, commit.Author.When, commit.MessageShort));
+                    }
+                }
+            }
+            return results;
+        });
     }
 
     private static string DetectLanguage(string path)

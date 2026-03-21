@@ -262,7 +262,47 @@ public class WebIdeController : ControllerBase
         }
     }
 
-    // ── 8. GET {repoName}/search ──────────────────────────────────
+    // ── 8. GET {repoName}/blame/{*path} ─────────────────────────────
+
+    [HttpGet("{repoName}/blame/{*path}")]
+    public async Task<IActionResult> GetBlame(string repoName, string path, [FromQuery] string? branch = null)
+    {
+        var authResult = await EnsureAuthenticatedAndAuthorized(repoName);
+        if (authResult != null) return authResult;
+
+        try
+        {
+            var blame = await _ideService.GetFileBlameAsync(repoName, branch ?? "", path);
+            return Ok(blame);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get blame for {Path} in {Repo}/{Branch}", path, repoName, branch);
+            return Problem(detail: ex.Message, title: "Failed to retrieve blame", statusCode: 500);
+        }
+    }
+
+    // ── 9. GET {repoName}/history/{*path} ─────────────────────────
+
+    [HttpGet("{repoName}/history/{*path}")]
+    public async Task<IActionResult> GetFileHistory(string repoName, string path, [FromQuery] string? branch = null)
+    {
+        var authResult = await EnsureAuthenticatedAndAuthorized(repoName);
+        if (authResult != null) return authResult;
+
+        try
+        {
+            var history = await _ideService.GetFileHistoryAsync(repoName, branch ?? "", path);
+            return Ok(history);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get history for {Path} in {Repo}/{Branch}", path, repoName, branch);
+            return Problem(detail: ex.Message, title: "Failed to retrieve file history", statusCode: 500);
+        }
+    }
+
+    // ── 10. GET {repoName}/search ─────────────────────────────────
 
     [HttpGet("{repoName}/search")]
     public async Task<IActionResult> Search(
