@@ -140,6 +140,7 @@ builder.Services.AddSingleton<IWebAuthnService, WebAuthnService>();
 builder.Services.AddSingleton<IGitHooksService, GitHooksService>();
 builder.Services.AddSingleton<IAutolinkService, AutolinkService>();
 builder.Services.AddSingleton<ISavedReplyService, SavedReplyService>();
+builder.Services.AddSingleton<IRepoHealthService, RepoHealthService>();
 builder.Services.AddSingleton<ISecretScanService, SecretScanService>();
 builder.Services.AddSingleton<ICherryPickRevertService, CherryPickRevertService>();
 builder.Services.AddSingleton<IRepositoryTrafficService, RepositoryTrafficService>();

@@ -41,6 +41,7 @@
 @inject ICherryPickRevertService CherryPickRevertService
 @inject IRepositoryLabelService LabelService
 @inject IDependencyUpdateService DependencyUpdateService
+@inject IRepoHealthService RepoHealthService
 @inject IStringLocalizer<SharedResource> L
 @inject IGitHooksService GitHooksService
 @inject IAutolinkService AutolinkService
@@ -261,6 +262,11 @@ else
                 <li class="nav-item">
                     <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/insights">
                         <i class="bi bi-graph-up me-1"></i> @L["Repo_Insights"]
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/todos">
+                        <i class="bi bi-check2-square me-1"></i> TODOs
                     </a>
                 </li>
                 <li class="nav-item">
@@ -569,6 +575,15 @@ else
                                 <div class="mt-2">
                                     <a href="/repo/@RepoName/LICENSE" class="small text-decoration-none">
                                         <i class="bi bi-file-earmark-text me-1"></i>@licenseName
+                                    </a>
+                                </div>
+                            }
+                            @if (healthReport != null)
+                            {
+                                <div class="mt-2">
+                                    <a href="/repo/@RepoName/stats" class="text-decoration-none">
+                                        <span class="badge bg-@healthReport.GradeColor fs-6 me-1">@healthReport.Grade</span>
+                                        <span class="small text-muted">Health score: @healthReport.Score/100</span>
                                     </a>
                                 </div>
                             }
@@ -3233,6 +3248,7 @@ else
     private string licenseName = "";
     private string licenseFilePath = "";
     private bool hasContributing;
+    private RepoHealthReport? healthReport;
     private List<LanguageStat> languageStats = new();
     private List<string> fileCodeOwners = new();
 
@@ -4287,6 +4303,12 @@ else
                     LoadReadme(branch.Tip.Tree);
                     LoadLicense(branch.Tip.Tree);
                     LoadLanguageStats(branch.Tip.Tree);
+
+                    // Load health score async
+                    _ = Task.Run(async () => {
+                        healthReport = await RepoHealthService.GetHealthReportAsync(RepoName);
+                        await InvokeAsync(StateHasChanged);
+                    });
                 }
                 else
                 {

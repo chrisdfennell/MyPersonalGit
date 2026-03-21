@@ -1,0 +1,248 @@
+@page "/repo/{RepoName}/todos"
+@using LibGit2Sharp
+@using System.Text.RegularExpressions
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@using GitRepository = LibGit2Sharp.Repository
+@inject IConfiguration Config
+@inject IAdminService AdminService
+@inject IStringLocalizer<SharedResource> L
+@rendermode InteractiveServer
+
+<PageTitle>TODOs · @RepoName</PageTitle>
+
+<div class="repo-header border-bottom bg-light-subtle mb-4 pt-3">
+    <div class="container-xl px-3">
+        <div class="d-flex align-items-center mb-3">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 h4">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">@L["Nav_Repositories"]</a></li>
+                    <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
+                    <li class="breadcrumb-item active fw-bold">TODOs</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="container-xl px-3">
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="text-muted mt-2">Scanning code for TODOs...</p>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0"><i class="bi bi-check2-square me-2"></i>TODO Scanner</h4>
+            <div class="d-flex gap-2">
+                @foreach (var type in new[] { "ALL", "TODO", "FIXME", "HACK", "XXX", "BUG", "NOTE" })
+                {
+                    var count = type == "ALL" ? items.Count : items.Count(i => i.Type == type);
+                    if (count > 0 || type == "ALL")
+                    {
+                        <button class="btn btn-sm @(filterType == type ? "btn-dark" : "btn-outline-secondary")" @onclick="() => filterType = type">
+                            @type <span class="badge @GetTypeBadge(type) ms-1">@count</span>
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+
+        @if (!filteredItems.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-check-circle display-4 d-block mb-3 text-success"></i>
+                <h3>No TODOs found</h3>
+                <p>Your codebase is clean — no TODO, FIXME, HACK, or XXX comments detected.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4 mb-4">
+                @foreach (var group in new[] { "TODO", "FIXME", "HACK", "XXX", "BUG", "NOTE" })
+                {
+                    var count = items.Count(i => i.Type == group);
+                    if (count > 0)
+                    {
+                        <div class="col">
+                            <div class="card text-center border shadow-sm">
+                                <div class="card-body py-2">
+                                    <div class="h4 fw-bold mb-0 @GetTypeTextColor(group)">@count</div>
+                                    <small class="text-muted">@group</small>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="card border shadow-sm">
+                <div class="card-body p-0">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;" class="ps-3">Type</th>
+                                <th>File</th>
+                                <th style="width: 60px;" class="text-end">Line</th>
+                                <th class="pe-3">Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in filteredItems)
+                            {
+                                <tr>
+                                    <td class="ps-3">
+                                        <span class="badge @GetTypeBadge(item.Type)">@item.Type</span>
+                                    </td>
+                                    <td>
+                                        <a href="/repo/@RepoName/@item.FilePath#L@item.LineNumber" class="text-decoration-none small">
+                                            <code>@item.FilePath</code>
+                                        </a>
+                                    </td>
+                                    <td class="text-end text-muted small">@item.LineNumber</td>
+                                    <td class="pe-3 small">@item.Message</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <p class="text-muted small mt-3">
+                <i class="bi bi-info-circle me-1"></i>
+                Scanned @filesScanned files. Found @items.Count items across @items.Select(i => i.FilePath).Distinct().Count() files.
+            </p>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string RepoName { get; set; } = "";
+
+    private List<TodoItem> items = new();
+    private string filterType = "ALL";
+    private bool isLoading = true;
+    private int filesScanned;
+
+    private IEnumerable<TodoItem> filteredItems => filterType == "ALL" ? items : items.Where(i => i.Type == filterType);
+
+    private static readonly Regex TodoRegex = new(
+        @"(?://|#|--|/\*|\*)\s*\b(TODO|FIXME|HACK|XXX|BUG|NOTE)\b[:\s]*(.*?)(?:\*/)?$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly HashSet<string> CodeExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".cs", ".razor", ".js", ".ts", ".jsx", ".tsx", ".py", ".java", ".go", ".rs",
+        ".rb", ".php", ".swift", ".kt", ".c", ".cpp", ".cc", ".h", ".hpp",
+        ".css", ".scss", ".less", ".html", ".htm", ".xml", ".yml", ".yaml",
+        ".sh", ".bash", ".ps1", ".sql", ".r", ".dart", ".lua", ".pl",
+        ".vue", ".svelte", ".tf", ".hcl", ".md", ".txt"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Run(() => ScanRepo());
+        isLoading = false;
+    }
+
+    private void ScanRepo()
+    {
+        try
+        {
+            var systemSettings = AdminService.GetSystemSettingsAsync().GetAwaiter().GetResult();
+            var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot) ? systemSettings.ProjectRoot : Config["Git:ProjectRoot"] ?? "/repos";
+            var repoPath = System.IO.Path.Combine(projectRoot, RepoName);
+            if (!GitRepository.IsValid(repoPath)) repoPath += ".git";
+            if (!GitRepository.IsValid(repoPath)) return;
+
+            using var repo = new GitRepository(repoPath);
+            if (repo.Head?.Tip == null) return;
+
+            ScanTree(repo.Head.Tip.Tree, "");
+        }
+        catch { }
+    }
+
+    private void ScanTree(Tree tree, string path)
+    {
+        foreach (var entry in tree)
+        {
+            var fullPath = string.IsNullOrEmpty(path) ? entry.Name : $"{path}/{entry.Name}";
+
+            if (entry.TargetType == TreeEntryTargetType.Tree)
+            {
+                // Skip common non-code directories
+                if (entry.Name is "node_modules" or "bin" or "obj" or ".git" or "vendor" or "dist" or "build" or "__pycache__")
+                    continue;
+                ScanTree((Tree)entry.Target, fullPath);
+            }
+            else if (entry.TargetType == TreeEntryTargetType.Blob)
+            {
+                var ext = System.IO.Path.GetExtension(entry.Name).ToLowerInvariant();
+                if (!CodeExtensions.Contains(ext)) continue;
+
+                var blob = (Blob)entry.Target;
+                if (blob.IsBinary || blob.Size > 500_000) continue;
+
+                filesScanned++;
+
+                try
+                {
+                    using var reader = new System.IO.StreamReader(blob.GetContentStream());
+                    int lineNum = 0;
+                    string? line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        lineNum++;
+                        var match = TodoRegex.Match(line);
+                        if (match.Success)
+                        {
+                            items.Add(new TodoItem
+                            {
+                                Type = match.Groups[1].Value.ToUpperInvariant(),
+                                FilePath = fullPath,
+                                LineNumber = lineNum,
+                                Message = match.Groups[2].Value.Trim()
+                            });
+                        }
+                    }
+                }
+                catch { }
+            }
+        }
+    }
+
+    private static string GetTypeBadge(string type) => type switch
+    {
+        "TODO" => "bg-primary",
+        "FIXME" => "bg-danger",
+        "HACK" => "bg-warning text-dark",
+        "XXX" => "bg-dark",
+        "BUG" => "bg-danger",
+        "NOTE" => "bg-info",
+        "ALL" => "bg-secondary",
+        _ => "bg-secondary"
+    };
+
+    private static string GetTypeTextColor(string type) => type switch
+    {
+        "TODO" => "text-primary",
+        "FIXME" => "text-danger",
+        "HACK" => "text-warning",
+        "BUG" => "text-danger",
+        _ => ""
+    };
+
+    private class TodoItem
+    {
+        public string Type { get; set; } = "";
+        public string FilePath { get; set; } = "";
+        public int LineNumber { get; set; }
+        public string Message { get; set; } = "";
+    }
+}

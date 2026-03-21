@@ -9,6 +9,7 @@
 @using MyPersonalGit.Resources
 @inject IDbContextFactory<AppDbContext> DbFactory
 @inject IAdminService AdminService
+@inject IRepoHealthService RepoHealthService
 @inject IConfiguration Config
 @inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
@@ -98,6 +99,46 @@
             </div>
         </div>
 
+        @if (healthReport != null)
+        {
+            <div class="card border shadow-sm mb-4">
+                <div class="card-header bg-light-subtle py-2 fw-bold small">
+                    <i class="bi bi-heart-pulse me-1"></i> Repository Health
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="badge bg-@healthReport.GradeColor display-6 px-3 py-2">@healthReport.Grade</span>
+                        <div>
+                            <div class="h5 mb-0">@healthReport.Score / 100</div>
+                            <div class="progress" style="width: 200px; height: 8px;">
+                                <div class="progress-bar bg-@healthReport.GradeColor" style="width: @healthReport.Score%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-4"><span class="badge @(healthReport.HasReadme ? "bg-success" : "bg-danger") me-1">@(healthReport.HasReadme ? "✓" : "✗")</span> README</div>
+                        <div class="col-md-4"><span class="badge @(healthReport.HasLicense ? "bg-success" : "bg-danger") me-1">@(healthReport.HasLicense ? "✓" : "✗")</span> LICENSE</div>
+                        <div class="col-md-4"><span class="badge @(healthReport.HasCI ? "bg-success" : "bg-danger") me-1">@(healthReport.HasCI ? "✓" : "✗")</span> CI/CD</div>
+                        <div class="col-md-4"><span class="badge @(healthReport.HasDescription ? "bg-success" : "bg-danger") me-1">@(healthReport.HasDescription ? "✓" : "✗")</span> Description</div>
+                        <div class="col-md-4"><span class="badge @(healthReport.HasContributing ? "bg-success" : "bg-danger") me-1">@(healthReport.HasContributing ? "✓" : "✗")</span> CONTRIBUTING</div>
+                        <div class="col-md-4"><span class="badge @(healthReport.HasRecentCommits ? "bg-success" : "bg-danger") me-1">@(healthReport.HasRecentCommits ? "✓" : "✗")</span> Recent commits</div>
+                    </div>
+                    @if (healthReport.Suggestions.Any())
+                    {
+                        <div class="mt-3">
+                            <h6 class="small fw-bold">Suggestions</h6>
+                            <ul class="small text-muted mb-0">
+                                @foreach (var suggestion in healthReport.Suggestions)
+                                {
+                                    <li>@suggestion</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
         @if (languageBreakdown.Any())
         {
             <div class="card border shadow-sm mb-4">
@@ -146,6 +187,48 @@
                             }
                         </tbody>
                     </table>
+                </div>
+            </div>
+        }
+
+        @if (totalSizeBytes > 0)
+        {
+            <div class="card border shadow-sm mb-4">
+                <div class="card-header bg-light-subtle py-2 fw-bold small">
+                    <i class="bi bi-hdd me-1"></i> Repository Size: @FormatBytes(totalSizeBytes)
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="small fw-bold mb-2">Largest directories</h6>
+                            <table class="table table-sm mb-0">
+                                <tbody>
+                                    @foreach (var dir in dirSizes.Take(8))
+                                    {
+                                        <tr>
+                                            <td><code class="small">@dir.Path</code></td>
+                                            <td class="text-end text-muted small">@dir.FileCount files</td>
+                                            <td class="text-end fw-bold small">@FormatBytes(dir.SizeBytes)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="small fw-bold mb-2">Largest files</h6>
+                            <table class="table table-sm mb-0">
+                                <tbody>
+                                    @foreach (var file in largestFiles.Take(8))
+                                    {
+                                        <tr>
+                                            <td><code class="small">@file.Name</code></td>
+                                            <td class="text-end fw-bold small">@FormatBytes(file.Size)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         }
@@ -257,8 +340,13 @@
 @code {
     [Parameter] public string? RepoName { get; set; }
 
+    // Health report
+    private RepoHealthReport? healthReport;
+
     // Repo-level stats
-    private long totalLines, totalFiles;
+    private long totalLines, totalFiles, totalSizeBytes;
+    private List<DirSizeStat> dirSizes = new();
+    private List<LargeFile> largestFiles = new();
     private int commitCount, contributorCount, branchCount, tagCount;
     private int repoIssueCount, repoPRCount;
     private List<LangStat> languageBreakdown = new();
@@ -272,7 +360,10 @@
     protected override async Task OnInitializedAsync()
     {
         if (!string.IsNullOrEmpty(RepoName))
+        {
             await LoadRepoStats();
+            healthReport = await RepoHealthService.GetHealthReportAsync(RepoName);
+        }
         else
             await LoadPlatformStats();
     }
@@ -327,9 +418,14 @@
             // Count files, lines, and language breakdown
             var langLines = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
             var fileTypes = new Dictionary<string, FileTypeStat>(StringComparer.OrdinalIgnoreCase);
-            CountTree(repo.Head.Tip.Tree, langLines, fileTypes);
+            var dirSizeMap = new Dictionary<string, DirSizeStat>();
+            var largeFileList = new List<(string, long)>();
+            CountTree(repo.Head.Tip.Tree, langLines, fileTypes, "", dirSizeMap, largeFileList);
             totalFiles = fileTypes.Values.Sum(f => f.FileCount);
             totalLines = fileTypes.Values.Sum(f => f.LineCount);
+            totalSizeBytes = dirSizeMap.Values.Sum(d => d.SizeBytes);
+            dirSizes = dirSizeMap.Values.OrderByDescending(d => d.SizeBytes).Take(15).ToList();
+            largestFiles = largeFileList.OrderByDescending(f => f.Item2).Take(10).Select(f => new LargeFile { Name = f.Item1, Size = f.Item2 }).ToList();
 
             fileTypeBreakdown = fileTypes.Values.OrderByDescending(f => f.LineCount).ToList();
 
@@ -353,17 +449,31 @@
         catch { }
     }
 
-    private static void CountTree(Tree tree, Dictionary<string, long> langLines, Dictionary<string, FileTypeStat> fileTypes)
+    private static void CountTree(Tree tree, Dictionary<string, long> langLines, Dictionary<string, FileTypeStat> fileTypes,
+        string path = "", Dictionary<string, DirSizeStat>? dirSizes = null, List<(string, long)>? largestFiles = null)
     {
         foreach (var entry in tree)
         {
+            var fullPath = string.IsNullOrEmpty(path) ? entry.Name : $"{path}/{entry.Name}";
+
             if (entry.TargetType == TreeEntryTargetType.Tree)
             {
-                CountTree((Tree)entry.Target, langLines, fileTypes);
+                CountTree((Tree)entry.Target, langLines, fileTypes, fullPath, dirSizes, largestFiles);
             }
             else if (entry.TargetType == TreeEntryTargetType.Blob)
             {
                 var blob = (Blob)entry.Target;
+
+                // Track size for all files (including binary)
+                var dir = string.IsNullOrEmpty(path) ? "/" : path;
+                if (dirSizes != null)
+                {
+                    if (!dirSizes.ContainsKey(dir)) dirSizes[dir] = new DirSizeStat { Path = dir };
+                    dirSizes[dir].SizeBytes += blob.Size;
+                    dirSizes[dir].FileCount++;
+                }
+                largestFiles?.Add((fullPath, blob.Size));
+
                 if (blob.IsBinary || blob.Size > 500_000) continue;
 
                 var ext = System.IO.Path.GetExtension(entry.Name).ToLowerInvariant();
@@ -381,6 +491,7 @@
                     fileTypes[ext] = new FileTypeStat { Extension = ext };
                 fileTypes[ext].FileCount++;
                 fileTypes[ext].LineCount += lineCount;
+                fileTypes[ext].SizeBytes += blob.Size;
 
                 var lang = ExtToLanguage(ext);
                 if (lang != null)
@@ -436,7 +547,17 @@
         return $"https://www.gravatar.com/avatar/{Convert.ToHexString(hash).ToLowerInvariant()}?s={size}&d=identicon";
     }
 
+    private static string FormatBytes(long bytes) => bytes switch
+    {
+        >= 1_073_741_824 => $"{bytes / 1_073_741_824.0:F1} GB",
+        >= 1_048_576 => $"{bytes / 1_048_576.0:F1} MB",
+        >= 1_024 => $"{bytes / 1_024.0:F1} KB",
+        _ => $"{bytes} B"
+    };
+
     private class LangStat { public string Name { get; set; } = ""; public long Lines { get; set; } public double Percentage { get; set; } public string Color { get; set; } = ""; }
-    private class FileTypeStat { public string Extension { get; set; } = ""; public int FileCount { get; set; } public long LineCount { get; set; } }
+    private class FileTypeStat { public string Extension { get; set; } = ""; public int FileCount { get; set; } public long LineCount { get; set; } public long SizeBytes { get; set; } }
+    private class DirSizeStat { public string Path { get; set; } = ""; public long SizeBytes { get; set; } public int FileCount { get; set; } }
+    private class LargeFile { public string Name { get; set; } = ""; public long Size { get; set; } }
     private class ContributorStat { public string Name { get; set; } = ""; public int Commits { get; set; } public int Additions { get; set; } public int Deletions { get; set; } }
 }
