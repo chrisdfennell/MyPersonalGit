@@ -1,7 +1,7 @@
 .ide-container {
     display: grid;
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto auto 1fr auto auto;
+    grid-template-columns: auto auto 1fr;
+    grid-template-rows: auto auto auto 1fr auto auto auto;
     height: calc(100vh - 40px);
     overflow: hidden;
     background: #1e1e1e;
@@ -63,7 +63,7 @@
 
 /* Tabs */
 .ide-tabs {
-    grid-column: 2;
+    grid-column: 3;
     background: #252526;
     border-bottom: 1px solid #1e1e1e;
     overflow: hidden;
@@ -100,9 +100,41 @@
     background: #3c3c3c;
 }
 
+/* Resize handles */
+.ide-resize-handle {
+    flex-shrink: 0;
+    z-index: 5;
+    transition: background 0.15s;
+}
+
+.ide-resize-sidebar {
+    grid-row: 1 / -1;
+    grid-column: 2;
+    width: 4px;
+    cursor: col-resize;
+    background: transparent;
+}
+
+.ide-resize-sidebar:hover,
+.ide-resize-sidebar:active {
+    background: #0078d4;
+}
+
+.ide-resize-bottom {
+    grid-column: 3;
+    height: 4px;
+    cursor: row-resize;
+    background: transparent;
+}
+
+.ide-resize-bottom:hover,
+.ide-resize-bottom:active {
+    background: #0078d4;
+}
+
 /* Editor */
 .ide-editor {
-    grid-column: 2;
+    grid-column: 3;
     position: relative;
     overflow: hidden;
     min-height: 0;
@@ -152,7 +184,7 @@
 
 /* Bottom panel */
 .ide-bottom-panel {
-    grid-column: 2;
+    grid-column: 3;
     border-top: 1px solid #1e1e1e;
     background: #252526;
     max-height: 300px;
@@ -608,7 +640,7 @@
 
 /* Breadcrumbs */
 .ide-breadcrumbs {
-    grid-column: 2;
+    grid-column: 3;
     display: flex;
     align-items: center;
     padding: 2px 12px;
@@ -777,7 +809,7 @@
 
 /* Image & Markdown Preview */
 .ide-preview {
-    grid-column: 2;
+    grid-column: 3;
     overflow: auto;
     display: flex;
     flex-direction: column;
@@ -931,7 +963,7 @@
 
 /* ============ Zen Mode ============ */
 .ide-container.ide-zen-mode {
-    grid-template-columns: 0fr 1fr;
+    grid-template-columns: 0fr 0fr 1fr;
     height: 100vh;
 }
 
@@ -940,6 +972,10 @@
     min-width: 0;
     overflow: hidden;
     border-right: none;
+}
+
+.ide-container.ide-zen-mode .ide-resize-handle {
+    display: none;
 }
 
 .ide-container.ide-zen-mode .ide-tabs {
@@ -965,7 +1001,7 @@
 }
 
 .ide-container.ide-zen-mode .ide-editor {
-    grid-column: 1 / -1;
+    grid-column: 1 / -1 !important;
 }
 
 /* ============ Toast Notifications ============ */
@@ -1039,6 +1075,71 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* ============ Git Graph ============ */
+.ide-graph-panel {
+    font-size: 0.8rem;
+}
+
+.ide-graph-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.ide-graph-row {
+    border-bottom: 1px solid #2d2d2d;
+}
+
+.ide-graph-row:hover {
+    background: #2a2d2e;
+}
+
+.ide-graph-line {
+    padding: 0;
+    vertical-align: middle;
+}
+
+.ide-graph-sha {
+    padding: 2px 8px;
+    white-space: nowrap;
+    color: #4fc1ff;
+    font-size: 0.75rem;
+}
+
+.ide-graph-msg {
+    padding: 2px 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 400px;
+    color: #cccccc;
+}
+
+.ide-graph-branch {
+    display: inline-block;
+    font-size: 0.65rem;
+    padding: 0 5px;
+    margin-left: 6px;
+    border-radius: 3px;
+    background: #0078d4;
+    color: #ffffff;
+    vertical-align: middle;
+    line-height: 16px;
+}
+
+.ide-graph-author {
+    padding: 2px 8px;
+    white-space: nowrap;
+    color: #858585;
+    font-size: 0.75rem;
+}
+
+.ide-graph-date {
+    padding: 2px 8px;
+    white-space: nowrap;
+    color: #858585;
+    font-size: 0.75rem;
 }
 
 /* ============ Merge Conflict Styles ============ */
