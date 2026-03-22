@@ -1489,6 +1489,172 @@
     background: #ffffff;
 }
 
+/* Breadcrumb dropdown */
+::deep [data-bs-theme="light"] .ide-breadcrumb-dropdown {
+    background: #ffffff;
+    border-color: #d0d0d0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+::deep [data-bs-theme="light"] .ide-breadcrumb-item {
+    color: #333333;
+}
+
+::deep [data-bs-theme="light"] .ide-breadcrumb-item:hover {
+    background: #e0e8f0;
+}
+
+::deep [data-bs-theme="light"] .ide-breadcrumb-item.active {
+    background: #cce0f0;
+    color: #0078d4;
+}
+
+::deep [data-bs-theme="light"] .ide-breadcrumb-sep {
+    color: #999999;
+}
+
+/* Quick Open borders & secondary text */
+::deep [data-bs-theme="light"] .ide-quick-open-input-wrapper {
+    border-bottom-color: #e0e0e0;
+}
+
+::deep [data-bs-theme="light"] .ide-quick-open-input::placeholder {
+    color: #999999;
+}
+
+::deep [data-bs-theme="light"] .ide-quick-open-filepath {
+    color: #888888;
+}
+
+::deep [data-bs-theme="light"] .ide-quick-open-section {
+    color: #888888;
+}
+
+::deep [data-bs-theme="light"] .ide-quick-open-divider {
+    background: #e0e0e0;
+}
+
+::deep [data-bs-theme="light"] .ide-quick-open-empty {
+    color: #888888;
+}
+
+/* Command Palette borders & secondary text */
+::deep [data-bs-theme="light"] .ide-command-palette-input-wrapper {
+    border-bottom-color: #e0e0e0;
+}
+
+::deep [data-bs-theme="light"] .ide-command-palette-input::placeholder {
+    color: #999999;
+}
+
+::deep [data-bs-theme="light"] .ide-command-palette-shortcut {
+    color: #888888;
+}
+
+::deep [data-bs-theme="light"] .ide-command-palette-empty {
+    color: #888888;
+}
+
+/* Source control */
+::deep [data-bs-theme="light"] .ide-sc-header {
+    border-bottom-color: #e0e0e0;
+}
+
+::deep [data-bs-theme="light"] .ide-sc-filepath {
+    color: #888888;
+}
+
+/* History */
+::deep [data-bs-theme="light"] .ide-history-header {
+    border-bottom-color: #e0e0e0;
+}
+
+::deep [data-bs-theme="light"] .ide-history-entry {
+    border-bottom-color: #e8e8e8;
+}
+
+/* Settings labels */
+::deep [data-bs-theme="light"] .ide-settings-label {
+    color: #333333;
+}
+
+::deep [data-bs-theme="light"] .ide-settings-value {
+    color: #888888;
+}
+
+::deep [data-bs-theme="light"] .ide-settings-body .form-check-label {
+    color: #333333;
+}
+
+/* Git Graph */
+::deep [data-bs-theme="light"] .ide-graph-row {
+    border-bottom-color: #e8e8e8;
+}
+
+::deep [data-bs-theme="light"] .ide-graph-row:hover {
+    background: #f0f4f8;
+}
+
+::deep [data-bs-theme="light"] .ide-graph-sha {
+    color: #0078d4;
+}
+
+::deep [data-bs-theme="light"] .ide-graph-msg {
+    color: #333333;
+}
+
+::deep [data-bs-theme="light"] .ide-graph-author,
+::deep [data-bs-theme="light"] .ide-graph-date {
+    color: #888888;
+}
+
+/* Markdown body — tables, blockquotes */
+::deep [data-bs-theme="light"] .ide-markdown-body th,
+::deep [data-bs-theme="light"] .ide-markdown-body td {
+    border-color: #d0d7de;
+}
+
+::deep [data-bs-theme="light"] .ide-markdown-body th {
+    background: #f6f8fa;
+}
+
+::deep [data-bs-theme="light"] .ide-markdown-body blockquote {
+    border-left-color: #d0d7de;
+    color: #656d76;
+}
+
+/* Terminal tab buttons */
+::deep [data-bs-theme="light"] .ide-term-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+::deep [data-bs-theme="light"] .ide-term-add {
+    color: #888888 !important;
+}
+
+::deep [data-bs-theme="light"] .ide-term-add:hover {
+    color: #333333 !important;
+}
+
+/* Sidebar tab hover */
+::deep [data-bs-theme="light"] .ide-sidebar-tab:hover {
+    color: #333333;
+}
+
+/* Shortcut dialog header/body borders */
+::deep [data-bs-theme="light"] .ide-shortcut-header {
+    border-bottom-color: #e0e0e0;
+}
+
+/* Bottom panel tab border */
+::deep [data-bs-theme="light"] .ide-bottom-panel {
+    border-top-color: #e0e0e0;
+}
+
+::deep [data-bs-theme="light"] .ide-bottom-tabs {
+    border-bottom-color: #e0e0e0;
+}
+
 :global([data-bs-theme="light"] .ide-toast) {
     background: #f0f0f0;
     border-color: #d0d0d0;
