@@ -19,6 +19,7 @@ public class MarkdownService : IMarkdownService
 {
     private static readonly MarkdownPipeline _pipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
+        .UseEmojiAndSmiley()
         .Build();
 
     public MarkupString RenderMarkdown(string markdown, string? repoName = null, string? currentBranch = null, string? currentPath = null, bool isFile = false)
