@@ -1635,6 +1635,18 @@
         },
 
         /**
+         * Re-fit all active terminals to their containers.
+         */
+        fitAll: function () {
+            for (var containerId in _terminals) {
+                var t = _terminals[containerId];
+                if (t && t.fitAddon) {
+                    try { t.fitAddon.fit(); } catch (e) { }
+                }
+            }
+        },
+
+        /**
          * Dispose a terminal and close its WebSocket.
          * @param {string} containerId - The DOM element ID.
          */

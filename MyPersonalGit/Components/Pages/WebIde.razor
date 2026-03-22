@@ -1943,9 +1943,13 @@
         activeTerminalId = id;
     }
 
-    private void CloseTerminal(string id)
+    private async Task CloseTerminal(string id)
     {
         var idx = terminalTabs.FindIndex(t => t.Id == id);
+
+        // Dispose the terminal being closed
+        try { await JS.InvokeVoidAsync("ideTerminal.dispose", $"ide-terminal-{id}"); } catch { }
+
         terminalTabs.RemoveAll(t => t.Id == id);
         if (activeTerminalId == id && terminalTabs.Count > 0)
         {
@@ -1959,6 +1963,10 @@
             activeTerminalId = newId;
         }
         StateHasChanged();
+
+        // Re-fit the active terminal after DOM settles
+        await Task.Delay(100);
+        try { await JS.InvokeVoidAsync("ideTerminal.fitAll"); } catch { }
     }
 
     // ---- Quick Open & Key Handling ----
