@@ -1236,4 +1236,89 @@
   <data name="Settings_EnterKeyName" xml:space="preserve"><value>Lütfen bu anahtar için bir ad girin.</value></data>
   <data name="Settings_PasskeyRegistered" xml:space="preserve"><value>Geçiş anahtarı başarıyla kaydedildi.</value></data>
   <data name="Settings_PasskeyRemoved" xml:space="preserve"><value>Geçiş anahtarı kaldırıldı.</value></data>
+  <!-- Register error/success messages -->
+  <data name="Register_PasswordsDontMatch" xml:space="preserve"><value>Şifreler eşleşmiyor</value></data>
+  <data name="Register_PasswordTooShort" xml:space="preserve"><value>Şifre en az 6 karakter uzunluğunda olmalıdır</value></data>
+  <data name="Register_Success" xml:space="preserve"><value>Hesap başarıyla oluşturuldu! Giriş sayfasına yönlendiriliyor...</value></data>
+  <data name="Register_UserExists" xml:space="preserve"><value>Kullanıcı adı veya e-posta zaten mevcut</value></data>
+  <data name="Register_Error" xml:space="preserve"><value>Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.</value></data>
+
+  <!-- RepoDetails: badges and action buttons -->
+  <data name="Repo_Private" xml:space="preserve"><value>Özel</value></data>
+  <data name="Repo_Public" xml:space="preserve"><value>Herkese Açık</value></data>
+  <data name="Repo_TemplateBadge" xml:space="preserve"><value>Şablon</value></data>
+  <data name="Repo_ArchivedBadge" xml:space="preserve"><value>Arşivlendi</value></data>
+  <data name="Repo_Watch" xml:space="preserve"><value>İzle</value></data>
+  <data name="Repo_Unwatch" xml:space="preserve"><value>İzlemeyi Bırak</value></data>
+  <data name="Repo_Star" xml:space="preserve"><value>Yıldız</value></data>
+  <data name="Repo_Starred" xml:space="preserve"><value>Yıldızlandı</value></data>
+  <data name="Repo_Fork" xml:space="preserve"><value>Fork</value></data>
+  <data name="Repo_Forked" xml:space="preserve"><value>Forklandı</value></data>
+
+  <!-- RepoDetails: clone/download section -->
+  <data name="Repo_CopyToClipboard" xml:space="preserve"><value>Panoya kopyala</value></data>
+  <data name="Repo_CloneHelp" xml:space="preserve"><value>Bu depoyu klonlamak için Git HTTP URL'sini kullanın.</value></data>
+  <data name="Repo_DownloadZip" xml:space="preserve"><value>ZIP İndir</value></data>
+  <data name="Repo_DownloadTarGz" xml:space="preserve"><value>TAR.GZ İndir</value></data>
+
+  <!-- RepoDetails: file actions -->
+  <data name="Repo_CreateNewFile" xml:space="preserve"><value>Yeni dosya oluştur</value></data>
+  <data name="Repo_UploadFiles" xml:space="preserve"><value>Dosya yükle</value></data>
+  <data name="Repo_UploadFolder" xml:space="preserve"><value>Klasör yükle</value></data>
+
+  <!-- RepoDetails: commit signatures -->
+  <data name="Repo_Verified" xml:space="preserve"><value>Doğrulanmış</value></data>
+  <data name="Repo_SignedBadge" xml:space="preserve"><value>İmzalı</value></data>
+
+  <!-- RepoDetails: danger zone -->
+  <data name="Repo_DangerZone" xml:space="preserve"><value>Tehlikeli Bölge</value></data>
+  <data name="Repo_DeleteThisRepo" xml:space="preserve"><value>Bu depoyu sil</value></data>
+  <data name="Repo_DeleteRepoWarning" xml:space="preserve"><value>Bir depoyu sildikten sonra geri dönüş yoktur.</value></data>
+
+  <!-- RepoDetails: editor/commit -->
+  <data name="Repo_CommitChanges" xml:space="preserve"><value>Değişiklikleri kaydet</value></data>
+  <data name="Repo_CommitMessagePlaceholder" xml:space="preserve"><value>Commit mesajı</value></data>
+  <data name="Repo_AddDescriptionPlaceholder" xml:space="preserve"><value>Açıklama ekle...</value></data>
+  <data name="Repo_MustBeLoggedIn" xml:space="preserve"><value>Dosyaları düzenlemek için giriş yapmalısınız.</value></data>
+  <data name="Repo_ClearFilter" xml:space="preserve"><value>Filtreyi temizle</value></data>
+  <data name="Repo_UnableToLoadBlame" xml:space="preserve"><value>Blame bilgileri yüklenemedi.</value></data>
+
+  <!-- RepoDetails: diff view -->
+  <data name="Repo_Unified" xml:space="preserve"><value>Birleşik</value></data>
+  <data name="Repo_Split" xml:space="preserve"><value>Bölünmüş</value></data>
+  <data name="Repo_ChangedFiles" xml:space="preserve"><value>Değişen dosyalar</value></data>
+
+  <!-- RepoDetails: commit comments -->
+  <data name="Repo_AddComment" xml:space="preserve"><value>Yorum ekle</value></data>
+  <data name="Repo_CommentPlaceholder" xml:space="preserve"><value>Bu commit'e bir yorum bırakın...</value></data>
+  <data name="Repo_CommentButton" xml:space="preserve"><value>Yorum Yap</value></data>
+
+  <!-- RepoDetails: archive -->
+  <data name="Repo_ArchiveHeader" xml:space="preserve"><value>Arşiv</value></data>
+  <data name="Repo_ArchiveThisRepo" xml:space="preserve"><value>Bu depoyu arşivle</value></data>
+  <data name="Repo_UnarchiveThisRepo" xml:space="preserve"><value>Bu deponun arşivini kaldır</value></data>
+  <data name="Repo_ArchiveDesc" xml:space="preserve"><value>Arşivleme depoyu salt okunur yapar. Yeni push, issue veya PR yapılamaz.</value></data>
+  <data name="Repo_UnarchiveDesc" xml:space="preserve"><value>Arşivden çıkarma push, issue ve PR'ları yeniden etkinleştirir.</value></data>
+  <data name="Repo_ArchiveButton" xml:space="preserve"><value>Arşivle</value></data>
+  <data name="Repo_UnarchiveButton" xml:space="preserve"><value>Arşivden Çıkar</value></data>
+
+  <!-- RepoDetails: upload modals -->
+  <data name="Repo_DragDropFiles" xml:space="preserve"><value>Dosyaları buraya sürükleyip bırakın</value></data>
+  <data name="Repo_Or" xml:space="preserve"><value>veya</value></data>
+  <data name="Repo_ChooseFiles" xml:space="preserve"><value>Dosya seç</value></data>
+  <data name="Repo_SelectedFiles" xml:space="preserve"><value>Seçilen dosyalar:</value></data>
+  <data name="Repo_CommitMessageLabel" xml:space="preserve"><value>Commit mesajı</value></data>
+  <data name="Repo_AddFilesViaUpload" xml:space="preserve"><value>Yükleme ile dosya ekle</value></data>
+  <data name="Repo_UploadFolderTo" xml:space="preserve"><value>Klasörü şuraya yükle</value></data>
+  <data name="Repo_SelectFolderToUpload" xml:space="preserve"><value>Yüklenecek bir klasör seçin</value></data>
+  <data name="Repo_AllFilesWillBeAdded" xml:space="preserve"><value>Klasördeki tüm dosyalar depoya eklenecektir</value></data>
+  <data name="Repo_ChooseFolder" xml:space="preserve"><value>Klasör seç</value></data>
+
+  <!-- RepoDetails: C# error messages -->
+  <data name="Repo_AutolinkPrefixRequired" xml:space="preserve"><value>Ön ek gereklidir.</value></data>
+  <data name="Repo_AutolinkUrlRequired" xml:space="preserve"><value>URL şablonu gereklidir ve {0} içermelidir.</value></data>
+  <data name="Repo_InvalidSecretName" xml:space="preserve"><value>Geçersiz gizli anahtar adı. Yalnızca büyük harf, rakam ve alt çizgi kullanın (ör. MY_SECRET).</value></data>
+  <data name="Repo_DeployKeyRequired" xml:space="preserve"><value>Başlık ve genel anahtar gereklidir.</value></data>
+  <data name="Repo_RepoNotFound" xml:space="preserve"><value>Depo bulunamadı.</value></data>
+  <data name="Repo_DeployKeyFailed" xml:space="preserve"><value>Dağıtım anahtarı eklenemedi. Bu parmak izine sahip bir anahtar zaten mevcut olabilir.</value></data>
 </root>

@@ -1236,4 +1236,89 @@
   <data name="Settings_EnterKeyName" xml:space="preserve"><value>이 키의 이름을 입력하세요.</value></data>
   <data name="Settings_PasskeyRegistered" xml:space="preserve"><value>패스키가 성공적으로 등록되었습니다.</value></data>
   <data name="Settings_PasskeyRemoved" xml:space="preserve"><value>패스키가 제거되었습니다.</value></data>
+  <!-- Register error/success messages -->
+  <data name="Register_PasswordsDontMatch" xml:space="preserve"><value>비밀번호가 일치하지 않습니다</value></data>
+  <data name="Register_PasswordTooShort" xml:space="preserve"><value>비밀번호는 최소 6자 이상이어야 합니다</value></data>
+  <data name="Register_Success" xml:space="preserve"><value>계정이 성공적으로 생성되었습니다! 로그인 페이지로 이동 중...</value></data>
+  <data name="Register_UserExists" xml:space="preserve"><value>사용자 이름 또는 이메일이 이미 존재합니다</value></data>
+  <data name="Register_Error" xml:space="preserve"><value>등록 중 오류가 발생했습니다. 다시 시도해 주세요.</value></data>
+
+  <!-- RepoDetails: badges and action buttons -->
+  <data name="Repo_Private" xml:space="preserve"><value>비공개</value></data>
+  <data name="Repo_Public" xml:space="preserve"><value>공개</value></data>
+  <data name="Repo_TemplateBadge" xml:space="preserve"><value>템플릿</value></data>
+  <data name="Repo_ArchivedBadge" xml:space="preserve"><value>보관됨</value></data>
+  <data name="Repo_Watch" xml:space="preserve"><value>구독</value></data>
+  <data name="Repo_Unwatch" xml:space="preserve"><value>구독 해제</value></data>
+  <data name="Repo_Star" xml:space="preserve"><value>스타</value></data>
+  <data name="Repo_Starred" xml:space="preserve"><value>스타 표시됨</value></data>
+  <data name="Repo_Fork" xml:space="preserve"><value>Fork</value></data>
+  <data name="Repo_Forked" xml:space="preserve"><value>포크됨</value></data>
+
+  <!-- RepoDetails: clone/download section -->
+  <data name="Repo_CopyToClipboard" xml:space="preserve"><value>클립보드에 복사</value></data>
+  <data name="Repo_CloneHelp" xml:space="preserve"><value>Git HTTP URL을 사용하여 이 저장소를 클론하세요.</value></data>
+  <data name="Repo_DownloadZip" xml:space="preserve"><value>ZIP 다운로드</value></data>
+  <data name="Repo_DownloadTarGz" xml:space="preserve"><value>TAR.GZ 다운로드</value></data>
+
+  <!-- RepoDetails: file actions -->
+  <data name="Repo_CreateNewFile" xml:space="preserve"><value>새 파일 만들기</value></data>
+  <data name="Repo_UploadFiles" xml:space="preserve"><value>파일 업로드</value></data>
+  <data name="Repo_UploadFolder" xml:space="preserve"><value>폴더 업로드</value></data>
+
+  <!-- RepoDetails: commit signatures -->
+  <data name="Repo_Verified" xml:space="preserve"><value>검증됨</value></data>
+  <data name="Repo_SignedBadge" xml:space="preserve"><value>서명됨</value></data>
+
+  <!-- RepoDetails: danger zone -->
+  <data name="Repo_DangerZone" xml:space="preserve"><value>위험 구역</value></data>
+  <data name="Repo_DeleteThisRepo" xml:space="preserve"><value>이 저장소 삭제</value></data>
+  <data name="Repo_DeleteRepoWarning" xml:space="preserve"><value>저장소를 삭제하면 되돌릴 수 없습니다.</value></data>
+
+  <!-- RepoDetails: editor/commit -->
+  <data name="Repo_CommitChanges" xml:space="preserve"><value>변경 사항 커밋</value></data>
+  <data name="Repo_CommitMessagePlaceholder" xml:space="preserve"><value>커밋 메시지</value></data>
+  <data name="Repo_AddDescriptionPlaceholder" xml:space="preserve"><value>설명 추가...</value></data>
+  <data name="Repo_MustBeLoggedIn" xml:space="preserve"><value>파일을 편집하려면 로그인해야 합니다.</value></data>
+  <data name="Repo_ClearFilter" xml:space="preserve"><value>필터 지우기</value></data>
+  <data name="Repo_UnableToLoadBlame" xml:space="preserve"><value>Blame 정보를 로드할 수 없습니다.</value></data>
+
+  <!-- RepoDetails: diff view -->
+  <data name="Repo_Unified" xml:space="preserve"><value>통합</value></data>
+  <data name="Repo_Split" xml:space="preserve"><value>분할</value></data>
+  <data name="Repo_ChangedFiles" xml:space="preserve"><value>변경된 파일</value></data>
+
+  <!-- RepoDetails: commit comments -->
+  <data name="Repo_AddComment" xml:space="preserve"><value>댓글 추가</value></data>
+  <data name="Repo_CommentPlaceholder" xml:space="preserve"><value>이 커밋에 댓글을 남기세요...</value></data>
+  <data name="Repo_CommentButton" xml:space="preserve"><value>댓글</value></data>
+
+  <!-- RepoDetails: archive -->
+  <data name="Repo_ArchiveHeader" xml:space="preserve"><value>보관</value></data>
+  <data name="Repo_ArchiveThisRepo" xml:space="preserve"><value>이 저장소 보관</value></data>
+  <data name="Repo_UnarchiveThisRepo" xml:space="preserve"><value>이 저장소 보관 해제</value></data>
+  <data name="Repo_ArchiveDesc" xml:space="preserve"><value>보관하면 저장소가 읽기 전용이 됩니다. 새로운 푸시, 이슈 또는 PR이 불가능합니다.</value></data>
+  <data name="Repo_UnarchiveDesc" xml:space="preserve"><value>보관 해제하면 푸시, 이슈 및 PR이 다시 활성화됩니다.</value></data>
+  <data name="Repo_ArchiveButton" xml:space="preserve"><value>보관</value></data>
+  <data name="Repo_UnarchiveButton" xml:space="preserve"><value>보관 해제</value></data>
+
+  <!-- RepoDetails: upload modals -->
+  <data name="Repo_DragDropFiles" xml:space="preserve"><value>여기에 파일을 드래그 앤 드롭하세요</value></data>
+  <data name="Repo_Or" xml:space="preserve"><value>또는</value></data>
+  <data name="Repo_ChooseFiles" xml:space="preserve"><value>파일 선택</value></data>
+  <data name="Repo_SelectedFiles" xml:space="preserve"><value>선택된 파일:</value></data>
+  <data name="Repo_CommitMessageLabel" xml:space="preserve"><value>커밋 메시지</value></data>
+  <data name="Repo_AddFilesViaUpload" xml:space="preserve"><value>업로드로 파일 추가</value></data>
+  <data name="Repo_UploadFolderTo" xml:space="preserve"><value>폴더 업로드 위치</value></data>
+  <data name="Repo_SelectFolderToUpload" xml:space="preserve"><value>업로드할 폴더를 선택하세요</value></data>
+  <data name="Repo_AllFilesWillBeAdded" xml:space="preserve"><value>폴더의 모든 파일이 저장소에 추가됩니다</value></data>
+  <data name="Repo_ChooseFolder" xml:space="preserve"><value>폴더 선택</value></data>
+
+  <!-- RepoDetails: C# error messages -->
+  <data name="Repo_AutolinkPrefixRequired" xml:space="preserve"><value>접두사는 필수입니다.</value></data>
+  <data name="Repo_AutolinkUrlRequired" xml:space="preserve"><value>URL 템플릿은 필수이며 {0}을(를) 포함해야 합니다.</value></data>
+  <data name="Repo_InvalidSecretName" xml:space="preserve"><value>잘못된 시크릿 이름입니다. 대문자, 숫자, 밑줄만 사용하세요 (예: MY_SECRET).</value></data>
+  <data name="Repo_DeployKeyRequired" xml:space="preserve"><value>제목과 공개 키는 필수입니다.</value></data>
+  <data name="Repo_RepoNotFound" xml:space="preserve"><value>저장소를 찾을 수 없습니다.</value></data>
+  <data name="Repo_DeployKeyFailed" xml:space="preserve"><value>배포 키 추가에 실패했습니다. 이 지문의 키가 이미 존재할 수 있습니다.</value></data>
 </root>
