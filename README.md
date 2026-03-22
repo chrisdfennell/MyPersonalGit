@@ -25,7 +25,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
   - [Create a Repository](#2-create-a-repository)
   - [Clone and Push](#3-clone-and-push)
   - [Clone from an IDE](#4-clone-from-an-ide)
-  - [Web Editor](#5-use-the-web-editor)
+  - [Web IDE](#5-use-the-web-editor)
   - [Container Registry](#6-container-registry)
   - [Package Registry](#7-package-registry)
   - [Pages (Static Sites)](#8-pages-static-site-hosting)
@@ -115,6 +115,25 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Repository Topics** — Tag repositories with topics for discovery and filtering on the Explore page
 - **Activity Pulse** — Weekly summary page per repository showing PRs merged, issues opened/closed, commits, top contributors, and active branches over the last 7 days
 
+### Web IDE
+- **Full-Featured Code Editor** — Monaco Editor-powered IDE with 30+ language syntax highlighting, multiple themes, Emmet abbreviation expansion for HTML/CSS, and format-on-paste
+- **File Management** — Hierarchical file tree with file nesting (groups `.razor` + `.razor.css` + `.razor.cs`), search/filter, drag-and-drop file upload, and context menus for new file/folder/rename/delete
+- **Tab Management** — Multi-tab interface with drag-to-reorder, pinned tabs, right-click context menu (Close, Close Others, Close to the Right, Close Saved), and scroll chevrons for overflow
+- **Split Editor & Diff View** — Side-by-side editing with independent scroll, and diff view for comparing changes before commit
+- **Integrated Terminal** — xterm.js-based terminal with multiple terminal tabs and WebSocket shell access
+- **Git Integration** — Branch creation, blame view, file history, commit panel, source control with file selection, and a visual commit graph with colored lane lines and branch labels
+- **Merge Conflict Resolution** — Inline Accept Current / Accept Incoming / Accept Both buttons with color-coded conflict regions (green/blue)
+- **Search & Replace** — Global search across all files with file extension filtering, line-by-line results, and replace all
+- **Code Navigation** — Quick Open (Ctrl+P), Command Palette (Ctrl+Shift+P), Go to Line (Ctrl+G), outline/symbols panel, and breadcrumb navigation
+- **CSS Color Previews** — Inline color swatches next to hex/rgb/hsl values in CSS, SCSS, and Less files
+- **Minimap Highlights** — Modified lines, added lines, and conflict markers shown as colored markers in the minimap gutter
+- **Markdown & Image Preview** — Toggle between edit and rendered preview for Markdown files; inline image display for common formats
+- **Auto-Save** — Optional auto-commit with configurable delay (500ms–5s), toggleable in settings or command palette
+- **Persistent Workspace** — Remembers open tabs, pinned tabs, active file, sidebar state, and panel mode across browser sessions
+- **Resizable Panels** — Drag-to-resize sidebar and bottom panel with visual handles
+- **Customizable Settings** — Font family picker (8 fonts), font size, tab size, word wrap, minimap, line numbers, bracket guides, sticky scroll, code folding, font ligatures, format on paste, and render whitespace options
+- **Zen Mode** — Distraction-free full-screen editing (Escape to exit)
+
 ### CI/CD & DevOps
 - **CI/CD Runner** — Define workflows in `.github/workflows/*.yml` and run them in Docker containers. Auto-triggers on push and pull request events
 - **GitHub Actions Compatibility** — Same workflow YAML works on both MyPersonalGit and GitHub Actions. Translates `uses:` actions (`actions/checkout`, `actions/setup-dotnet`, `actions/setup-node`, `actions/setup-python`, `actions/setup-java`, `docker/login-action`, `docker/build-push-action`, `softprops/action-gh-release`) into equivalent shell commands
@@ -193,7 +212,8 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Linked Accounts** — Users can link multiple OAuth providers to their account from Settings
 
 ### Administration
-- **Admin Dashboard** — System settings (including database provider, SSH server, LDAP/AD, footer pages), user management, audit logs, and statistics
+- **Admin Dashboard** — System settings (including database provider, TLS/HTTPS, SSH server, LDAP/AD, footer pages), user management, audit logs, and statistics organized into separate cards per section
+- **Built-in TLS/HTTPS** — Enable HTTPS directly from admin settings with three certificate options: self-signed (auto-generated, 2-year validity), PFX/PKCS#12 file, or PEM cert+key pair (e.g., Let's Encrypt). Configurable internal/external ports for Docker port mapping, optional HTTP-to-HTTPS redirect
 - **Customizable Footer Pages** — Terms of Service, Privacy Policy, Documentation, and Contact pages with Markdown content editable from Admin > Settings
 - **User Profiles** — Contribution heatmap, activity feed, and stats per user
 - **Gravatar Avatars** — User avatars throughout the UI use Gravatar identicons based on username, with automatic fallback
@@ -208,6 +228,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Multi-Language / i18n** — Full localization across all 30 pages with 930 resource keys. Ships with 11 languages: English, Spanish, French, German, Japanese, Korean, Chinese (Simplified), Portuguese, Russian, Italian, and Turkish. Language picker in the header. Add more by creating `SharedResource.{locale}.resx` files
 - **Swagger / OpenAPI** — Interactive API documentation at `/swagger` with all REST endpoints discoverable and testable
 - **Open Graph Meta Tags** — Repository, issue, and PR pages include og:title and og:description for rich link previews in Slack, Discord, and social media
+- **Emoji Shortcodes** — GitHub-style emoji shortcodes (`:white_check_mark:`, `:rocket:`, etc.) rendered as actual emoji throughout all Markdown views
 - **Mermaid Diagrams** — Mermaid diagram rendering in Markdown files (flowcharts, sequence diagrams, Gantt charts, etc.)
 - **Math Rendering** — LaTeX/KaTeX math expressions in Markdown (`$inline$` and `$$display$$` syntax)
 - **CSV/TSV Viewer** — CSV and TSV files render as formatted, sortable tables instead of raw text

@@ -113,6 +113,25 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Repository Topics** — Taggen Sie Repositories mit Topics zur Entdeckung und Filterung auf der Entdecken-Seite
 - **Activity Pulse** — Wöchentliche Zusammenfassungsseite pro Repository mit gemergten PRs, geöffneten/geschlossenen Issues, Commits, Top-Beitragenden und aktiven Branches der letzten 7 Tage
 
+### Web IDE
+- **Vollwertiger Code-Editor** — Monaco Editor-basierte IDE mit Syntaxhervorhebung für über 30 Sprachen, mehreren Themes, Emmet-Abkürzungserweiterung für HTML/CSS und Format beim Einfügen
+- **Dateiverwaltung** — Hierarchischer Dateibaum mit Dateiverschachtelung (gruppiert `.razor` + `.razor.css` + `.razor.cs`), Suche/Filter, Datei-Upload per Drag-and-Drop und Kontextmenüs für neue Datei/Ordner/Umbenennen/Löschen
+- **Tab-Verwaltung** — Multi-Tab-Oberfläche mit Drag-to-Reorder, angehefteten Tabs, Rechtsklick-Kontextmenü (Schließen, Andere schließen, Rechts schließen, Gespeicherte schließen) und Scroll-Pfeilen bei Überlauf
+- **Split-Editor & Diff-Ansicht** — Nebeneinander-Bearbeitung mit unabhängigem Scrollen und Diff-Ansicht zum Vergleichen von Änderungen vor dem Commit
+- **Integriertes Terminal** — xterm.js-basiertes Terminal mit mehreren Terminal-Tabs und WebSocket-Shell-Zugang
+- **Git-Integration** — Branch-Erstellung, Blame-Ansicht, Dateiverlauf, Commit-Panel, Quellkontrolle mit Dateiauswahl und visueller Commit-Graph mit farbigen Spurlinien und Branch-Labels
+- **Merge-Konflikt-Auflösung** — Inline-Schaltflächen Aktuell akzeptieren / Eingehend akzeptieren / Beide akzeptieren mit farbcodierten Konfliktregionen (grün/blau)
+- **Suchen & Ersetzen** — Globale Suche über alle Dateien mit Dateierweiterungs-Filterung, zeilenweise Ergebnisse und Alle ersetzen
+- **Code-Navigation** — Schnellöffnung (Strg+P), Befehlspalette (Strg+Umschalt+P), Gehe zu Zeile (Strg+G), Gliederungs-/Symbolpanel und Breadcrumb-Navigation
+- **CSS-Farbvorschauen** — Inline-Farbmuster neben hex/rgb/hsl-Werten in CSS-, SCSS- und Less-Dateien
+- **Minimap-Hervorhebungen** — Geänderte Zeilen, hinzugefügte Zeilen und Konfliktmarkierungen als farbige Marker im Minimap-Rand angezeigt
+- **Markdown- & Bildvorschau** — Umschalten zwischen Bearbeitung und gerenderter Vorschau für Markdown-Dateien; Inline-Bildanzeige für gängige Formate
+- **Auto-Speichern** — Optionaler Auto-Commit mit konfigurierbarer Verzögerung (500ms–5s), umschaltbar in Einstellungen oder Befehlspalette
+- **Persistenter Arbeitsbereich** — Merkt sich geöffnete Tabs, angeheftete Tabs, aktive Datei, Seitenleistenstatus und Panel-Modus über Browser-Sitzungen hinweg
+- **Größenveränderbare Panels** — Seitenleiste und unteres Panel per Drag mit visuellen Griffen größenveränderbar
+- **Anpassbare Einstellungen** — Schriftfamilienauswahl (8 Schriften), Schriftgröße, Tab-Größe, Zeilenumbruch, Minimap, Zeilennummern, Klammer-Hilfslinien, Sticky Scroll, Code-Faltung, Schriftligaturen, Format beim Einfügen und Leerzeichenanzeige-Optionen
+- **Zen-Modus** — Ablenkungsfreie Vollbildbearbeitung (Escape zum Beenden)
+
 ### CI/CD & DevOps
 - **CI/CD Runner** — Definieren Sie Workflows in `.github/workflows/*.yml` und führen Sie sie in Docker-Containern aus. Automatische Auslösung bei Push- und Pull-Request-Events
 - **GitHub Actions-Kompatibilität** — Dasselbe Workflow-YAML funktioniert sowohl auf MyPersonalGit als auch auf GitHub Actions. Übersetzt `uses:`-Actions (`actions/checkout`, `actions/setup-dotnet`, `actions/setup-node`, `actions/setup-python`, `actions/setup-java`, `docker/login-action`, `docker/build-push-action`, `softprops/action-gh-release`) in äquivalente Shell-Befehle
@@ -180,7 +199,8 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Verknüpfte Konten** — Benutzer können mehrere OAuth-Anbieter mit ihrem Konto in den Einstellungen verknüpfen
 
 ### Administration
-- **Admin-Dashboard** — Systemeinstellungen (einschließlich Datenbankanbieter, SSH-Server, LDAP/AD, Footer-Seiten), Benutzerverwaltung, Audit-Logs und Statistiken
+- **Admin-Dashboard** — Systemeinstellungen (einschließlich Datenbankanbieter, TLS/HTTPS, SSH-Server, LDAP/AD, Footer-Seiten), Benutzerverwaltung, Audit-Logs und Statistiken in separaten Karten pro Bereich organisiert
+- **Integriertes TLS/HTTPS** — HTTPS direkt über die Admin-Einstellungen aktivieren mit drei Zertifikatsoptionen: selbstsigniert (automatisch generiert, 2 Jahre Gültigkeit), PFX/PKCS#12-Datei oder PEM-Zertifikat+Schlüssel-Paar (z.B. Let's Encrypt). Konfigurierbare interne/externe Ports für Docker-Port-Mapping, optionale HTTP-zu-HTTPS-Weiterleitung
 - **Anpassbare Footer-Seiten** — Nutzungsbedingungen, Datenschutzrichtlinie, Dokumentation und Kontaktseiten mit Markdown-Inhalten, bearbeitbar unter Admin > Einstellungen
 - **Benutzerprofile** — Beitrags-Heatmap, Aktivitäts-Feed und Statistiken pro Benutzer
 - **Gravatar Avatars** — Benutzer-Avatare in der gesamten Oberfläche verwenden Gravatar-Identicons basierend auf dem Benutzernamen, mit automatischem Fallback
@@ -194,6 +214,7 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Mehrsprachigkeit / i18n** — Vollständige Lokalisierung über alle 30 Seiten mit 930 Ressourcenschlüsseln. Wird mit 11 Sprachen ausgeliefert: Englisch, Spanisch, Französisch, Deutsch, Japanisch, Koreanisch, Chinesisch (vereinfacht), Portugiesisch, Russisch, Italienisch und Türkisch. Sprachauswahl in der Kopfzeile. Weitere Sprachen können durch Erstellen von `SharedResource.{locale}.resx`-Dateien hinzugefügt werden
 - **Swagger / OpenAPI** — Interaktive API-Dokumentation unter `/swagger` mit allen REST-Endpunkten auffindbar und testbar
 - **Open Graph Meta Tags** — Repository-, Issue- und PR-Seiten enthalten og:title und og:description für erweiterte Link-Vorschauen in Slack, Discord und sozialen Medien
+- **Emoji Shortcodes** — GitHub-ähnliche Emoji-Kurzcodes (`:white_check_mark:`, `:rocket:`, usw.) werden als echte Emoji in allen Markdown-Ansichten dargestellt
 - **Mermaid Diagrams** — Mermaid-Diagramm-Rendering in Markdown-Dateien (Flussdiagramme, Sequenzdiagramme, Gantt-Diagramme usw.)
 - **Math Rendering** — LaTeX/KaTeX-Mathematikausdrücke in Markdown (`$inline$`- und `$$display$$`-Syntax)
 - **CSV/TSV Viewer** — CSV- und TSV-Dateien werden als formatierte, sortierbare Tabellen anstatt als Rohtext dargestellt

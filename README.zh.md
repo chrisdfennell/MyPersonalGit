@@ -113,6 +113,25 @@
 - **仓库主题** — 为仓库添加主题标签，用于在探索页面发现和过滤
 - **Activity Pulse** — 每个仓库的每周摘要页面，显示过去7天内合并的PR、打开/关闭的Issue、提交、顶级贡献者和活跃分支
 
+### Web IDE
+- **全功能代码编辑器** — 基于 Monaco Editor 的 IDE，支持 30 多种语言语法高亮、多种主题、HTML/CSS 的 Emmet 缩写展开以及粘贴时格式化
+- **文件管理** — 层级文件树，支持文件嵌套（将 `.razor` + `.razor.css` + `.razor.cs` 归组）、搜索/过滤、拖放上传文件，以及新建文件/文件夹/重命名/删除的右键菜单
+- **标签页管理** — 多标签页界面，支持拖拽排序、固定标签页、右键菜单（关闭、关闭其他、关闭右侧、关闭已保存的），以及溢出时的滚动箭头
+- **分屏编辑器 & Diff 视图** — 独立滚动的并排编辑，以及提交前比较更改的 Diff 视图
+- **集成终端** — 基于 xterm.js 的终端，支持多终端标签页和 WebSocket Shell 访问
+- **Git 集成** — 分支创建、Blame 视图、文件历史、提交面板、文件选择式源代码管理，以及带有彩色泳道线和分支标签的可视化提交图
+- **合并冲突解决** — 内联的"接受当前"/"接受传入"/"接受双方"按钮，带有颜色编码的冲突区域（绿色/蓝色）
+- **搜索与替换** — 跨所有文件的全局搜索，支持文件扩展名过滤、逐行结果和全部替换
+- **代码导航** — 快速打开（Ctrl+P）、命令面板（Ctrl+Shift+P）、跳转到行（Ctrl+G）、大纲/符号面板和面包屑导航
+- **CSS 颜色预览** — 在 CSS、SCSS 和 Less 文件中，hex/rgb/hsl 值旁显示内联颜色色块
+- **小地图高亮** — 修改的行、新增的行和冲突标记在小地图边栏中显示为彩色标记
+- **Markdown 和图片预览** — Markdown 文件的编辑与渲染预览切换；常见格式的内联图片显示
+- **自动保存** — 可选的自动提交，延迟可配置（500ms–5s），可在设置或命令面板中切换
+- **持久化工作区** — 在浏览器会话间记住打开的标签页、固定的标签页、活动文件、侧边栏状态和面板模式
+- **可调整大小的面板** — 通过可视化手柄拖拽调整侧边栏和底部面板大小
+- **可自定义设置** — 字体系列选择器（8种字体）、字体大小、制表符大小、自动换行、小地图、行号、括号参考线、粘性滚动、代码折叠、字体连字、粘贴时格式化和空白显示选项
+- **Zen 模式** — 无干扰全屏编辑（按 Escape 退出）
+
 ### CI/CD 与 DevOps
 - **CI/CD 运行器** — 在 `.github/workflows/*.yml` 中定义工作流并在 Docker 容器中运行。在 push 和 pull request 事件时自动触发
 - **GitHub Actions 兼容性** — 相同的工作流 YAML 在 MyPersonalGit 和 GitHub Actions 上都能运行。将 `uses:` 动作（`actions/checkout`、`actions/setup-dotnet`、`actions/setup-node`、`actions/setup-python`、`actions/setup-java`、`docker/login-action`、`docker/build-push-action`、`softprops/action-gh-release`）翻译为等效的 shell 命令
@@ -180,7 +199,8 @@
 - **关联账户** — 用户可以在设置中将多个 OAuth 提供商关联到其账户
 
 ### 管理
-- **管理后台** — 系统设置（包括数据库提供商、SSH 服务器、LDAP/AD、页脚页面）、用户管理、审计日志和统计
+- **管理后台** — 系统设置（包括数据库提供商、TLS/HTTPS、SSH 服务器、LDAP/AD、页脚页面）、用户管理、审计日志和统计，按分区组织为独立卡片
+- **内置 TLS/HTTPS** — 直接从管理设置启用 HTTPS，提供三种证书选项：自签名（自动生成，2年有效期）、PFX/PKCS#12 文件或 PEM 证书+密钥对（如 Let's Encrypt）。可配置 Docker 端口映射的内部/外部端口，可选的 HTTP 到 HTTPS 重定向
 - **自定义页脚页面** — 服务条款、隐私政策、文档和联系页面，支持从管理 > 设置中编辑 Markdown 内容
 - **用户资料** — 每用户的贡献热力图、活动源和统计
 - **Gravatar Avatars** — 整个界面中的用户头像使用基于用户名的 Gravatar 身份图标，支持自动回退
@@ -194,6 +214,7 @@
 - **多语言 / i18n** — 所有 30 个页面的完整本地化，共 930 个资源键。内置 11 种语言：英语、西班牙语、法语、德语、日语、韩语、简体中文、葡萄牙语、俄语、意大利语和土耳其语。通过创建 `SharedResource.{locale}.resx` 文件添加更多语言。页头的语言选择器可切换语言
 - **Swagger / OpenAPI** — 在 `/swagger` 提供交互式 API 文档，所有 REST 端点均可发现和测试
 - **Open Graph Meta Tags** — 仓库、Issue 和 PR 页面包含 og:title 和 og:description，用于在 Slack、Discord 和社交媒体中显示丰富的链接预览
+- **表情符号简码** — GitHub 风格的表情符号简码（`:white_check_mark:`、`:rocket:` 等）在所有 Markdown 视图中渲染为实际的表情符号
 - **Mermaid 图表** — 在 Markdown 文件中渲染 Mermaid 图表（流程图、时序图、甘特图等）
 - **数学公式渲染** — Markdown 中的 LaTeX/KaTeX 数学表达式（`$inline$` 和 `$$display$$` 语法）
 - **CSV/TSV 查看器** — CSV 和 TSV 文件以格式化、可排序的表格呈现，而非原始文本
