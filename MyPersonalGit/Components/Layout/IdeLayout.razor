@@ -43,6 +43,21 @@
             </ul>
         </div>
         <div class="ms-auto d-flex align-items-center gap-2">
+            <div class="dropdown">
+                <button class="btn btn-sm btn-link text-muted p-0" type="button" data-bs-toggle="dropdown" title="@L["Ide_Language"]">
+                    <i class="bi bi-translate"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" style="min-width: 140px;">
+                    @foreach (var (code, name) in supportedLanguages)
+                    {
+                        <li>
+                            <button class="dropdown-item small @(currentCulture == code ? "active" : "")" @onclick="() => SetLanguage(code)">
+                                @name
+                            </button>
+                        </li>
+                    }
+                </ul>
+            </div>
             @if (UserService.IsLoggedIn)
             {
                 <span class="text-muted small">@UserService.Username</span>
@@ -106,6 +121,14 @@
     private string CurrentBranch = "main";
     private List<string> Branches = new();
     private string currentTheme = "light";
+    private string currentCulture = "en";
+
+    private static readonly (string Code, string Name)[] supportedLanguages = new[]
+    {
+        ("en", "English"), ("es", "Español"), ("fr", "Français"), ("de", "Deutsch"),
+        ("ja", "日本語"), ("ko", "한국어"), ("zh", "中文"), ("pt", "Português"),
+        ("ru", "Русский"), ("it", "Italiano"), ("tr", "Türkçe")
+    };
 
     private string BackUrl => $"/repo/{RepoName}";
 
@@ -138,6 +161,7 @@
                 }
 
                 currentTheme = await JS.InvokeAsync<string>("themeHelper.get");
+                currentCulture = await JS.InvokeAsync<string>("eval", "document.cookie.match(/\\.AspNetCore\\.Culture=c%3D([^|&;]+)/)?.[1] || navigator.language?.substring(0,2) || 'en'") ?? "en";
 
                 // Parse current branch from query string
                 var uri = new Uri(Navigation.Uri);
@@ -247,6 +271,13 @@
     {
         CurrentBranch = branch;
         Navigation.NavigateTo($"/repo/{RepoName}/ide?branch={branch}", forceLoad: true);
+    }
+
+    private async Task SetLanguage(string culture)
+    {
+        currentCulture = culture;
+        await JS.InvokeVoidAsync("eval", $"document.cookie = '.AspNetCore.Culture=c%3D{culture}|uic%3D{culture};path=/;max-age=31536000'");
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
     }
 
     private async Task ToggleTheme()
