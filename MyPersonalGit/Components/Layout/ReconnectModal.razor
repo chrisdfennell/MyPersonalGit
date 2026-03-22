@@ -32,27 +32,26 @@
 </style>
 
 <style>
-    /* Dark mode for the framework's <dialog> reconnect modal.
-       This MUST be unscoped (not in .razor.css) to reach the top-layer dialog. */
-    [data-bs-theme="dark"] dialog#components-reconnect-modal {
+    /* Dark mode for the framework reconnect modal (top-layer element). */
+    [data-bs-theme="dark"] #components-reconnect-modal[open] {
         background-color: #1e1e2e !important;
         color: #c9d1d9 !important;
         border-color: #444 !important;
     }
 
-    [data-bs-theme="dark"] dialog#components-reconnect-modal p {
+    [data-bs-theme="dark"] #components-reconnect-modal[open] p {
         color: #8b949e !important;
     }
 
-    [data-bs-theme="dark"] dialog#components-reconnect-modal .components-rejoining-animation div {
+    [data-bs-theme="dark"] #components-reconnect-modal[open] .components-rejoining-animation div {
         border-color: #58a6ff !important;
     }
 
-    [data-bs-theme="dark"] dialog#components-reconnect-modal::backdrop {
+    [data-bs-theme="dark"] #components-reconnect-modal[open]::backdrop {
         background-color: rgba(0, 0, 0, 0.7) !important;
     }
 
-    [data-bs-theme="dark"] dialog#components-reconnect-modal button {
+    [data-bs-theme="dark"] #components-reconnect-modal[open] button {
         background-color: #388bfd;
     }
 </style>
