@@ -1004,4 +1004,132 @@
             }
         }
     };
+    // ============================================================
+    // Preview helpers (markdown, unsaved changes)
+    // ============================================================
+
+    window.idePreview = {
+        _markedLoaded: false,
+        _markedPromise: null,
+
+        /**
+         * Load the marked.js library for markdown rendering.
+         */
+        loadMarked: function () {
+            if (this._markedPromise) return this._markedPromise;
+            if (window.marked) { this._markedLoaded = true; return Promise.resolve(); }
+
+            var self = this;
+            this._markedPromise = new Promise(function (resolve, reject) {
+                var savedDefine = window.define;
+                window.define = undefined;
+
+                var script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js';
+                script.onload = function () {
+                    window.define = savedDefine;
+                    self._markedLoaded = true;
+                    resolve();
+                };
+                script.onerror = function () {
+                    window.define = savedDefine;
+                    reject(new Error('Failed to load marked.js'));
+                };
+                document.head.appendChild(script);
+            });
+            return this._markedPromise;
+        },
+
+        /**
+         * Render markdown to HTML.
+         * @param {string} markdown - The markdown string.
+         * @returns {string} HTML string.
+         */
+        renderMarkdown: async function (markdown) {
+            await this.loadMarked();
+            if (window.marked && window.marked.parse) {
+                return marked.parse(markdown || '', { breaks: true, gfm: true });
+            }
+            return '<pre>' + (markdown || '').replace(/</g, '&lt;') + '</pre>';
+        }
+    };
+
+    // ============================================================
+    // Unsaved changes warning
+    // ============================================================
+
+    window.ideUnsaved = {
+        _enabled: false,
+
+        /**
+         * Enable or disable the beforeunload warning.
+         * @param {boolean} hasChanges - Whether there are unsaved changes.
+         */
+        setHasChanges: function (hasChanges) {
+            if (hasChanges && !this._enabled) {
+                window.addEventListener('beforeunload', this._handler);
+                this._enabled = true;
+            } else if (!hasChanges && this._enabled) {
+                window.removeEventListener('beforeunload', this._handler);
+                this._enabled = false;
+            }
+        },
+
+        _handler: function (e) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    };
+
+    // ============================================================
+    // Drag & drop file upload helper
+    // ============================================================
+
+    window.ideUpload = {
+        /**
+         * Set up drop zone on an element. Calls .NET when files are dropped.
+         * @param {string} elementId - The DOM element ID to attach drop events to.
+         * @param {object} dotNetRef - .NET object reference.
+         * @param {string} methodName - .NET method to call with {name, path, base64Content}.
+         */
+        setupDropZone: function (elementId, dotNetRef, methodName) {
+            var el = document.getElementById(elementId);
+            if (!el) return;
+
+            el.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                el.classList.add('ide-drop-active');
+            });
+
+            el.addEventListener('dragleave', function (e) {
+                e.preventDefault();
+                el.classList.remove('ide-drop-active');
+            });
+
+            el.addEventListener('drop', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                el.classList.remove('ide-drop-active');
+
+                var files = e.dataTransfer.files;
+                if (!files || files.length === 0) return;
+
+                for (var i = 0; i < files.length; i++) {
+                    (function (file) {
+                        var reader = new FileReader();
+                        reader.onload = function (ev) {
+                            var base64 = ev.target.result.split(',')[1] || '';
+                            try {
+                                dotNetRef.invokeMethodAsync(methodName, file.name, base64);
+                            } catch (ex) {
+                                console.error('Drop upload error:', ex);
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    })(files[i]);
+                }
+            });
+        }
+    };
 })();

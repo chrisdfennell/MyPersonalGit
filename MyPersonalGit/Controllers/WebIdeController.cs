@@ -262,7 +262,41 @@ public class WebIdeController : ControllerBase
         }
     }
 
-    // ── 8. GET {repoName}/blame/{*path} ─────────────────────────────
+    // ── 8. GET {repoName}/raw/{*path} ───────────────────────────────
+
+    [HttpGet("{repoName}/raw/{*path}")]
+    public async Task<IActionResult> GetRawFile(string repoName, string path, [FromQuery] string? branch = null)
+    {
+        var authResult = await EnsureAuthenticatedAndAuthorized(repoName);
+        if (authResult != null) return authResult;
+
+        try
+        {
+            var data = await _ideService.GetFileRawAsync(repoName, branch ?? "", path);
+            if (data == null) return NotFound();
+
+            var ext = Path.GetExtension(path).ToLowerInvariant();
+            var contentType = ext switch
+            {
+                ".png" => "image/png",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".gif" => "image/gif",
+                ".webp" => "image/webp",
+                ".svg" => "image/svg+xml",
+                ".ico" => "image/x-icon",
+                ".bmp" => "image/bmp",
+                _ => "application/octet-stream"
+            };
+            return File(data, contentType);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get raw file {Path} in {Repo}/{Branch}", path, repoName, branch);
+            return Problem(detail: ex.Message, title: "Failed to retrieve raw file", statusCode: 500);
+        }
+    }
+
+    // ── 9. GET {repoName}/blame/{*path} ─────────────────────────────
 
     [HttpGet("{repoName}/blame/{*path}")]
     public async Task<IActionResult> GetBlame(string repoName, string path, [FromQuery] string? branch = null)
