@@ -581,6 +581,30 @@ using (var scope = app.Services.CreateScope())
         }
         Console.WriteLine("==> IMPORTANT: Remove the RESET_ADMIN_PASSWORD env var and restart!");
     }
+
+    // Cleanup: fix orphaned fork records and stale fork counts
+    try
+    {
+        var allRepoNames = db.Repositories.Select(r => r.Name).ToHashSet();
+        var orphanedForks = db.RepositoryForks.Where(f => !allRepoNames.Contains(f.ForkedRepo)).ToList();
+        if (orphanedForks.Count > 0)
+        {
+            // Decrement fork count on source repos
+            foreach (var orphan in orphanedForks)
+            {
+                var source = db.Repositories.FirstOrDefault(r => r.Name == orphan.OriginalRepo);
+                if (source != null && source.Forks > 0)
+                    source.Forks--;
+            }
+            db.RepositoryForks.RemoveRange(orphanedForks);
+            db.SaveChanges();
+            Console.WriteLine($"==> Cleaned up {orphanedForks.Count} orphaned fork record(s)");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Warning: Fork cleanup failed: {ex.Message}");
+    }
 }
 
 // Configure the HTTP request pipeline.
