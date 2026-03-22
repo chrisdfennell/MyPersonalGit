@@ -303,10 +303,18 @@ public class RepositoryService : IRepositoryService
         if (repo == null) return false;
 
         // If this repo is a fork, decrement the source repo's fork count and remove the fork record
-        var forkRecord = await db.RepositoryForks.FirstOrDefaultAsync(f => f.ForkedRepo == name || f.ForkedRepo == repo.Name);
+        var repoNameLower = repo.Name.ToLower();
+        var nameLower = name.ToLower();
+        var nameWithGit = nameLower.EndsWith(".git") ? nameLower : nameLower + ".git";
+        var nameWithoutGit = nameLower.EndsWith(".git") ? nameLower[..^4] : nameLower;
+        var forkRecord = await db.RepositoryForks.FirstOrDefaultAsync(f =>
+            f.ForkedRepo.ToLower() == repoNameLower ||
+            f.ForkedRepo.ToLower() == nameLower ||
+            f.ForkedRepo.ToLower() == nameWithGit ||
+            f.ForkedRepo.ToLower() == nameWithoutGit);
         if (forkRecord != null)
         {
-            var sourceMeta = await db.Repositories.FirstOrDefaultAsync(r => r.Name == forkRecord.OriginalRepo);
+            var sourceMeta = await db.Repositories.FirstOrDefaultAsync(r => r.Name.ToLower() == forkRecord.OriginalRepo.ToLower());
             if (sourceMeta != null && sourceMeta.Forks > 0)
                 sourceMeta.Forks--;
             db.RepositoryForks.Remove(forkRecord);
