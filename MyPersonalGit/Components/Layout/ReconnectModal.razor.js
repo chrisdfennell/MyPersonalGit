@@ -8,8 +8,22 @@ retryButton.addEventListener("click", retry);
 const resumeButton = document.getElementById("components-resume-button");
 resumeButton.addEventListener("click", resume);
 
+function applyThemeToDialog() {
+    var isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    if (isDark) {
+        reconnectModal.style.backgroundColor = '#1e1e2e';
+        reconnectModal.style.color = '#c9d1d9';
+        reconnectModal.style.borderColor = '#444';
+    } else {
+        reconnectModal.style.backgroundColor = '';
+        reconnectModal.style.color = '';
+        reconnectModal.style.borderColor = '';
+    }
+}
+
 function handleReconnectStateChanged(event) {
     if (event.detail.state === "show") {
+        applyThemeToDialog();
         reconnectModal.showModal();
     } else if (event.detail.state === "hide") {
         reconnectModal.close();
