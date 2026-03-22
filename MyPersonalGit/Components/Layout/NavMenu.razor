@@ -1,7 +1,10 @@
 @using MyPersonalGit.Data
 @using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject INotificationService NotificationService
 @inject CurrentUserService UserService
+@inject IStringLocalizer<SharedResource> L
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -19,7 +22,7 @@
                     }
                 </a>
                 <a href="/profile/@UserService.Username" class="btn btn-sm btn-outline-light">
-                    <i class="bi bi-person-circle"></i> Profile
+                    <i class="bi bi-person-circle"></i> @L["Nav_Profile"]
                 </a>
                 <a href="/settings" class="btn btn-sm btn-outline-light">
                     <i class="bi bi-gear"></i>
@@ -28,7 +31,7 @@
             @if (UserService.IsAdmin)
             {
                 <a href="/admin" class="btn btn-sm btn-outline-light">
-                    <i class="bi bi-shield-lock"></i> Admin
+                    <i class="bi bi-shield-lock"></i> @L["Nav_Admin"]
                 </a>
             }
         </div>
@@ -41,25 +44,25 @@
     <nav class="nav flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> @L["Nav_Home"]
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="explore">
-                <span class="bi bi-compass" aria-hidden="true"></span> Explore
+                <span class="bi bi-compass" aria-hidden="true"></span> @L["Nav_Explore"]
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="search">
-                <span class="bi bi-search" aria-hidden="true"></span> Search
+                <span class="bi bi-search" aria-hidden="true"></span> @L["Nav_Search"]
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="orgs">
-                <span class="bi bi-people" aria-hidden="true"></span> Organizations
+                <span class="bi bi-people" aria-hidden="true"></span> @L["Nav_Organizations"]
             </NavLink>
         </div>
 
@@ -67,7 +70,7 @@
         {
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="notifications">
-                    <span class="bi bi-bell" aria-hidden="true"></span> Notifications
+                    <span class="bi bi-bell" aria-hidden="true"></span> @L["Nav_Notifications"]
                     @if (UnreadCount > 0)
                     {
                         <span class="badge bg-danger rounded-pill ms-2">@UnreadCount</span>
@@ -77,13 +80,13 @@
 
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="@($"/profile/{UserService.Username}")">
-                    <span class="bi bi-person-circle" aria-hidden="true"></span> Profile
+                    <span class="bi bi-person-circle" aria-hidden="true"></span> @L["Nav_Profile"]
                 </NavLink>
             </div>
 
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="settings">
-                    <span class="bi bi-gear" aria-hidden="true"></span> Settings
+                    <span class="bi bi-gear" aria-hidden="true"></span> @L["Nav_Settings"]
                 </NavLink>
             </div>
         }
@@ -92,7 +95,7 @@
         {
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="admin">
-                    <span class="bi bi-shield-lock" aria-hidden="true"></span> Admin
+                    <span class="bi bi-shield-lock" aria-hidden="true"></span> @L["Nav_Admin"]
                 </NavLink>
             </div>
         }

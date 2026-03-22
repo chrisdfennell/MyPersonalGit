@@ -245,8 +245,8 @@ else
                                     <div class="input-group" style="max-width: 300px;">
                                         <input type="text" class="form-control font-monospace" @bind="Disable2FACode"
                                                placeholder="000000" maxlength="6" inputmode="numeric" />
-                                        <button class="btn btn-danger" @onclick="Disable2FA">Confirm</button>
-                                        <button class="btn btn-secondary" @onclick='() => { ShowDisable2FAConfirm = false; Disable2FACode = ""; }'>Cancel</button>
+                                        <button class="btn btn-danger" @onclick="Disable2FA">@L["Settings_Confirm"]</button>
+                                        <button class="btn btn-secondary" @onclick='() => { ShowDisable2FAConfirm = false; Disable2FACode = ""; }'>@L["Settings_Cancel"]</button>
                                     </div>
                                 </div>
                             }
@@ -276,11 +276,11 @@ else
                                 <div class="input-group" style="max-width: 300px;">
                                     <input type="text" class="form-control font-monospace text-center" @bind="VerifySetupCode"
                                            placeholder="000000" maxlength="6" inputmode="numeric" />
-                                    <button class="btn btn-primary" @onclick="VerifyAndActivate2FA">Verify</button>
+                                    <button class="btn btn-primary" @onclick="VerifyAndActivate2FA">@L["Settings_Verify"]</button>
                                 </div>
                             </div>
 
-                            <button class="btn btn-secondary" @onclick="Cancel2FASetup">Cancel</button>
+                            <button class="btn btn-secondary" @onclick="Cancel2FASetup">@L["Settings_Cancel"]</button>
 
                             @if (ShowRecoveryCodes && RecoveryCodes.Length > 0)
                             {
@@ -417,7 +417,7 @@ else
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Personal Access Tokens</h5>
                         <button class="btn btn-primary btn-sm" @onclick='() => ShowAddToken = true'>
-                            <i class="bi bi-plus-lg"></i> Generate Token
+                            <i class="bi bi-plus-lg"></i> @L["Settings_GenerateToken"]
                         </button>
                     </div>
                     <div class="card-body">
@@ -695,7 +695,7 @@ else
                                        placeholder="SECRET_NAME" disabled="@(editingUserSecretName != null)" />
                             </div>
                             <div class="mb-2">
-                                <input type="password" class="form-control form-control-sm" @bind="newUserSecretValue" placeholder="Secret value" />
+                                <input type="password" class="form-control form-control-sm" @bind="newUserSecretValue" placeholder="@L["Settings_SecretValue"]" />
                             </div>
                             <div class="d-flex gap-2">
                                 <button class="btn btn-gh-primary btn-sm" @onclick="SaveUserSecret"
@@ -704,7 +704,7 @@ else
                                 </button>
                                 @if (editingUserSecretName != null)
                                 {
-                                    <button class="btn btn-outline-secondary btn-sm" @onclick="CancelEditUserSecret">Cancel</button>
+                                    <button class="btn btn-outline-secondary btn-sm" @onclick="CancelEditUserSecret">@L["Settings_Cancel"]</button>
                                 }
                             </div>
                             @if (!string.IsNullOrEmpty(userSecretMessage))
@@ -790,7 +790,7 @@ else
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Title</label>
-                        <input type="text" class="form-control" @bind="NewSshKeyTitle" placeholder="My SSH Key" />
+                        <input type="text" class="form-control" @bind="NewSshKeyTitle" placeholder="@L["Settings_SshKeyPlaceholder"]" />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Key</label>
@@ -799,8 +799,8 @@ else
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick='() => ShowAddSshKey = false'>Cancel</button>
-                    <button type="button" class="btn btn-primary" @onclick="AddSshKey">Add Key</button>
+                    <button type="button" class="btn btn-secondary" @onclick='() => ShowAddSshKey = false'>@L["Settings_Cancel"]</button>
+                    <button type="button" class="btn btn-primary" @onclick="AddSshKey">@L["Settings_AddKey"]</button>
                 </div>
             </div>
         </div>
@@ -819,7 +819,7 @@ else
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Token Name</label>
-                        <input type="text" class="form-control" @bind="NewTokenName" placeholder="My Token" />
+                        <input type="text" class="form-control" @bind="NewTokenName" placeholder="@L["Settings_TokenPlaceholder"]" />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Scopes</label>
@@ -851,8 +851,8 @@ else
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick='() => ShowAddToken = false'>Cancel</button>
-                    <button type="button" class="btn btn-primary" @onclick="GenerateToken">Generate Token</button>
+                    <button type="button" class="btn btn-secondary" @onclick='() => ShowAddToken = false'>@L["Settings_Cancel"]</button>
+                    <button type="button" class="btn btn-primary" @onclick="GenerateToken">@L["Settings_GenerateToken"]</button>
                 </div>
             </div>
         </div>
@@ -880,8 +880,8 @@ else
                     }
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick='() => ShowAddGpgKey = false'>Cancel</button>
-                    <button type="button" class="btn btn-primary" @onclick="AddGpgKey">Add Key</button>
+                    <button type="button" class="btn btn-secondary" @onclick='() => ShowAddGpgKey = false'>@L["Settings_Cancel"]</button>
+                    <button type="button" class="btn btn-primary" @onclick="AddGpgKey">@L["Settings_AddKey"]</button>
                 </div>
             </div>
         </div>

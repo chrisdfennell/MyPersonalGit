@@ -519,10 +519,10 @@
                                 @if (UserService.IsLoggedIn && comment.Author.Equals(UserService.Username, StringComparison.OrdinalIgnoreCase))
                                 {
                                     <div class="ms-auto d-flex gap-1">
-                                        <button class="btn btn-link btn-sm text-muted p-0" @onclick="() => StartEditComment(comment)" title="Edit">
+                                        <button class="btn btn-link btn-sm text-muted p-0" @onclick="() => StartEditComment(comment)" title="@L["Issues_Edit"]">
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                        <button class="btn btn-link btn-sm text-danger p-0" @onclick="() => DeleteComment(comment.Id)" title="Delete">
+                                        <button class="btn btn-link btn-sm text-danger p-0" @onclick="() => DeleteComment(comment.Id)" title="@L["Issues_Delete"]">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -662,11 +662,11 @@
                                     <h6 class="mb-0">@issue.Title</h6>
                                     @if (issue.IsPinned)
                                     {
-                                        <i class="bi bi-pin-angle-fill text-warning" style="font-size: 12px;" title="Pinned"></i>
+                                        <i class="bi bi-pin-angle-fill text-warning" style="font-size: 12px;" title="@L["Issues_Pinned"]"></i>
                                     }
                                     @if (issue.IsLocked)
                                     {
-                                        <i class="bi bi-lock-fill text-muted" style="font-size: 12px;" title="Locked"></i>
+                                        <i class="bi bi-lock-fill text-muted" style="font-size: 12px;" title="@L["Issues_Locked"]"></i>
                                     }
                                     @if (issue.IsDraft)
                                     {

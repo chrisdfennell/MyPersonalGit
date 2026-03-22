@@ -549,7 +549,7 @@
                                                                 <td class="px-1 diff-sign" style="width: 20px; user-select: none;">
                                                                     @if (row.CssClass != "diff-hunk" && UserService.IsLoggedIn && lineNum > 0)
                                                                     {
-                                                                        <button class="btn-comment-add" title="Add comment" @onclick="() => StartComment(patch.Path, lineNum, side)">+</button>
+                                                                        <button class="btn-comment-add" title="@L["PR_AddComment"]" @onclick="() => StartComment(patch.Path, lineNum, side)">+</button>
                                                                     }
                                                                     @(row.Sign == ' ' ? "" : row.Sign.ToString())
                                                                 </td>
@@ -571,7 +571,7 @@
                                                                                 {
                                                                                     <div class="suggestion-block border rounded-2 mt-2 overflow-hidden">
                                                                                         <div class="d-flex justify-content-between align-items-center px-2 py-1 bg-success bg-opacity-10 border-bottom">
-                                                                                            <span class="small fw-bold text-success"><i class="bi bi-code-slash me-1"></i>Suggested change</span>
+                                                                                            <span class="small fw-bold text-success"><i class="bi bi-code-slash me-1"></i>@L["PR_SuggestedChange"]</span>
                                                                                         </div>
                                                                                         <pre class="mb-0 p-2 bg-light" style="font-size: 12px; white-space: pre-wrap;">@comment.SuggestionBody</pre>
                                                                                     </div>
@@ -579,11 +579,11 @@
                                                                                 <div class="mt-1">
                                                                                     @if (UserService.IsLoggedIn)
                                                                                     {
-                                                                                        <button class="btn btn-link btn-sm p-0 text-muted" @onclick="() => StartComment(patch.Path, lineNum, side, comment.Id)">Reply</button>
+                                                                                        <button class="btn btn-link btn-sm p-0 text-muted" @onclick="() => StartComment(patch.Path, lineNum, side, comment.Id)">@L["PR_Reply"]</button>
                                                                                     }
                                                                                     @if (UserService.Username == comment.Author)
                                                                                     {
-                                                                                        <button class="btn btn-link btn-sm p-0 text-danger ms-2" @onclick="() => DeleteInlineComment(comment.Id)">Delete</button>
+                                                                                        <button class="btn btn-link btn-sm p-0 text-danger ms-2" @onclick="() => DeleteInlineComment(comment.Id)">@L["PR_Delete"]</button>
                                                                                     }
                                                                                 </div>
                                                                             </div>
@@ -597,17 +597,17 @@
                                                                                     <div class="small" style="font-family: var(--bs-body-font-family);">@((MarkupString)Markdig.Markdown.ToHtml(reply.Body, _mdPipeline))</div>
                                                                                     @if (UserService.Username == reply.Author)
                                                                                     {
-                                                                                        <button class="btn btn-link btn-sm p-0 text-danger mt-1" @onclick="() => DeleteInlineComment(reply.Id)">Delete</button>
+                                                                                        <button class="btn btn-link btn-sm p-0 text-danger mt-1" @onclick="() => DeleteInlineComment(reply.Id)">@L["PR_Delete"]</button>
                                                                                     }
                                                                                 </div>
                                                                             }
                                                                             @if (commentingOnFile == patch.Path && commentingOnLine == lineNum && commentingOnSide == side && replyToCommentId == comment.Id)
                                                                             {
                                                                                 <div class="border rounded-2 p-2 ms-3 bg-white">
-                                                                                    <textarea class="form-control form-control-sm mb-1" rows="2" @bind="newCommentBody" placeholder="Reply..."></textarea>
+                                                                                    <textarea class="form-control form-control-sm mb-1" rows="2" @bind="newCommentBody" placeholder="@L["PR_ReplyPlaceholder"]"></textarea>
                                                                                     <div class="d-flex gap-1">
-                                                                                        <button class="btn btn-primary btn-sm" @onclick="SubmitInlineComment" disabled="@string.IsNullOrWhiteSpace(newCommentBody)">Reply</button>
-                                                                                        <button class="btn btn-outline-secondary btn-sm" @onclick="CancelComment">Cancel</button>
+                                                                                        <button class="btn btn-primary btn-sm" @onclick="SubmitInlineComment" disabled="@string.IsNullOrWhiteSpace(newCommentBody)">@L["PR_Reply"]</button>
+                                                                                        <button class="btn btn-outline-secondary btn-sm" @onclick="CancelComment">@L["PR_Cancel"]</button>
                                                                                     </div>
                                                                                 </div>
                                                                             }
@@ -623,21 +623,21 @@
                                                                         <div class="diff-comment-thread mx-3 my-1">
                                                                             <div class="border rounded-2 p-2 bg-white">
                                                                                 <div class="d-flex gap-1 mb-1">
-                                                                                    <button class="btn btn-sm @(!isSuggestionMode ? "btn-secondary" : "btn-outline-secondary")" @onclick="() => isSuggestionMode = false">Comment</button>
+                                                                                    <button class="btn btn-sm @(!isSuggestionMode ? "btn-secondary" : "btn-outline-secondary")" @onclick="() => isSuggestionMode = false">@L["PR_Comment"]</button>
                                                                                     <button class="btn btn-sm @(isSuggestionMode ? "btn-secondary" : "btn-outline-secondary")" @onclick="() => isSuggestionMode = true">
-                                                                                        <i class="bi bi-code-slash me-1"></i>Suggest changes
+                                                                                        <i class="bi bi-code-slash me-1"></i>@L["PR_SuggestChanges"]
                                                                                     </button>
                                                                                 </div>
-                                                                                <textarea class="form-control form-control-sm mb-1" rows="3" @bind="newCommentBody" placeholder="@(isSuggestionMode ? "Explain the suggestion..." : "Leave a comment on this line...")"></textarea>
+                                                                                <textarea class="form-control form-control-sm mb-1" rows="3" @bind="newCommentBody" placeholder="@(isSuggestionMode ? L["PR_ExplainSuggestion"] : L["PR_LeaveCommentOnLine"])"></textarea>
                                                                                 @if (isSuggestionMode)
                                                                                 {
-                                                                                    <textarea class="form-control form-control-sm mb-1 font-monospace" rows="3" @bind="suggestionCode" placeholder="Suggested replacement code..."></textarea>
+                                                                                    <textarea class="form-control form-control-sm mb-1 font-monospace" rows="3" @bind="suggestionCode" placeholder="@L["PR_SuggestedReplacementCode"]"></textarea>
                                                                                 }
                                                                                 <div class="d-flex gap-1">
                                                                                     <button class="btn btn-primary btn-sm" @onclick="SubmitInlineComment" disabled="@(string.IsNullOrWhiteSpace(newCommentBody) && !isSuggestionMode)">
-                                                                                        @(isSuggestionMode ? "Suggest" : "Comment")
+                                                                                        @(isSuggestionMode ? L["PR_Suggest"] : L["PR_Comment"])
                                                                                     </button>
-                                                                                    <button class="btn btn-outline-secondary btn-sm" @onclick="CancelComment">Cancel</button>
+                                                                                    <button class="btn btn-outline-secondary btn-sm" @onclick="CancelComment">@L["PR_Cancel"]</button>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -658,7 +658,7 @@
                                                                 <td class="text-muted text-end px-1 diff-linenum @(pair.Left != null && pair.Left.StartsWith("-") ? "diff-removed" : "diff-context")" style="width: 40px; user-select: none;">
                                                                     @if (pair.LeftLineNum > 0 && pair.Left != null && pair.Left.StartsWith("-") && UserService.IsLoggedIn)
                                                                     {
-                                                                        <button class="btn-comment-add" title="Add comment" @onclick="() => StartComment(patch.Path, pair.LeftLineNum, SideLeft)">+</button>
+                                                                        <button class="btn-comment-add" title="@L["PR_AddComment"]" @onclick="() => StartComment(patch.Path, pair.LeftLineNum, SideLeft)">+</button>
                                                                     }
                                                                     @(pair.LeftLineNum > 0 ? pair.LeftLineNum.ToString() : "")
                                                                 </td>
@@ -666,7 +666,7 @@
                                                                 <td class="text-muted text-end px-1 diff-linenum @(pair.Right != null && pair.Right.StartsWith("+") ? "diff-added" : "diff-context")" style="width: 40px; user-select: none;">
                                                                     @if (pair.RightLineNum > 0 && UserService.IsLoggedIn)
                                                                     {
-                                                                        <button class="btn-comment-add" title="Add comment" @onclick="() => StartComment(patch.Path, pair.RightLineNum, SideRight)">+</button>
+                                                                        <button class="btn-comment-add" title="@L["PR_AddComment"]" @onclick="() => StartComment(patch.Path, pair.RightLineNum, SideRight)">+</button>
                                                                     }
                                                                     @(pair.RightLineNum > 0 ? pair.RightLineNum.ToString() : "")
                                                                 </td>
@@ -687,8 +687,8 @@
                                                                                 </div>
                                                                                 <div class="small" style="font-family: var(--bs-body-font-family);">@((MarkupString)Markdig.Markdown.ToHtml(comment.Body, _mdPipeline))</div>
                                                                                 <div class="mt-1">
-                                                                                    @if (UserService.IsLoggedIn) { <button class="btn btn-link btn-sm p-0 text-muted" @onclick="() => StartComment(patch.Path, pair.LeftLineNum, SideLeft, comment.Id)">Reply</button> }
-                                                                                    @if (UserService.Username == comment.Author) { <button class="btn btn-link btn-sm p-0 text-danger ms-2" @onclick="() => DeleteInlineComment(comment.Id)">Delete</button> }
+                                                                                    @if (UserService.IsLoggedIn) { <button class="btn btn-link btn-sm p-0 text-muted" @onclick="() => StartComment(patch.Path, pair.LeftLineNum, SideLeft, comment.Id)">@L["PR_Reply"]</button> }
+                                                                                    @if (UserService.Username == comment.Author) { <button class="btn btn-link btn-sm p-0 text-danger ms-2" @onclick="() => DeleteInlineComment(comment.Id)">@L["PR_Delete"]</button> }
                                                                                 </div>
                                                                             </div>
                                                                             @foreach (var reply in GetReplies(comment.Id))
@@ -696,7 +696,7 @@
                                                                                 <div class="diff-comment border rounded-2 p-2 mb-1 bg-light-subtle ms-3">
                                                                                     <div class="d-flex justify-content-between align-items-center mb-1"><span class="fw-semibold small">@reply.Author</span><span class="text-muted" style="font-size: 11px;">@FormatDate(reply.CreatedAt)</span></div>
                                                                                     <div class="small" style="font-family: var(--bs-body-font-family);">@((MarkupString)Markdig.Markdown.ToHtml(reply.Body, _mdPipeline))</div>
-                                                                                    @if (UserService.Username == reply.Author) { <button class="btn btn-link btn-sm p-0 text-danger mt-1" @onclick="() => DeleteInlineComment(reply.Id)">Delete</button> }
+                                                                                    @if (UserService.Username == reply.Author) { <button class="btn btn-link btn-sm p-0 text-danger mt-1" @onclick="() => DeleteInlineComment(reply.Id)">@L["PR_Delete"]</button> }
                                                                                 </div>
                                                                             }
                                                                         </div>
@@ -705,8 +705,8 @@
                                                                 @if (commentingOnFile == patch.Path && commentingOnLine == pair.LeftLineNum && commentingOnSide == "LEFT" && replyToCommentId == null)
                                                                 {
                                                                     <tr class="diff-comment-row"><td colspan="4" class="p-0"><div class="diff-comment-thread mx-3 my-1"><div class="border rounded-2 p-2 bg-white">
-                                                                        <textarea class="form-control form-control-sm mb-1" rows="3" @bind="newCommentBody" placeholder="Leave a comment..."></textarea>
-                                                                        <div class="d-flex gap-1"><button class="btn btn-primary btn-sm" @onclick="SubmitInlineComment" disabled="@string.IsNullOrWhiteSpace(newCommentBody)">Comment</button><button class="btn btn-outline-secondary btn-sm" @onclick="CancelComment">Cancel</button></div>
+                                                                        <textarea class="form-control form-control-sm mb-1" rows="3" @bind="newCommentBody" placeholder="@L["PR_LeaveComment"]"></textarea>
+                                                                        <div class="d-flex gap-1"><button class="btn btn-primary btn-sm" @onclick="SubmitInlineComment" disabled="@string.IsNullOrWhiteSpace(newCommentBody)">@L["PR_Comment"]</button><button class="btn btn-outline-secondary btn-sm" @onclick="CancelComment">@L["PR_Cancel"]</button></div>
                                                                     </div></div></td></tr>
                                                                 }
                                                             }
@@ -725,8 +725,8 @@
                                                                                 </div>
                                                                                 <div class="small" style="font-family: var(--bs-body-font-family);">@((MarkupString)Markdig.Markdown.ToHtml(comment.Body, _mdPipeline))</div>
                                                                                 <div class="mt-1">
-                                                                                    @if (UserService.IsLoggedIn) { <button class="btn btn-link btn-sm p-0 text-muted" @onclick="() => StartComment(patch.Path, pair.RightLineNum, SideRight, comment.Id)">Reply</button> }
-                                                                                    @if (UserService.Username == comment.Author) { <button class="btn btn-link btn-sm p-0 text-danger ms-2" @onclick="() => DeleteInlineComment(comment.Id)">Delete</button> }
+                                                                                    @if (UserService.IsLoggedIn) { <button class="btn btn-link btn-sm p-0 text-muted" @onclick="() => StartComment(patch.Path, pair.RightLineNum, SideRight, comment.Id)">@L["PR_Reply"]</button> }
+                                                                                    @if (UserService.Username == comment.Author) { <button class="btn btn-link btn-sm p-0 text-danger ms-2" @onclick="() => DeleteInlineComment(comment.Id)">@L["PR_Delete"]</button> }
                                                                                 </div>
                                                                             </div>
                                                                             @foreach (var reply in GetReplies(comment.Id))
@@ -734,7 +734,7 @@
                                                                                 <div class="diff-comment border rounded-2 p-2 mb-1 bg-light-subtle ms-3">
                                                                                     <div class="d-flex justify-content-between align-items-center mb-1"><span class="fw-semibold small">@reply.Author</span><span class="text-muted" style="font-size: 11px;">@FormatDate(reply.CreatedAt)</span></div>
                                                                                     <div class="small" style="font-family: var(--bs-body-font-family);">@((MarkupString)Markdig.Markdown.ToHtml(reply.Body, _mdPipeline))</div>
-                                                                                    @if (UserService.Username == reply.Author) { <button class="btn btn-link btn-sm p-0 text-danger mt-1" @onclick="() => DeleteInlineComment(reply.Id)">Delete</button> }
+                                                                                    @if (UserService.Username == reply.Author) { <button class="btn btn-link btn-sm p-0 text-danger mt-1" @onclick="() => DeleteInlineComment(reply.Id)">@L["PR_Delete"]</button> }
                                                                                 </div>
                                                                             }
                                                                         </div>
@@ -743,8 +743,8 @@
                                                                 @if (commentingOnFile == patch.Path && commentingOnLine == pair.RightLineNum && commentingOnSide == "RIGHT" && replyToCommentId == null)
                                                                 {
                                                                     <tr class="diff-comment-row"><td colspan="4" class="p-0"><div class="diff-comment-thread mx-3 my-1"><div class="border rounded-2 p-2 bg-white">
-                                                                        <textarea class="form-control form-control-sm mb-1" rows="3" @bind="newCommentBody" placeholder="Leave a comment..."></textarea>
-                                                                        <div class="d-flex gap-1"><button class="btn btn-primary btn-sm" @onclick="SubmitInlineComment" disabled="@string.IsNullOrWhiteSpace(newCommentBody)">Comment</button><button class="btn btn-outline-secondary btn-sm" @onclick="CancelComment">Cancel</button></div>
+                                                                        <textarea class="form-control form-control-sm mb-1" rows="3" @bind="newCommentBody" placeholder="@L["PR_LeaveComment"]"></textarea>
+                                                                        <div class="d-flex gap-1"><button class="btn btn-primary btn-sm" @onclick="SubmitInlineComment" disabled="@string.IsNullOrWhiteSpace(newCommentBody)">@L["PR_Comment"]</button><button class="btn btn-outline-secondary btn-sm" @onclick="CancelComment">@L["PR_Cancel"]</button></div>
                                                                     </div></div></td></tr>
                                                                 }
                                                             }

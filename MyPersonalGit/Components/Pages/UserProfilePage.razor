@@ -297,7 +297,7 @@
                                                 </div>
                                                 @if (IsOwnProfile)
                                                 {
-                                                    <button class="btn btn-sm btn-outline-secondary" title="Unpin" @onclick="() => UnpinRepo(pin.RepoName)" @onclick:preventDefault @onclick:stopPropagation>
+                                                    <button class="btn btn-sm btn-outline-secondary" title="@L["Profile_Unpin"]" @onclick="() => UnpinRepo(pin.RepoName)" @onclick:preventDefault @onclick:stopPropagation>
                                                         <i class="bi bi-pin-fill"></i>
                                                     </button>
                                                 }
@@ -352,13 +352,13 @@
                                         {
                                             @if (isPinned)
                                             {
-                                                <button class="btn btn-sm btn-outline-warning" title="Unpin repository" @onclick="() => UnpinRepo(repo.DisplayName)" @onclick:preventDefault @onclick:stopPropagation>
+                                                <button class="btn btn-sm btn-outline-warning" title="@L["Profile_UnpinRepo"]" @onclick="() => UnpinRepo(repo.DisplayName)" @onclick:preventDefault @onclick:stopPropagation>
                                                     <i class="bi bi-star-fill"></i>
                                                 </button>
                                             }
                                             else
                                             {
-                                                <button class="btn btn-sm btn-outline-secondary" title="Pin repository" @onclick="() => PinRepo(repo.DisplayName)" @onclick:preventDefault @onclick:stopPropagation>
+                                                <button class="btn btn-sm btn-outline-secondary" title="@L["Profile_PinRepo"]" @onclick="() => PinRepo(repo.DisplayName)" @onclick:preventDefault @onclick:stopPropagation>
                                                     <i class="bi bi-star"></i>
                                                 </button>
                                             }

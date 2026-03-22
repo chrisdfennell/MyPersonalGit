@@ -381,7 +381,7 @@ else
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">From Address</label>
                                 <InputText class="form-control" @bind-Value="Settings.SmtpFromAddress" placeholder="noreply@example.com" />
-                                <small class="form-text text-muted">Defaults to SMTP username if empty</small>
+                                <small class="form-text text-muted">@L["Admin_SmtpFromDefault"]</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">From Name</label>
@@ -461,7 +461,7 @@ else
                         <h5 class="mb-0"><i class="bi bi-palette me-2"></i>@L["Admin_SiteBranding"]</h5>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted small mb-3">Customize the site name and footer page content. Uses Markdown.</p>
+                        <p class="text-muted small mb-3">@L["Admin_BrandingHelp"]</p>
 
                         <div class="mb-3">
                             <label class="form-label">Site Name</label>
@@ -469,12 +469,12 @@ else
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Terms of Service <a href="/terms" target="_blank" class="small">(preview)</a></label>
+                            <label class="form-label">@L["Admin_TermsOfService"] <a href="/terms" target="_blank" class="small">(preview)</a></label>
                             <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterTerms" rows="4" />
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Privacy Policy <a href="/privacy" target="_blank" class="small">(preview)</a></label>
+                            <label class="form-label">@L["Admin_PrivacyPolicy"] <a href="/privacy" target="_blank" class="small">(preview)</a></label>
                             <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterPrivacy" rows="4" />
                         </div>
 
@@ -940,9 +940,9 @@ else
                                     <div class="btn-group btn-group-sm">
                                         <button class="btn btn-success" @onclick="SaveGlobalSecret"
                                                 disabled="@(string.IsNullOrWhiteSpace(newGlobalSecretName) || string.IsNullOrWhiteSpace(newGlobalSecretValue))">
-                                            <i class="bi bi-check me-1"></i> Save
+                                            <i class="bi bi-check me-1"></i> @L["Admin_Save"]
                                         </button>
-                                        <button class="btn btn-secondary" @onclick="CancelAddGlobalSecret">Cancel</button>
+                                        <button class="btn btn-secondary" @onclick="CancelAddGlobalSecret">@L["Admin_Cancel"]</button>
                                     </div>
                                 </div>
                             </div>
@@ -1168,8 +1168,8 @@ else
                             <div class="alert alert-danger">@EditUserMessage</div>
                         }
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @onclick="() => ShowEditUser = false">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <button type="button" class="btn btn-secondary" @onclick="() => ShowEditUser = false">@L["Admin_Cancel"]</button>
+                            <button type="submit" class="btn btn-primary">@L["Admin_SaveChanges"]</button>
                         </div>
                     </EditForm>
                 </div>
