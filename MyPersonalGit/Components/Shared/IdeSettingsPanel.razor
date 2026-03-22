@@ -61,6 +61,66 @@
                 <option value="all">All</option>
             </select>
         </div>
+
+        <div class="ide-settings-group">
+            <label class="ide-settings-label">Code Folding</label>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" @bind="foldingEnabled" @bind:after="ApplySettings" />
+                <label class="form-check-label small">@(foldingEnabled ? "Enabled" : "Disabled")</label>
+            </div>
+        </div>
+
+        <div class="ide-settings-group">
+            <label class="ide-settings-label">Sticky Scroll</label>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" @bind="stickyScrollEnabled" @bind:after="ApplySettings" />
+                <label class="form-check-label small">@(stickyScrollEnabled ? "Enabled" : "Disabled")</label>
+            </div>
+        </div>
+
+        <div class="ide-settings-group">
+            <label class="ide-settings-label">Bracket Pair Guides</label>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" @bind="bracketGuides" @bind:after="ApplySettings" />
+                <label class="form-check-label small">@(bracketGuides ? "Visible" : "Hidden")</label>
+            </div>
+        </div>
+
+        <div class="ide-settings-group">
+            <label class="ide-settings-label">Font Ligatures</label>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" @bind="fontLigatures" @bind:after="ApplySettings" />
+                <label class="form-check-label small">@(fontLigatures ? "Enabled" : "Disabled")</label>
+            </div>
+        </div>
+
+        <div class="ide-settings-group">
+            <label class="ide-settings-label">Format on Paste</label>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" @bind="formatOnPaste" @bind:after="ApplySettings" />
+                <label class="form-check-label small">@(formatOnPaste ? "Enabled" : "Disabled")</label>
+            </div>
+        </div>
+
+        <div class="ide-settings-group">
+            <label class="ide-settings-label">Auto Save</label>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" @bind="autoSaveEnabled" @bind:after="ApplySettings" />
+                <label class="form-check-label small">@(autoSaveEnabled ? "Enabled" : "Disabled")</label>
+            </div>
+        </div>
+
+        @if (autoSaveEnabled)
+        {
+            <div class="ide-settings-group">
+                <label class="ide-settings-label">Auto Save Delay</label>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="range" class="form-range flex-grow-1" min="500" max="5000" step="500"
+                           @bind-value="autoSaveDelay" @bind-value:event="oninput" @onchange="ApplySettings" />
+                    <span class="ide-settings-value">@(autoSaveDelay)ms</span>
+                </div>
+            </div>
+        }
     </div>
 </div>
 
@@ -75,6 +135,13 @@
     private bool minimapEnabled = true;
     private bool lineNumbers = true;
     private string renderWhitespace = "selection";
+    private bool foldingEnabled = true;
+    private bool stickyScrollEnabled = false;
+    private bool bracketGuides = true;
+    private bool fontLigatures = false;
+    private bool formatOnPaste = true;
+    private bool autoSaveEnabled = false;
+    private int autoSaveDelay = 1000;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -95,6 +162,13 @@
                         minimapEnabled = settings.MinimapEnabled;
                         lineNumbers = settings.LineNumbers;
                         renderWhitespace = settings.RenderWhitespace;
+                        foldingEnabled = settings.FoldingEnabled;
+                        stickyScrollEnabled = settings.StickyScrollEnabled;
+                        bracketGuides = settings.BracketGuides;
+                        fontLigatures = settings.FontLigatures;
+                        formatOnPaste = settings.FormatOnPaste;
+                        autoSaveEnabled = settings.AutoSaveEnabled;
+                        autoSaveDelay = settings.AutoSaveDelay;
                         StateHasChanged();
                     }
                 }
@@ -112,7 +186,14 @@
             WordWrap = wordWrap,
             MinimapEnabled = minimapEnabled,
             LineNumbers = lineNumbers,
-            RenderWhitespace = renderWhitespace
+            RenderWhitespace = renderWhitespace,
+            FoldingEnabled = foldingEnabled,
+            StickyScrollEnabled = stickyScrollEnabled,
+            BracketGuides = bracketGuides,
+            FontLigatures = fontLigatures,
+            FormatOnPaste = formatOnPaste,
+            AutoSaveEnabled = autoSaveEnabled,
+            AutoSaveDelay = autoSaveDelay
         };
 
         // Save to localStorage
@@ -133,7 +214,12 @@
                 wordWrap = settings.WordWrap,
                 minimap = new { enabled = settings.MinimapEnabled },
                 lineNumbers = settings.LineNumbers ? "on" : "off",
-                renderWhitespace = settings.RenderWhitespace
+                renderWhitespace = settings.RenderWhitespace,
+                folding = settings.FoldingEnabled,
+                stickyScroll = new { enabled = settings.StickyScrollEnabled },
+                guides = new { bracketPairs = settings.BracketGuides, indentation = settings.BracketGuides, highlightActiveBracketPair = settings.BracketGuides, highlightActiveIndentation = settings.BracketGuides },
+                fontLigatures = settings.FontLigatures,
+                formatOnPaste = settings.FormatOnPaste
             };
 
             if (!string.IsNullOrEmpty(EditorId))
@@ -158,5 +244,12 @@
         public bool MinimapEnabled { get; set; } = true;
         public bool LineNumbers { get; set; } = true;
         public string RenderWhitespace { get; set; } = "selection";
+        public bool FoldingEnabled { get; set; } = true;
+        public bool StickyScrollEnabled { get; set; } = false;
+        public bool BracketGuides { get; set; } = true;
+        public bool FontLigatures { get; set; } = false;
+        public bool FormatOnPaste { get; set; } = true;
+        public bool AutoSaveEnabled { get; set; } = false;
+        public int AutoSaveDelay { get; set; } = 1000;
     }
 }

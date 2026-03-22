@@ -1,4 +1,4 @@
-<div class="ide-tab-bar">
+<div class="ide-tab-bar" @ref="tabBarRef">
     @if (Tabs == null || Tabs.Count == 0)
     {
         <div class="ide-tab-empty text-muted small px-3 py-1">
@@ -7,11 +7,17 @@
     }
     else
     {
-        <div class="ide-tab-scroll">
-            @foreach (var tab in Tabs)
+        @if (showScrollLeft)
+        {
+            <button class="ide-tab-scroll-btn ide-tab-scroll-left" @onclick="ScrollLeft" title="Scroll left">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        }
+        <div class="ide-tab-scroll" @ref="scrollRef">
+            @foreach (var tab in SortedTabs)
             {
                 var isActive = tab.FilePath == ActiveTabPath;
-                <div class="ide-tab @(isActive ? "active" : "") @(dragOverTab == tab.FilePath ? "drag-over" : "")"
+                <div class="ide-tab @(isActive ? "active" : "") @(tab.IsPinned ? "pinned" : "") @(dragOverTab == tab.FilePath ? "drag-over" : "")"
                      title="@tab.FilePath"
                      draggable="true"
                      @onclick="() => OnTabSelected.InvokeAsync(tab.FilePath)"
@@ -19,21 +25,63 @@
                      @ondragover:preventDefault="true"
                      @ondragover="() => OnDragOver(tab.FilePath)"
                      @ondragleave="() => dragOverTab = null"
-                     @ondrop="() => OnDrop(tab.FilePath)">
+                     @ondrop="() => OnDrop(tab.FilePath)"
+                     @oncontextmenu="(e) => HandleContextMenu(e, tab.FilePath)"
+                     @oncontextmenu:preventDefault="true">
+                    @if (tab.IsPinned)
+                    {
+                        <i class="bi bi-pin-fill me-1" style="font-size: 0.65rem; color: #0078d4;"></i>
+                    }
                     <i class="bi @GetFileIcon(tab.FileName) me-1" style="font-size: 0.75rem;"></i>
-                    <span class="ide-tab-name">@tab.FileName</span>
+                    @if (!tab.IsPinned)
+                    {
+                        <span class="ide-tab-name">@tab.FileName</span>
+                    }
                     @if (tab.IsDirty)
                     {
                         <span class="ide-tab-dirty" title="Unsaved changes"></span>
                     }
-                    <button class="ide-tab-close" @onclick="() => CloseTab(tab.FilePath)" @onclick:stopPropagation="true" title="Close">
-                        <i class="bi bi-x"></i>
-                    </button>
+                    @if (!tab.IsPinned)
+                    {
+                        <button class="ide-tab-close" @onclick="() => CloseTab(tab.FilePath)" @onclick:stopPropagation="true" title="Close">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    }
                 </div>
             }
         </div>
+        @if (showScrollRight)
+        {
+            <button class="ide-tab-scroll-btn ide-tab-scroll-right" @onclick="ScrollRight" title="Scroll right">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        }
     }
 </div>
+
+@if (showContextMenu)
+{
+    <div class="ide-tab-context-overlay" @onclick="CloseContextMenu">
+        <div class="ide-tab-context-menu" style="left: @(contextMenuX)px; top: @(contextMenuY)px;" @onclick:stopPropagation="true">
+            @{ var ctxTab = Tabs?.FirstOrDefault(t => t.FilePath == contextMenuTab); }
+            @if (ctxTab != null)
+            {
+                <div class="ide-tab-context-item" @onclick="() => TogglePin(ctxTab)">
+                    <i class="bi @(ctxTab.IsPinned ? "bi-pin-angle" : "bi-pin-fill") me-2"></i>
+                    @(ctxTab.IsPinned ? "Unpin Tab" : "Pin Tab")
+                </div>
+                <div class="ide-tab-context-item" @onclick="async () => { CloseContextMenu(); await CloseTab(ctxTab.FilePath); }">
+                    <i class="bi bi-x-lg me-2"></i>Close Tab
+                </div>
+                <div class="ide-tab-context-item" @onclick="CloseOtherTabs">
+                    <i class="bi bi-x-square me-2"></i>Close Other Tabs
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@inject IJSRuntime JS
 
 @code {
     [Parameter] public List<OpenTab>? Tabs { get; set; }
@@ -41,9 +89,73 @@
     [Parameter] public EventCallback<string> OnTabSelected { get; set; }
     [Parameter] public EventCallback<string> OnTabClosed { get; set; }
     [Parameter] public EventCallback<(int from, int to)> OnTabReordered { get; set; }
+    [Parameter] public EventCallback<string> OnTabPinToggled { get; set; }
 
     private string? draggedTab;
     private string? dragOverTab;
+    private ElementReference tabBarRef;
+    private ElementReference scrollRef;
+    private bool showScrollLeft;
+    private bool showScrollRight;
+
+    // Context menu state
+    private bool showContextMenu;
+    private double contextMenuX;
+    private double contextMenuY;
+    private string? contextMenuTab;
+
+    private List<OpenTab> SortedTabs => Tabs?.OrderByDescending(t => t.IsPinned).ToList() ?? new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await CheckScrollOverflow();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Defer scroll check to after render
+        await Task.Yield();
+        try { await CheckScrollOverflow(); } catch { }
+    }
+
+    private async Task CheckScrollOverflow()
+    {
+        try
+        {
+            var state = await JS.InvokeAsync<ScrollState>("ideTabScroll.getScrollState", scrollRef);
+            showScrollLeft = state.ScrollLeft > 0;
+            showScrollRight = state.ScrollLeft + state.ClientWidth < state.ScrollWidth - 1;
+            StateHasChanged();
+        }
+        catch { }
+    }
+
+    private async Task ScrollLeft()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("ideTabScroll.scroll", scrollRef, -200);
+            await Task.Delay(150);
+            await CheckScrollOverflow();
+        }
+        catch { }
+    }
+
+    private async Task ScrollRight()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("ideTabScroll.scroll", scrollRef, 200);
+            await Task.Delay(150);
+            await CheckScrollOverflow();
+        }
+        catch { }
+    }
+
+    private record ScrollState(double ScrollLeft, double ClientWidth, double ScrollWidth);
 
     private void OnDragStart(string filePath)
     {
@@ -78,6 +190,38 @@
         await OnTabClosed.InvokeAsync(filePath);
     }
 
+    private void HandleContextMenu(MouseEventArgs e, string filePath)
+    {
+        contextMenuTab = filePath;
+        contextMenuX = e.ClientX;
+        contextMenuY = e.ClientY;
+        showContextMenu = true;
+    }
+
+    private void CloseContextMenu()
+    {
+        showContextMenu = false;
+        contextMenuTab = null;
+    }
+
+    private async Task TogglePin(OpenTab tab)
+    {
+        tab.IsPinned = !tab.IsPinned;
+        CloseContextMenu();
+        await OnTabPinToggled.InvokeAsync(tab.FilePath);
+    }
+
+    private async Task CloseOtherTabs()
+    {
+        if (Tabs == null || contextMenuTab == null) return;
+        CloseContextMenu();
+        var toClose = Tabs.Where(t => t.FilePath != contextMenuTab && !t.IsPinned).Select(t => t.FilePath).ToList();
+        foreach (var path in toClose)
+        {
+            await OnTabClosed.InvokeAsync(path);
+        }
+    }
+
     private string GetFileIcon(string name)
     {
         var ext = System.IO.Path.GetExtension(name).ToLowerInvariant();
@@ -100,6 +244,7 @@
         public string FileName { get; set; } = "";
         public bool IsDirty { get; set; }
         public string OriginalContent { get; set; } = "";
+        public bool IsPinned { get; set; }
     }
 }
 
@@ -110,6 +255,7 @@
         background: #252526;
         min-height: 35px;
         overflow: hidden;
+        position: relative;
     }
 
     .ide-tab-empty {
@@ -123,15 +269,36 @@
         display: flex;
         overflow-x: auto;
         overflow-y: hidden;
-        scrollbar-width: thin;
+        scrollbar-width: none;
+        flex: 1;
+        min-width: 0;
     }
 
     .ide-tab-scroll::-webkit-scrollbar {
-        height: 3px;
+        height: 0;
+        display: none;
     }
 
-    .ide-tab-scroll::-webkit-scrollbar-thumb {
-        background: rgba(121, 121, 121, 0.4);
+    /* Scroll chevron buttons */
+    .ide-tab-scroll-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        min-width: 24px;
+        border: none;
+        background: #333333;
+        color: #cccccc;
+        cursor: pointer;
+        font-size: 0.7rem;
+        z-index: 2;
+        flex-shrink: 0;
+        transition: background 0.15s;
+    }
+
+    .ide-tab-scroll-btn:hover {
+        background: #3c3c3c;
+        color: #ffffff;
     }
 
     .ide-tab {
@@ -161,6 +328,15 @@
     .ide-tab.active {
         color: #ffffff;
         background: #1e1e1e;
+        border-top-color: #0078d4;
+    }
+
+    .ide-tab.pinned {
+        padding: 0 8px;
+        border-right: 1px solid #333333;
+    }
+
+    .ide-tab.pinned.active {
         border-top-color: #0078d4;
     }
 
@@ -210,6 +386,41 @@
         color: #ffffff;
     }
 
+    /* Context menu */
+    .ide-tab-context-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10000;
+    }
+
+    .ide-tab-context-menu {
+        position: fixed;
+        background: #252526;
+        border: 1px solid #3c3c3c;
+        border-radius: 4px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+        min-width: 160px;
+        padding: 4px 0;
+        z-index: 10001;
+    }
+
+    .ide-tab-context-item {
+        display: flex;
+        align-items: center;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        color: #cccccc;
+        cursor: pointer;
+        transition: background 0.1s;
+    }
+
+    .ide-tab-context-item:hover {
+        background: #04395e;
+    }
+
     /* Light mode */
     [data-bs-theme="light"] .ide-tab-bar {
         background: #ececec;
@@ -228,5 +439,28 @@
 
     [data-bs-theme="light"] .ide-tab:hover {
         color: #333333;
+    }
+
+    [data-bs-theme="light"] .ide-tab-scroll-btn {
+        background: #e0e0e0;
+        color: #555555;
+    }
+
+    [data-bs-theme="light"] .ide-tab-scroll-btn:hover {
+        background: #d0d0d0;
+        color: #333333;
+    }
+
+    [data-bs-theme="light"] .ide-tab-context-menu {
+        background: #ffffff;
+        border-color: #d0d0d0;
+    }
+
+    [data-bs-theme="light"] .ide-tab-context-item {
+        color: #333333;
+    }
+
+    [data-bs-theme="light"] .ide-tab-context-item:hover {
+        background: #e0e8f0;
     }
 </style>
