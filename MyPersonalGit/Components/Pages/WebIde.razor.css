@@ -65,6 +65,7 @@
 /* Tabs */
 .ide-tabs {
     grid-column: 2;
+    grid-row: 1;
     background: #252526;
     border-bottom: 1px solid #1e1e1e;
     overflow: hidden;
@@ -140,6 +141,7 @@
 /* Editor */
 .ide-editor {
     grid-column: 2;
+    grid-row: 3;
     position: relative;
     overflow: hidden;
     min-height: 0;
@@ -190,6 +192,7 @@
 /* Bottom panel */
 .ide-bottom-panel {
     grid-column: 2;
+    grid-row: 4;
     border-top: 1px solid #1e1e1e;
     background: #252526;
     max-height: 300px;
@@ -646,6 +649,7 @@
 /* Breadcrumbs */
 .ide-breadcrumbs {
     grid-column: 2;
+    grid-row: 2;
     display: flex;
     align-items: center;
     padding: 2px 12px;
@@ -688,6 +692,7 @@
 /* Status Bar */
 .ide-status-bar {
     grid-column: 1 / -1;
+    grid-row: 5;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -815,6 +820,7 @@
 /* Image & Markdown Preview */
 .ide-preview {
     grid-column: 2;
+    grid-row: 3;
     overflow: auto;
     display: flex;
     flex-direction: column;
