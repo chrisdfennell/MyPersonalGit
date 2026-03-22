@@ -1404,6 +1404,77 @@
         },
 
         /**
+         * Register Go to Definition provider for Ctrl+Click.
+         * Uses regex-based symbol search across all loaded models.
+         * @param {string} editorId - The editor instance ID.
+         * @param {object} dotNetObjRef - .NET object reference for cross-file navigation.
+         */
+        registerDefinitionProvider: function (editorId, dotNetObjRef) {
+            var editor = _editors[editorId];
+            if (!editor) return;
+
+            // Register for all languages
+            var languages = ['csharp', 'javascript', 'typescript', 'python', 'go', 'rust', 'java', 'ruby', 'php', 'css', 'html', 'razor'];
+            languages.forEach(function (lang) {
+                monaco.languages.registerDefinitionProvider(lang, {
+                    provideDefinition: function (model, position) {
+                        var word = model.getWordAtPosition(position);
+                        if (!word) return null;
+                        var symbol = word.word;
+                        if (symbol.length < 2) return null;
+
+                        // Search current model first
+                        var results = [];
+                        var patterns = [
+                            new RegExp('(?:class|interface|struct|enum|record)\\s+' + symbol + '\\b'),
+                            new RegExp('(?:function|def|fn|func|sub)\\s+' + symbol + '\\s*\\('),
+                            new RegExp('(?:public|private|protected|internal|static|async|override|virtual|abstract)\\s+(?:[\\w<>\\[\\]?,\\s]+\\s+)?' + symbol + '\\s*[\\(\\{]'),
+                            new RegExp('(?:const|let|var|val)\\s+' + symbol + '\\s*[=:]'),
+                            new RegExp('type\\s+' + symbol + '\\s'),
+                        ];
+
+                        // Search all loaded models
+                        for (var filePath in _models) {
+                            var m = _models[filePath];
+                            if (!m || m.isDisposed()) continue;
+                            var text = m.getValue();
+                            var lines = text.split('\n');
+                            for (var i = 0; i < lines.length; i++) {
+                                for (var p = 0; p < patterns.length; p++) {
+                                    if (patterns[p].test(lines[i])) {
+                                        var col = lines[i].indexOf(symbol) + 1;
+                                        results.push({
+                                            uri: m.uri,
+                                            range: new monaco.Range(i + 1, col, i + 1, col + symbol.length)
+                                        });
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        // If no results in loaded models, ask .NET to search the repo
+                        if (results.length === 0 && dotNetObjRef) {
+                            try {
+                                dotNetObjRef.invokeMethodAsync('OnGoToDefinition', symbol);
+                            } catch (e) { }
+                            return null;
+                        }
+
+                        // Filter out the current position (don't navigate to yourself)
+                        var currentUri = model.uri.toString();
+                        var currentLine = position.lineNumber;
+                        results = results.filter(function (r) {
+                            return !(r.uri.toString() === currentUri && r.range.startLineNumber === currentLine);
+                        });
+
+                        return results.length > 0 ? results : null;
+                    }
+                });
+            });
+        },
+
+        /**
          * Update the stored original content for a file (after auto-save).
          * @param {string} editorId - The editor instance ID.
          * @param {string} filePath - The file path.

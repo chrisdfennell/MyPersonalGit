@@ -17,6 +17,24 @@
                    autocomplete="off" />
         </div>
         <div class="ide-quick-open-results">
+            @if (string.IsNullOrEmpty(searchQuery) && recentEntries.Count > 0)
+            {
+                <div class="ide-quick-open-section">@L["Ide_RecentFiles"]</div>
+                @for (var i = 0; i < recentEntries.Count; i++)
+                {
+                    var file = recentEntries[i];
+                    var isSelected = i == selectedIndex;
+                    var index = i;
+                    <div class="ide-quick-open-item @(isSelected ? "selected" : "")"
+                         @onclick="() => SelectFile(file.Path)"
+                         @onmouseover="() => selectedIndex = index">
+                        <i class="bi bi-clock-history me-2" style="font-size: 0.7rem; opacity: 0.5;"></i>
+                        <span class="ide-quick-open-filename">@file.Name</span>
+                        <span class="ide-quick-open-filepath">@file.Path</span>
+                    </div>
+                }
+                <div class="ide-quick-open-divider"></div>
+            }
             @if (filteredFiles.Count == 0 && !string.IsNullOrEmpty(searchQuery))
             {
                 <div class="ide-quick-open-empty">
@@ -25,14 +43,16 @@
             }
             else
             {
+                var offset = string.IsNullOrEmpty(searchQuery) ? recentEntries.Count : 0;
                 @for (var i = 0; i < filteredFiles.Count && i < MaxResults; i++)
                 {
                     var file = filteredFiles[i];
-                    var isSelected = i == selectedIndex;
-                    var index = i;
+                    var displayIdx = i + offset;
+                    var isSelected = displayIdx == selectedIndex;
+                    var idx = displayIdx;
                     <div class="ide-quick-open-item @(isSelected ? "selected" : "")"
                          @onclick="() => SelectFile(file.Path)"
-                         @onmouseover="() => selectedIndex = index">
+                         @onmouseover="() => selectedIndex = idx">
                         <i class="bi @GetFileIcon(file.Name) me-2" style="font-size: 0.8rem; opacity: 0.7;"></i>
                         <span class="ide-quick-open-filename">@file.Name</span>
                         <span class="ide-quick-open-filepath">@file.Path</span>
@@ -45,10 +65,12 @@
 
 @code {
     [Parameter] public List<TreeNode>? TreeNodes { get; set; }
+    [Parameter] public List<string>? RecentFiles { get; set; }
     [Parameter] public EventCallback<string> OnFileSelected { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
 
     private const int MaxResults = 20;
+    private List<FileEntry> recentEntries = new();
     private string searchQuery = "";
     private int selectedIndex;
     private List<FileEntry> allFiles = new();
@@ -65,6 +87,15 @@
             FlattenTree(TreeNodes, allFiles);
         }
         filteredFiles = allFiles.Take(MaxResults).ToList();
+
+        // Build recent file entries
+        if (RecentFiles != null)
+        {
+            recentEntries = RecentFiles
+                .Where(p => allFiles.Any(f => f.Path == p))
+                .Select(p => new FileEntry(System.IO.Path.GetFileName(p), p))
+                .ToList();
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

@@ -29,7 +29,14 @@ public interface IWebIdeService
     Task<List<FileHistoryEntry>> GetFileHistoryAsync(string repoName, string branch, string path);
     Task CreateBranchAsync(string repoName, string sourceBranch, string newBranchName);
     Task<List<CommitGraphEntry>> GetCommitGraphAsync(string repoName, string branch, int maxCount = 100);
+    Task<List<StashEntry>> GetStashesAsync(string repoName);
+    Task StashAsync(string repoName, string username, string email, string? message = null);
+    Task StashPopAsync(string repoName);
+    Task StashApplyAsync(string repoName, int index);
+    Task StashDropAsync(string repoName, int index);
 }
+
+public record StashEntry(int Index, string Message, DateTimeOffset Date);
 
 public class WebIdeService : IWebIdeService
 {
@@ -694,6 +701,60 @@ public class WebIdeService : IWebIdeService
                 throw new InvalidOperationException($"Branch '{newBranchName}' already exists.");
 
             repo.CreateBranch(newBranchName, source.Tip);
+        });
+    }
+
+    public async Task<List<StashEntry>> GetStashesAsync(string repoName)
+    {
+        var repoPath = await GetRepoPathAsync(repoName);
+        return await Task.Run(() =>
+        {
+            using var repo = new Repository(repoPath);
+            return repo.Stashes.Select((s, i) => new StashEntry(i, s.Message, s.Index.Committer.When)).ToList();
+        });
+    }
+
+    public async Task StashAsync(string repoName, string username, string email, string? message = null)
+    {
+        var repoPath = await GetRepoPathAsync(repoName);
+        await Task.Run(() =>
+        {
+            using var repo = new Repository(repoPath);
+            var sig = new Signature(username, email, DateTimeOffset.Now);
+            repo.Stashes.Add(sig, message ?? "WIP");
+        });
+    }
+
+    public async Task StashPopAsync(string repoName)
+    {
+        var repoPath = await GetRepoPathAsync(repoName);
+        await Task.Run(() =>
+        {
+            using var repo = new Repository(repoPath);
+            if (repo.Stashes.Count() == 0) throw new InvalidOperationException("No stashes to pop.");
+            repo.Stashes.Pop(0);
+        });
+    }
+
+    public async Task StashApplyAsync(string repoName, int index)
+    {
+        var repoPath = await GetRepoPathAsync(repoName);
+        await Task.Run(() =>
+        {
+            using var repo = new Repository(repoPath);
+            if (index >= repo.Stashes.Count()) throw new InvalidOperationException("Stash index out of range.");
+            repo.Stashes.Apply(index);
+        });
+    }
+
+    public async Task StashDropAsync(string repoName, int index)
+    {
+        var repoPath = await GetRepoPathAsync(repoName);
+        await Task.Run(() =>
+        {
+            using var repo = new Repository(repoPath);
+            if (index >= repo.Stashes.Count()) throw new InvalidOperationException("Stash index out of range.");
+            repo.Stashes.Remove(index);
         });
     }
 }
