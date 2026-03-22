@@ -211,7 +211,7 @@
 - **Dependabot-Style Auto-Update PRs** — 自动检查过时的依赖项并创建 Pull Request 进行更新。支持 NuGet、npm 和 PyPI 生态系统。可配置的计划（每日/每周/每月）以及每个仓库的开放 PR 限制
 - **Repository Insights (Traffic)** — 跟踪克隆/拉取计数、页面浏览量、独立访客、热门来源和热门内容路径。Insights 选项卡中的流量图表包含 14 天摘要。每日聚合，保留 90 天。IP 地址经过哈希处理以保护隐私
 - **深色模式** — 完整的深色/浅色模式支持，在页头有切换开关
-- **多语言 / i18n** — 所有 30 个页面的完整本地化，共 930 个资源键。内置 11 种语言：英语、西班牙语、法语、德语、日语、韩语、简体中文、葡萄牙语、俄语、意大利语和土耳其语。通过创建 `SharedResource.{locale}.resx` 文件添加更多语言。页头的语言选择器可切换语言
+- **多语言 / i18n** — 包括 Web IDE 在内的所有 30 多个页面的完整本地化，共 1,088 个资源键。内置 11 种语言：英语、西班牙语、法语、德语、日语、韩语、简体中文、葡萄牙语、俄语、意大利语和土耳其语。通过创建 `SharedResource.{locale}.resx` 文件添加更多语言。页头和 IDE 顶部栏的语言选择器可切换语言
 - **Swagger / OpenAPI** — 在 `/swagger` 提供交互式 API 文档，所有 REST 端点均可发现和测试
 - **Open Graph Meta Tags** — 仓库、Issue 和 PR 页面包含 og:title 和 og:description，用于在 Slack、Discord 和社交媒体中显示丰富的链接预览
 - **表情符号简码** — GitHub 风格的表情符号简码（`:white_check_mark:`、`:rocket:` 等）在所有 Markdown 视图中渲染为实际的表情符号
