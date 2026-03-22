@@ -321,34 +321,23 @@
         };
     </script>
     <script src="js/monaco-interop.js"></script>
-    <script>
-        // Style Blazor's reconnect dialog for dark mode
-        // The framework creates a top-layer <dialog> that can't be styled via CSS
-        (function() {
-            function styleDarkDialogs() {
-                if (document.documentElement.getAttribute('data-bs-theme') !== 'dark') return;
-                document.querySelectorAll('dialog').forEach(function(d) {
-                    d.style.setProperty('background-color', '#1e1e2e', 'important');
-                    d.style.setProperty('color', '#c9d1d9', 'important');
-                    d.style.setProperty('border-color', '#444', 'important');
-                    d.querySelectorAll('p').forEach(function(p) { p.style.setProperty('color', '#8b949e', 'important'); });
-                    d.querySelectorAll('.components-rejoining-animation div').forEach(function(el) { el.style.setProperty('border-color', '#58a6ff', 'important'); });
-                });
-            }
-            // MutationObserver for new dialogs
-            new MutationObserver(function(muts) {
-                muts.forEach(function(m) {
-                    if (m.type === 'childList') { m.addedNodes.forEach(function(n) { if (n.tagName === 'DIALOG') styleDarkDialogs(); }); }
-                    if (m.type === 'attributes' && m.target.tagName === 'DIALOG') styleDarkDialogs();
-                });
-            }).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['open', 'class'] });
-            // Also poll every 500ms as a fallback
-            setInterval(function() {
-                var openDialogs = document.querySelectorAll('dialog[open]');
-                if (openDialogs.length > 0) styleDarkDialogs();
-            }, 500);
-        })();
-    </script>
+    <style>
+        /* Blazor reconnect overlay — dark mode */
+        [data-bs-theme="dark"] .components-reconnect-overlay .components-reconnect-dialog {
+            background-color: #1e1e2e !important;
+            color: #c9d1d9 !important;
+            border-color: #444 !important;
+        }
+        [data-bs-theme="dark"] .components-reconnect-overlay .components-reconnect-dialog p {
+            color: #8b949e !important;
+        }
+        [data-bs-theme="dark"] .components-reconnect-overlay .components-rejoining-animation div {
+            border-color: #58a6ff !important;
+        }
+        [data-bs-theme="dark"] .components-reconnect-overlay {
+            background-color: rgba(0, 0, 0, 0.6) !important;
+        }
+    </style>
 </body>
 
 </html>
