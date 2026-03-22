@@ -2,14 +2,14 @@
     @if (Tabs == null || Tabs.Count == 0)
     {
         <div class="ide-tab-empty text-muted small px-3 py-1">
-            <i class="bi bi-window-stack me-1"></i>No files open
+            <i class="bi bi-window-stack me-1"></i>@L["Ide_NoFilesOpen"]
         </div>
     }
     else
     {
         @if (showScrollLeft)
         {
-            <button class="ide-tab-scroll-btn ide-tab-scroll-left" @onclick="ScrollLeft" title="Scroll left">
+            <button class="ide-tab-scroll-btn ide-tab-scroll-left" @onclick="ScrollLeft" title="@L["Ide_ScrollLeft"]">
                 <i class="bi bi-chevron-left"></i>
             </button>
         }
@@ -39,11 +39,11 @@
                     }
                     @if (tab.IsDirty)
                     {
-                        <span class="ide-tab-dirty" title="Unsaved changes"></span>
+                        <span class="ide-tab-dirty" title="@L["Ide_UnsavedChanges"]"></span>
                     }
                     @if (!tab.IsPinned)
                     {
-                        <button class="ide-tab-close" @onclick="() => CloseTab(tab.FilePath)" @onclick:stopPropagation="true" title="Close">
+                        <button class="ide-tab-close" @onclick="() => CloseTab(tab.FilePath)" @onclick:stopPropagation="true" title="@L["Ide_Close"]">
                             <i class="bi bi-x"></i>
                         </button>
                     }
@@ -52,7 +52,7 @@
         </div>
         @if (showScrollRight)
         {
-            <button class="ide-tab-scroll-btn ide-tab-scroll-right" @onclick="ScrollRight" title="Scroll right">
+            <button class="ide-tab-scroll-btn ide-tab-scroll-right" @onclick="ScrollRight" title="@L["Ide_ScrollRight"]">
                 <i class="bi bi-chevron-right"></i>
             </button>
         }
@@ -68,19 +68,19 @@
             {
                 <div class="ide-tab-context-item" @onclick="() => TogglePin(ctxTab)">
                     <i class="bi @(ctxTab.IsPinned ? "bi-pin-angle" : "bi-pin-fill") me-2"></i>
-                    @(ctxTab.IsPinned ? "Unpin Tab" : "Pin Tab")
+                    @(ctxTab.IsPinned ? L["Ide_UnpinTab"] : L["Ide_PinTab"])
                 </div>
                 <div class="ide-tab-context-item" @onclick="async () => { CloseContextMenu(); await CloseTab(ctxTab.FilePath); }">
-                    <i class="bi bi-x-lg me-2"></i>Close Tab
+                    <i class="bi bi-x-lg me-2"></i>@L["Ide_CloseTab"]
                 </div>
                 <div class="ide-tab-context-item" @onclick="CloseOtherTabs">
-                    <i class="bi bi-x-square me-2"></i>Close Other Tabs
+                    <i class="bi bi-x-square me-2"></i>@L["Ide_CloseOtherTabs"]
                 </div>
                 <div class="ide-tab-context-item" @onclick="CloseTabsToRight">
-                    <i class="bi bi-chevron-bar-right me-2"></i>Close Tabs to the Right
+                    <i class="bi bi-chevron-bar-right me-2"></i>@L["Ide_CloseTabsToRight"]
                 </div>
                 <div class="ide-tab-context-item" @onclick="CloseSavedTabs">
-                    <i class="bi bi-check2-square me-2"></i>Close Saved Tabs
+                    <i class="bi bi-check2-square me-2"></i>@L["Ide_CloseSavedTabs"]
                 </div>
             }
         </div>
@@ -88,6 +88,9 @@
 }
 
 @inject IJSRuntime JS
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@inject IStringLocalizer<SharedResource> L
 
 @code {
     [Parameter] public List<OpenTab>? Tabs { get; set; }

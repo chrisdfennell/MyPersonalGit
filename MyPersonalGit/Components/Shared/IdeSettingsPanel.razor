@@ -1,12 +1,15 @@
 @inject IJSRuntime JS
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@inject IStringLocalizer<SharedResource> L
 
 <div class="ide-settings-panel">
     <div class="ide-settings-header">
-        <i class="bi bi-gear me-2"></i>Editor Settings
+        <i class="bi bi-gear me-2"></i>@L["Ide_EditorSettings"]
     </div>
     <div class="ide-settings-body">
         <div class="ide-settings-group">
-            <label class="ide-settings-label">Font Family</label>
+            <label class="ide-settings-label">@L["Ide_FontFamily"]</label>
             <select class="form-select form-select-sm" @bind="fontFamily" @bind:after="ApplySettings">
                 <option value="'Cascadia Code', 'Fira Code', Consolas, monospace">Cascadia Code</option>
                 <option value="'Fira Code', Consolas, monospace">Fira Code</option>
@@ -20,7 +23,7 @@
         </div>
 
         <div class="ide-settings-group">
-            <label class="ide-settings-label">Font Size</label>
+            <label class="ide-settings-label">@L["Ide_FontSize"]</label>
             <div class="d-flex align-items-center gap-2">
                 <input type="range" class="form-range flex-grow-1" min="10" max="24" step="1"
                        @bind-value="fontSize" @bind-value:event="oninput" @onchange="ApplySettings" />
@@ -29,7 +32,7 @@
         </div>
 
         <div class="ide-settings-group">
-            <label class="ide-settings-label">Tab Size</label>
+            <label class="ide-settings-label">@L["Ide_TabSize"]</label>
             <div class="d-flex gap-2">
                 @foreach (var size in new[] { 2, 4, 8 })
                 {
@@ -42,92 +45,92 @@
         </div>
 
         <div class="ide-settings-group">
-            <label class="ide-settings-label">Word Wrap</label>
+            <label class="ide-settings-label">@L["Ide_WordWrap"]</label>
             <select class="form-select form-select-sm" @bind="wordWrap" @bind:after="ApplySettings">
-                <option value="off">Off</option>
-                <option value="on">On</option>
-                <option value="wordWrapColumn">Word Wrap Column</option>
+                <option value="off">@L["Ide_Off"]</option>
+                <option value="on">@L["Ide_On"]</option>
+                <option value="wordWrapColumn">@L["Ide_WordWrapColumn"]</option>
             </select>
         </div>
 
         <div class="ide-settings-group">
-            <label class="ide-settings-label">Minimap</label>
+            <label class="ide-settings-label">@L["Ide_Minimap"]</label>
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" @bind="minimapEnabled" @bind:after="ApplySettings" />
-                <label class="form-check-label small">@(minimapEnabled ? "Visible" : "Hidden")</label>
+                <label class="form-check-label small">@(minimapEnabled ? L["Ide_Visible"] : L["Ide_Hidden"])</label>
             </div>
         </div>
 
         <div class="ide-settings-group">
-            <label class="ide-settings-label">Line Numbers</label>
+            <label class="ide-settings-label">@L["Ide_LineNumbers"]</label>
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" @bind="lineNumbers" @bind:after="ApplySettings" />
-                <label class="form-check-label small">@(lineNumbers ? "On" : "Off")</label>
+                <label class="form-check-label small">@(lineNumbers ? L["Ide_On"] : L["Ide_Off"])</label>
             </div>
         </div>
 
         <div class="ide-settings-group">
-            <label class="ide-settings-label">Render Whitespace</label>
+            <label class="ide-settings-label">@L["Ide_RenderWhitespace"]</label>
             <select class="form-select form-select-sm" @bind="renderWhitespace" @bind:after="ApplySettings">
-                <option value="none">None</option>
-                <option value="boundary">Boundary</option>
-                <option value="selection">Selection</option>
-                <option value="all">All</option>
+                <option value="none">@L["Ide_None"]</option>
+                <option value="boundary">@L["Ide_Boundary"]</option>
+                <option value="selection">@L["Ide_Selection"]</option>
+                <option value="all">@L["Ide_All"]</option>
             </select>
         </div>
 
         <div class="ide-settings-group">
-            <label class="ide-settings-label">Code Folding</label>
+            <label class="ide-settings-label">@L["Ide_CodeFolding"]</label>
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" @bind="foldingEnabled" @bind:after="ApplySettings" />
-                <label class="form-check-label small">@(foldingEnabled ? "Enabled" : "Disabled")</label>
+                <label class="form-check-label small">@(foldingEnabled ? L["Ide_Enabled"] : L["Ide_Disabled"])</label>
             </div>
         </div>
 
         <div class="ide-settings-group">
-            <label class="ide-settings-label">Sticky Scroll</label>
+            <label class="ide-settings-label">@L["Ide_StickyScroll"]</label>
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" @bind="stickyScrollEnabled" @bind:after="ApplySettings" />
-                <label class="form-check-label small">@(stickyScrollEnabled ? "Enabled" : "Disabled")</label>
+                <label class="form-check-label small">@(stickyScrollEnabled ? L["Ide_Enabled"] : L["Ide_Disabled"])</label>
             </div>
         </div>
 
         <div class="ide-settings-group">
-            <label class="ide-settings-label">Bracket Pair Guides</label>
+            <label class="ide-settings-label">@L["Ide_BracketPairGuides"]</label>
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" @bind="bracketGuides" @bind:after="ApplySettings" />
-                <label class="form-check-label small">@(bracketGuides ? "Visible" : "Hidden")</label>
+                <label class="form-check-label small">@(bracketGuides ? L["Ide_Visible"] : L["Ide_Hidden"])</label>
             </div>
         </div>
 
         <div class="ide-settings-group">
-            <label class="ide-settings-label">Font Ligatures</label>
+            <label class="ide-settings-label">@L["Ide_FontLigatures"]</label>
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" @bind="fontLigatures" @bind:after="ApplySettings" />
-                <label class="form-check-label small">@(fontLigatures ? "Enabled" : "Disabled")</label>
+                <label class="form-check-label small">@(fontLigatures ? L["Ide_Enabled"] : L["Ide_Disabled"])</label>
             </div>
         </div>
 
         <div class="ide-settings-group">
-            <label class="ide-settings-label">Format on Paste</label>
+            <label class="ide-settings-label">@L["Ide_FormatOnPaste"]</label>
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" @bind="formatOnPaste" @bind:after="ApplySettings" />
-                <label class="form-check-label small">@(formatOnPaste ? "Enabled" : "Disabled")</label>
+                <label class="form-check-label small">@(formatOnPaste ? L["Ide_Enabled"] : L["Ide_Disabled"])</label>
             </div>
         </div>
 
         <div class="ide-settings-group">
-            <label class="ide-settings-label">Auto Save</label>
+            <label class="ide-settings-label">@L["Ide_AutoSave"]</label>
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" @bind="autoSaveEnabled" @bind:after="ApplySettings" />
-                <label class="form-check-label small">@(autoSaveEnabled ? "Enabled" : "Disabled")</label>
+                <label class="form-check-label small">@(autoSaveEnabled ? L["Ide_Enabled"] : L["Ide_Disabled"])</label>
             </div>
         </div>
 
         @if (autoSaveEnabled)
         {
             <div class="ide-settings-group">
-                <label class="ide-settings-label">Auto Save Delay</label>
+                <label class="ide-settings-label">@L["Ide_AutoSaveDelay"]</label>
                 <div class="d-flex align-items-center gap-2">
                     <input type="range" class="form-range flex-grow-1" min="500" max="5000" step="500"
                            @bind-value="autoSaveDelay" @bind-value:event="oninput" @onchange="ApplySettings" />

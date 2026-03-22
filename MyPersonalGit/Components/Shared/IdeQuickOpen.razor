@@ -1,4 +1,7 @@
 @using MyPersonalGit.Data
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@inject IStringLocalizer<SharedResource> L
 
 <div class="ide-quick-open-overlay" @onclick="HandleOverlayClick" @onkeydown="HandleKeyDown">
     <div class="ide-quick-open-dialog" @onclick:stopPropagation="true">
@@ -7,7 +10,7 @@
             <input @ref="searchInput"
                    type="text"
                    class="ide-quick-open-input"
-                   placeholder="Search files by name..."
+                   placeholder="@L["Ide_SearchFilesByName"]"
                    @bind-value="searchQuery"
                    @bind-value:event="oninput"
                    @onkeydown="HandleKeyDown"
@@ -17,7 +20,7 @@
             @if (filteredFiles.Count == 0 && !string.IsNullOrEmpty(searchQuery))
             {
                 <div class="ide-quick-open-empty">
-                    <i class="bi bi-inbox me-1"></i>No matching files found
+                    <i class="bi bi-inbox me-1"></i>@L["Ide_NoMatchingFiles"]
                 </div>
             }
             else

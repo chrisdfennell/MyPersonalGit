@@ -1,9 +1,12 @@
 @using MyPersonalGit.Data
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@inject IStringLocalizer<SharedResource> L
 
 <div class="ide-commit-panel">
     <button class="ide-commit-toggle" @onclick="() => isExpanded = !isExpanded">
         <i class="bi @(isExpanded ? "bi-chevron-down" : "bi-chevron-up") me-1"></i>
-        Source Control
+        @L["Ide_SourceControl"]
         @if (Changes != null && Changes.Count > 0)
         {
             <span class="badge bg-primary rounded-pill ms-2">@Changes.Count</span>
@@ -17,16 +20,16 @@
                 @if (Changes == null || Changes.Count == 0)
                 {
                     <div class="text-muted small px-3 py-2">
-                        <i class="bi bi-check-circle me-1"></i>No changes to commit
+                        <i class="bi bi-check-circle me-1"></i>@L["Ide_NoChangesToCommit"]
                     </div>
                 }
                 else
                 {
                     <div class="px-2 py-1">
                         <div class="d-flex align-items-center justify-content-between mb-1">
-                            <span class="small fw-semibold">Changed Files</span>
+                            <span class="small fw-semibold">@L["Ide_ChangedFiles"]</span>
                             <button class="btn btn-sm btn-link p-0 text-decoration-none small" @onclick="ToggleSelectAll">
-                                @(allSelected ? "Deselect All" : "Select All")
+                                @(allSelected ? L["Ide_DeselectAll"] : L["Ide_SelectAll"])
                             </button>
                         </div>
                         @foreach (var change in Changes)
@@ -46,7 +49,7 @@
             </div>
 
             <div class="ide-commit-form px-2 py-2 border-top">
-                <textarea class="form-control form-control-sm mb-2" rows="2" placeholder="Commit message..."
+                <textarea class="form-control form-control-sm mb-2" rows="2" placeholder="@L["Ide_CommitMessage"]"
                           @bind="commitMessage" @bind:event="oninput"
                           disabled="@IsCommitting"></textarea>
                 <button class="btn btn-sm btn-success w-100"
@@ -55,12 +58,12 @@
                     @if (IsCommitting)
                     {
                         <span class="spinner-border spinner-border-sm me-1"></span>
-                        <span>Committing...</span>
+                        <span>@L["Ide_Committing"]</span>
                     }
                     else
                     {
                         <i class="bi bi-check-lg me-1"></i>
-                        <span>Commit @(selectedPaths.Count) file(s)</span>
+                        <span>@L["Ide_Commit"] @(selectedPaths.Count) file(s)</span>
                     }
                 </button>
             </div>

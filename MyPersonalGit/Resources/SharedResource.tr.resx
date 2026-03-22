@@ -1008,4 +1008,196 @@
 
   <!-- Branch delete -->
   <data name="PR_DeleteBranchAfterMerge" xml:space="preserve"><value>Birleştirmeden sonra kaynak dalı sil</value></data>
+
+  <!-- IDE Düzeni -->
+  <data name="Ide_BackToRepo" xml:space="preserve"><value>Depoya geri dön</value></data>
+  <data name="Ide_NewBranch" xml:space="preserve"><value>Yeni dal</value></data>
+  <data name="Ide_ToggleTheme" xml:space="preserve"><value>Temayı değiştir</value></data>
+  <data name="Ide_CreateNewBranch" xml:space="preserve"><value>Yeni dal oluştur</value></data>
+  <data name="Ide_BranchFrom" xml:space="preserve"><value>Dallanma kaynağı</value></data>
+  <data name="Ide_NewBranchName" xml:space="preserve"><value>Yeni dal adı</value></data>
+  <data name="Ide_BranchNameRequired" xml:space="preserve"><value>Dal adı gereklidir.</value></data>
+  <data name="Ide_CreateBranch" xml:space="preserve"><value>Dal oluştur</value></data>
+
+  <!-- IDE Kenar Çubuğu -->
+  <data name="Ide_Explorer" xml:space="preserve"><value>Gezgin</value></data>
+  <data name="Ide_Search" xml:space="preserve"><value>Ara</value></data>
+  <data name="Ide_SourceControl" xml:space="preserve"><value>Kaynak Denetimi</value></data>
+  <data name="Ide_Outline" xml:space="preserve"><value>Anahat</value></data>
+  <data name="Ide_Settings" xml:space="preserve"><value>Ayarlar</value></data>
+  <data name="Ide_NoChanges" xml:space="preserve"><value>Değişiklik yok</value></data>
+  <data name="Ide_ClickViewDiff" xml:space="preserve"><value>Farkları görüntülemek için tıklayın</value></data>
+  <data name="Ide_Refresh" xml:space="preserve"><value>Yenile</value></data>
+  <data name="Ide_OpenFileOutline" xml:space="preserve"><value>Anahatını görmek için bir dosya açın</value></data>
+  <data name="Ide_NoSymbolsFound" xml:space="preserve"><value>Sembol bulunamadı</value></data>
+
+  <!-- IDE Sekmeleri ve Eylemleri -->
+  <data name="Ide_TogglePreview" xml:space="preserve"><value>Önizlemeyi aç/kapat</value></data>
+  <data name="Ide_ShowGitBlame" xml:space="preserve"><value>Git Blame göster</value></data>
+  <data name="Ide_HideGitBlame" xml:space="preserve"><value>Git Blame gizle</value></data>
+  <data name="Ide_FileHistory" xml:space="preserve"><value>Dosya geçmişi</value></data>
+  <data name="Ide_ToggleMinimap" xml:space="preserve"><value>Minimap aç/kapat</value></data>
+  <data name="Ide_SplitEditor" xml:space="preserve"><value>Düzenleyiciyi böl</value></data>
+  <data name="Ide_CloseSplit" xml:space="preserve"><value>Bölmeyi kapat</value></data>
+
+  <!-- IDE Hoş Geldiniz -->
+  <data name="Ide_WebIde" xml:space="preserve"><value>Web IDE</value></data>
+  <data name="Ide_WelcomeMessage" xml:space="preserve"><value>Gezginden bir dosya açın veya basın</value></data>
+  <data name="Ide_ToGetStarted" xml:space="preserve"><value>başlamak için</value></data>
+  <data name="Ide_Commands" xml:space="preserve"><value>Komutlar</value></data>
+  <data name="Ide_QuickOpen" xml:space="preserve"><value>Hızlı aç</value></data>
+  <data name="Ide_Terminal" xml:space="preserve"><value>Terminal</value></data>
+  <data name="Ide_Shortcuts" xml:space="preserve"><value>Kısayollar</value></data>
+
+  <!-- IDE Düzenleyici -->
+  <data name="Ide_Loading" xml:space="preserve"><value>Yükleniyor...</value></data>
+  <data name="Ide_Diff" xml:space="preserve"><value>Farklar</value></data>
+  <data name="Ide_Preview" xml:space="preserve"><value>Önizleme</value></data>
+  <data name="Ide_Edit" xml:space="preserve"><value>Düzenle</value></data>
+
+  <!-- IDE Alt Panel -->
+  <data name="Ide_Commits" xml:space="preserve"><value>Commitler</value></data>
+  <data name="Ide_Graph" xml:space="preserve"><value>Grafik</value></data>
+  <data name="Ide_NoCommits" xml:space="preserve"><value>Commit yok</value></data>
+  <data name="Ide_NewTerminal" xml:space="preserve"><value>Yeni terminal</value></data>
+  <data name="Ide_History" xml:space="preserve"><value>Geçmiş</value></data>
+  <data name="Ide_NoHistoryFound" xml:space="preserve"><value>Geçmiş bulunamadı</value></data>
+
+  <!-- IDE Durum Çubuğu -->
+  <data name="Ide_Branch" xml:space="preserve"><value>Dal</value></data>
+  <data name="Ide_UnsavedChanges" xml:space="preserve"><value>Kaydedilmemiş değişiklikler</value></data>
+  <data name="Ide_CursorPosition" xml:space="preserve"><value>İmleç konumu</value></data>
+  <data name="Ide_Selection" xml:space="preserve"><value>Seçim</value></data>
+  <data name="Ide_Selected" xml:space="preserve"><value>seçili</value></data>
+  <data name="Ide_ToggleWordWrap" xml:space="preserve"><value>Sözcük kaydırmayı aç/kapat</value></data>
+  <data name="Ide_WrapOn" xml:space="preserve"><value>Kaydırma: Açık</value></data>
+  <data name="Ide_WrapOff" xml:space="preserve"><value>Kaydırma: Kapalı</value></data>
+  <data name="Ide_Language" xml:space="preserve"><value>Dil</value></data>
+  <data name="Ide_Encoding" xml:space="preserve"><value>Kodlama</value></data>
+  <data name="Ide_ZenMode" xml:space="preserve"><value>Zen Modu</value></data>
+  <data name="Ide_KeyboardShortcuts" xml:space="preserve"><value>Klavye kısayolları</value></data>
+  <data name="Ide_Change" xml:space="preserve"><value>değişiklik</value></data>
+
+  <!-- IDE Sekme Çubuğu -->
+  <data name="Ide_NoFilesOpen" xml:space="preserve"><value>Açık dosya yok</value></data>
+  <data name="Ide_ScrollLeft" xml:space="preserve"><value>Sola kaydır</value></data>
+  <data name="Ide_ScrollRight" xml:space="preserve"><value>Sağa kaydır</value></data>
+  <data name="Ide_Close" xml:space="preserve"><value>Kapat</value></data>
+  <data name="Ide_PinTab" xml:space="preserve"><value>Sekmeyi sabitle</value></data>
+  <data name="Ide_UnpinTab" xml:space="preserve"><value>Sekme sabitlemesini kaldır</value></data>
+  <data name="Ide_CloseTab" xml:space="preserve"><value>Sekmeyi kapat</value></data>
+  <data name="Ide_CloseOtherTabs" xml:space="preserve"><value>Diğer sekmeleri kapat</value></data>
+  <data name="Ide_CloseTabsToRight" xml:space="preserve"><value>Sağdaki sekmeleri kapat</value></data>
+  <data name="Ide_CloseSavedTabs" xml:space="preserve"><value>Kaydedilmiş sekmeleri kapat</value></data>
+
+  <!-- IDE Dosya Ağacı -->
+  <data name="Ide_FilterFiles" xml:space="preserve"><value>Dosyaları filtrele...</value></data>
+  <data name="Ide_NewFile" xml:space="preserve"><value>Yeni dosya</value></data>
+  <data name="Ide_NewFolder" xml:space="preserve"><value>Yeni klasör</value></data>
+  <data name="Ide_Rename" xml:space="preserve"><value>Yeniden adlandır</value></data>
+  <data name="Ide_Delete" xml:space="preserve"><value>Sil</value></data>
+  <data name="Ide_Modified" xml:space="preserve"><value>Değiştirilmiş</value></data>
+
+  <!-- IDE Ayarlar Paneli -->
+  <data name="Ide_EditorSettings" xml:space="preserve"><value>Düzenleyici ayarları</value></data>
+  <data name="Ide_FontFamily" xml:space="preserve"><value>Yazı tipi ailesi</value></data>
+  <data name="Ide_FontSize" xml:space="preserve"><value>Yazı tipi boyutu</value></data>
+  <data name="Ide_TabSize" xml:space="preserve"><value>Sekme boyutu</value></data>
+  <data name="Ide_WordWrap" xml:space="preserve"><value>Sözcük kaydırma</value></data>
+  <data name="Ide_Off" xml:space="preserve"><value>Kapalı</value></data>
+  <data name="Ide_On" xml:space="preserve"><value>Açık</value></data>
+  <data name="Ide_WordWrapColumn" xml:space="preserve"><value>Sözcük kaydırma sütunu</value></data>
+  <data name="Ide_Minimap" xml:space="preserve"><value>Minimap</value></data>
+  <data name="Ide_Visible" xml:space="preserve"><value>Görünür</value></data>
+  <data name="Ide_Hidden" xml:space="preserve"><value>Gizli</value></data>
+  <data name="Ide_LineNumbers" xml:space="preserve"><value>Satır numaraları</value></data>
+  <data name="Ide_RenderWhitespace" xml:space="preserve"><value>Boşlukları göster</value></data>
+  <data name="Ide_None" xml:space="preserve"><value>Hiçbiri</value></data>
+  <data name="Ide_Boundary" xml:space="preserve"><value>Sınır</value></data>
+  <data name="Ide_All" xml:space="preserve"><value>Tümü</value></data>
+  <data name="Ide_CodeFolding" xml:space="preserve"><value>Kod katlama</value></data>
+  <data name="Ide_Enabled" xml:space="preserve"><value>Etkin</value></data>
+  <data name="Ide_Disabled" xml:space="preserve"><value>Devre dışı</value></data>
+  <data name="Ide_StickyScroll" xml:space="preserve"><value>Sabit kaydırma</value></data>
+  <data name="Ide_BracketPairGuides" xml:space="preserve"><value>Parantez çifti kılavuzları</value></data>
+  <data name="Ide_FontLigatures" xml:space="preserve"><value>Yazı tipi bitişik harfleri</value></data>
+  <data name="Ide_FormatOnPaste" xml:space="preserve"><value>Yapıştırırken biçimlendir</value></data>
+  <data name="Ide_AutoSave" xml:space="preserve"><value>Otomatik kaydet</value></data>
+  <data name="Ide_AutoSaveDelay" xml:space="preserve"><value>Otomatik kaydetme gecikmesi</value></data>
+
+  <!-- IDE Komut Paleti -->
+  <data name="Ide_TypeCommand" xml:space="preserve"><value>Bir komut yazın...</value></data>
+  <data name="Ide_NoMatchingCommands" xml:space="preserve"><value>Eşleşen komut yok</value></data>
+  <data name="Ide_CmdQuickOpen" xml:space="preserve"><value>Dosyayı hızlı aç</value></data>
+  <data name="Ide_CmdSearchFiles" xml:space="preserve"><value>Dosyalarda ara</value></data>
+  <data name="Ide_CmdToggleTerminal" xml:space="preserve"><value>Terminali aç/kapat</value></data>
+  <data name="Ide_CmdToggleSplit" xml:space="preserve"><value>Bölünmüş düzenleyiciyi aç/kapat</value></data>
+  <data name="Ide_CmdToggleTheme" xml:space="preserve"><value>Temayı değiştir (Açık/Koyu)</value></data>
+  <data name="Ide_CmdShowBlame" xml:space="preserve"><value>Git Blame göster</value></data>
+  <data name="Ide_CmdHideBlame" xml:space="preserve"><value>Git Blame gizle</value></data>
+  <data name="Ide_CmdFileHistory" xml:space="preserve"><value>Dosya geçmişini göster</value></data>
+  <data name="Ide_CmdFindReplace" xml:space="preserve"><value>Düzenleyicide bul ve değiştir</value></data>
+  <data name="Ide_CmdGoToLine" xml:space="preserve"><value>Satıra git</value></data>
+  <data name="Ide_CmdToggleMinimap" xml:space="preserve"><value>Minimap aç/kapat</value></data>
+  <data name="Ide_CmdCloseTab" xml:space="preserve"><value>Geçerli sekmeyi kapat</value></data>
+  <data name="Ide_CmdCloseAllTabs" xml:space="preserve"><value>Tüm sekmeleri kapat</value></data>
+  <data name="Ide_CmdSourceControl" xml:space="preserve"><value>Kaynak denetimini aç</value></data>
+  <data name="Ide_CmdOutline" xml:space="preserve"><value>Anahatı aç</value></data>
+  <data name="Ide_CmdSettings" xml:space="preserve"><value>Ayarları aç</value></data>
+  <data name="Ide_CmdExplorer" xml:space="preserve"><value>Dosya gezginini aç</value></data>
+  <data name="Ide_CmdZenMode" xml:space="preserve"><value>Zen modunu aç/kapat</value></data>
+  <data name="Ide_CmdWordWrap" xml:space="preserve"><value>Sözcük kaydırmayı aç/kapat</value></data>
+  <data name="Ide_CmdFoldAll" xml:space="preserve"><value>Tüm bölgeleri katla</value></data>
+  <data name="Ide_CmdUnfoldAll" xml:space="preserve"><value>Tüm bölgeleri aç</value></data>
+  <data name="Ide_CmdShortcuts" xml:space="preserve"><value>Klavye kısayollarını göster</value></data>
+  <data name="Ide_CmdToggleAutoSave" xml:space="preserve"><value>Otomatik kaydetmeyi aç/kapat</value></data>
+
+  <!-- IDE Kısayol Yardımı -->
+  <data name="Ide_ShortGeneral" xml:space="preserve"><value>Genel</value></data>
+  <data name="Ide_ShortCommandPalette" xml:space="preserve"><value>Komut paleti</value></data>
+  <data name="Ide_ShortQuickOpen" xml:space="preserve"><value>Dosyayı hızlı aç</value></data>
+  <data name="Ide_ShortSearchFiles" xml:space="preserve"><value>Dosyalarda ara</value></data>
+  <data name="Ide_ShortToggleTerminal" xml:space="preserve"><value>Terminali aç/kapat</value></data>
+  <data name="Ide_ShortShowHelp" xml:space="preserve"><value>Bu yardımı göster</value></data>
+  <data name="Ide_ShortEditor" xml:space="preserve"><value>Düzenleyici</value></data>
+  <data name="Ide_ShortSave" xml:space="preserve"><value>Kaydet (düzenleyicide)</value></data>
+  <data name="Ide_ShortFind" xml:space="preserve"><value>Dosyada bul</value></data>
+  <data name="Ide_ShortFindReplace" xml:space="preserve"><value>Bul ve değiştir</value></data>
+  <data name="Ide_ShortGoToLine" xml:space="preserve"><value>Satıra git</value></data>
+  <data name="Ide_ShortSelectNext" xml:space="preserve"><value>Sonraki eşleşmeyi seç</value></data>
+  <data name="Ide_ShortToggleComment" xml:space="preserve"><value>Yorumu aç/kapat</value></data>
+  <data name="Ide_ShortMoveLine" xml:space="preserve"><value>Satırı yukarı/aşağı taşı</value></data>
+  <data name="Ide_ShortDeleteLine" xml:space="preserve"><value>Satırı sil</value></data>
+  <data name="Ide_ShortNavigation" xml:space="preserve"><value>Gezinme</value></data>
+  <data name="Ide_ShortSwitchTab" xml:space="preserve"><value>Sekme değiştir (tarayıcı)</value></data>
+  <data name="Ide_ShortCloseTab" xml:space="preserve"><value>Sekmeyi kapat (tarayıcı)</value></data>
+  <data name="Ide_ShortView" xml:space="preserve"><value>Görünüm</value></data>
+  <data name="Ide_ShortZenMode" xml:space="preserve"><value>Dikkat dağıtmayan düzenleme (çıkmak için Esc)</value></data>
+  <data name="Ide_ShortFoldAll" xml:space="preserve"><value>Tümünü katla (Monaco yerleşik)</value></data>
+  <data name="Ide_ShortUnfoldAll" xml:space="preserve"><value>Tümünü aç (Monaco yerleşik)</value></data>
+  <data name="Ide_ShortFoldRegion" xml:space="preserve"><value>Bölgeyi katla</value></data>
+  <data name="Ide_ShortUnfoldRegion" xml:space="preserve"><value>Bölgeyi aç</value></data>
+
+  <!-- IDE Arama Paneli -->
+  <data name="Ide_ToggleReplace" xml:space="preserve"><value>Değiştirmeyi aç/kapat</value></data>
+  <data name="Ide_SearchInFiles" xml:space="preserve"><value>Dosyalarda ara...</value></data>
+  <data name="Ide_ReplaceWith" xml:space="preserve"><value>Şununla değiştir...</value></data>
+  <data name="Ide_FileExtFilter" xml:space="preserve"><value>Dosya uzantısı filtresi (ör. .cs)</value></data>
+  <data name="Ide_Searching" xml:space="preserve"><value>Aranıyor...</value></data>
+  <data name="Ide_NoResults" xml:space="preserve"><value>Sonuç bulunamadı</value></data>
+  <data name="Ide_ReplaceAll" xml:space="preserve"><value>Tümünü değiştir</value></data>
+  <data name="Ide_ReplaceAllInFile" xml:space="preserve"><value>Bu dosyadaki tümünü değiştir</value></data>
+
+  <!-- IDE Hızlı Açma -->
+  <data name="Ide_SearchFilesByName" xml:space="preserve"><value>Ada göre dosya ara...</value></data>
+  <data name="Ide_NoMatchingFiles" xml:space="preserve"><value>Eşleşen dosya bulunamadı</value></data>
+
+  <!-- IDE Commit Paneli -->
+  <data name="Ide_NoChangesToCommit" xml:space="preserve"><value>Commit edilecek değişiklik yok</value></data>
+  <data name="Ide_ChangedFiles" xml:space="preserve"><value>Değiştirilen dosyalar</value></data>
+  <data name="Ide_SelectAll" xml:space="preserve"><value>Tümünü seç</value></data>
+  <data name="Ide_DeselectAll" xml:space="preserve"><value>Tüm seçimi kaldır</value></data>
+  <data name="Ide_CommitMessage" xml:space="preserve"><value>Commit mesajı...</value></data>
+  <data name="Ide_Committing" xml:space="preserve"><value>Commit ediliyor...</value></data>
+  <data name="Ide_Commit" xml:space="preserve"><value>Commit</value></data>
 </root>

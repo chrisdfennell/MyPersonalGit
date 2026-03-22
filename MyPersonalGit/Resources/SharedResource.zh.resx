@@ -1008,4 +1008,196 @@
 
   <!-- Branch delete -->
   <data name="PR_DeleteBranchAfterMerge" xml:space="preserve"><value>合并后删除源分支</value></data>
+
+  <!-- IDE 布局 -->
+  <data name="Ide_BackToRepo" xml:space="preserve"><value>返回仓库</value></data>
+  <data name="Ide_NewBranch" xml:space="preserve"><value>新建分支</value></data>
+  <data name="Ide_ToggleTheme" xml:space="preserve"><value>切换主题</value></data>
+  <data name="Ide_CreateNewBranch" xml:space="preserve"><value>创建新分支</value></data>
+  <data name="Ide_BranchFrom" xml:space="preserve"><value>基于分支</value></data>
+  <data name="Ide_NewBranchName" xml:space="preserve"><value>新分支名称</value></data>
+  <data name="Ide_BranchNameRequired" xml:space="preserve"><value>分支名称为必填项。</value></data>
+  <data name="Ide_CreateBranch" xml:space="preserve"><value>创建分支</value></data>
+
+  <!-- IDE 侧边栏 -->
+  <data name="Ide_Explorer" xml:space="preserve"><value>资源管理器</value></data>
+  <data name="Ide_Search" xml:space="preserve"><value>搜索</value></data>
+  <data name="Ide_SourceControl" xml:space="preserve"><value>源代码管理</value></data>
+  <data name="Ide_Outline" xml:space="preserve"><value>大纲</value></data>
+  <data name="Ide_Settings" xml:space="preserve"><value>设置</value></data>
+  <data name="Ide_NoChanges" xml:space="preserve"><value>无更改</value></data>
+  <data name="Ide_ClickViewDiff" xml:space="preserve"><value>点击查看差异</value></data>
+  <data name="Ide_Refresh" xml:space="preserve"><value>刷新</value></data>
+  <data name="Ide_OpenFileOutline" xml:space="preserve"><value>打开文件以查看其大纲</value></data>
+  <data name="Ide_NoSymbolsFound" xml:space="preserve"><value>未找到符号</value></data>
+
+  <!-- IDE 标签页和操作 -->
+  <data name="Ide_TogglePreview" xml:space="preserve"><value>切换预览</value></data>
+  <data name="Ide_ShowGitBlame" xml:space="preserve"><value>显示 Git Blame</value></data>
+  <data name="Ide_HideGitBlame" xml:space="preserve"><value>隐藏 Git Blame</value></data>
+  <data name="Ide_FileHistory" xml:space="preserve"><value>文件历史</value></data>
+  <data name="Ide_ToggleMinimap" xml:space="preserve"><value>切换 Minimap</value></data>
+  <data name="Ide_SplitEditor" xml:space="preserve"><value>拆分编辑器</value></data>
+  <data name="Ide_CloseSplit" xml:space="preserve"><value>关闭拆分</value></data>
+
+  <!-- IDE 欢迎 -->
+  <data name="Ide_WebIde" xml:space="preserve"><value>Web IDE</value></data>
+  <data name="Ide_WelcomeMessage" xml:space="preserve"><value>从资源管理器打开文件或按下</value></data>
+  <data name="Ide_ToGetStarted" xml:space="preserve"><value>以开始</value></data>
+  <data name="Ide_Commands" xml:space="preserve"><value>命令</value></data>
+  <data name="Ide_QuickOpen" xml:space="preserve"><value>快速打开</value></data>
+  <data name="Ide_Terminal" xml:space="preserve"><value>终端</value></data>
+  <data name="Ide_Shortcuts" xml:space="preserve"><value>快捷键</value></data>
+
+  <!-- IDE 编辑器 -->
+  <data name="Ide_Loading" xml:space="preserve"><value>加载中...</value></data>
+  <data name="Ide_Diff" xml:space="preserve"><value>差异</value></data>
+  <data name="Ide_Preview" xml:space="preserve"><value>预览</value></data>
+  <data name="Ide_Edit" xml:space="preserve"><value>编辑</value></data>
+
+  <!-- IDE 底部面板 -->
+  <data name="Ide_Commits" xml:space="preserve"><value>提交</value></data>
+  <data name="Ide_Graph" xml:space="preserve"><value>图表</value></data>
+  <data name="Ide_NoCommits" xml:space="preserve"><value>无提交</value></data>
+  <data name="Ide_NewTerminal" xml:space="preserve"><value>新建终端</value></data>
+  <data name="Ide_History" xml:space="preserve"><value>历史</value></data>
+  <data name="Ide_NoHistoryFound" xml:space="preserve"><value>未找到历史记录</value></data>
+
+  <!-- IDE 状态栏 -->
+  <data name="Ide_Branch" xml:space="preserve"><value>分支</value></data>
+  <data name="Ide_UnsavedChanges" xml:space="preserve"><value>未保存的更改</value></data>
+  <data name="Ide_CursorPosition" xml:space="preserve"><value>光标位置</value></data>
+  <data name="Ide_Selection" xml:space="preserve"><value>选择</value></data>
+  <data name="Ide_Selected" xml:space="preserve"><value>已选择</value></data>
+  <data name="Ide_ToggleWordWrap" xml:space="preserve"><value>切换自动换行</value></data>
+  <data name="Ide_WrapOn" xml:space="preserve"><value>换行：开启</value></data>
+  <data name="Ide_WrapOff" xml:space="preserve"><value>换行：关闭</value></data>
+  <data name="Ide_Language" xml:space="preserve"><value>语言</value></data>
+  <data name="Ide_Encoding" xml:space="preserve"><value>编码</value></data>
+  <data name="Ide_ZenMode" xml:space="preserve"><value>Zen 模式</value></data>
+  <data name="Ide_KeyboardShortcuts" xml:space="preserve"><value>键盘快捷键</value></data>
+  <data name="Ide_Change" xml:space="preserve"><value>项更改</value></data>
+
+  <!-- IDE 标签栏 -->
+  <data name="Ide_NoFilesOpen" xml:space="preserve"><value>没有打开的文件</value></data>
+  <data name="Ide_ScrollLeft" xml:space="preserve"><value>向左滚动</value></data>
+  <data name="Ide_ScrollRight" xml:space="preserve"><value>向右滚动</value></data>
+  <data name="Ide_Close" xml:space="preserve"><value>关闭</value></data>
+  <data name="Ide_PinTab" xml:space="preserve"><value>固定标签页</value></data>
+  <data name="Ide_UnpinTab" xml:space="preserve"><value>取消固定标签页</value></data>
+  <data name="Ide_CloseTab" xml:space="preserve"><value>关闭标签页</value></data>
+  <data name="Ide_CloseOtherTabs" xml:space="preserve"><value>关闭其他标签页</value></data>
+  <data name="Ide_CloseTabsToRight" xml:space="preserve"><value>关闭右侧标签页</value></data>
+  <data name="Ide_CloseSavedTabs" xml:space="preserve"><value>关闭已保存的标签页</value></data>
+
+  <!-- IDE 文件树 -->
+  <data name="Ide_FilterFiles" xml:space="preserve"><value>筛选文件...</value></data>
+  <data name="Ide_NewFile" xml:space="preserve"><value>新建文件</value></data>
+  <data name="Ide_NewFolder" xml:space="preserve"><value>新建文件夹</value></data>
+  <data name="Ide_Rename" xml:space="preserve"><value>重命名</value></data>
+  <data name="Ide_Delete" xml:space="preserve"><value>删除</value></data>
+  <data name="Ide_Modified" xml:space="preserve"><value>已修改</value></data>
+
+  <!-- IDE 设置面板 -->
+  <data name="Ide_EditorSettings" xml:space="preserve"><value>编辑器设置</value></data>
+  <data name="Ide_FontFamily" xml:space="preserve"><value>字体系列</value></data>
+  <data name="Ide_FontSize" xml:space="preserve"><value>字体大小</value></data>
+  <data name="Ide_TabSize" xml:space="preserve"><value>制表符大小</value></data>
+  <data name="Ide_WordWrap" xml:space="preserve"><value>自动换行</value></data>
+  <data name="Ide_Off" xml:space="preserve"><value>关闭</value></data>
+  <data name="Ide_On" xml:space="preserve"><value>开启</value></data>
+  <data name="Ide_WordWrapColumn" xml:space="preserve"><value>自动换行列</value></data>
+  <data name="Ide_Minimap" xml:space="preserve"><value>Minimap</value></data>
+  <data name="Ide_Visible" xml:space="preserve"><value>可见</value></data>
+  <data name="Ide_Hidden" xml:space="preserve"><value>隐藏</value></data>
+  <data name="Ide_LineNumbers" xml:space="preserve"><value>行号</value></data>
+  <data name="Ide_RenderWhitespace" xml:space="preserve"><value>显示空白字符</value></data>
+  <data name="Ide_None" xml:space="preserve"><value>无</value></data>
+  <data name="Ide_Boundary" xml:space="preserve"><value>边界</value></data>
+  <data name="Ide_All" xml:space="preserve"><value>全部</value></data>
+  <data name="Ide_CodeFolding" xml:space="preserve"><value>代码折叠</value></data>
+  <data name="Ide_Enabled" xml:space="preserve"><value>已启用</value></data>
+  <data name="Ide_Disabled" xml:space="preserve"><value>已禁用</value></data>
+  <data name="Ide_StickyScroll" xml:space="preserve"><value>固定滚动</value></data>
+  <data name="Ide_BracketPairGuides" xml:space="preserve"><value>括号对指南</value></data>
+  <data name="Ide_FontLigatures" xml:space="preserve"><value>字体连字</value></data>
+  <data name="Ide_FormatOnPaste" xml:space="preserve"><value>粘贴时格式化</value></data>
+  <data name="Ide_AutoSave" xml:space="preserve"><value>自动保存</value></data>
+  <data name="Ide_AutoSaveDelay" xml:space="preserve"><value>自动保存延迟</value></data>
+
+  <!-- IDE 命令面板 -->
+  <data name="Ide_TypeCommand" xml:space="preserve"><value>输入命令...</value></data>
+  <data name="Ide_NoMatchingCommands" xml:space="preserve"><value>没有匹配的命令</value></data>
+  <data name="Ide_CmdQuickOpen" xml:space="preserve"><value>快速打开文件</value></data>
+  <data name="Ide_CmdSearchFiles" xml:space="preserve"><value>在文件中搜索</value></data>
+  <data name="Ide_CmdToggleTerminal" xml:space="preserve"><value>切换终端</value></data>
+  <data name="Ide_CmdToggleSplit" xml:space="preserve"><value>切换拆分编辑器</value></data>
+  <data name="Ide_CmdToggleTheme" xml:space="preserve"><value>切换主题（亮色/暗色）</value></data>
+  <data name="Ide_CmdShowBlame" xml:space="preserve"><value>显示 Git Blame</value></data>
+  <data name="Ide_CmdHideBlame" xml:space="preserve"><value>隐藏 Git Blame</value></data>
+  <data name="Ide_CmdFileHistory" xml:space="preserve"><value>显示文件历史</value></data>
+  <data name="Ide_CmdFindReplace" xml:space="preserve"><value>在编辑器中查找和替换</value></data>
+  <data name="Ide_CmdGoToLine" xml:space="preserve"><value>转到行</value></data>
+  <data name="Ide_CmdToggleMinimap" xml:space="preserve"><value>切换 Minimap</value></data>
+  <data name="Ide_CmdCloseTab" xml:space="preserve"><value>关闭当前标签页</value></data>
+  <data name="Ide_CmdCloseAllTabs" xml:space="preserve"><value>关闭所有标签页</value></data>
+  <data name="Ide_CmdSourceControl" xml:space="preserve"><value>打开源代码管理</value></data>
+  <data name="Ide_CmdOutline" xml:space="preserve"><value>打开大纲</value></data>
+  <data name="Ide_CmdSettings" xml:space="preserve"><value>打开设置</value></data>
+  <data name="Ide_CmdExplorer" xml:space="preserve"><value>打开文件资源管理器</value></data>
+  <data name="Ide_CmdZenMode" xml:space="preserve"><value>切换 Zen 模式</value></data>
+  <data name="Ide_CmdWordWrap" xml:space="preserve"><value>切换自动换行</value></data>
+  <data name="Ide_CmdFoldAll" xml:space="preserve"><value>折叠所有区域</value></data>
+  <data name="Ide_CmdUnfoldAll" xml:space="preserve"><value>展开所有区域</value></data>
+  <data name="Ide_CmdShortcuts" xml:space="preserve"><value>显示键盘快捷键</value></data>
+  <data name="Ide_CmdToggleAutoSave" xml:space="preserve"><value>切换自动保存</value></data>
+
+  <!-- IDE 快捷键帮助 -->
+  <data name="Ide_ShortGeneral" xml:space="preserve"><value>常规</value></data>
+  <data name="Ide_ShortCommandPalette" xml:space="preserve"><value>命令面板</value></data>
+  <data name="Ide_ShortQuickOpen" xml:space="preserve"><value>快速打开文件</value></data>
+  <data name="Ide_ShortSearchFiles" xml:space="preserve"><value>在文件中搜索</value></data>
+  <data name="Ide_ShortToggleTerminal" xml:space="preserve"><value>切换终端</value></data>
+  <data name="Ide_ShortShowHelp" xml:space="preserve"><value>显示此帮助</value></data>
+  <data name="Ide_ShortEditor" xml:space="preserve"><value>编辑器</value></data>
+  <data name="Ide_ShortSave" xml:space="preserve"><value>保存（在编辑器中）</value></data>
+  <data name="Ide_ShortFind" xml:space="preserve"><value>在文件中查找</value></data>
+  <data name="Ide_ShortFindReplace" xml:space="preserve"><value>查找和替换</value></data>
+  <data name="Ide_ShortGoToLine" xml:space="preserve"><value>转到行</value></data>
+  <data name="Ide_ShortSelectNext" xml:space="preserve"><value>选择下一个匹配项</value></data>
+  <data name="Ide_ShortToggleComment" xml:space="preserve"><value>切换注释</value></data>
+  <data name="Ide_ShortMoveLine" xml:space="preserve"><value>上/下移动行</value></data>
+  <data name="Ide_ShortDeleteLine" xml:space="preserve"><value>删除行</value></data>
+  <data name="Ide_ShortNavigation" xml:space="preserve"><value>导航</value></data>
+  <data name="Ide_ShortSwitchTab" xml:space="preserve"><value>切换标签页（浏览器）</value></data>
+  <data name="Ide_ShortCloseTab" xml:space="preserve"><value>关闭标签页（浏览器）</value></data>
+  <data name="Ide_ShortView" xml:space="preserve"><value>视图</value></data>
+  <data name="Ide_ShortZenMode" xml:space="preserve"><value>无干扰编辑（Esc 退出）</value></data>
+  <data name="Ide_ShortFoldAll" xml:space="preserve"><value>全部折叠（Monaco 内置）</value></data>
+  <data name="Ide_ShortUnfoldAll" xml:space="preserve"><value>全部展开（Monaco 内置）</value></data>
+  <data name="Ide_ShortFoldRegion" xml:space="preserve"><value>折叠区域</value></data>
+  <data name="Ide_ShortUnfoldRegion" xml:space="preserve"><value>展开区域</value></data>
+
+  <!-- IDE 搜索面板 -->
+  <data name="Ide_ToggleReplace" xml:space="preserve"><value>切换替换</value></data>
+  <data name="Ide_SearchInFiles" xml:space="preserve"><value>在文件中搜索...</value></data>
+  <data name="Ide_ReplaceWith" xml:space="preserve"><value>替换为...</value></data>
+  <data name="Ide_FileExtFilter" xml:space="preserve"><value>文件扩展名筛选（例如 .cs）</value></data>
+  <data name="Ide_Searching" xml:space="preserve"><value>搜索中...</value></data>
+  <data name="Ide_NoResults" xml:space="preserve"><value>未找到结果</value></data>
+  <data name="Ide_ReplaceAll" xml:space="preserve"><value>全部替换</value></data>
+  <data name="Ide_ReplaceAllInFile" xml:space="preserve"><value>替换此文件中的全部</value></data>
+
+  <!-- IDE 快速打开 -->
+  <data name="Ide_SearchFilesByName" xml:space="preserve"><value>按名称搜索文件...</value></data>
+  <data name="Ide_NoMatchingFiles" xml:space="preserve"><value>未找到匹配的文件</value></data>
+
+  <!-- IDE 提交面板 -->
+  <data name="Ide_NoChangesToCommit" xml:space="preserve"><value>没有要提交的更改</value></data>
+  <data name="Ide_ChangedFiles" xml:space="preserve"><value>已更改的文件</value></data>
+  <data name="Ide_SelectAll" xml:space="preserve"><value>全选</value></data>
+  <data name="Ide_DeselectAll" xml:space="preserve"><value>取消全选</value></data>
+  <data name="Ide_CommitMessage" xml:space="preserve"><value>提交消息...</value></data>
+  <data name="Ide_Committing" xml:space="preserve"><value>提交中...</value></data>
+  <data name="Ide_Commit" xml:space="preserve"><value>提交</value></data>
 </root>

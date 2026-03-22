@@ -1007,4 +1007,196 @@
 
   <!-- Branch delete after merge -->
   <data name="PR_DeleteBranchAfterMerge" xml:space="preserve"><value>Delete source branch after merge</value></data>
+
+  <!-- IDE Layout -->
+  <data name="Ide_BackToRepo" xml:space="preserve"><value>Back to repository</value></data>
+  <data name="Ide_NewBranch" xml:space="preserve"><value>New Branch</value></data>
+  <data name="Ide_ToggleTheme" xml:space="preserve"><value>Toggle theme</value></data>
+  <data name="Ide_CreateNewBranch" xml:space="preserve"><value>Create New Branch</value></data>
+  <data name="Ide_BranchFrom" xml:space="preserve"><value>Branch from</value></data>
+  <data name="Ide_NewBranchName" xml:space="preserve"><value>New branch name</value></data>
+  <data name="Ide_BranchNameRequired" xml:space="preserve"><value>Branch name is required.</value></data>
+  <data name="Ide_CreateBranch" xml:space="preserve"><value>Create Branch</value></data>
+
+  <!-- IDE Sidebar -->
+  <data name="Ide_Explorer" xml:space="preserve"><value>Explorer</value></data>
+  <data name="Ide_Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Ide_SourceControl" xml:space="preserve"><value>Source Control</value></data>
+  <data name="Ide_Outline" xml:space="preserve"><value>Outline</value></data>
+  <data name="Ide_Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Ide_NoChanges" xml:space="preserve"><value>No changes</value></data>
+  <data name="Ide_ClickViewDiff" xml:space="preserve"><value>Click to view diff</value></data>
+  <data name="Ide_Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Ide_OpenFileOutline" xml:space="preserve"><value>Open a file to see its outline</value></data>
+  <data name="Ide_NoSymbolsFound" xml:space="preserve"><value>No symbols found</value></data>
+
+  <!-- IDE Tabs & Actions -->
+  <data name="Ide_TogglePreview" xml:space="preserve"><value>Toggle Preview</value></data>
+  <data name="Ide_ShowGitBlame" xml:space="preserve"><value>Show Git Blame</value></data>
+  <data name="Ide_HideGitBlame" xml:space="preserve"><value>Hide Git Blame</value></data>
+  <data name="Ide_FileHistory" xml:space="preserve"><value>File History</value></data>
+  <data name="Ide_ToggleMinimap" xml:space="preserve"><value>Toggle Minimap</value></data>
+  <data name="Ide_SplitEditor" xml:space="preserve"><value>Split Editor</value></data>
+  <data name="Ide_CloseSplit" xml:space="preserve"><value>Close Split</value></data>
+
+  <!-- IDE Welcome -->
+  <data name="Ide_WebIde" xml:space="preserve"><value>Web IDE</value></data>
+  <data name="Ide_WelcomeMessage" xml:space="preserve"><value>Open a file from the explorer or press</value></data>
+  <data name="Ide_ToGetStarted" xml:space="preserve"><value>to get started</value></data>
+  <data name="Ide_Commands" xml:space="preserve"><value>Commands</value></data>
+  <data name="Ide_QuickOpen" xml:space="preserve"><value>Quick Open</value></data>
+  <data name="Ide_Terminal" xml:space="preserve"><value>Terminal</value></data>
+  <data name="Ide_Shortcuts" xml:space="preserve"><value>Shortcuts</value></data>
+
+  <!-- IDE Editor -->
+  <data name="Ide_Loading" xml:space="preserve"><value>Loading...</value></data>
+  <data name="Ide_Diff" xml:space="preserve"><value>Diff</value></data>
+  <data name="Ide_Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="Ide_Edit" xml:space="preserve"><value>Edit</value></data>
+
+  <!-- IDE Bottom Panel -->
+  <data name="Ide_Commits" xml:space="preserve"><value>Commits</value></data>
+  <data name="Ide_Graph" xml:space="preserve"><value>Graph</value></data>
+  <data name="Ide_NoCommits" xml:space="preserve"><value>No commits</value></data>
+  <data name="Ide_NewTerminal" xml:space="preserve"><value>New Terminal</value></data>
+  <data name="Ide_History" xml:space="preserve"><value>History</value></data>
+  <data name="Ide_NoHistoryFound" xml:space="preserve"><value>No history found</value></data>
+
+  <!-- IDE Status Bar -->
+  <data name="Ide_Branch" xml:space="preserve"><value>Branch</value></data>
+  <data name="Ide_UnsavedChanges" xml:space="preserve"><value>Unsaved changes</value></data>
+  <data name="Ide_CursorPosition" xml:space="preserve"><value>Cursor position</value></data>
+  <data name="Ide_Selection" xml:space="preserve"><value>Selection</value></data>
+  <data name="Ide_Selected" xml:space="preserve"><value>selected</value></data>
+  <data name="Ide_ToggleWordWrap" xml:space="preserve"><value>Toggle Word Wrap</value></data>
+  <data name="Ide_WrapOn" xml:space="preserve"><value>Wrap: On</value></data>
+  <data name="Ide_WrapOff" xml:space="preserve"><value>Wrap: Off</value></data>
+  <data name="Ide_Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Ide_Encoding" xml:space="preserve"><value>Encoding</value></data>
+  <data name="Ide_ZenMode" xml:space="preserve"><value>Zen Mode</value></data>
+  <data name="Ide_KeyboardShortcuts" xml:space="preserve"><value>Keyboard Shortcuts</value></data>
+  <data name="Ide_Change" xml:space="preserve"><value>change(s)</value></data>
+
+  <!-- IDE Tab Bar -->
+  <data name="Ide_NoFilesOpen" xml:space="preserve"><value>No files open</value></data>
+  <data name="Ide_ScrollLeft" xml:space="preserve"><value>Scroll left</value></data>
+  <data name="Ide_ScrollRight" xml:space="preserve"><value>Scroll right</value></data>
+  <data name="Ide_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Ide_PinTab" xml:space="preserve"><value>Pin Tab</value></data>
+  <data name="Ide_UnpinTab" xml:space="preserve"><value>Unpin Tab</value></data>
+  <data name="Ide_CloseTab" xml:space="preserve"><value>Close Tab</value></data>
+  <data name="Ide_CloseOtherTabs" xml:space="preserve"><value>Close Other Tabs</value></data>
+  <data name="Ide_CloseTabsToRight" xml:space="preserve"><value>Close Tabs to the Right</value></data>
+  <data name="Ide_CloseSavedTabs" xml:space="preserve"><value>Close Saved Tabs</value></data>
+
+  <!-- IDE File Tree -->
+  <data name="Ide_FilterFiles" xml:space="preserve"><value>Filter files...</value></data>
+  <data name="Ide_NewFile" xml:space="preserve"><value>New File</value></data>
+  <data name="Ide_NewFolder" xml:space="preserve"><value>New Folder</value></data>
+  <data name="Ide_Rename" xml:space="preserve"><value>Rename</value></data>
+  <data name="Ide_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Ide_Modified" xml:space="preserve"><value>Modified</value></data>
+
+  <!-- IDE Settings Panel -->
+  <data name="Ide_EditorSettings" xml:space="preserve"><value>Editor Settings</value></data>
+  <data name="Ide_FontFamily" xml:space="preserve"><value>Font Family</value></data>
+  <data name="Ide_FontSize" xml:space="preserve"><value>Font Size</value></data>
+  <data name="Ide_TabSize" xml:space="preserve"><value>Tab Size</value></data>
+  <data name="Ide_WordWrap" xml:space="preserve"><value>Word Wrap</value></data>
+  <data name="Ide_Off" xml:space="preserve"><value>Off</value></data>
+  <data name="Ide_On" xml:space="preserve"><value>On</value></data>
+  <data name="Ide_WordWrapColumn" xml:space="preserve"><value>Word Wrap Column</value></data>
+  <data name="Ide_Minimap" xml:space="preserve"><value>Minimap</value></data>
+  <data name="Ide_Visible" xml:space="preserve"><value>Visible</value></data>
+  <data name="Ide_Hidden" xml:space="preserve"><value>Hidden</value></data>
+  <data name="Ide_LineNumbers" xml:space="preserve"><value>Line Numbers</value></data>
+  <data name="Ide_RenderWhitespace" xml:space="preserve"><value>Render Whitespace</value></data>
+  <data name="Ide_None" xml:space="preserve"><value>None</value></data>
+  <data name="Ide_Boundary" xml:space="preserve"><value>Boundary</value></data>
+  <data name="Ide_All" xml:space="preserve"><value>All</value></data>
+  <data name="Ide_CodeFolding" xml:space="preserve"><value>Code Folding</value></data>
+  <data name="Ide_Enabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="Ide_Disabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="Ide_StickyScroll" xml:space="preserve"><value>Sticky Scroll</value></data>
+  <data name="Ide_BracketPairGuides" xml:space="preserve"><value>Bracket Pair Guides</value></data>
+  <data name="Ide_FontLigatures" xml:space="preserve"><value>Font Ligatures</value></data>
+  <data name="Ide_FormatOnPaste" xml:space="preserve"><value>Format on Paste</value></data>
+  <data name="Ide_AutoSave" xml:space="preserve"><value>Auto Save</value></data>
+  <data name="Ide_AutoSaveDelay" xml:space="preserve"><value>Auto Save Delay</value></data>
+
+  <!-- IDE Command Palette -->
+  <data name="Ide_TypeCommand" xml:space="preserve"><value>Type a command...</value></data>
+  <data name="Ide_NoMatchingCommands" xml:space="preserve"><value>No matching commands</value></data>
+  <data name="Ide_CmdQuickOpen" xml:space="preserve"><value>Quick Open File</value></data>
+  <data name="Ide_CmdSearchFiles" xml:space="preserve"><value>Search in Files</value></data>
+  <data name="Ide_CmdToggleTerminal" xml:space="preserve"><value>Toggle Terminal</value></data>
+  <data name="Ide_CmdToggleSplit" xml:space="preserve"><value>Toggle Split Editor</value></data>
+  <data name="Ide_CmdToggleTheme" xml:space="preserve"><value>Toggle Theme (Light/Dark)</value></data>
+  <data name="Ide_CmdShowBlame" xml:space="preserve"><value>Show Git Blame</value></data>
+  <data name="Ide_CmdHideBlame" xml:space="preserve"><value>Hide Git Blame</value></data>
+  <data name="Ide_CmdFileHistory" xml:space="preserve"><value>Show File History</value></data>
+  <data name="Ide_CmdFindReplace" xml:space="preserve"><value>Find and Replace in Editor</value></data>
+  <data name="Ide_CmdGoToLine" xml:space="preserve"><value>Go to Line</value></data>
+  <data name="Ide_CmdToggleMinimap" xml:space="preserve"><value>Toggle Minimap</value></data>
+  <data name="Ide_CmdCloseTab" xml:space="preserve"><value>Close Current Tab</value></data>
+  <data name="Ide_CmdCloseAllTabs" xml:space="preserve"><value>Close All Tabs</value></data>
+  <data name="Ide_CmdSourceControl" xml:space="preserve"><value>Open Source Control</value></data>
+  <data name="Ide_CmdOutline" xml:space="preserve"><value>Open Outline</value></data>
+  <data name="Ide_CmdSettings" xml:space="preserve"><value>Open Settings</value></data>
+  <data name="Ide_CmdExplorer" xml:space="preserve"><value>Open File Explorer</value></data>
+  <data name="Ide_CmdZenMode" xml:space="preserve"><value>Toggle Zen Mode</value></data>
+  <data name="Ide_CmdWordWrap" xml:space="preserve"><value>Toggle Word Wrap</value></data>
+  <data name="Ide_CmdFoldAll" xml:space="preserve"><value>Fold All Regions</value></data>
+  <data name="Ide_CmdUnfoldAll" xml:space="preserve"><value>Unfold All Regions</value></data>
+  <data name="Ide_CmdShortcuts" xml:space="preserve"><value>Show Keyboard Shortcuts</value></data>
+  <data name="Ide_CmdToggleAutoSave" xml:space="preserve"><value>Toggle Auto Save</value></data>
+
+  <!-- IDE Shortcut Help -->
+  <data name="Ide_ShortGeneral" xml:space="preserve"><value>General</value></data>
+  <data name="Ide_ShortCommandPalette" xml:space="preserve"><value>Command Palette</value></data>
+  <data name="Ide_ShortQuickOpen" xml:space="preserve"><value>Quick Open File</value></data>
+  <data name="Ide_ShortSearchFiles" xml:space="preserve"><value>Search in Files</value></data>
+  <data name="Ide_ShortToggleTerminal" xml:space="preserve"><value>Toggle Terminal</value></data>
+  <data name="Ide_ShortShowHelp" xml:space="preserve"><value>Show This Help</value></data>
+  <data name="Ide_ShortEditor" xml:space="preserve"><value>Editor</value></data>
+  <data name="Ide_ShortSave" xml:space="preserve"><value>Save (in editor)</value></data>
+  <data name="Ide_ShortFind" xml:space="preserve"><value>Find in File</value></data>
+  <data name="Ide_ShortFindReplace" xml:space="preserve"><value>Find and Replace</value></data>
+  <data name="Ide_ShortGoToLine" xml:space="preserve"><value>Go to Line</value></data>
+  <data name="Ide_ShortSelectNext" xml:space="preserve"><value>Select Next Occurrence</value></data>
+  <data name="Ide_ShortToggleComment" xml:space="preserve"><value>Toggle Comment</value></data>
+  <data name="Ide_ShortMoveLine" xml:space="preserve"><value>Move Line Up/Down</value></data>
+  <data name="Ide_ShortDeleteLine" xml:space="preserve"><value>Delete Line</value></data>
+  <data name="Ide_ShortNavigation" xml:space="preserve"><value>Navigation</value></data>
+  <data name="Ide_ShortSwitchTab" xml:space="preserve"><value>Switch Tab (browser)</value></data>
+  <data name="Ide_ShortCloseTab" xml:space="preserve"><value>Close Tab (browser)</value></data>
+  <data name="Ide_ShortView" xml:space="preserve"><value>View</value></data>
+  <data name="Ide_ShortZenMode" xml:space="preserve"><value>Distraction-free editing (Esc to exit)</value></data>
+  <data name="Ide_ShortFoldAll" xml:space="preserve"><value>Fold All (Monaco built-in)</value></data>
+  <data name="Ide_ShortUnfoldAll" xml:space="preserve"><value>Unfold All (Monaco built-in)</value></data>
+  <data name="Ide_ShortFoldRegion" xml:space="preserve"><value>Fold Region</value></data>
+  <data name="Ide_ShortUnfoldRegion" xml:space="preserve"><value>Unfold Region</value></data>
+
+  <!-- IDE Search Panel -->
+  <data name="Ide_ToggleReplace" xml:space="preserve"><value>Toggle Replace</value></data>
+  <data name="Ide_SearchInFiles" xml:space="preserve"><value>Search in files...</value></data>
+  <data name="Ide_ReplaceWith" xml:space="preserve"><value>Replace with...</value></data>
+  <data name="Ide_FileExtFilter" xml:space="preserve"><value>File extension filter (e.g. .cs)</value></data>
+  <data name="Ide_Searching" xml:space="preserve"><value>Searching...</value></data>
+  <data name="Ide_NoResults" xml:space="preserve"><value>No results found</value></data>
+  <data name="Ide_ReplaceAll" xml:space="preserve"><value>Replace All</value></data>
+  <data name="Ide_ReplaceAllInFile" xml:space="preserve"><value>Replace all in this file</value></data>
+
+  <!-- IDE Quick Open -->
+  <data name="Ide_SearchFilesByName" xml:space="preserve"><value>Search files by name...</value></data>
+  <data name="Ide_NoMatchingFiles" xml:space="preserve"><value>No matching files found</value></data>
+
+  <!-- IDE Commit Panel -->
+  <data name="Ide_NoChangesToCommit" xml:space="preserve"><value>No changes to commit</value></data>
+  <data name="Ide_ChangedFiles" xml:space="preserve"><value>Changed Files</value></data>
+  <data name="Ide_SelectAll" xml:space="preserve"><value>Select All</value></data>
+  <data name="Ide_DeselectAll" xml:space="preserve"><value>Deselect All</value></data>
+  <data name="Ide_CommitMessage" xml:space="preserve"><value>Commit message...</value></data>
+  <data name="Ide_Committing" xml:space="preserve"><value>Committing...</value></data>
+  <data name="Ide_Commit" xml:space="preserve"><value>Commit</value></data>
 </root>

@@ -8,10 +8,13 @@
 @inject IWebIdeService WebIdeService
 @inject IAdminService AdminService
 @inject IConfiguration Config
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@inject IStringLocalizer<SharedResource> L
 
 <div class="ide-layout">
     <div class="ide-topbar">
-        <a href="@BackUrl" class="ide-topbar-back" title="Back to repository">
+        <a href="@BackUrl" class="ide-topbar-back" title="@L["Ide_BackToRepo"]">
             <i class="bi bi-arrow-left"></i>
         </a>
         <span class="ide-topbar-repo fw-semibold">@RepoName</span>
@@ -33,7 +36,7 @@
                     <li><hr class="dropdown-divider" /></li>
                     <li>
                         <button class="dropdown-item small text-primary" @onclick="ShowCreateBranch">
-                            <i class="bi bi-plus-circle me-1"></i>New Branch
+                            <i class="bi bi-plus-circle me-1"></i>@L["Ide_NewBranch"]
                         </button>
                     </li>
                 }
@@ -44,7 +47,7 @@
             {
                 <span class="text-muted small">@UserService.Username</span>
             }
-            <button class="btn btn-sm btn-link text-muted p-0" @onclick="ToggleTheme" title="Toggle theme">
+            <button class="btn btn-sm btn-link text-muted p-0" @onclick="ToggleTheme" title="@L["Ide_ToggleTheme"]">
                 <i class="bi @(currentTheme == "dark" ? "bi-sun-fill" : "bi-moon-fill")"></i>
             </button>
         </div>
@@ -59,14 +62,14 @@
     <div class="ide-branch-overlay" @onclick="() => showCreateBranch = false">
         <div class="ide-branch-dialog" @onclick:stopPropagation="true">
             <div class="ide-branch-header">
-                <span class="fw-semibold"><i class="bi bi-git me-2"></i>Create New Branch</span>
+                <span class="fw-semibold"><i class="bi bi-git me-2"></i>@L["Ide_CreateNewBranch"]</span>
                 <button class="btn btn-sm btn-link text-muted p-0" @onclick="() => showCreateBranch = false">
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
             <div class="ide-branch-body">
                 <div class="mb-3">
-                    <label class="form-label small">Branch from</label>
+                    <label class="form-label small">@L["Ide_BranchFrom"]</label>
                     <select class="form-select form-select-sm" @bind="newBranchSource">
                         @foreach (var branch in Branches)
                         {
@@ -75,7 +78,7 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small">New branch name</label>
+                    <label class="form-label small">@L["Ide_NewBranchName"]</label>
                     <input type="text" class="form-control form-control-sm" @bind="newBranchName" placeholder="feature/my-branch"
                            @onkeydown="HandleBranchKeyDown" />
                 </div>
@@ -88,7 +91,7 @@
                     {
                         <span class="spinner-border spinner-border-sm me-1"></span>
                     }
-                    Create Branch
+                    @L["Ide_CreateBranch"]
                 </button>
             </div>
         </div>
@@ -215,7 +218,7 @@
     {
         if (string.IsNullOrWhiteSpace(newBranchName))
         {
-            createBranchError = "Branch name is required.";
+            createBranchError = L["Ide_BranchNameRequired"];
             return;
         }
 
