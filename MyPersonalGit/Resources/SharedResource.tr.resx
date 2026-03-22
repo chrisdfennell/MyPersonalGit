@@ -1200,4 +1200,40 @@
   <data name="Ide_CommitMessage" xml:space="preserve"><value>Commit mesajı...</value></data>
   <data name="Ide_Committing" xml:space="preserve"><value>Commit ediliyor...</value></data>
   <data name="Ide_Commit" xml:space="preserve"><value>Commit</value></data>
+
+  <!-- Admin TLS / HTTPS -->
+  <data name="Admin_TlsHttps" xml:space="preserve"><value>TLS / HTTPS</value></data>
+  <data name="Admin_TlsDescription" xml:space="preserve"><value>Güvenli bağlantılar için HTTPS'yi etkinleştirin. WebAuthn/Passkeys için gereklidir ve tüm dağıtımlar için önerilir.</value></data>
+  <data name="Admin_RequiresRestart" xml:space="preserve"><value>Uygulama yeniden başlatılması gerekir.</value></data>
+  <data name="Admin_EnableHttps" xml:space="preserve"><value>HTTPS'yi Etkinleştir</value></data>
+  <data name="Admin_InternalHttpsPort" xml:space="preserve"><value>Dahili HTTPS Portu</value></data>
+  <data name="Admin_InternalPortHelp" xml:space="preserve"><value>Kestrel'in konteyner içinde dinlediği port. Varsayılan: 8443.</value></data>
+  <data name="Admin_ExternalHttpsPort" xml:space="preserve"><value>Harici HTTPS Portu</value></data>
+  <data name="Admin_ExternalPortHelp" xml:space="preserve"><value>Kullanıcıların dışarıdan eriştiği port (Docker -p eşlemesi). Yönlendirmeler için kullanılır.</value></data>
+  <data name="Admin_RedirectHttps" xml:space="preserve"><value>HTTP'yi HTTPS'ye Yönlendir</value></data>
+  <data name="Admin_CertSource" xml:space="preserve"><value>Sertifika Kaynağı</value></data>
+  <data name="Admin_CertSelfSigned" xml:space="preserve"><value>Kendinden imzalı sertifika (otomatik oluşturulur)</value></data>
+  <data name="Admin_CertFile" xml:space="preserve"><value>Sertifika Dosyası (PEM veya PFX)</value></data>
+  <data name="Admin_SelfSignedInfo" xml:space="preserve"><value>Kendinden imzalı bir sertifika otomatik olarak oluşturulacak ve /data/tls/selfsigned.pfx konumunda saklanacaktır. Tarayıcılar güvenlik uyarısı gösterecektir — bir istisna ekleyebilir veya sertifikayı güvenilir deponuza aktarabilirsiniz. 2 yıl geçerli, yeniden başlatmada otomatik yenilenir.</value></data>
+  <data name="Admin_RegenerateCert" xml:space="preserve"><value>Sertifikayı Şimdi Yeniden Oluştur</value></data>
+  <data name="Admin_CertFileInfo" xml:space="preserve"><value>Bir PFX dosyası veya PEM sertifikası + anahtar çifti sağlayın. Dosyaları konteynere bağlayın.</value></data>
+  <data name="Admin_OptionPfx" xml:space="preserve"><value>Seçenek 1: PFX / PKCS#12</value></data>
+  <data name="Admin_PfxFilePath" xml:space="preserve"><value>PFX Dosya Yolu</value></data>
+  <data name="Admin_PfxPassword" xml:space="preserve"><value>PFX Şifresi</value></data>
+  <data name="Admin_OptionPem" xml:space="preserve"><value>Seçenek 2: PEM Sertifikası + Anahtar (ör., Let's Encrypt)</value></data>
+  <data name="Admin_CertPath" xml:space="preserve"><value>Sertifika Yolu</value></data>
+  <data name="Admin_PrivateKeyPath" xml:space="preserve"><value>Özel Anahtar Yolu</value></data>
+
+  <!-- Settings Passkeys -->
+  <data name="Settings_PasskeysTitle" xml:space="preserve"><value>Passkeys ve Güvenlik Anahtarları</value></data>
+  <data name="Settings_RegisterNewKey" xml:space="preserve"><value>Yeni Anahtar Kaydet</value></data>
+  <data name="Settings_KeyName" xml:space="preserve"><value>Anahtar Adı</value></data>
+  <data name="Settings_KeyNamePlaceholder" xml:space="preserve"><value>ör. YubiKey 5, iPhone</value></data>
+  <data name="Settings_Register" xml:space="preserve"><value>Kaydet</value></data>
+  <data name="Settings_Cancel" xml:space="preserve"><value>İptal</value></data>
+  <data name="Settings_NoPasskeys" xml:space="preserve"><value>Kayıtlı geçiş anahtarı veya güvenlik anahtarı yok.</value></data>
+  <data name="Settings_PasskeysHelp" xml:space="preserve"><value>Güvenli iki faktörlü kimlik doğrulama için bir geçiş anahtarı (Face ID, Windows Hello, Touch ID) veya donanım güvenlik anahtarı (YubiKey) ekleyin.</value></data>
+  <data name="Settings_EnterKeyName" xml:space="preserve"><value>Lütfen bu anahtar için bir ad girin.</value></data>
+  <data name="Settings_PasskeyRegistered" xml:space="preserve"><value>Geçiş anahtarı başarıyla kaydedildi.</value></data>
+  <data name="Settings_PasskeyRemoved" xml:space="preserve"><value>Geçiş anahtarı kaldırıldı.</value></data>
 </root>

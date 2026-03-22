@@ -1200,4 +1200,40 @@
   <data name="Ide_CommitMessage" xml:space="preserve"><value>커밋 메시지...</value></data>
   <data name="Ide_Committing" xml:space="preserve"><value>커밋 중...</value></data>
   <data name="Ide_Commit" xml:space="preserve"><value>커밋</value></data>
+
+  <!-- Admin TLS / HTTPS -->
+  <data name="Admin_TlsHttps" xml:space="preserve"><value>TLS / HTTPS</value></data>
+  <data name="Admin_TlsDescription" xml:space="preserve"><value>보안 연결을 위해 HTTPS를 활성화합니다. WebAuthn/Passkeys에 필요하며 모든 배포에 권장됩니다.</value></data>
+  <data name="Admin_RequiresRestart" xml:space="preserve"><value>애플리케이션 재시작이 필요합니다.</value></data>
+  <data name="Admin_EnableHttps" xml:space="preserve"><value>HTTPS 활성화</value></data>
+  <data name="Admin_InternalHttpsPort" xml:space="preserve"><value>내부 HTTPS 포트</value></data>
+  <data name="Admin_InternalPortHelp" xml:space="preserve"><value>컨테이너 내부에서 Kestrel이 수신하는 포트입니다. 기본값: 8443.</value></data>
+  <data name="Admin_ExternalHttpsPort" xml:space="preserve"><value>외부 HTTPS 포트</value></data>
+  <data name="Admin_ExternalPortHelp" xml:space="preserve"><value>사용자가 외부에서 접근하는 포트(Docker -p 매핑)입니다. 리디렉션에 사용됩니다.</value></data>
+  <data name="Admin_RedirectHttps" xml:space="preserve"><value>HTTP를 HTTPS로 리디렉션</value></data>
+  <data name="Admin_CertSource" xml:space="preserve"><value>인증서 소스</value></data>
+  <data name="Admin_CertSelfSigned" xml:space="preserve"><value>자체 서명 인증서 (자동 생성)</value></data>
+  <data name="Admin_CertFile" xml:space="preserve"><value>인증서 파일 (PEM 또는 PFX)</value></data>
+  <data name="Admin_SelfSignedInfo" xml:space="preserve"><value>자체 서명 인증서가 자동으로 생성되어 /data/tls/selfsigned.pfx에 저장됩니다. 브라우저에 보안 경고가 표시됩니다 — 예외를 추가하거나 신뢰할 수 있는 저장소에 인증서를 가져올 수 있습니다. 2년간 유효하며 재시작 시 자동 갱신됩니다.</value></data>
+  <data name="Admin_RegenerateCert" xml:space="preserve"><value>지금 인증서 재생성</value></data>
+  <data name="Admin_CertFileInfo" xml:space="preserve"><value>PFX 파일 또는 PEM 인증서 + 키 쌍을 제공하세요. 파일을 컨테이너에 마운트하세요.</value></data>
+  <data name="Admin_OptionPfx" xml:space="preserve"><value>옵션 1: PFX / PKCS#12</value></data>
+  <data name="Admin_PfxFilePath" xml:space="preserve"><value>PFX 파일 경로</value></data>
+  <data name="Admin_PfxPassword" xml:space="preserve"><value>PFX 비밀번호</value></data>
+  <data name="Admin_OptionPem" xml:space="preserve"><value>옵션 2: PEM 인증서 + 키 (예: Let's Encrypt)</value></data>
+  <data name="Admin_CertPath" xml:space="preserve"><value>인증서 경로</value></data>
+  <data name="Admin_PrivateKeyPath" xml:space="preserve"><value>개인 키 경로</value></data>
+
+  <!-- Settings Passkeys -->
+  <data name="Settings_PasskeysTitle" xml:space="preserve"><value>Passkeys 및 보안 키</value></data>
+  <data name="Settings_RegisterNewKey" xml:space="preserve"><value>새 키 등록</value></data>
+  <data name="Settings_KeyName" xml:space="preserve"><value>키 이름</value></data>
+  <data name="Settings_KeyNamePlaceholder" xml:space="preserve"><value>예: YubiKey 5, iPhone</value></data>
+  <data name="Settings_Register" xml:space="preserve"><value>등록</value></data>
+  <data name="Settings_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Settings_NoPasskeys" xml:space="preserve"><value>등록된 패스키 또는 보안 키가 없습니다.</value></data>
+  <data name="Settings_PasskeysHelp" xml:space="preserve"><value>안전한 이중 인증을 위해 패스키(Face ID, Windows Hello, Touch ID) 또는 하드웨어 보안 키(YubiKey)를 추가하세요.</value></data>
+  <data name="Settings_EnterKeyName" xml:space="preserve"><value>이 키의 이름을 입력하세요.</value></data>
+  <data name="Settings_PasskeyRegistered" xml:space="preserve"><value>패스키가 성공적으로 등록되었습니다.</value></data>
+  <data name="Settings_PasskeyRemoved" xml:space="preserve"><value>패스키가 제거되었습니다.</value></data>
 </root>
