@@ -490,6 +490,103 @@ else
                     </div>
                 </div>
 
+                <!-- TLS / HTTPS -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-lock me-2"></i>TLS / HTTPS</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Enable HTTPS for secure connections. Required for WebAuthn/Passkeys and recommended for all deployments. <strong>Requires application restart.</strong></p>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableHttps" id="enableHttps" />
+                                <label class="form-check-label" for="enableHttps">
+                                    Enable HTTPS
+                                </label>
+                            </div>
+                        </div>
+
+                        @if (Settings.EnableHttps)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">HTTPS Port</label>
+                                <InputNumber class="form-control" @bind-Value="Settings.HttpsPort" style="max-width: 200px;" />
+                                <small class="form-text text-muted">Default: 8443. HTTP will continue on port 8080.</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.HttpsRedirect" id="httpsRedirect" />
+                                    <label class="form-check-label" for="httpsRedirect">
+                                        Redirect HTTP to HTTPS
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Certificate Source</label>
+                                <select class="form-select" @bind="Settings.TlsCertSource">
+                                    <option value="selfSigned">Self-Signed Certificate (auto-generated)</option>
+                                    <option value="file">Certificate File (PEM or PFX)</option>
+                                </select>
+                            </div>
+
+                            @if (Settings.TlsCertSource == "selfSigned")
+                            {
+                                <div class="alert alert-info py-2 small">
+                                    <i class="bi bi-info-circle me-1"></i>A self-signed certificate will be automatically generated and stored at <code>/data/tls/selfsigned.pfx</code>.
+                                    Browsers will show a security warning — you can add an exception or import the cert into your trusted store.
+                                    Valid for 2 years, auto-renewed on restart.
+                                </div>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="RegenerateSelfSignedCert" disabled="@regeneratingCert">
+                                    @if (regeneratingCert)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                    }
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Regenerate Certificate Now
+                                </button>
+                                @if (!string.IsNullOrEmpty(certMessage))
+                                {
+                                    <div class="alert @(certMessageSuccess ? "alert-success" : "alert-danger") mt-2 py-2 small">@certMessage</div>
+                                }
+                            }
+                            else if (Settings.TlsCertSource == "file")
+                            {
+                                <div class="alert alert-info py-2 small mb-3">
+                                    <i class="bi bi-info-circle me-1"></i>Provide <strong>either</strong> a PFX file <strong>or</strong> a PEM certificate + key pair. Mount the files into the container.
+                                </div>
+
+                                <h6 class="text-muted mb-2"><small>Option 1: PFX / PKCS#12</small></h6>
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label class="form-label">PFX File Path</label>
+                                        <InputText class="form-control" @bind-Value="Settings.TlsPfxPath" placeholder="/data/tls/cert.pfx" />
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">PFX Password</label>
+                                        <InputText type="password" class="form-control" @bind-Value="Settings.TlsPfxPassword" />
+                                    </div>
+                                </div>
+
+                                <hr />
+
+                                <h6 class="text-muted mb-2"><small>Option 2: PEM Certificate + Key (e.g., Let's Encrypt)</small></h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Certificate Path</label>
+                                        <InputText class="form-control" @bind-Value="Settings.TlsCertPath" placeholder="/data/tls/fullchain.pem" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Private Key Path</label>
+                                        <InputText class="form-control" @bind-Value="Settings.TlsKeyPath" placeholder="/data/tls/privkey.pem" />
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+
                 <!-- SSH Server -->
                 <div class="card mb-4">
                     <div class="card-header">
@@ -1108,6 +1205,11 @@ else
     private string? LdapTestMessage;
     private bool LdapTestSuccess;
 
+    // TLS certificate
+    private bool regeneratingCert;
+    private string? certMessage;
+    private bool certMessageSuccess;
+
     // Database config
     private DatabaseConfig DbConfig = new();
     private string? DbConfigMessage;
@@ -1191,6 +1293,30 @@ else
         {
             DbConfigSuccess = false;
             DbConfigMessage = $"Failed to save: {ex.Message}";
+        }
+    }
+
+    private async Task RegenerateSelfSignedCert()
+    {
+        regeneratingCert = true;
+        certMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            await Task.Run(() => TlsBootstrap.GenerateSelfSignedCert());
+            certMessage = "Self-signed certificate generated successfully. Restart the application to use it.";
+            certMessageSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            certMessage = $"Failed to generate certificate: {ex.Message}";
+            certMessageSuccess = false;
+        }
+        finally
+        {
+            regeneratingCert = false;
+            StateHasChanged();
         }
     }
 

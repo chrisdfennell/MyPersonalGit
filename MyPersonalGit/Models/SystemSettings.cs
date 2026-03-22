@@ -60,6 +60,16 @@ public class SystemSettings
     // AGit Flow (push to refs/for/*)
     public bool AGitFlowEnabled { get; set; } = true;
 
+    // TLS / HTTPS
+    public bool EnableHttps { get; set; }
+    public int HttpsPort { get; set; } = 8443;
+    public bool HttpsRedirect { get; set; }
+    public string TlsCertSource { get; set; } = "none"; // "none", "file", "selfSigned"
+    public string TlsCertPath { get; set; } = string.Empty;
+    public string TlsKeyPath { get; set; } = string.Empty;
+    public string TlsPfxPath { get; set; } = string.Empty;
+    public string TlsPfxPassword { get; set; } = string.Empty;
+
     // Footer Pages (customizable content)
     public string SiteName { get; set; } = "PersonalGit";
     public string FooterTerms { get; set; } = "## Terms of Service\n\nBy using this MyPersonalGit instance, you agree to use it responsibly.\n\n- Do not upload malicious code or content that violates applicable laws.\n- Administrators reserve the right to remove content or disable accounts.\n- This is a self-hosted service — your data stays on this server.\n\nFor questions, contact your instance administrator.";
