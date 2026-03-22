@@ -484,6 +484,7 @@
 
     private static readonly MarkdownPipeline _mdPipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
+        .UseEmojiAndSmiley()
         .Build();
 
     private string RenderMarkdown(string markdown)
