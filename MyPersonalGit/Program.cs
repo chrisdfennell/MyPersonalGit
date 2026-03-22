@@ -621,17 +621,46 @@ using (var scope = app.Services.CreateScope())
     // Cleanup: fix orphaned fork records and recalculate fork counts
     try
     {
+        // Get project root — read from SystemSettings in DB, fall back to config
+        var forkCleanupRoot = builder.Configuration["Git:ProjectRoot"] ?? builder.Configuration["Git:ReposPath"] ?? "/repos";
+        var settingsForRoot = db.SystemSettings.FirstOrDefault();
+        if (settingsForRoot != null && !string.IsNullOrEmpty(settingsForRoot.ProjectRoot))
+            forkCleanupRoot = settingsForRoot.ProjectRoot;
+
         var allRepoNames = db.Repositories.Select(r => r.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var allForks = db.RepositoryForks.ToList();
-        var orphanedForks = allForks.Where(f => !allRepoNames.Contains(f.ForkedRepo)).ToList();
+
+        // Remove fork records where forked repo doesn't exist in DB OR on disk
+        var orphanedForks = allForks.Where(f =>
+        {
+            if (!allRepoNames.Contains(f.ForkedRepo)) return true;
+            // Also check if the forked repo exists on disk
+            var diskPath = Path.Combine(forkCleanupRoot, f.ForkedRepo);
+            return !Directory.Exists(diskPath) && !Directory.Exists(diskPath + ".git");
+        }).ToList();
 
         if (orphanedForks.Count > 0)
         {
             db.RepositoryForks.RemoveRange(orphanedForks);
             Console.WriteLine($"==> Cleaned up {orphanedForks.Count} orphaned fork record(s)");
+
+            // Also remove the DB entry for forked repos that don't exist on disk
+            foreach (var orphan in orphanedForks)
+            {
+                var deadRepo = db.Repositories.FirstOrDefault(r => r.Name == orphan.ForkedRepo);
+                if (deadRepo != null)
+                {
+                    var diskPath = Path.Combine(forkCleanupRoot, deadRepo.Name);
+                    if (!Directory.Exists(diskPath) && !Directory.Exists(diskPath + ".git"))
+                    {
+                        db.Repositories.Remove(deadRepo);
+                        Console.WriteLine($"==> Removed dead repo record: {deadRepo.Name}");
+                    }
+                }
+            }
         }
 
-        // Recalculate fork counts from actual fork records (not orphaned ones)
+        // Recalculate fork counts from remaining valid fork records
         var remainingForks = allForks.Except(orphanedForks).ToList();
         var forkCountsBySource = remainingForks
             .GroupBy(f => f.OriginalRepo, StringComparer.OrdinalIgnoreCase)
