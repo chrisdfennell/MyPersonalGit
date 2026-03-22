@@ -186,3 +186,25 @@ h1:focus {
     color: #e6edf3;
     caret-color: #e6edf3;
 }
+
+/* Blazor reconnect dialog — dark mode */
+[data-bs-theme="dark"] dialog#components-reconnect-modal,
+[data-bs-theme="dark"] #components-reconnect-modal {
+    background-color: #1e1e2e !important;
+    color: #c9d1d9 !important;
+    border-color: #444 !important;
+}
+
+[data-bs-theme="dark"] dialog#components-reconnect-modal p,
+[data-bs-theme="dark"] #components-reconnect-modal p {
+    color: #8b949e !important;
+}
+
+[data-bs-theme="dark"] dialog#components-reconnect-modal::backdrop {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+[data-bs-theme="dark"] dialog#components-reconnect-modal .components-rejoining-animation div,
+[data-bs-theme="dark"] #components-reconnect-modal .components-rejoining-animation div {
+    border-color: #58a6ff;
+}
