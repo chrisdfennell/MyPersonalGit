@@ -29,3 +29,6 @@ MyPersonalGit.Tests/
 
 ## Certs
 *.crt
+
+## MailMap
+*.mailmap

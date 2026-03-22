@@ -12,6 +12,7 @@
 
 /* Sidebar */
 .ide-sidebar {
+    grid-column: 1;
     grid-row: 1 / -1;
     display: flex;
     width: 280px;
