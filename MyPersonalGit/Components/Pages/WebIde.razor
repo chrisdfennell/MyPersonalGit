@@ -15,8 +15,7 @@
 @inject IAdminService AdminService
 @implements IAsyncDisposable
 
-<div class="ide-container @(isZenMode ? "ide-zen-mode" : "")" @onkeydown="HandleGlobalKeyDown" tabindex="0" @ref="ideContainerRef"
-     style="@(sidebarWidth > 0 ? $"grid-template-columns: {sidebarWidth}px auto 1fr;" : "")">
+<div class="ide-container @(isZenMode ? "ide-zen-mode" : "")" @onkeydown="HandleGlobalKeyDown" tabindex="0" @ref="ideContainerRef">
     <div class="ide-sidebar" style="@(sidebarWidth > 0 ? $"width:{sidebarWidth}px;" : "")">
         <div class="ide-sidebar-tabs">
             <button class="ide-sidebar-tab @(sidebarMode == "files" ? "active" : "")" @onclick='() => sidebarMode = "files"' title="Explorer">
@@ -140,7 +139,7 @@
             }
         </div>
     </div>
-    <div class="ide-resize-handle ide-resize-sidebar" @onmousedown="StartSidebarResize"></div>
+    <div class="ide-resize-handle ide-resize-sidebar" style="left: @(sidebarWidth > 0 ? sidebarWidth : 280)px;" @onmousedown="StartSidebarResize"></div>
 
     <div class="ide-tabs">
         <div class="ide-tabs-row">
@@ -260,8 +259,8 @@
         }
     </div>
 
-    <div class="ide-resize-handle ide-resize-bottom" @onmousedown="StartBottomResize"></div>
     <div class="ide-bottom-panel @(showHistory ? "expanded" : "")" style="@(bottomPanelHeight > 0 ? $"max-height:{bottomPanelHeight}px;height:{bottomPanelHeight}px;" : "")">
+        <div class="ide-resize-bottom" @onmousedown="StartBottomResize"></div>
         <div class="ide-bottom-tabs">
             <button class="ide-bottom-tab @(bottomPanelMode == "commits" ? "active" : "")" @onclick='() => bottomPanelMode = "commits"'>
                 <i class="bi bi-git me-1"></i>Commits
