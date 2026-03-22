@@ -7,6 +7,7 @@ namespace MyPersonalGit.Services;
 public record TlsSettings(
     bool Enabled,
     int HttpsPort,
+    int HttpsExternalPort,
     bool HttpsRedirect,
     string CertSource, // "none", "file", "selfSigned"
     string CertPath,
@@ -26,7 +27,7 @@ public static class TlsBootstrap
     /// </summary>
     public static TlsSettings ReadTlsSettings(IConfiguration config)
     {
-        var defaults = new TlsSettings(false, 8443, false, "none", "", "", "", "");
+        var defaults = new TlsSettings(false, 8443, 8443, false, "none", "", "", "", "");
 
         // Determine the database path from the connection string
         var connStr = config.GetConnectionString("DefaultConnection")
@@ -67,7 +68,7 @@ public static class TlsBootstrap
             conn.Open();
 
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"SELECT ""EnableHttps"", ""HttpsPort"", ""HttpsRedirect"",
+            cmd.CommandText = @"SELECT ""EnableHttps"", ""HttpsPort"", ""HttpsExternalPort"", ""HttpsRedirect"",
                 ""TlsCertSource"", ""TlsCertPath"", ""TlsKeyPath"", ""TlsPfxPath"", ""TlsPfxPassword""
                 FROM ""SystemSettings"" LIMIT 1";
 
@@ -77,12 +78,13 @@ public static class TlsBootstrap
                 return new TlsSettings(
                     Enabled: reader.GetInt64(0) != 0,
                     HttpsPort: (int)reader.GetInt64(1),
-                    HttpsRedirect: reader.GetInt64(2) != 0,
-                    CertSource: reader.GetString(3),
-                    CertPath: reader.GetString(4),
-                    KeyPath: reader.GetString(5),
-                    PfxPath: reader.GetString(6),
-                    PfxPassword: reader.GetString(7)
+                    HttpsExternalPort: (int)reader.GetInt64(2),
+                    HttpsRedirect: reader.GetInt64(3) != 0,
+                    CertSource: reader.GetString(4),
+                    CertPath: reader.GetString(5),
+                    KeyPath: reader.GetString(6),
+                    PfxPath: reader.GetString(7),
+                    PfxPassword: reader.GetString(8)
                 );
             }
         }

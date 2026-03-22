@@ -259,6 +259,7 @@ using (var scope = app.Services.CreateScope())
     // From 20260322: TLS / HTTPS settings
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""EnableHttps"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""HttpsPort"" INTEGER NOT NULL DEFAULT 8443;"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""HttpsExternalPort"" INTEGER NOT NULL DEFAULT 8443;"); } catch { }
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""HttpsRedirect"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""TlsCertSource"" TEXT NOT NULL DEFAULT 'none';"); } catch { }
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""TlsCertPath"" TEXT NOT NULL DEFAULT '';"); } catch { }
@@ -656,10 +657,22 @@ app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MyPersonalG
 // Only redirect HTTP to HTTPS if explicitly enabled in settings
 try
 {
-    var tlsSettings = TlsBootstrap.ReadTlsSettings(builder.Configuration);
-    if (tlsSettings.Enabled && tlsSettings.HttpsRedirect)
+    var redirectTlsSettings = TlsBootstrap.ReadTlsSettings(builder.Configuration);
+    if (redirectTlsSettings.Enabled && redirectTlsSettings.HttpsRedirect)
     {
-        app.UseHttpsRedirection();
+        app.Use(async (context, next) =>
+        {
+            if (!context.Request.IsHttps)
+            {
+                var host = context.Request.Host.Host;
+                var port = redirectTlsSettings.HttpsExternalPort;
+                var path = context.Request.Path + context.Request.QueryString;
+                var redirectUrl = $"https://{host}:{port}{path}";
+                context.Response.Redirect(redirectUrl, permanent: false);
+                return;
+            }
+            await next();
+        });
     }
 }
 catch { }
