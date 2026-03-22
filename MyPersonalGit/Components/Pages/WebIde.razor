@@ -13,24 +13,27 @@
 @inject NavigationManager Navigation
 @inject CurrentUserService UserService
 @inject IAdminService AdminService
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@inject IStringLocalizer<SharedResource> L
 @implements IAsyncDisposable
 
 <div class="ide-container @(isZenMode ? "ide-zen-mode" : "")" @onkeydown="HandleGlobalKeyDown" tabindex="0" @ref="ideContainerRef">
     <div class="ide-sidebar" style="@(sidebarWidth > 0 ? $"width:{sidebarWidth}px;" : "")">
         <div class="ide-sidebar-tabs">
-            <button class="ide-sidebar-tab @(sidebarMode == "files" ? "active" : "")" @onclick='() => sidebarMode = "files"' title="Explorer">
+            <button class="ide-sidebar-tab @(sidebarMode == "files" ? "active" : "")" @onclick='() => sidebarMode = "files"' title="@L["Ide_Explorer"]">
                 <i class="bi bi-files"></i>
             </button>
-            <button class="ide-sidebar-tab @(sidebarMode == "search" ? "active" : "")" @onclick='() => sidebarMode = "search"' title="Search">
+            <button class="ide-sidebar-tab @(sidebarMode == "search" ? "active" : "")" @onclick='() => sidebarMode = "search"' title="@L["Ide_Search"]">
                 <i class="bi bi-search"></i>
             </button>
-            <button class="ide-sidebar-tab @(sidebarMode == "sourcecontrol" ? "active" : "")" @onclick='() => sidebarMode = "sourcecontrol"' title="Source Control">
+            <button class="ide-sidebar-tab @(sidebarMode == "sourcecontrol" ? "active" : "")" @onclick='() => sidebarMode = "sourcecontrol"' title="@L["Ide_SourceControl"]">
                 <i class="bi bi-git"></i>
             </button>
-            <button class="ide-sidebar-tab @(sidebarMode == "outline" ? "active" : "")" @onclick="OpenOutlinePanel" title="Outline">
+            <button class="ide-sidebar-tab @(sidebarMode == "outline" ? "active" : "")" @onclick="OpenOutlinePanel" title="@L["Ide_Outline"]">
                 <i class="bi bi-list-nested"></i>
             </button>
-            <button class="ide-sidebar-tab @(sidebarMode == "settings" ? "active" : "")" @onclick='() => sidebarMode = "settings"' title="Settings" style="margin-top: auto;">
+            <button class="ide-sidebar-tab @(sidebarMode == "settings" ? "active" : "")" @onclick='() => sidebarMode = "settings"' title="@L["Ide_Settings"]" style="margin-top: auto;">
                 <i class="bi bi-gear"></i>
             </button>
         </div>
@@ -58,7 +61,7 @@
             {
                 <div class="ide-source-control">
                     <div class="ide-sc-header px-3 py-2">
-                        <span class="small fw-semibold">Source Control</span>
+                        <span class="small fw-semibold">@L["Ide_SourceControl"]</span>
                         @if (modifiedFiles.Count > 0)
                         {
                             <span class="badge bg-primary rounded-pill ms-2">@modifiedFiles.Count</span>
@@ -67,7 +70,7 @@
                     @if (modifiedFiles.Count == 0)
                     {
                         <div class="text-muted small px-3 py-2">
-                            <i class="bi bi-check-circle me-1"></i>No changes
+                            <i class="bi bi-check-circle me-1"></i>@L["Ide_NoChanges"]
                         </div>
                     }
                     else
@@ -76,7 +79,7 @@
                             @foreach (var filePath in modifiedFiles)
                             {
                                 var fileName = System.IO.Path.GetFileName(filePath);
-                                <div class="ide-sc-file" @onclick="() => OpenDiffView(filePath)" title="Click to view diff">
+                                <div class="ide-sc-file" @onclick="() => OpenDiffView(filePath)" title="@L["Ide_ClickViewDiff"]">
                                     <i class="bi bi-file-earmark-diff me-2 text-warning"></i>
                                     <span class="ide-sc-filename">@fileName</span>
                                     <span class="ide-sc-filepath text-muted ms-2">@filePath</span>
@@ -90,7 +93,7 @@
             {
                 <div class="ide-source-control">
                     <div class="ide-sc-header px-3 py-2">
-                        <span class="small fw-semibold">Outline</span>
+                        <span class="small fw-semibold">@L["Ide_Outline"]</span>
                         @if (activeTabPath != null)
                         {
                             <button class="btn btn-sm btn-link text-muted p-0 ms-auto" @onclick="RefreshOutline" title="Refresh">
@@ -101,7 +104,7 @@
                     @if (activeTabPath == null)
                     {
                         <div class="text-muted small px-3 py-2">
-                            <i class="bi bi-info-circle me-1"></i>Open a file to see its outline
+                            <i class="bi bi-info-circle me-1"></i>@L["Ide_OpenFileOutline"]
                         </div>
                     }
                     else if (isLoadingOutline)
@@ -113,7 +116,7 @@
                     else if (outlineSymbols.Count == 0)
                     {
                         <div class="text-muted small px-3 py-2">
-                            <i class="bi bi-info-circle me-1"></i>No symbols found
+                            <i class="bi bi-info-circle me-1"></i>@L["Ide_NoSymbolsFound"]
                         </div>
                     }
                     else
@@ -153,20 +156,20 @@
             {
                 @if (activeTabPath != null && IsMarkdownFile(activeTabPath))
                 {
-                    <button class="ide-action-btn @(showMarkdownPreview ? "active" : "")" @onclick="ToggleMarkdownPreview" title="Toggle Preview">
+                    <button class="ide-action-btn @(showMarkdownPreview ? "active" : "")" @onclick="ToggleMarkdownPreview" title="@L["Ide_TogglePreview"]">
                         <i class="bi bi-eye"></i>
                     </button>
                 }
-                <button class="ide-action-btn @(isBlameActive ? "active" : "")" @onclick="ToggleBlame" title="@(isBlameActive ? "Hide Git Blame" : "Show Git Blame")">
+                <button class="ide-action-btn @(isBlameActive ? "active" : "")" @onclick="ToggleBlame" title="@(isBlameActive ? L["Ide_HideGitBlame"] : L["Ide_ShowGitBlame"])">
                     <i class="bi bi-person-lines-fill"></i>
                 </button>
-                <button class="ide-action-btn" @onclick="ShowFileHistory" title="File History">
+                <button class="ide-action-btn" @onclick="ShowFileHistory" title="@L["Ide_FileHistory"]">
                     <i class="bi bi-clock-history"></i>
                 </button>
-                <button class="ide-action-btn" @onclick="HandleToggleMinimap" title="Toggle Minimap">
+                <button class="ide-action-btn" @onclick="HandleToggleMinimap" title="@L["Ide_ToggleMinimap"]">
                     <i class="bi bi-map"></i>
                 </button>
-                <button class="ide-split-btn" @onclick="ToggleSplitEditor" title="@(isSplit ? "Close Split" : "Split Editor")">
+                <button class="ide-split-btn" @onclick="ToggleSplitEditor" title="@(isSplit ? L["Ide_CloseSplit"] : L["Ide_SplitEditor"])">
                     <i class="bi @(isSplit ? "bi-layout-sidebar-reverse" : "bi-layout-split")"></i>
                 </button>
             }
@@ -190,17 +193,17 @@
         @if (isLoading)
         {
             <div class="d-flex align-items-center justify-content-center h-100 text-muted">
-                <span class="spinner-border spinner-border-sm me-2"></span>Loading...
+                <span class="spinner-border spinner-border-sm me-2"></span>@L["Ide_Loading"]
             </div>
         }
         else if (openTabs.Count == 0 && !showDiffView)
         {
             <div class="ide-welcome d-flex flex-column align-items-center justify-content-center h-100 text-muted">
                 <i class="bi bi-braces display-3 mb-3 opacity-25"></i>
-                <h5 class="fw-light opacity-50">Web IDE</h5>
-                <p class="small opacity-50">Open a file from the explorer or press <kbd>Ctrl+P</kbd> to get started</p>
+                <h5 class="fw-light opacity-50">@L["Ide_WebIde"]</h5>
+                <p class="small opacity-50">@L["Ide_WelcomeMessage"] <kbd>Ctrl+P</kbd> @L["Ide_ToGetStarted"]</p>
                 <div class="mt-3 small opacity-50">
-                    <p class="mb-1"><kbd>Ctrl+Shift+P</kbd> Commands &middot; <kbd>Ctrl+P</kbd> Quick Open &middot; <kbd>Ctrl+`</kbd> Terminal &middot; <kbd>?</kbd> Shortcuts</p>
+                    <p class="mb-1"><kbd>Ctrl+Shift+P</kbd> @L["Ide_Commands"] &middot; <kbd>Ctrl+P</kbd> @L["Ide_QuickOpen"] &middot; <kbd>Ctrl+`</kbd> @L["Ide_Terminal"] &middot; <kbd>?</kbd> @L["Ide_Shortcuts"]</p>
                 </div>
             </div>
         }
@@ -209,7 +212,7 @@
         {
             <div class="ide-diff-header px-3 py-1">
                 <i class="bi bi-file-earmark-diff me-2"></i>
-                <span class="small">Diff: @diffFilePath</span>
+                <span class="small">@L["Ide_Diff"]: @diffFilePath</span>
                 <button class="btn btn-sm btn-link text-muted ms-auto p-0" @onclick="CloseDiffView">
                     <i class="bi bi-x-lg"></i>
                 </button>
@@ -226,10 +229,10 @@
         {
             <div class="ide-preview ide-markdown-preview">
                 <div class="ide-markdown-toolbar">
-                    <button class="ide-action-btn active" title="Preview">
+                    <button class="ide-action-btn active" title="@L["Ide_Preview"]">
                         <i class="bi bi-eye"></i>
                     </button>
-                    <button class="ide-action-btn" @onclick="() => { showMarkdownPreview = false; StateHasChanged(); }" title="Edit">
+                    <button class="ide-action-btn" @onclick="() => { showMarkdownPreview = false; StateHasChanged(); }" title="@L["Ide_Edit"]">
                         <i class="bi bi-pencil"></i>
                     </button>
                 </div>
@@ -243,7 +246,7 @@
             @if (activeTabPath != null && IsMarkdownFile(activeTabPath) && !showMarkdownPreview)
             {
                 <div class="ide-markdown-toolbar" style="position: absolute; top: 4px; right: 20px; z-index: 5;">
-                    <button class="ide-action-btn" @onclick="ToggleMarkdownPreview" title="Preview">
+                    <button class="ide-action-btn" @onclick="ToggleMarkdownPreview" title="@L["Ide_Preview"]">
                         <i class="bi bi-eye"></i>
                     </button>
                 </div>
@@ -263,13 +266,13 @@
         <div class="ide-resize-bottom" @onmousedown="StartBottomResize"></div>
         <div class="ide-bottom-tabs">
             <button class="ide-bottom-tab @(bottomPanelMode == "commits" ? "active" : "")" @onclick='() => bottomPanelMode = "commits"'>
-                <i class="bi bi-git me-1"></i>Commits
+                <i class="bi bi-git me-1"></i>@L["Ide_Commits"]
             </button>
             <button class="ide-bottom-tab @(bottomPanelMode == "graph" ? "active" : "")" @onclick="LoadCommitGraph">
-                <i class="bi bi-diagram-3 me-1"></i>Graph
+                <i class="bi bi-diagram-3 me-1"></i>@L["Ide_Graph"]
             </button>
             <button class="ide-bottom-tab @(bottomPanelMode == "terminal" ? "active" : "")" @onclick="ToggleTerminal">
-                <i class="bi bi-terminal me-1"></i>Terminal
+                <i class="bi bi-terminal me-1"></i>@L["Ide_Terminal"]
             </button>
             @if (bottomPanelMode == "terminal")
             {
@@ -286,14 +289,14 @@
                         }
                     </button>
                 }
-                <button class="ide-bottom-tab ide-term-add" @onclick="AddTerminal" title="New Terminal">
+                <button class="ide-bottom-tab ide-term-add" @onclick="AddTerminal" title="@L["Ide_NewTerminal"]">
                     <i class="bi bi-plus"></i>
                 </button>
             }
             @if (showHistory)
             {
                 <button class="ide-bottom-tab @(bottomPanelMode == "history" ? "active" : "")" @onclick='() => bottomPanelMode = "history"'>
-                    <i class="bi bi-clock-history me-1"></i>History
+                    <i class="bi bi-clock-history me-1"></i>@L["Ide_History"]
                     <button class="btn btn-sm btn-link text-muted p-0 ms-1" @onclick="CloseHistory" @onclick:stopPropagation="true">
                         <i class="bi bi-x"></i>
                     </button>
@@ -315,7 +318,7 @@
                 }
                 else if (commitGraph.Count == 0)
                 {
-                    <div class="text-muted small px-3 py-2">No commits</div>
+                    <div class="text-muted small px-3 py-2">@L["Ide_NoCommits"]</div>
                 }
                 else
                 {
@@ -380,7 +383,7 @@
                 }
                 else if (fileHistory.Count == 0)
                 {
-                    <div class="text-muted small px-3 py-2">No history found</div>
+                    <div class="text-muted small px-3 py-2">@L["Ide_NoHistoryFound"]</div>
                 }
                 else
                 {
@@ -406,43 +409,43 @@
 
     <div class="ide-status-bar">
         <div class="ide-status-left">
-            <span class="ide-status-item" title="Branch">
+            <span class="ide-status-item" title="@L["Ide_Branch"]">
                 <i class="bi bi-git me-1"></i>@currentBranch
             </span>
             @if (modifiedFiles.Count > 0)
             {
-                <span class="ide-status-item text-warning" title="Unsaved changes">
-                    <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>@modifiedFiles.Count change(s)
+                <span class="ide-status-item text-warning" title="@L["Ide_UnsavedChanges"]">
+                    <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>@modifiedFiles.Count @L["Ide_Change"]
                 </span>
             }
         </div>
         <div class="ide-status-right">
             @if (activeTabPath != null)
             {
-                <span class="ide-status-item" title="Cursor position">
+                <span class="ide-status-item" title="@L["Ide_CursorPosition"]">
                     Ln @cursorLine, Col @cursorColumn
                 </span>
                 @if (selectionLength > 0)
                 {
-                    <span class="ide-status-item" title="Selection">
-                        (@selectionLength selected)
+                    <span class="ide-status-item" title="@L["Ide_Selection"]">
+                        (@selectionLength @L["Ide_Selected"])
                     </span>
                 }
-                <button class="ide-status-item ide-status-btn" @onclick="HandleToggleWordWrap" title="Toggle Word Wrap">
-                    <i class="bi bi-text-wrap me-1"></i>@(currentWordWrap == "on" ? "Wrap: On" : "Wrap: Off")
+                <button class="ide-status-item ide-status-btn" @onclick="HandleToggleWordWrap" title="@L["Ide_ToggleWordWrap"]">
+                    <i class="bi bi-text-wrap me-1"></i>@(currentWordWrap == "on" ? L["Ide_WrapOn"] : L["Ide_WrapOff"])
                 </button>
-                <span class="ide-status-item" title="Language">
+                <span class="ide-status-item" title="@L["Ide_Language"]">
                     @GetLanguageDisplayName(activeTabPath)
                 </span>
-                <span class="ide-status-item" title="Encoding">
+                <span class="ide-status-item" title="@L["Ide_Encoding"]">
                     UTF-8
                 </span>
             }
-            <button class="ide-status-item ide-status-btn" @onclick="ToggleZenMode" title="Zen Mode">
+            <button class="ide-status-item ide-status-btn" @onclick="ToggleZenMode" title="@L["Ide_ZenMode"]">
                 <i class="bi bi-arrows-fullscreen"></i>
             </button>
-            <button class="ide-status-item ide-status-btn" @onclick="() => { showShortcutHelp = true; StateHasChanged(); }" title="Keyboard Shortcuts">
-                <i class="bi bi-keyboard me-1"></i>Shortcuts
+            <button class="ide-status-item ide-status-btn" @onclick="() => { showShortcutHelp = true; StateHasChanged(); }" title="@L["Ide_KeyboardShortcuts"]">
+                <i class="bi bi-keyboard me-1"></i>@L["Ide_Shortcuts"]
             </button>
         </div>
     </div>

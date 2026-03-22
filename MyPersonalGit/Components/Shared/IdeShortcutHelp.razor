@@ -1,43 +1,47 @@
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@inject IStringLocalizer<SharedResource> L
+
 <div class="ide-shortcut-overlay" @onclick="HandleOverlayClick">
     <div class="ide-shortcut-dialog" @onclick:stopPropagation="true">
         <div class="ide-shortcut-header">
-            <span class="fw-semibold">Keyboard Shortcuts</span>
+            <span class="fw-semibold">@L["Ide_KeyboardShortcuts"]</span>
             <button class="btn btn-sm btn-link text-muted p-0" @onclick="Close">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
         <div class="ide-shortcut-body">
             <div class="ide-shortcut-section">
-                <div class="ide-shortcut-section-title">General</div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+Shift+P</kbd><span>Command Palette</span></div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+P</kbd><span>Quick Open File</span></div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+Shift+F</kbd><span>Search in Files</span></div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+`</kbd><span>Toggle Terminal</span></div>
-                <div class="ide-shortcut-row"><kbd>?</kbd><span>Show This Help</span></div>
+                <div class="ide-shortcut-section-title">@L["Ide_ShortGeneral"]</div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+Shift+P</kbd><span>@L["Ide_ShortCommandPalette"]</span></div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+P</kbd><span>@L["Ide_ShortQuickOpen"]</span></div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+Shift+F</kbd><span>@L["Ide_ShortSearchFiles"]</span></div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+`</kbd><span>@L["Ide_ShortToggleTerminal"]</span></div>
+                <div class="ide-shortcut-row"><kbd>?</kbd><span>@L["Ide_ShortShowHelp"]</span></div>
             </div>
             <div class="ide-shortcut-section">
-                <div class="ide-shortcut-section-title">Editor</div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+S</kbd><span>Save (in editor)</span></div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+F</kbd><span>Find in File</span></div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+H</kbd><span>Find and Replace</span></div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+G</kbd><span>Go to Line</span></div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+D</kbd><span>Select Next Occurrence</span></div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+/</kbd><span>Toggle Comment</span></div>
-                <div class="ide-shortcut-row"><kbd>Alt+Up/Down</kbd><span>Move Line Up/Down</span></div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+Shift+K</kbd><span>Delete Line</span></div>
+                <div class="ide-shortcut-section-title">@L["Ide_ShortEditor"]</div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+S</kbd><span>@L["Ide_ShortSave"]</span></div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+F</kbd><span>@L["Ide_ShortFindInFile"]</span></div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+H</kbd><span>@L["Ide_ShortFindReplace"]</span></div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+G</kbd><span>@L["Ide_ShortGoToLine"]</span></div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+D</kbd><span>@L["Ide_ShortSelectNext"]</span></div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+/</kbd><span>@L["Ide_ShortToggleComment"]</span></div>
+                <div class="ide-shortcut-row"><kbd>Alt+Up/Down</kbd><span>@L["Ide_ShortMoveLine"]</span></div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+Shift+K</kbd><span>@L["Ide_ShortDeleteLine"]</span></div>
             </div>
             <div class="ide-shortcut-section">
-                <div class="ide-shortcut-section-title">Navigation</div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+Tab</kbd><span>Switch Tab (browser)</span></div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+W</kbd><span>Close Tab (browser)</span></div>
+                <div class="ide-shortcut-section-title">@L["Ide_ShortNavigation"]</div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+Tab</kbd><span>@L["Ide_ShortSwitchTab"]</span></div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+W</kbd><span>@L["Ide_ShortCloseTab"]</span></div>
             </div>
             <div class="ide-shortcut-section">
-                <div class="ide-shortcut-section-title">View</div>
-                <div class="ide-shortcut-row"><kbd>Zen Mode</kbd><span>Distraction-free editing (Esc to exit)</span></div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+K Ctrl+0</kbd><span>Fold All (Monaco built-in)</span></div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+K Ctrl+J</kbd><span>Unfold All (Monaco built-in)</span></div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+Shift+[</kbd><span>Fold Region</span></div>
-                <div class="ide-shortcut-row"><kbd>Ctrl+Shift+]</kbd><span>Unfold Region</span></div>
+                <div class="ide-shortcut-section-title">@L["Ide_ShortView"]</div>
+                <div class="ide-shortcut-row"><kbd>Zen Mode</kbd><span>@L["Ide_ShortZenMode"]</span></div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+K Ctrl+0</kbd><span>@L["Ide_ShortFoldAll"]</span></div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+K Ctrl+J</kbd><span>@L["Ide_ShortUnfoldAll"]</span></div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+Shift+[</kbd><span>@L["Ide_ShortFoldRegion"]</span></div>
+                <div class="ide-shortcut-row"><kbd>Ctrl+Shift+]</kbd><span>@L["Ide_ShortUnfoldRegion"]</span></div>
             </div>
         </div>
     </div>

@@ -1,17 +1,20 @@
 @using MyPersonalGit.Data
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
 @inject IWebIdeService WebIdeService
+@inject IStringLocalizer<SharedResource> L
 
 <div class="ide-search-panel">
     <div class="ide-search-header px-2 py-1 border-bottom">
-        <span class="small fw-semibold"><i class="bi bi-search me-1"></i>Search</span>
-        <button class="btn btn-sm btn-link text-muted p-0 ms-auto" @onclick="ToggleReplace" title="Toggle Replace">
+        <span class="small fw-semibold"><i class="bi bi-search me-1"></i>@L["Ide_Search"]</span>
+        <button class="btn btn-sm btn-link text-muted p-0 ms-auto" @onclick="ToggleReplace" title="@L["Ide_ToggleReplace"]">
             <i class="bi @(showReplace ? "bi-chevron-down" : "bi-chevron-right")"></i>
         </button>
     </div>
 
     <div class="ide-search-inputs px-2 py-2">
         <div class="input-group input-group-sm mb-1">
-            <input type="text" class="form-control" placeholder="Search in files..."
+            <input type="text" class="form-control" placeholder="@L["Ide_SearchInFiles"]"
                    @bind="searchQuery" @bind:event="oninput"
                    @onkeydown="HandleSearchKeyDown" />
             <button class="btn btn-outline-secondary" @onclick="ExecuteSearch" disabled="@isSearching">
@@ -21,15 +24,15 @@
         @if (showReplace)
         {
             <div class="input-group input-group-sm mb-1">
-                <input type="text" class="form-control" placeholder="Replace with..."
+                <input type="text" class="form-control" placeholder="@L["Ide_ReplaceWith"]"
                        @bind="replaceText" @bind:event="oninput" />
                 <button class="btn btn-outline-secondary" @onclick="ReplaceAll" disabled="@(isSearching || results == null || results.Count == 0)"
-                        title="Replace All">
+                        title="@L["Ide_ReplaceAll"]">
                     <i class="bi bi-arrow-repeat"></i>
                 </button>
             </div>
         }
-        <input type="text" class="form-control form-control-sm" placeholder="File extension filter (e.g. .cs)"
+        <input type="text" class="form-control form-control-sm" placeholder="@L["Ide_FileExtFilter"]"
                @bind="extFilter" @bind:event="oninput" />
     </div>
 
@@ -38,7 +41,7 @@
         {
             <div class="text-center py-3">
                 <span class="spinner-border spinner-border-sm text-muted"></span>
-                <span class="text-muted small ms-1">Searching...</span>
+                <span class="text-muted small ms-1">@L["Ide_Searching"]</span>
             </div>
         }
         else if (replaceMessage != null)
@@ -50,7 +53,7 @@
         else if (hasSearched && (results == null || results.Count == 0))
         {
             <div class="text-muted small px-3 py-2">
-                <i class="bi bi-emoji-frown me-1"></i>No results found
+                <i class="bi bi-emoji-frown me-1"></i>@L["Ide_NoResults"]
             </div>
         }
         else if (results != null && results.Count > 0)
@@ -59,8 +62,8 @@
                 <span>@results.Count result(s) in @groupedResults.Count file(s)</span>
                 @if (showReplace && !string.IsNullOrEmpty(replaceText))
                 {
-                    <button class="btn btn-sm btn-link text-warning p-0 ms-auto" @onclick="ReplaceAll" title="Replace All">
-                        Replace All
+                    <button class="btn btn-sm btn-link text-warning p-0 ms-auto" @onclick="ReplaceAll" title="@L["Ide_ReplaceAll"]">
+                        @L["Ide_ReplaceAll"]
                     </button>
                 }
             </div>
@@ -75,7 +78,7 @@
                         @if (showReplace && !string.IsNullOrEmpty(replaceText))
                         {
                             <button class="btn btn-sm btn-link text-warning p-0 ms-2" @onclick="() => ReplaceInFile(group.Key)"
-                                    title="Replace all in this file">
+                                    title="@L["Ide_ReplaceAllInFile"]">
                                 <i class="bi bi-arrow-repeat"></i>
                             </button>
                         }

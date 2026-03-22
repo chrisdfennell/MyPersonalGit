@@ -1,10 +1,13 @@
 @using MyPersonalGit.Data
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@inject IStringLocalizer<SharedResource> L
 
 <div class="ide-file-tree" id="ide-file-tree-root">
     <div class="ide-file-tree-filter px-2 py-1">
         <div class="input-group input-group-sm">
             <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search" style="font-size: 0.75rem;"></i></span>
-            <input type="text" class="form-control border-start-0 ps-0" placeholder="Filter files..."
+            <input type="text" class="form-control border-start-0 ps-0" placeholder="@L["Ide_FilterFiles"]"
                    @bind="filterText" @bind:event="oninput" />
         </div>
     </div>
@@ -28,20 +31,20 @@
             @if (contextMenuIsFolder || contextMenuPath == null)
             {
                 <button class="dropdown-item small" @onclick="HandleContextNewFile">
-                    <i class="bi bi-file-earmark-plus me-2"></i>New File
+                    <i class="bi bi-file-earmark-plus me-2"></i>@L["Ide_NewFile"]
                 </button>
                 <button class="dropdown-item small" @onclick="HandleContextNewFolder">
-                    <i class="bi bi-folder-plus me-2"></i>New Folder
+                    <i class="bi bi-folder-plus me-2"></i>@L["Ide_NewFolder"]
                 </button>
             }
             @if (contextMenuPath != null)
             {
                 <button class="dropdown-item small" @onclick="HandleContextRename">
-                    <i class="bi bi-pencil me-2"></i>Rename
+                    <i class="bi bi-pencil me-2"></i>@L["Ide_Rename"]
                 </button>
                 <hr class="dropdown-divider" />
                 <button class="dropdown-item small text-danger" @onclick="HandleContextDelete">
-                    <i class="bi bi-trash me-2"></i>Delete
+                    <i class="bi bi-trash me-2"></i>@L["Ide_Delete"]
                 </button>
             }
         </div>
@@ -309,11 +312,11 @@
                     }
                     @if (isModified)
                     {
-                        <span class="tree-modified-dot" title="Modified"></span>
+                        <span class="tree-modified-dot" title="@L["Ide_Modified"]"></span>
                     }
                     @if (CanEdit)
                     {
-                        <button class="tree-action-btn" @onclick="() => OnDeletePath.InvokeAsync(node.Path)" @onclick:stopPropagation="true" title="Delete">
+                        <button class="tree-action-btn" @onclick="() => OnDeletePath.InvokeAsync(node.Path)" @onclick:stopPropagation="true" title="@L["Ide_Delete"]">
                             <i class="bi bi-trash"></i>
                         </button>
                     }
@@ -334,7 +337,7 @@
                                     <span class="tree-name tree-nested-name">@GetNestedSuffix(node.Name, child.Name)</span>
                                     @if (childModified)
                                     {
-                                        <span class="tree-modified-dot" title="Modified"></span>
+                                        <span class="tree-modified-dot" title="@L["Ide_Modified"]"></span>
                                     }
                                 </div>
                             </li>

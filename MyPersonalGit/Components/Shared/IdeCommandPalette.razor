@@ -1,14 +1,18 @@
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@inject IStringLocalizer<SharedResource> L
+
 <div class="ide-command-palette-overlay" @onclick="HandleOverlayClick" @onkeydown="HandleKeyDown">
     <div class="ide-command-palette-dialog" @onclick:stopPropagation="true">
         <div class="ide-command-palette-input-wrapper">
             <i class="bi bi-chevron-right me-2 text-muted"></i>
-            <input type="text" class="ide-command-palette-input" placeholder="Type a command..."
+            <input type="text" class="ide-command-palette-input" placeholder="@L["Ide_TypeCommand"]"
                    @ref="inputRef" @bind="filter" @bind:event="oninput" @onkeydown="HandleKeyDown" />
         </div>
         <div class="ide-command-palette-results">
             @if (FilteredCommands.Count == 0)
             {
-                <div class="ide-command-palette-empty">No matching commands</div>
+                <div class="ide-command-palette-empty">@L["Ide_NoMatchingCommands"]</div>
             }
             else
             {
@@ -45,28 +49,28 @@
 
     private List<CommandItem> AllCommands => new()
     {
-        new("quickOpen", "Quick Open File", "bi-folder2-open", "Ctrl+P"),
-        new("search", "Search in Files", "bi-search", "Ctrl+Shift+F"),
-        new("toggleTerminal", "Toggle Terminal", "bi-terminal", "Ctrl+`"),
-        new("splitEditor", "Toggle Split Editor", "bi-layout-split", null, true),
-        new("toggleTheme", "Toggle Theme (Light/Dark)", "bi-circle-half"),
-        new("toggleBlame", IsBlameActive ? "Hide Git Blame" : "Show Git Blame", "bi-person-lines-fill", null, true),
-        new("fileHistory", "Show File History", "bi-clock-history", null, true),
-        new("findReplace", "Find and Replace in Editor", "bi-arrow-left-right", "Ctrl+H", true),
-        new("goToLine", "Go to Line", "bi-hash", "Ctrl+G", true),
-        new("toggleMinimap", "Toggle Minimap", "bi-layout-sidebar-reverse", null, true),
-        new("closeTab", "Close Current Tab", "bi-x-lg", null, true),
-        new("closeAllTabs", "Close All Tabs", "bi-x-square"),
-        new("sourceControl", "Open Source Control", "bi-git"),
-        new("outline", "Open Outline", "bi-list-nested"),
-        new("settings", "Open Settings", "bi-gear"),
-        new("explorer", "Open File Explorer", "bi-files"),
-        new("zenMode", "Toggle Zen Mode", "bi-arrows-fullscreen"),
-        new("toggleWordWrap", "Toggle Word Wrap", "bi-text-wrap", null, true),
-        new("foldAll", "Fold All Regions", "bi-chevron-bar-contract", null, true),
-        new("unfoldAll", "Unfold All Regions", "bi-chevron-bar-expand", null, true),
-        new("showShortcuts", "Show Keyboard Shortcuts", "bi-keyboard", "?"),
-        new("toggleAutoSave", "Toggle Auto Save", "bi-save"),
+        new("quickOpen", L["Ide_CmdQuickOpen"], "bi-folder2-open", "Ctrl+P"),
+        new("search", L["Ide_CmdSearchFiles"], "bi-search", "Ctrl+Shift+F"),
+        new("toggleTerminal", L["Ide_CmdToggleTerminal"], "bi-terminal", "Ctrl+`"),
+        new("splitEditor", L["Ide_CmdToggleSplit"], "bi-layout-split", null, true),
+        new("toggleTheme", L["Ide_CmdToggleTheme"], "bi-circle-half"),
+        new("toggleBlame", IsBlameActive ? L["Ide_CmdHideBlame"] : L["Ide_CmdShowBlame"], "bi-person-lines-fill", null, true),
+        new("fileHistory", L["Ide_CmdFileHistory"], "bi-clock-history", null, true),
+        new("findReplace", L["Ide_CmdFindReplace"], "bi-arrow-left-right", "Ctrl+H", true),
+        new("goToLine", L["Ide_CmdGoToLine"], "bi-hash", "Ctrl+G", true),
+        new("toggleMinimap", L["Ide_CmdToggleMinimap"], "bi-layout-sidebar-reverse", null, true),
+        new("closeTab", L["Ide_CmdCloseTab"], "bi-x-lg", null, true),
+        new("closeAllTabs", L["Ide_CmdCloseAllTabs"], "bi-x-square"),
+        new("sourceControl", L["Ide_CmdSourceControl"], "bi-git"),
+        new("outline", L["Ide_CmdOutline"], "bi-list-nested"),
+        new("settings", L["Ide_CmdSettings"], "bi-gear"),
+        new("explorer", L["Ide_CmdExplorer"], "bi-files"),
+        new("zenMode", L["Ide_CmdZenMode"], "bi-arrows-fullscreen"),
+        new("toggleWordWrap", L["Ide_CmdWordWrap"], "bi-text-wrap", null, true),
+        new("foldAll", L["Ide_CmdFoldAll"], "bi-chevron-bar-contract", null, true),
+        new("unfoldAll", L["Ide_CmdUnfoldAll"], "bi-chevron-bar-expand", null, true),
+        new("showShortcuts", L["Ide_CmdShortcuts"], "bi-keyboard", "?"),
+        new("toggleAutoSave", L["Ide_CmdToggleAutoSave"], "bi-save"),
     };
 
     private List<CommandItem> FilteredCommands

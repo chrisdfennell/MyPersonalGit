@@ -1008,4 +1008,196 @@
 
   <!-- Branch delete -->
   <data name="PR_DeleteBranchAfterMerge" xml:space="preserve"><value>マージ後にソースブランチを削除</value></data>
+
+  <!-- IDEレイアウト -->
+  <data name="Ide_BackToRepo" xml:space="preserve"><value>リポジトリに戻る</value></data>
+  <data name="Ide_NewBranch" xml:space="preserve"><value>新しいブランチ</value></data>
+  <data name="Ide_ToggleTheme" xml:space="preserve"><value>テーマを切り替え</value></data>
+  <data name="Ide_CreateNewBranch" xml:space="preserve"><value>新しいブランチを作成</value></data>
+  <data name="Ide_BranchFrom" xml:space="preserve"><value>ブランチ元</value></data>
+  <data name="Ide_NewBranchName" xml:space="preserve"><value>新しいブランチ名</value></data>
+  <data name="Ide_BranchNameRequired" xml:space="preserve"><value>ブランチ名は必須です。</value></data>
+  <data name="Ide_CreateBranch" xml:space="preserve"><value>ブランチを作成</value></data>
+
+  <!-- IDEサイドバー -->
+  <data name="Ide_Explorer" xml:space="preserve"><value>エクスプローラー</value></data>
+  <data name="Ide_Search" xml:space="preserve"><value>検索</value></data>
+  <data name="Ide_SourceControl" xml:space="preserve"><value>ソース管理</value></data>
+  <data name="Ide_Outline" xml:space="preserve"><value>アウトライン</value></data>
+  <data name="Ide_Settings" xml:space="preserve"><value>設定</value></data>
+  <data name="Ide_NoChanges" xml:space="preserve"><value>変更なし</value></data>
+  <data name="Ide_ClickViewDiff" xml:space="preserve"><value>クリックして差分を表示</value></data>
+  <data name="Ide_Refresh" xml:space="preserve"><value>更新</value></data>
+  <data name="Ide_OpenFileOutline" xml:space="preserve"><value>ファイルを開いてアウトラインを表示</value></data>
+  <data name="Ide_NoSymbolsFound" xml:space="preserve"><value>シンボルが見つかりません</value></data>
+
+  <!-- IDEタブとアクション -->
+  <data name="Ide_TogglePreview" xml:space="preserve"><value>プレビューを切り替え</value></data>
+  <data name="Ide_ShowGitBlame" xml:space="preserve"><value>Git Blameを表示</value></data>
+  <data name="Ide_HideGitBlame" xml:space="preserve"><value>Git Blameを非表示</value></data>
+  <data name="Ide_FileHistory" xml:space="preserve"><value>ファイル履歴</value></data>
+  <data name="Ide_ToggleMinimap" xml:space="preserve"><value>Minimapを切り替え</value></data>
+  <data name="Ide_SplitEditor" xml:space="preserve"><value>エディタを分割</value></data>
+  <data name="Ide_CloseSplit" xml:space="preserve"><value>分割を閉じる</value></data>
+
+  <!-- IDEようこそ -->
+  <data name="Ide_WebIde" xml:space="preserve"><value>Web IDE</value></data>
+  <data name="Ide_WelcomeMessage" xml:space="preserve"><value>エクスプローラーからファイルを開くか、次を押してください</value></data>
+  <data name="Ide_ToGetStarted" xml:space="preserve"><value>開始するには</value></data>
+  <data name="Ide_Commands" xml:space="preserve"><value>コマンド</value></data>
+  <data name="Ide_QuickOpen" xml:space="preserve"><value>クイックオープン</value></data>
+  <data name="Ide_Terminal" xml:space="preserve"><value>ターミナル</value></data>
+  <data name="Ide_Shortcuts" xml:space="preserve"><value>ショートカット</value></data>
+
+  <!-- IDEエディタ -->
+  <data name="Ide_Loading" xml:space="preserve"><value>読み込み中...</value></data>
+  <data name="Ide_Diff" xml:space="preserve"><value>差分</value></data>
+  <data name="Ide_Preview" xml:space="preserve"><value>プレビュー</value></data>
+  <data name="Ide_Edit" xml:space="preserve"><value>編集</value></data>
+
+  <!-- IDE下部パネル -->
+  <data name="Ide_Commits" xml:space="preserve"><value>コミット</value></data>
+  <data name="Ide_Graph" xml:space="preserve"><value>グラフ</value></data>
+  <data name="Ide_NoCommits" xml:space="preserve"><value>コミットなし</value></data>
+  <data name="Ide_NewTerminal" xml:space="preserve"><value>新しいターミナル</value></data>
+  <data name="Ide_History" xml:space="preserve"><value>履歴</value></data>
+  <data name="Ide_NoHistoryFound" xml:space="preserve"><value>履歴が見つかりません</value></data>
+
+  <!-- IDEステータスバー -->
+  <data name="Ide_Branch" xml:space="preserve"><value>ブランチ</value></data>
+  <data name="Ide_UnsavedChanges" xml:space="preserve"><value>未保存の変更</value></data>
+  <data name="Ide_CursorPosition" xml:space="preserve"><value>カーソル位置</value></data>
+  <data name="Ide_Selection" xml:space="preserve"><value>選択</value></data>
+  <data name="Ide_Selected" xml:space="preserve"><value>選択済み</value></data>
+  <data name="Ide_ToggleWordWrap" xml:space="preserve"><value>折り返しを切り替え</value></data>
+  <data name="Ide_WrapOn" xml:space="preserve"><value>折り返し: オン</value></data>
+  <data name="Ide_WrapOff" xml:space="preserve"><value>折り返し: オフ</value></data>
+  <data name="Ide_Language" xml:space="preserve"><value>言語</value></data>
+  <data name="Ide_Encoding" xml:space="preserve"><value>エンコーディング</value></data>
+  <data name="Ide_ZenMode" xml:space="preserve"><value>Zenモード</value></data>
+  <data name="Ide_KeyboardShortcuts" xml:space="preserve"><value>キーボードショートカット</value></data>
+  <data name="Ide_Change" xml:space="preserve"><value>変更</value></data>
+
+  <!-- IDEタブバー -->
+  <data name="Ide_NoFilesOpen" xml:space="preserve"><value>開いているファイルがありません</value></data>
+  <data name="Ide_ScrollLeft" xml:space="preserve"><value>左にスクロール</value></data>
+  <data name="Ide_ScrollRight" xml:space="preserve"><value>右にスクロール</value></data>
+  <data name="Ide_Close" xml:space="preserve"><value>閉じる</value></data>
+  <data name="Ide_PinTab" xml:space="preserve"><value>タブをピン留め</value></data>
+  <data name="Ide_UnpinTab" xml:space="preserve"><value>タブのピン留めを解除</value></data>
+  <data name="Ide_CloseTab" xml:space="preserve"><value>タブを閉じる</value></data>
+  <data name="Ide_CloseOtherTabs" xml:space="preserve"><value>他のタブを閉じる</value></data>
+  <data name="Ide_CloseTabsToRight" xml:space="preserve"><value>右側のタブを閉じる</value></data>
+  <data name="Ide_CloseSavedTabs" xml:space="preserve"><value>保存済みのタブを閉じる</value></data>
+
+  <!-- IDEファイルツリー -->
+  <data name="Ide_FilterFiles" xml:space="preserve"><value>ファイルをフィルター...</value></data>
+  <data name="Ide_NewFile" xml:space="preserve"><value>新しいファイル</value></data>
+  <data name="Ide_NewFolder" xml:space="preserve"><value>新しいフォルダー</value></data>
+  <data name="Ide_Rename" xml:space="preserve"><value>名前を変更</value></data>
+  <data name="Ide_Delete" xml:space="preserve"><value>削除</value></data>
+  <data name="Ide_Modified" xml:space="preserve"><value>変更済み</value></data>
+
+  <!-- IDE設定パネル -->
+  <data name="Ide_EditorSettings" xml:space="preserve"><value>エディタ設定</value></data>
+  <data name="Ide_FontFamily" xml:space="preserve"><value>フォントファミリー</value></data>
+  <data name="Ide_FontSize" xml:space="preserve"><value>フォントサイズ</value></data>
+  <data name="Ide_TabSize" xml:space="preserve"><value>タブサイズ</value></data>
+  <data name="Ide_WordWrap" xml:space="preserve"><value>折り返し</value></data>
+  <data name="Ide_Off" xml:space="preserve"><value>オフ</value></data>
+  <data name="Ide_On" xml:space="preserve"><value>オン</value></data>
+  <data name="Ide_WordWrapColumn" xml:space="preserve"><value>折り返し列</value></data>
+  <data name="Ide_Minimap" xml:space="preserve"><value>Minimap</value></data>
+  <data name="Ide_Visible" xml:space="preserve"><value>表示</value></data>
+  <data name="Ide_Hidden" xml:space="preserve"><value>非表示</value></data>
+  <data name="Ide_LineNumbers" xml:space="preserve"><value>行番号</value></data>
+  <data name="Ide_RenderWhitespace" xml:space="preserve"><value>空白文字の表示</value></data>
+  <data name="Ide_None" xml:space="preserve"><value>なし</value></data>
+  <data name="Ide_Boundary" xml:space="preserve"><value>境界</value></data>
+  <data name="Ide_All" xml:space="preserve"><value>すべて</value></data>
+  <data name="Ide_CodeFolding" xml:space="preserve"><value>コードの折りたたみ</value></data>
+  <data name="Ide_Enabled" xml:space="preserve"><value>有効</value></data>
+  <data name="Ide_Disabled" xml:space="preserve"><value>無効</value></data>
+  <data name="Ide_StickyScroll" xml:space="preserve"><value>固定スクロール</value></data>
+  <data name="Ide_BracketPairGuides" xml:space="preserve"><value>括弧ペアガイド</value></data>
+  <data name="Ide_FontLigatures" xml:space="preserve"><value>フォントリガチャ</value></data>
+  <data name="Ide_FormatOnPaste" xml:space="preserve"><value>貼り付け時にフォーマット</value></data>
+  <data name="Ide_AutoSave" xml:space="preserve"><value>自動保存</value></data>
+  <data name="Ide_AutoSaveDelay" xml:space="preserve"><value>自動保存の遅延</value></data>
+
+  <!-- IDEコマンドパレット -->
+  <data name="Ide_TypeCommand" xml:space="preserve"><value>コマンドを入力...</value></data>
+  <data name="Ide_NoMatchingCommands" xml:space="preserve"><value>一致するコマンドがありません</value></data>
+  <data name="Ide_CmdQuickOpen" xml:space="preserve"><value>ファイルをクイックオープン</value></data>
+  <data name="Ide_CmdSearchFiles" xml:space="preserve"><value>ファイル内を検索</value></data>
+  <data name="Ide_CmdToggleTerminal" xml:space="preserve"><value>ターミナルを切り替え</value></data>
+  <data name="Ide_CmdToggleSplit" xml:space="preserve"><value>分割エディタを切り替え</value></data>
+  <data name="Ide_CmdToggleTheme" xml:space="preserve"><value>テーマを切り替え（ライト/ダーク）</value></data>
+  <data name="Ide_CmdShowBlame" xml:space="preserve"><value>Git Blameを表示</value></data>
+  <data name="Ide_CmdHideBlame" xml:space="preserve"><value>Git Blameを非表示</value></data>
+  <data name="Ide_CmdFileHistory" xml:space="preserve"><value>ファイル履歴を表示</value></data>
+  <data name="Ide_CmdFindReplace" xml:space="preserve"><value>エディタで検索と置換</value></data>
+  <data name="Ide_CmdGoToLine" xml:space="preserve"><value>行に移動</value></data>
+  <data name="Ide_CmdToggleMinimap" xml:space="preserve"><value>Minimapを切り替え</value></data>
+  <data name="Ide_CmdCloseTab" xml:space="preserve"><value>現在のタブを閉じる</value></data>
+  <data name="Ide_CmdCloseAllTabs" xml:space="preserve"><value>すべてのタブを閉じる</value></data>
+  <data name="Ide_CmdSourceControl" xml:space="preserve"><value>ソース管理を開く</value></data>
+  <data name="Ide_CmdOutline" xml:space="preserve"><value>アウトラインを開く</value></data>
+  <data name="Ide_CmdSettings" xml:space="preserve"><value>設定を開く</value></data>
+  <data name="Ide_CmdExplorer" xml:space="preserve"><value>ファイルエクスプローラーを開く</value></data>
+  <data name="Ide_CmdZenMode" xml:space="preserve"><value>Zenモードを切り替え</value></data>
+  <data name="Ide_CmdWordWrap" xml:space="preserve"><value>折り返しを切り替え</value></data>
+  <data name="Ide_CmdFoldAll" xml:space="preserve"><value>すべての領域を折りたたむ</value></data>
+  <data name="Ide_CmdUnfoldAll" xml:space="preserve"><value>すべての領域を展開</value></data>
+  <data name="Ide_CmdShortcuts" xml:space="preserve"><value>キーボードショートカットを表示</value></data>
+  <data name="Ide_CmdToggleAutoSave" xml:space="preserve"><value>自動保存を切り替え</value></data>
+
+  <!-- IDEショートカットヘルプ -->
+  <data name="Ide_ShortGeneral" xml:space="preserve"><value>一般</value></data>
+  <data name="Ide_ShortCommandPalette" xml:space="preserve"><value>コマンドパレット</value></data>
+  <data name="Ide_ShortQuickOpen" xml:space="preserve"><value>ファイルをクイックオープン</value></data>
+  <data name="Ide_ShortSearchFiles" xml:space="preserve"><value>ファイル内を検索</value></data>
+  <data name="Ide_ShortToggleTerminal" xml:space="preserve"><value>ターミナルを切り替え</value></data>
+  <data name="Ide_ShortShowHelp" xml:space="preserve"><value>このヘルプを表示</value></data>
+  <data name="Ide_ShortEditor" xml:space="preserve"><value>エディタ</value></data>
+  <data name="Ide_ShortSave" xml:space="preserve"><value>保存（エディタ内）</value></data>
+  <data name="Ide_ShortFind" xml:space="preserve"><value>ファイル内検索</value></data>
+  <data name="Ide_ShortFindReplace" xml:space="preserve"><value>検索と置換</value></data>
+  <data name="Ide_ShortGoToLine" xml:space="preserve"><value>行に移動</value></data>
+  <data name="Ide_ShortSelectNext" xml:space="preserve"><value>次の出現箇所を選択</value></data>
+  <data name="Ide_ShortToggleComment" xml:space="preserve"><value>コメントを切り替え</value></data>
+  <data name="Ide_ShortMoveLine" xml:space="preserve"><value>行を上下に移動</value></data>
+  <data name="Ide_ShortDeleteLine" xml:space="preserve"><value>行を削除</value></data>
+  <data name="Ide_ShortNavigation" xml:space="preserve"><value>ナビゲーション</value></data>
+  <data name="Ide_ShortSwitchTab" xml:space="preserve"><value>タブを切り替え（ブラウザ）</value></data>
+  <data name="Ide_ShortCloseTab" xml:space="preserve"><value>タブを閉じる（ブラウザ）</value></data>
+  <data name="Ide_ShortView" xml:space="preserve"><value>表示</value></data>
+  <data name="Ide_ShortZenMode" xml:space="preserve"><value>集中編集モード（Escで終了）</value></data>
+  <data name="Ide_ShortFoldAll" xml:space="preserve"><value>すべて折りたたむ（Monaco組み込み）</value></data>
+  <data name="Ide_ShortUnfoldAll" xml:space="preserve"><value>すべて展開（Monaco組み込み）</value></data>
+  <data name="Ide_ShortFoldRegion" xml:space="preserve"><value>領域を折りたたむ</value></data>
+  <data name="Ide_ShortUnfoldRegion" xml:space="preserve"><value>領域を展開</value></data>
+
+  <!-- IDE検索パネル -->
+  <data name="Ide_ToggleReplace" xml:space="preserve"><value>置換を切り替え</value></data>
+  <data name="Ide_SearchInFiles" xml:space="preserve"><value>ファイル内を検索...</value></data>
+  <data name="Ide_ReplaceWith" xml:space="preserve"><value>置換...</value></data>
+  <data name="Ide_FileExtFilter" xml:space="preserve"><value>ファイル拡張子フィルター（例: .cs）</value></data>
+  <data name="Ide_Searching" xml:space="preserve"><value>検索中...</value></data>
+  <data name="Ide_NoResults" xml:space="preserve"><value>結果が見つかりません</value></data>
+  <data name="Ide_ReplaceAll" xml:space="preserve"><value>すべて置換</value></data>
+  <data name="Ide_ReplaceAllInFile" xml:space="preserve"><value>このファイル内をすべて置換</value></data>
+
+  <!-- IDEクイックオープン -->
+  <data name="Ide_SearchFilesByName" xml:space="preserve"><value>名前でファイルを検索...</value></data>
+  <data name="Ide_NoMatchingFiles" xml:space="preserve"><value>一致するファイルが見つかりません</value></data>
+
+  <!-- IDEコミットパネル -->
+  <data name="Ide_NoChangesToCommit" xml:space="preserve"><value>コミットする変更がありません</value></data>
+  <data name="Ide_ChangedFiles" xml:space="preserve"><value>変更されたファイル</value></data>
+  <data name="Ide_SelectAll" xml:space="preserve"><value>すべて選択</value></data>
+  <data name="Ide_DeselectAll" xml:space="preserve"><value>すべて選択解除</value></data>
+  <data name="Ide_CommitMessage" xml:space="preserve"><value>コミットメッセージ...</value></data>
+  <data name="Ide_Committing" xml:space="preserve"><value>コミット中...</value></data>
+  <data name="Ide_Commit" xml:space="preserve"><value>コミット</value></data>
 </root>
