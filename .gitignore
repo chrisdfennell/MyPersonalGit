@@ -36,3 +36,6 @@ Thumbs.db
 
 ## Repos directory (user data)
 repos/
+
+## Certs
+*.crt
