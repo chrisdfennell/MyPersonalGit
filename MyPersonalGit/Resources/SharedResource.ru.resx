@@ -1200,4 +1200,40 @@
   <data name="Ide_CommitMessage" xml:space="preserve"><value>Сообщение коммита...</value></data>
   <data name="Ide_Committing" xml:space="preserve"><value>Коммит...</value></data>
   <data name="Ide_Commit" xml:space="preserve"><value>Коммит</value></data>
+
+  <!-- Admin TLS / HTTPS -->
+  <data name="Admin_TlsHttps" xml:space="preserve"><value>TLS / HTTPS</value></data>
+  <data name="Admin_TlsDescription" xml:space="preserve"><value>Включить HTTPS для безопасных соединений. Требуется для WebAuthn/Passkeys и рекомендуется для всех развёртываний.</value></data>
+  <data name="Admin_RequiresRestart" xml:space="preserve"><value>Требуется перезапуск приложения.</value></data>
+  <data name="Admin_EnableHttps" xml:space="preserve"><value>Включить HTTPS</value></data>
+  <data name="Admin_InternalHttpsPort" xml:space="preserve"><value>Внутренний порт HTTPS</value></data>
+  <data name="Admin_InternalPortHelp" xml:space="preserve"><value>Порт, на котором Kestrel слушает внутри контейнера. По умолчанию: 8443.</value></data>
+  <data name="Admin_ExternalHttpsPort" xml:space="preserve"><value>Внешний порт HTTPS</value></data>
+  <data name="Admin_ExternalPortHelp" xml:space="preserve"><value>Порт, к которому пользователи обращаются извне (маппинг Docker -p). Используется для перенаправлений.</value></data>
+  <data name="Admin_RedirectHttps" xml:space="preserve"><value>Перенаправить HTTP на HTTPS</value></data>
+  <data name="Admin_CertSource" xml:space="preserve"><value>Источник сертификата</value></data>
+  <data name="Admin_CertSelfSigned" xml:space="preserve"><value>Самоподписанный сертификат (генерируется автоматически)</value></data>
+  <data name="Admin_CertFile" xml:space="preserve"><value>Файл сертификата (PEM или PFX)</value></data>
+  <data name="Admin_SelfSignedInfo" xml:space="preserve"><value>Самоподписанный сертификат будет автоматически сгенерирован и сохранён в /data/tls/selfsigned.pfx. Браузеры покажут предупреждение безопасности — вы можете добавить исключение или импортировать сертификат в доверенное хранилище. Действителен 2 года, автоматически обновляется при перезапуске.</value></data>
+  <data name="Admin_RegenerateCert" xml:space="preserve"><value>Перегенерировать сертификат сейчас</value></data>
+  <data name="Admin_CertFileInfo" xml:space="preserve"><value>Предоставьте файл PFX или сертификат PEM + пару ключей. Смонтируйте файлы в контейнер.</value></data>
+  <data name="Admin_OptionPfx" xml:space="preserve"><value>Вариант 1: PFX / PKCS#12</value></data>
+  <data name="Admin_PfxFilePath" xml:space="preserve"><value>Путь к файлу PFX</value></data>
+  <data name="Admin_PfxPassword" xml:space="preserve"><value>Пароль PFX</value></data>
+  <data name="Admin_OptionPem" xml:space="preserve"><value>Вариант 2: Сертификат PEM + Ключ (напр., Let's Encrypt)</value></data>
+  <data name="Admin_CertPath" xml:space="preserve"><value>Путь к сертификату</value></data>
+  <data name="Admin_PrivateKeyPath" xml:space="preserve"><value>Путь к закрытому ключу</value></data>
+
+  <!-- Settings Passkeys -->
+  <data name="Settings_PasskeysTitle" xml:space="preserve"><value>Passkeys и ключи безопасности</value></data>
+  <data name="Settings_RegisterNewKey" xml:space="preserve"><value>Зарегистрировать новый ключ</value></data>
+  <data name="Settings_KeyName" xml:space="preserve"><value>Имя ключа</value></data>
+  <data name="Settings_KeyNamePlaceholder" xml:space="preserve"><value>напр. YubiKey 5, iPhone</value></data>
+  <data name="Settings_Register" xml:space="preserve"><value>Зарегистрировать</value></data>
+  <data name="Settings_Cancel" xml:space="preserve"><value>Отмена</value></data>
+  <data name="Settings_NoPasskeys" xml:space="preserve"><value>Нет зарегистрированных ключей доступа или ключей безопасности.</value></data>
+  <data name="Settings_PasskeysHelp" xml:space="preserve"><value>Добавьте ключ доступа (Face ID, Windows Hello, Touch ID) или аппаратный ключ безопасности (YubiKey) для безопасной двухфакторной аутентификации.</value></data>
+  <data name="Settings_EnterKeyName" xml:space="preserve"><value>Пожалуйста, введите имя для этого ключа.</value></data>
+  <data name="Settings_PasskeyRegistered" xml:space="preserve"><value>Ключ доступа успешно зарегистрирован.</value></data>
+  <data name="Settings_PasskeyRemoved" xml:space="preserve"><value>Ключ доступа удалён.</value></data>
 </root>

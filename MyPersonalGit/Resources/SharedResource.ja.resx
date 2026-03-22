@@ -1200,4 +1200,40 @@
   <data name="Ide_CommitMessage" xml:space="preserve"><value>コミットメッセージ...</value></data>
   <data name="Ide_Committing" xml:space="preserve"><value>コミット中...</value></data>
   <data name="Ide_Commit" xml:space="preserve"><value>コミット</value></data>
+
+  <!-- Admin TLS / HTTPS -->
+  <data name="Admin_TlsHttps" xml:space="preserve"><value>TLS / HTTPS</value></data>
+  <data name="Admin_TlsDescription" xml:space="preserve"><value>安全な接続のためにHTTPSを有効にします。WebAuthn/Passkeysに必要であり、すべてのデプロイに推奨されます。</value></data>
+  <data name="Admin_RequiresRestart" xml:space="preserve"><value>アプリケーションの再起動が必要です。</value></data>
+  <data name="Admin_EnableHttps" xml:space="preserve"><value>HTTPSを有効にする</value></data>
+  <data name="Admin_InternalHttpsPort" xml:space="preserve"><value>内部HTTPSポート</value></data>
+  <data name="Admin_InternalPortHelp" xml:space="preserve"><value>コンテナ内でKestrelがリッスンするポート。デフォルト: 8443。</value></data>
+  <data name="Admin_ExternalHttpsPort" xml:space="preserve"><value>外部HTTPSポート</value></data>
+  <data name="Admin_ExternalPortHelp" xml:space="preserve"><value>ユーザーが外部からアクセスするポート（Docker -pマッピング）。リダイレクトに使用されます。</value></data>
+  <data name="Admin_RedirectHttps" xml:space="preserve"><value>HTTPをHTTPSにリダイレクト</value></data>
+  <data name="Admin_CertSource" xml:space="preserve"><value>証明書ソース</value></data>
+  <data name="Admin_CertSelfSigned" xml:space="preserve"><value>自己署名証明書（自動生成）</value></data>
+  <data name="Admin_CertFile" xml:space="preserve"><value>証明書ファイル（PEMまたはPFX）</value></data>
+  <data name="Admin_SelfSignedInfo" xml:space="preserve"><value>自己署名証明書が自動的に生成され、/data/tls/selfsigned.pfxに保存されます。ブラウザはセキュリティ警告を表示します — 例外を追加するか、信頼されたストアに証明書をインポートできます。2年間有効で、再起動時に自動更新されます。</value></data>
+  <data name="Admin_RegenerateCert" xml:space="preserve"><value>証明書を今すぐ再生成</value></data>
+  <data name="Admin_CertFileInfo" xml:space="preserve"><value>PFXファイルまたはPEM証明書+鍵ペアを提供してください。ファイルをコンテナにマウントしてください。</value></data>
+  <data name="Admin_OptionPfx" xml:space="preserve"><value>オプション1: PFX / PKCS#12</value></data>
+  <data name="Admin_PfxFilePath" xml:space="preserve"><value>PFXファイルパス</value></data>
+  <data name="Admin_PfxPassword" xml:space="preserve"><value>PFXパスワード</value></data>
+  <data name="Admin_OptionPem" xml:space="preserve"><value>オプション2: PEM証明書 + 鍵（例: Let's Encrypt）</value></data>
+  <data name="Admin_CertPath" xml:space="preserve"><value>証明書パス</value></data>
+  <data name="Admin_PrivateKeyPath" xml:space="preserve"><value>秘密鍵パス</value></data>
+
+  <!-- Settings Passkeys -->
+  <data name="Settings_PasskeysTitle" xml:space="preserve"><value>Passkeysとセキュリティキー</value></data>
+  <data name="Settings_RegisterNewKey" xml:space="preserve"><value>新しいキーを登録</value></data>
+  <data name="Settings_KeyName" xml:space="preserve"><value>キー名</value></data>
+  <data name="Settings_KeyNamePlaceholder" xml:space="preserve"><value>例: YubiKey 5、iPhone</value></data>
+  <data name="Settings_Register" xml:space="preserve"><value>登録</value></data>
+  <data name="Settings_Cancel" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="Settings_NoPasskeys" xml:space="preserve"><value>パスキーまたはセキュリティキーが登録されていません。</value></data>
+  <data name="Settings_PasskeysHelp" xml:space="preserve"><value>安全な二要素認証のために、パスキー（Face ID、Windows Hello、Touch ID）またはハードウェアセキュリティキー（YubiKey）を追加してください。</value></data>
+  <data name="Settings_EnterKeyName" xml:space="preserve"><value>このキーの名前を入力してください。</value></data>
+  <data name="Settings_PasskeyRegistered" xml:space="preserve"><value>パスキーが正常に登録されました。</value></data>
+  <data name="Settings_PasskeyRemoved" xml:space="preserve"><value>パスキーが削除されました。</value></data>
 </root>

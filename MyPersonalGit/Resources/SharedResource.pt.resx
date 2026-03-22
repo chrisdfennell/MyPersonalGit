@@ -1200,4 +1200,40 @@
   <data name="Ide_CommitMessage" xml:space="preserve"><value>Mensagem de commit...</value></data>
   <data name="Ide_Committing" xml:space="preserve"><value>Commitando...</value></data>
   <data name="Ide_Commit" xml:space="preserve"><value>Commitar</value></data>
+
+  <!-- Admin TLS / HTTPS -->
+  <data name="Admin_TlsHttps" xml:space="preserve"><value>TLS / HTTPS</value></data>
+  <data name="Admin_TlsDescription" xml:space="preserve"><value>Ativar HTTPS para conexões seguras. Necessário para WebAuthn/Passkeys e recomendado para todas as implantações.</value></data>
+  <data name="Admin_RequiresRestart" xml:space="preserve"><value>Requer reinicialização do aplicativo.</value></data>
+  <data name="Admin_EnableHttps" xml:space="preserve"><value>Ativar HTTPS</value></data>
+  <data name="Admin_InternalHttpsPort" xml:space="preserve"><value>Porta HTTPS interna</value></data>
+  <data name="Admin_InternalPortHelp" xml:space="preserve"><value>A porta em que o Kestrel escuta dentro do contêiner. Padrão: 8443.</value></data>
+  <data name="Admin_ExternalHttpsPort" xml:space="preserve"><value>Porta HTTPS externa</value></data>
+  <data name="Admin_ExternalPortHelp" xml:space="preserve"><value>A porta que os usuários acessam externamente (mapeamento Docker -p). Usada para redirecionamentos.</value></data>
+  <data name="Admin_RedirectHttps" xml:space="preserve"><value>Redirecionar HTTP para HTTPS</value></data>
+  <data name="Admin_CertSource" xml:space="preserve"><value>Origem do certificado</value></data>
+  <data name="Admin_CertSelfSigned" xml:space="preserve"><value>Certificado autoassinado (gerado automaticamente)</value></data>
+  <data name="Admin_CertFile" xml:space="preserve"><value>Arquivo de certificado (PEM ou PFX)</value></data>
+  <data name="Admin_SelfSignedInfo" xml:space="preserve"><value>Um certificado autoassinado será gerado automaticamente e armazenado em /data/tls/selfsigned.pfx. Os navegadores exibirão um aviso de segurança — você pode adicionar uma exceção ou importar o certificado no seu armazenamento confiável. Válido por 2 anos, renovado automaticamente na reinicialização.</value></data>
+  <data name="Admin_RegenerateCert" xml:space="preserve"><value>Regenerar certificado agora</value></data>
+  <data name="Admin_CertFileInfo" xml:space="preserve"><value>Forneça um arquivo PFX ou um certificado PEM + par de chaves. Monte os arquivos no contêiner.</value></data>
+  <data name="Admin_OptionPfx" xml:space="preserve"><value>Opção 1: PFX / PKCS#12</value></data>
+  <data name="Admin_PfxFilePath" xml:space="preserve"><value>Caminho do arquivo PFX</value></data>
+  <data name="Admin_PfxPassword" xml:space="preserve"><value>Senha PFX</value></data>
+  <data name="Admin_OptionPem" xml:space="preserve"><value>Opção 2: Certificado PEM + Chave (ex., Let's Encrypt)</value></data>
+  <data name="Admin_CertPath" xml:space="preserve"><value>Caminho do certificado</value></data>
+  <data name="Admin_PrivateKeyPath" xml:space="preserve"><value>Caminho da chave privada</value></data>
+
+  <!-- Settings Passkeys -->
+  <data name="Settings_PasskeysTitle" xml:space="preserve"><value>Passkeys e chaves de segurança</value></data>
+  <data name="Settings_RegisterNewKey" xml:space="preserve"><value>Registrar nova chave</value></data>
+  <data name="Settings_KeyName" xml:space="preserve"><value>Nome da chave</value></data>
+  <data name="Settings_KeyNamePlaceholder" xml:space="preserve"><value>ex. YubiKey 5, iPhone</value></data>
+  <data name="Settings_Register" xml:space="preserve"><value>Registrar</value></data>
+  <data name="Settings_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Settings_NoPasskeys" xml:space="preserve"><value>Nenhuma passkey ou chave de segurança registrada.</value></data>
+  <data name="Settings_PasskeysHelp" xml:space="preserve"><value>Adicione uma passkey (Face ID, Windows Hello, Touch ID) ou chave de segurança de hardware (YubiKey) para autenticação segura de dois fatores.</value></data>
+  <data name="Settings_EnterKeyName" xml:space="preserve"><value>Por favor, insira um nome para esta chave.</value></data>
+  <data name="Settings_PasskeyRegistered" xml:space="preserve"><value>Passkey registrada com sucesso.</value></data>
+  <data name="Settings_PasskeyRemoved" xml:space="preserve"><value>Passkey removida.</value></data>
 </root>

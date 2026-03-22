@@ -1200,4 +1200,40 @@
   <data name="Ide_CommitMessage" xml:space="preserve"><value>提交消息...</value></data>
   <data name="Ide_Committing" xml:space="preserve"><value>提交中...</value></data>
   <data name="Ide_Commit" xml:space="preserve"><value>提交</value></data>
+
+  <!-- Admin TLS / HTTPS -->
+  <data name="Admin_TlsHttps" xml:space="preserve"><value>TLS / HTTPS</value></data>
+  <data name="Admin_TlsDescription" xml:space="preserve"><value>启用HTTPS以实现安全连接。WebAuthn/Passkeys必需，建议所有部署使用。</value></data>
+  <data name="Admin_RequiresRestart" xml:space="preserve"><value>需要重启应用程序。</value></data>
+  <data name="Admin_EnableHttps" xml:space="preserve"><value>启用HTTPS</value></data>
+  <data name="Admin_InternalHttpsPort" xml:space="preserve"><value>内部HTTPS端口</value></data>
+  <data name="Admin_InternalPortHelp" xml:space="preserve"><value>Kestrel在容器内监听的端口。默认：8443。</value></data>
+  <data name="Admin_ExternalHttpsPort" xml:space="preserve"><value>外部HTTPS端口</value></data>
+  <data name="Admin_ExternalPortHelp" xml:space="preserve"><value>用户从外部访问的端口（Docker -p映射）。用于重定向。</value></data>
+  <data name="Admin_RedirectHttps" xml:space="preserve"><value>将HTTP重定向到HTTPS</value></data>
+  <data name="Admin_CertSource" xml:space="preserve"><value>证书来源</value></data>
+  <data name="Admin_CertSelfSigned" xml:space="preserve"><value>自签名证书（自动生成）</value></data>
+  <data name="Admin_CertFile" xml:space="preserve"><value>证书文件（PEM或PFX）</value></data>
+  <data name="Admin_SelfSignedInfo" xml:space="preserve"><value>将自动生成自签名证书并存储在/data/tls/selfsigned.pfx。浏览器将显示安全警告——您可以添加例外或将证书导入到受信任的存储中。有效期2年，重启时自动续期。</value></data>
+  <data name="Admin_RegenerateCert" xml:space="preserve"><value>立即重新生成证书</value></data>
+  <data name="Admin_CertFileInfo" xml:space="preserve"><value>提供PFX文件或PEM证书+密钥对。将文件挂载到容器中。</value></data>
+  <data name="Admin_OptionPfx" xml:space="preserve"><value>选项1：PFX / PKCS#12</value></data>
+  <data name="Admin_PfxFilePath" xml:space="preserve"><value>PFX文件路径</value></data>
+  <data name="Admin_PfxPassword" xml:space="preserve"><value>PFX密码</value></data>
+  <data name="Admin_OptionPem" xml:space="preserve"><value>选项2：PEM证书 + 密钥（例如Let's Encrypt）</value></data>
+  <data name="Admin_CertPath" xml:space="preserve"><value>证书路径</value></data>
+  <data name="Admin_PrivateKeyPath" xml:space="preserve"><value>私钥路径</value></data>
+
+  <!-- Settings Passkeys -->
+  <data name="Settings_PasskeysTitle" xml:space="preserve"><value>Passkeys和安全密钥</value></data>
+  <data name="Settings_RegisterNewKey" xml:space="preserve"><value>注册新密钥</value></data>
+  <data name="Settings_KeyName" xml:space="preserve"><value>密钥名称</value></data>
+  <data name="Settings_KeyNamePlaceholder" xml:space="preserve"><value>例如 YubiKey 5、iPhone</value></data>
+  <data name="Settings_Register" xml:space="preserve"><value>注册</value></data>
+  <data name="Settings_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Settings_NoPasskeys" xml:space="preserve"><value>未注册任何通行密钥或安全密钥。</value></data>
+  <data name="Settings_PasskeysHelp" xml:space="preserve"><value>添加通行密钥（Face ID、Windows Hello、Touch ID）或硬件安全密钥（YubiKey）以实现安全的双因素认证。</value></data>
+  <data name="Settings_EnterKeyName" xml:space="preserve"><value>请输入此密钥的名称。</value></data>
+  <data name="Settings_PasskeyRegistered" xml:space="preserve"><value>通行密钥注册成功。</value></data>
+  <data name="Settings_PasskeyRemoved" xml:space="preserve"><value>通行密钥已移除。</value></data>
 </root>

@@ -1200,4 +1200,40 @@
   <data name="Ide_CommitMessage" xml:space="preserve"><value>Commit-Nachricht...</value></data>
   <data name="Ide_Committing" xml:space="preserve"><value>Wird committet...</value></data>
   <data name="Ide_Commit" xml:space="preserve"><value>Committen</value></data>
+
+  <!-- Admin TLS / HTTPS -->
+  <data name="Admin_TlsHttps" xml:space="preserve"><value>TLS / HTTPS</value></data>
+  <data name="Admin_TlsDescription" xml:space="preserve"><value>HTTPS für sichere Verbindungen aktivieren. Erforderlich für WebAuthn/Passkeys und empfohlen für alle Bereitstellungen.</value></data>
+  <data name="Admin_RequiresRestart" xml:space="preserve"><value>Erfordert einen Neustart der Anwendung.</value></data>
+  <data name="Admin_EnableHttps" xml:space="preserve"><value>HTTPS aktivieren</value></data>
+  <data name="Admin_InternalHttpsPort" xml:space="preserve"><value>Interner HTTPS-Port</value></data>
+  <data name="Admin_InternalPortHelp" xml:space="preserve"><value>Der Port, auf dem Kestrel innerhalb des Containers lauscht. Standard: 8443.</value></data>
+  <data name="Admin_ExternalHttpsPort" xml:space="preserve"><value>Externer HTTPS-Port</value></data>
+  <data name="Admin_ExternalPortHelp" xml:space="preserve"><value>Der Port, über den Benutzer von außen zugreifen (Docker -p Zuordnung). Wird für Weiterleitungen verwendet.</value></data>
+  <data name="Admin_RedirectHttps" xml:space="preserve"><value>HTTP zu HTTPS umleiten</value></data>
+  <data name="Admin_CertSource" xml:space="preserve"><value>Zertifikatsquelle</value></data>
+  <data name="Admin_CertSelfSigned" xml:space="preserve"><value>Selbstsigniertes Zertifikat (automatisch generiert)</value></data>
+  <data name="Admin_CertFile" xml:space="preserve"><value>Zertifikatsdatei (PEM oder PFX)</value></data>
+  <data name="Admin_SelfSignedInfo" xml:space="preserve"><value>Ein selbstsigniertes Zertifikat wird automatisch generiert und unter /data/tls/selfsigned.pfx gespeichert. Browser zeigen eine Sicherheitswarnung an — Sie können eine Ausnahme hinzufügen oder das Zertifikat in Ihren vertrauenswürdigen Speicher importieren. Gültig für 2 Jahre, wird beim Neustart automatisch erneuert.</value></data>
+  <data name="Admin_RegenerateCert" xml:space="preserve"><value>Zertifikat jetzt neu generieren</value></data>
+  <data name="Admin_CertFileInfo" xml:space="preserve"><value>Stellen Sie entweder eine PFX-Datei oder ein PEM-Zertifikat + Schlüsselpaar bereit. Binden Sie die Dateien in den Container ein.</value></data>
+  <data name="Admin_OptionPfx" xml:space="preserve"><value>Option 1: PFX / PKCS#12</value></data>
+  <data name="Admin_PfxFilePath" xml:space="preserve"><value>PFX-Dateipfad</value></data>
+  <data name="Admin_PfxPassword" xml:space="preserve"><value>PFX-Passwort</value></data>
+  <data name="Admin_OptionPem" xml:space="preserve"><value>Option 2: PEM-Zertifikat + Schlüssel (z.B. Let's Encrypt)</value></data>
+  <data name="Admin_CertPath" xml:space="preserve"><value>Zertifikatspfad</value></data>
+  <data name="Admin_PrivateKeyPath" xml:space="preserve"><value>Pfad zum privaten Schlüssel</value></data>
+
+  <!-- Settings Passkeys -->
+  <data name="Settings_PasskeysTitle" xml:space="preserve"><value>Passkeys und Sicherheitsschlüssel</value></data>
+  <data name="Settings_RegisterNewKey" xml:space="preserve"><value>Neuen Schlüssel registrieren</value></data>
+  <data name="Settings_KeyName" xml:space="preserve"><value>Schlüsselname</value></data>
+  <data name="Settings_KeyNamePlaceholder" xml:space="preserve"><value>z.B. YubiKey 5, iPhone</value></data>
+  <data name="Settings_Register" xml:space="preserve"><value>Registrieren</value></data>
+  <data name="Settings_Cancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="Settings_NoPasskeys" xml:space="preserve"><value>Keine Passkeys oder Sicherheitsschlüssel registriert.</value></data>
+  <data name="Settings_PasskeysHelp" xml:space="preserve"><value>Fügen Sie einen Passkey (Face ID, Windows Hello, Touch ID) oder einen Hardware-Sicherheitsschlüssel (YubiKey) für sichere Zwei-Faktor-Authentifizierung hinzu.</value></data>
+  <data name="Settings_EnterKeyName" xml:space="preserve"><value>Bitte geben Sie einen Namen für diesen Schlüssel ein.</value></data>
+  <data name="Settings_PasskeyRegistered" xml:space="preserve"><value>Passkey erfolgreich registriert.</value></data>
+  <data name="Settings_PasskeyRemoved" xml:space="preserve"><value>Passkey entfernt.</value></data>
 </root>
