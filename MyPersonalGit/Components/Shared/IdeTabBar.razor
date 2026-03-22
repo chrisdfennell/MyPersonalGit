@@ -112,29 +112,32 @@
 
     private List<OpenTab> SortedTabs => Tabs?.OrderByDescending(t => t.IsPinned).ToList() ?? new();
 
+    private int lastTabCount;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        // Only check scroll overflow when tab count changes or on first render
+        var tabCount = Tabs?.Count ?? 0;
+        if (firstRender || tabCount != lastTabCount)
         {
-            await CheckScrollOverflow();
+            lastTabCount = tabCount;
+            await UpdateScrollButtons();
         }
     }
 
-    protected override async Task OnParametersSetAsync()
-    {
-        // Defer scroll check to after render
-        await Task.Yield();
-        try { await CheckScrollOverflow(); } catch { }
-    }
-
-    private async Task CheckScrollOverflow()
+    private async Task UpdateScrollButtons()
     {
         try
         {
             var state = await JS.InvokeAsync<ScrollState>("ideTabScroll.getScrollState", scrollRef);
-            showScrollLeft = state.ScrollLeft > 0;
-            showScrollRight = state.ScrollLeft + state.ClientWidth < state.ScrollWidth - 1;
-            StateHasChanged();
+            var newLeft = state.ScrollLeft > 0;
+            var newRight = state.ScrollLeft + state.ClientWidth < state.ScrollWidth - 1;
+            if (newLeft != showScrollLeft || newRight != showScrollRight)
+            {
+                showScrollLeft = newLeft;
+                showScrollRight = newRight;
+                StateHasChanged();
+            }
         }
         catch { }
     }
@@ -144,8 +147,8 @@
         try
         {
             await JS.InvokeVoidAsync("ideTabScroll.scroll", scrollRef, -200);
-            await Task.Delay(150);
-            await CheckScrollOverflow();
+            await Task.Delay(200);
+            await UpdateScrollButtons();
         }
         catch { }
     }
@@ -155,8 +158,8 @@
         try
         {
             await JS.InvokeVoidAsync("ideTabScroll.scroll", scrollRef, 200);
-            await Task.Delay(150);
-            await CheckScrollOverflow();
+            await Task.Delay(200);
+            await UpdateScrollButtons();
         }
         catch { }
     }
