@@ -1321,4 +1321,101 @@
   <data name="Repo_DeployKeyRequired" xml:space="preserve"><value>Заголовок и открытый ключ обязательны.</value></data>
   <data name="Repo_RepoNotFound" xml:space="preserve"><value>Репозиторий не найден.</value></data>
   <data name="Repo_DeployKeyFailed" xml:space="preserve"><value>Не удалось добавить ключ развёртывания. Ключ с таким отпечатком, возможно, уже существует.</value></data>
+
+  <!-- NavMenu -->
+  <data name="Nav_Home" xml:space="preserve"><value>Главная</value></data>
+  <data name="Nav_Explore" xml:space="preserve"><value>Обзор</value></data>
+  <data name="Nav_Organizations" xml:space="preserve"><value>Организации</value></data>
+  <data name="Nav_Language" xml:space="preserve"><value>Язык</value></data>
+  <data name="Nav_ToggleDarkMode" xml:space="preserve"><value>Переключить тёмный режим</value></data>
+  <data name="Nav_NewRepository" xml:space="preserve"><value>Новый репозиторий</value></data>
+  <data name="Footer_Stats" xml:space="preserve"><value>Статистика</value></data>
+
+  <!-- PullRequests inline comments -->
+  <data name="PR_AddComment" xml:space="preserve"><value>Добавить комментарий</value></data>
+  <data name="PR_Reply" xml:space="preserve"><value>Ответить</value></data>
+  <data name="PR_Delete" xml:space="preserve"><value>Удалить</value></data>
+  <data name="PR_ReplyPlaceholder" xml:space="preserve"><value>Ответить...</value></data>
+  <data name="PR_LeaveComment" xml:space="preserve"><value>Оставить комментарий...</value></data>
+  <data name="PR_LeaveCommentOnLine" xml:space="preserve"><value>Оставить комментарий к этой строке...</value></data>
+  <data name="PR_SuggestChanges" xml:space="preserve"><value>Предложить изменения</value></data>
+  <data name="PR_ExplainSuggestion" xml:space="preserve"><value>Объяснить предложение...</value></data>
+  <data name="PR_Suggest" xml:space="preserve"><value>Предложить</value></data>
+  <data name="PR_SuggestedChange" xml:space="preserve"><value>Предложенное изменение</value></data>
+  <data name="PR_SuggestedReplacementCode" xml:space="preserve"><value>Предложенный код замены...</value></data>
+
+  <!-- Discussions detail -->
+  <data name="Discussion_StartedBy" xml:space="preserve"><value>Начато</value></data>
+  <data name="Discussion_Posted" xml:space="preserve"><value>опубликовано</value></data>
+  <data name="Discussion_Commented" xml:space="preserve"><value>прокомментировал(а)</value></data>
+
+  <!-- IDE -->
+  <data name="Ide_CommitSuccessful" xml:space="preserve"><value>Коммит выполнен успешно</value></data>
+
+  <!-- Settings page -->
+  <data name="Settings_Confirm" xml:space="preserve"><value>Подтвердить</value></data>
+  <data name="Settings_Verify" xml:space="preserve"><value>Проверить</value></data>
+  <data name="Settings_SecretValue" xml:space="preserve"><value>Значение секрета</value></data>
+  <data name="Settings_SshKeyPlaceholder" xml:space="preserve"><value>Мой SSH-ключ</value></data>
+  <data name="Settings_AddKey" xml:space="preserve"><value>Добавить ключ</value></data>
+  <data name="Settings_TokenPlaceholder" xml:space="preserve"><value>Мой токен</value></data>
+  <data name="Settings_GenerateToken" xml:space="preserve"><value>Сгенерировать токен</value></data>
+
+  <!-- Admin page -->
+  <data name="Admin_SmtpFromDefault" xml:space="preserve"><value>По умолчанию используется имя пользователя SMTP, если пусто</value></data>
+  <data name="Admin_BrandingHelp" xml:space="preserve"><value>Настройте название сайта и содержимое подвала страницы. Используется Markdown.</value></data>
+  <data name="Admin_TermsOfService" xml:space="preserve"><value>Условия использования</value></data>
+  <data name="Admin_PrivacyPolicy" xml:space="preserve"><value>Политика конфиденциальности</value></data>
+  <data name="Admin_Save" xml:space="preserve"><value>Сохранить</value></data>
+  <data name="Admin_SaveChanges" xml:space="preserve"><value>Сохранить изменения</value></data>
+
+  <!-- Actions page -->
+  <data name="Actions_Edit" xml:space="preserve"><value>Редактировать</value></data>
+  <data name="Actions_Disable" xml:space="preserve"><value>Отключить</value></data>
+  <data name="Actions_Enable" xml:space="preserve"><value>Включить</value></data>
+  <data name="Actions_Delete" xml:space="preserve"><value>Удалить</value></data>
+  <data name="Actions_Redeliver" xml:space="preserve"><value>Повторить доставку</value></data>
+
+  <!-- Issues page -->
+  <data name="Issues_Edit" xml:space="preserve"><value>Редактировать</value></data>
+  <data name="Issues_Delete" xml:space="preserve"><value>Удалить</value></data>
+  <data name="Issues_Locked" xml:space="preserve"><value>Заблокирована</value></data>
+
+  <!-- Stats page -->
+  <data name="Stats_Title" xml:space="preserve"><value>Статистика платформы</value></data>
+  <data name="Stats_LinesOfCode" xml:space="preserve"><value>Строк кода</value></data>
+  <data name="Stats_Files" xml:space="preserve"><value>Файлов</value></data>
+
+  <!-- Wiki page -->
+  <data name="Wiki_SearchPages" xml:space="preserve"><value>Поиск страниц...</value></data>
+  <data name="Wiki_RevertRevision" xml:space="preserve"><value>Вернуться к этой ревизии</value></data>
+
+  <!-- Snippets page -->
+  <data name="Snippets_PastePlaceholder" xml:space="preserve"><value>Вставьте свой код здесь...</value></data>
+
+  <!-- UserProfilePage -->
+  <data name="Profile_UnpinRepo" xml:space="preserve"><value>Открепить репозиторий</value></data>
+  <data name="Profile_PinRepo" xml:space="preserve"><value>Закрепить репозиторий</value></data>
+
+  <!-- Notifications page -->
+  <data name="Notifications_AllCaughtUp" xml:space="preserve"><value>Вы всё просмотрели!</value></data>
+  <data name="Notifications_NoNotifications" xml:space="preserve"><value>У вас пока нет уведомлений</value></data>
+
+  <!-- Organizations page -->
+  <data name="Org_AddUserPlaceholder" xml:space="preserve"><value>Имя пользователя для добавления...</value></data>
+  <data name="Org_SecretValue" xml:space="preserve"><value>Значение секрета</value></data>
+
+  <!-- Projects page -->
+  <data name="Projects_Cards" xml:space="preserve"><value>карточки</value></data>
+
+  <!-- Home page -->
+  <data name="Home_ProjectDescription" xml:space="preserve"><value>Краткое описание вашего проекта</value></data>
+
+  <!-- TodoScanner page -->
+  <data name="Todo_Title" xml:space="preserve"><value>TODOs</value></data>
+  <data name="Todo_Scanning" xml:space="preserve"><value>Сканирование кода на наличие TODO...</value></data>
+  <data name="Todo_ScannerHeading" xml:space="preserve"><value>Сканер TODO</value></data>
+
+  <!-- FooterPage -->
+  <data name="Footer_NoContent" xml:space="preserve"><value>Контент ещё не настроен. Администраторы могут отредактировать в Admin > Настройки.</value></data>
 </root>

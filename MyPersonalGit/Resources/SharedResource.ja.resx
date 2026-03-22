@@ -1321,4 +1321,101 @@
   <data name="Repo_DeployKeyRequired" xml:space="preserve"><value>タイトルと公開鍵は必須です。</value></data>
   <data name="Repo_RepoNotFound" xml:space="preserve"><value>リポジトリが見つかりません。</value></data>
   <data name="Repo_DeployKeyFailed" xml:space="preserve"><value>デプロイキーの追加に失敗しました。このフィンガープリントのキーが既に存在する可能性があります。</value></data>
+
+  <!-- NavMenu -->
+  <data name="Nav_Home" xml:space="preserve"><value>ホーム</value></data>
+  <data name="Nav_Explore" xml:space="preserve"><value>探索</value></data>
+  <data name="Nav_Organizations" xml:space="preserve"><value>組織</value></data>
+  <data name="Nav_Language" xml:space="preserve"><value>言語</value></data>
+  <data name="Nav_ToggleDarkMode" xml:space="preserve"><value>ダークモード切替</value></data>
+  <data name="Nav_NewRepository" xml:space="preserve"><value>新規リポジトリ</value></data>
+  <data name="Footer_Stats" xml:space="preserve"><value>統計</value></data>
+
+  <!-- PullRequests inline comments -->
+  <data name="PR_AddComment" xml:space="preserve"><value>コメントを追加</value></data>
+  <data name="PR_Reply" xml:space="preserve"><value>返信</value></data>
+  <data name="PR_Delete" xml:space="preserve"><value>削除</value></data>
+  <data name="PR_ReplyPlaceholder" xml:space="preserve"><value>返信...</value></data>
+  <data name="PR_LeaveComment" xml:space="preserve"><value>コメントを残す...</value></data>
+  <data name="PR_LeaveCommentOnLine" xml:space="preserve"><value>この行にコメントを残す...</value></data>
+  <data name="PR_SuggestChanges" xml:space="preserve"><value>変更を提案</value></data>
+  <data name="PR_ExplainSuggestion" xml:space="preserve"><value>提案を説明...</value></data>
+  <data name="PR_Suggest" xml:space="preserve"><value>提案</value></data>
+  <data name="PR_SuggestedChange" xml:space="preserve"><value>提案された変更</value></data>
+  <data name="PR_SuggestedReplacementCode" xml:space="preserve"><value>提案する置換コード...</value></data>
+
+  <!-- Discussions detail -->
+  <data name="Discussion_StartedBy" xml:space="preserve"><value>開始者</value></data>
+  <data name="Discussion_Posted" xml:space="preserve"><value>投稿</value></data>
+  <data name="Discussion_Commented" xml:space="preserve"><value>コメントしました</value></data>
+
+  <!-- IDE -->
+  <data name="Ide_CommitSuccessful" xml:space="preserve"><value>コミット成功</value></data>
+
+  <!-- Settings page -->
+  <data name="Settings_Confirm" xml:space="preserve"><value>確認</value></data>
+  <data name="Settings_Verify" xml:space="preserve"><value>検証</value></data>
+  <data name="Settings_SecretValue" xml:space="preserve"><value>シークレット値</value></data>
+  <data name="Settings_SshKeyPlaceholder" xml:space="preserve"><value>マイSSHキー</value></data>
+  <data name="Settings_AddKey" xml:space="preserve"><value>キーを追加</value></data>
+  <data name="Settings_TokenPlaceholder" xml:space="preserve"><value>マイトークン</value></data>
+  <data name="Settings_GenerateToken" xml:space="preserve"><value>トークンを生成</value></data>
+
+  <!-- Admin page -->
+  <data name="Admin_SmtpFromDefault" xml:space="preserve"><value>空の場合はSMTPユーザー名がデフォルトになります</value></data>
+  <data name="Admin_BrandingHelp" xml:space="preserve"><value>サイト名とフッターページの内容をカスタマイズします。Markdownを使用します。</value></data>
+  <data name="Admin_TermsOfService" xml:space="preserve"><value>利用規約</value></data>
+  <data name="Admin_PrivacyPolicy" xml:space="preserve"><value>プライバシーポリシー</value></data>
+  <data name="Admin_Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Admin_SaveChanges" xml:space="preserve"><value>変更を保存</value></data>
+
+  <!-- Actions page -->
+  <data name="Actions_Edit" xml:space="preserve"><value>編集</value></data>
+  <data name="Actions_Disable" xml:space="preserve"><value>無効にする</value></data>
+  <data name="Actions_Enable" xml:space="preserve"><value>有効にする</value></data>
+  <data name="Actions_Delete" xml:space="preserve"><value>削除</value></data>
+  <data name="Actions_Redeliver" xml:space="preserve"><value>再送信</value></data>
+
+  <!-- Issues page -->
+  <data name="Issues_Edit" xml:space="preserve"><value>編集</value></data>
+  <data name="Issues_Delete" xml:space="preserve"><value>削除</value></data>
+  <data name="Issues_Locked" xml:space="preserve"><value>ロック済み</value></data>
+
+  <!-- Stats page -->
+  <data name="Stats_Title" xml:space="preserve"><value>プラットフォーム統計</value></data>
+  <data name="Stats_LinesOfCode" xml:space="preserve"><value>コード行数</value></data>
+  <data name="Stats_Files" xml:space="preserve"><value>ファイル</value></data>
+
+  <!-- Wiki page -->
+  <data name="Wiki_SearchPages" xml:space="preserve"><value>ページを検索...</value></data>
+  <data name="Wiki_RevertRevision" xml:space="preserve"><value>このリビジョンに戻す</value></data>
+
+  <!-- Snippets page -->
+  <data name="Snippets_PastePlaceholder" xml:space="preserve"><value>ここにコードを貼り付けてください...</value></data>
+
+  <!-- UserProfilePage -->
+  <data name="Profile_UnpinRepo" xml:space="preserve"><value>リポジトリのピン留めを解除</value></data>
+  <data name="Profile_PinRepo" xml:space="preserve"><value>リポジトリをピン留め</value></data>
+
+  <!-- Notifications page -->
+  <data name="Notifications_AllCaughtUp" xml:space="preserve"><value>すべて確認済みです！</value></data>
+  <data name="Notifications_NoNotifications" xml:space="preserve"><value>まだ通知はありません</value></data>
+
+  <!-- Organizations page -->
+  <data name="Org_AddUserPlaceholder" xml:space="preserve"><value>追加するユーザー名...</value></data>
+  <data name="Org_SecretValue" xml:space="preserve"><value>シークレット値</value></data>
+
+  <!-- Projects page -->
+  <data name="Projects_Cards" xml:space="preserve"><value>カード</value></data>
+
+  <!-- Home page -->
+  <data name="Home_ProjectDescription" xml:space="preserve"><value>プロジェクトの簡単な説明</value></data>
+
+  <!-- TodoScanner page -->
+  <data name="Todo_Title" xml:space="preserve"><value>TODOs</value></data>
+  <data name="Todo_Scanning" xml:space="preserve"><value>コードのTODOをスキャン中...</value></data>
+  <data name="Todo_ScannerHeading" xml:space="preserve"><value>TODOスキャナー</value></data>
+
+  <!-- FooterPage -->
+  <data name="Footer_NoContent" xml:space="preserve"><value>まだコンテンツが設定されていません。管理者はAdmin > 設定で編集できます。</value></data>
 </root>

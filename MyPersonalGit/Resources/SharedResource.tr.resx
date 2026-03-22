@@ -1321,4 +1321,101 @@
   <data name="Repo_DeployKeyRequired" xml:space="preserve"><value>Başlık ve genel anahtar gereklidir.</value></data>
   <data name="Repo_RepoNotFound" xml:space="preserve"><value>Depo bulunamadı.</value></data>
   <data name="Repo_DeployKeyFailed" xml:space="preserve"><value>Dağıtım anahtarı eklenemedi. Bu parmak izine sahip bir anahtar zaten mevcut olabilir.</value></data>
+
+  <!-- NavMenu -->
+  <data name="Nav_Home" xml:space="preserve"><value>Ana Sayfa</value></data>
+  <data name="Nav_Explore" xml:space="preserve"><value>Keşfet</value></data>
+  <data name="Nav_Organizations" xml:space="preserve"><value>Organizasyonlar</value></data>
+  <data name="Nav_Language" xml:space="preserve"><value>Dil</value></data>
+  <data name="Nav_ToggleDarkMode" xml:space="preserve"><value>Karanlık modu değiştir</value></data>
+  <data name="Nav_NewRepository" xml:space="preserve"><value>Yeni depo</value></data>
+  <data name="Footer_Stats" xml:space="preserve"><value>İstatistikler</value></data>
+
+  <!-- PullRequests inline comments -->
+  <data name="PR_AddComment" xml:space="preserve"><value>Yorum ekle</value></data>
+  <data name="PR_Reply" xml:space="preserve"><value>Yanıtla</value></data>
+  <data name="PR_Delete" xml:space="preserve"><value>Sil</value></data>
+  <data name="PR_ReplyPlaceholder" xml:space="preserve"><value>Yanıtla...</value></data>
+  <data name="PR_LeaveComment" xml:space="preserve"><value>Bir yorum bırakın...</value></data>
+  <data name="PR_LeaveCommentOnLine" xml:space="preserve"><value>Bu satıra bir yorum bırakın...</value></data>
+  <data name="PR_SuggestChanges" xml:space="preserve"><value>Değişiklik öner</value></data>
+  <data name="PR_ExplainSuggestion" xml:space="preserve"><value>Öneriyi açıklayın...</value></data>
+  <data name="PR_Suggest" xml:space="preserve"><value>Öner</value></data>
+  <data name="PR_SuggestedChange" xml:space="preserve"><value>Önerilen değişiklik</value></data>
+  <data name="PR_SuggestedReplacementCode" xml:space="preserve"><value>Önerilen değiştirme kodu...</value></data>
+
+  <!-- Discussions detail -->
+  <data name="Discussion_StartedBy" xml:space="preserve"><value>Başlatan</value></data>
+  <data name="Discussion_Posted" xml:space="preserve"><value>yayınladı</value></data>
+  <data name="Discussion_Commented" xml:space="preserve"><value>yorum yaptı</value></data>
+
+  <!-- IDE -->
+  <data name="Ide_CommitSuccessful" xml:space="preserve"><value>Commit başarılı</value></data>
+
+  <!-- Settings page -->
+  <data name="Settings_Confirm" xml:space="preserve"><value>Onayla</value></data>
+  <data name="Settings_Verify" xml:space="preserve"><value>Doğrula</value></data>
+  <data name="Settings_SecretValue" xml:space="preserve"><value>Gizli değer</value></data>
+  <data name="Settings_SshKeyPlaceholder" xml:space="preserve"><value>SSH Anahtarım</value></data>
+  <data name="Settings_AddKey" xml:space="preserve"><value>Anahtar ekle</value></data>
+  <data name="Settings_TokenPlaceholder" xml:space="preserve"><value>Tokenim</value></data>
+  <data name="Settings_GenerateToken" xml:space="preserve"><value>Token oluştur</value></data>
+
+  <!-- Admin page -->
+  <data name="Admin_SmtpFromDefault" xml:space="preserve"><value>Boşsa varsayılan olarak SMTP kullanıcı adını kullanır</value></data>
+  <data name="Admin_BrandingHelp" xml:space="preserve"><value>Site adını ve alt bilgi sayfa içeriğini özelleştirin. Markdown kullanır.</value></data>
+  <data name="Admin_TermsOfService" xml:space="preserve"><value>Hizmet Şartları</value></data>
+  <data name="Admin_PrivacyPolicy" xml:space="preserve"><value>Gizlilik Politikası</value></data>
+  <data name="Admin_Save" xml:space="preserve"><value>Kaydet</value></data>
+  <data name="Admin_SaveChanges" xml:space="preserve"><value>Değişiklikleri kaydet</value></data>
+
+  <!-- Actions page -->
+  <data name="Actions_Edit" xml:space="preserve"><value>Düzenle</value></data>
+  <data name="Actions_Disable" xml:space="preserve"><value>Devre dışı bırak</value></data>
+  <data name="Actions_Enable" xml:space="preserve"><value>Etkinleştir</value></data>
+  <data name="Actions_Delete" xml:space="preserve"><value>Sil</value></data>
+  <data name="Actions_Redeliver" xml:space="preserve"><value>Yeniden gönder</value></data>
+
+  <!-- Issues page -->
+  <data name="Issues_Edit" xml:space="preserve"><value>Düzenle</value></data>
+  <data name="Issues_Delete" xml:space="preserve"><value>Sil</value></data>
+  <data name="Issues_Locked" xml:space="preserve"><value>Kilitli</value></data>
+
+  <!-- Stats page -->
+  <data name="Stats_Title" xml:space="preserve"><value>Platform İstatistikleri</value></data>
+  <data name="Stats_LinesOfCode" xml:space="preserve"><value>Kod satırı</value></data>
+  <data name="Stats_Files" xml:space="preserve"><value>Dosyalar</value></data>
+
+  <!-- Wiki page -->
+  <data name="Wiki_SearchPages" xml:space="preserve"><value>Sayfa ara...</value></data>
+  <data name="Wiki_RevertRevision" xml:space="preserve"><value>Bu revizyona geri dön</value></data>
+
+  <!-- Snippets page -->
+  <data name="Snippets_PastePlaceholder" xml:space="preserve"><value>Kodunuzu buraya yapıştırın...</value></data>
+
+  <!-- UserProfilePage -->
+  <data name="Profile_UnpinRepo" xml:space="preserve"><value>Depo sabitlemesini kaldır</value></data>
+  <data name="Profile_PinRepo" xml:space="preserve"><value>Depoyu sabitle</value></data>
+
+  <!-- Notifications page -->
+  <data name="Notifications_AllCaughtUp" xml:space="preserve"><value>Hepsini gördünüz!</value></data>
+  <data name="Notifications_NoNotifications" xml:space="preserve"><value>Henüz bildiriminiz yok</value></data>
+
+  <!-- Organizations page -->
+  <data name="Org_AddUserPlaceholder" xml:space="preserve"><value>Eklenecek kullanıcı adı...</value></data>
+  <data name="Org_SecretValue" xml:space="preserve"><value>Gizli değer</value></data>
+
+  <!-- Projects page -->
+  <data name="Projects_Cards" xml:space="preserve"><value>kartlar</value></data>
+
+  <!-- Home page -->
+  <data name="Home_ProjectDescription" xml:space="preserve"><value>Projenizin kısa açıklaması</value></data>
+
+  <!-- TodoScanner page -->
+  <data name="Todo_Title" xml:space="preserve"><value>TODOs</value></data>
+  <data name="Todo_Scanning" xml:space="preserve"><value>Kod TODO'lar için taranıyor...</value></data>
+  <data name="Todo_ScannerHeading" xml:space="preserve"><value>TODO Tarayıcı</value></data>
+
+  <!-- FooterPage -->
+  <data name="Footer_NoContent" xml:space="preserve"><value>Henüz yapılandırılmış içerik yok. Yöneticiler Admin > Ayarlar'dan düzenleyebilir.</value></data>
 </root>
