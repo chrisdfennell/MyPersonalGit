@@ -1321,4 +1321,101 @@
   <data name="Repo_DeployKeyRequired" xml:space="preserve"><value>Titolo e chiave pubblica sono obbligatori.</value></data>
   <data name="Repo_RepoNotFound" xml:space="preserve"><value>Repository non trovato.</value></data>
   <data name="Repo_DeployKeyFailed" xml:space="preserve"><value>Impossibile aggiungere la chiave di deploy. Una chiave con questa impronta digitale potrebbe già esistere.</value></data>
+
+  <!-- NavMenu -->
+  <data name="Nav_Home" xml:space="preserve"><value>Home</value></data>
+  <data name="Nav_Explore" xml:space="preserve"><value>Esplora</value></data>
+  <data name="Nav_Organizations" xml:space="preserve"><value>Organizzazioni</value></data>
+  <data name="Nav_Language" xml:space="preserve"><value>Lingua</value></data>
+  <data name="Nav_ToggleDarkMode" xml:space="preserve"><value>Attiva/disattiva modalità scura</value></data>
+  <data name="Nav_NewRepository" xml:space="preserve"><value>Nuovo repository</value></data>
+  <data name="Footer_Stats" xml:space="preserve"><value>Statistiche</value></data>
+
+  <!-- PullRequests inline comments -->
+  <data name="PR_AddComment" xml:space="preserve"><value>Aggiungi commento</value></data>
+  <data name="PR_Reply" xml:space="preserve"><value>Rispondi</value></data>
+  <data name="PR_Delete" xml:space="preserve"><value>Elimina</value></data>
+  <data name="PR_ReplyPlaceholder" xml:space="preserve"><value>Rispondi...</value></data>
+  <data name="PR_LeaveComment" xml:space="preserve"><value>Lascia un commento...</value></data>
+  <data name="PR_LeaveCommentOnLine" xml:space="preserve"><value>Lascia un commento su questa riga...</value></data>
+  <data name="PR_SuggestChanges" xml:space="preserve"><value>Suggerisci modifiche</value></data>
+  <data name="PR_ExplainSuggestion" xml:space="preserve"><value>Spiega il suggerimento...</value></data>
+  <data name="PR_Suggest" xml:space="preserve"><value>Suggerisci</value></data>
+  <data name="PR_SuggestedChange" xml:space="preserve"><value>Modifica suggerita</value></data>
+  <data name="PR_SuggestedReplacementCode" xml:space="preserve"><value>Codice sostitutivo suggerito...</value></data>
+
+  <!-- Discussions detail -->
+  <data name="Discussion_StartedBy" xml:space="preserve"><value>Avviato da</value></data>
+  <data name="Discussion_Posted" xml:space="preserve"><value>pubblicato</value></data>
+  <data name="Discussion_Commented" xml:space="preserve"><value>ha commentato</value></data>
+
+  <!-- IDE -->
+  <data name="Ide_CommitSuccessful" xml:space="preserve"><value>Commit riuscito</value></data>
+
+  <!-- Settings page -->
+  <data name="Settings_Confirm" xml:space="preserve"><value>Conferma</value></data>
+  <data name="Settings_Verify" xml:space="preserve"><value>Verifica</value></data>
+  <data name="Settings_SecretValue" xml:space="preserve"><value>Valore del segreto</value></data>
+  <data name="Settings_SshKeyPlaceholder" xml:space="preserve"><value>La mia chiave SSH</value></data>
+  <data name="Settings_AddKey" xml:space="preserve"><value>Aggiungi chiave</value></data>
+  <data name="Settings_TokenPlaceholder" xml:space="preserve"><value>Il mio token</value></data>
+  <data name="Settings_GenerateToken" xml:space="preserve"><value>Genera token</value></data>
+
+  <!-- Admin page -->
+  <data name="Admin_SmtpFromDefault" xml:space="preserve"><value>Usa il nome utente SMTP come predefinito se vuoto</value></data>
+  <data name="Admin_BrandingHelp" xml:space="preserve"><value>Personalizza il nome del sito e il contenuto del piè di pagina. Usa Markdown.</value></data>
+  <data name="Admin_TermsOfService" xml:space="preserve"><value>Termini di servizio</value></data>
+  <data name="Admin_PrivacyPolicy" xml:space="preserve"><value>Informativa sulla privacy</value></data>
+  <data name="Admin_Save" xml:space="preserve"><value>Salva</value></data>
+  <data name="Admin_SaveChanges" xml:space="preserve"><value>Salva modifiche</value></data>
+
+  <!-- Actions page -->
+  <data name="Actions_Edit" xml:space="preserve"><value>Modifica</value></data>
+  <data name="Actions_Disable" xml:space="preserve"><value>Disabilita</value></data>
+  <data name="Actions_Enable" xml:space="preserve"><value>Abilita</value></data>
+  <data name="Actions_Delete" xml:space="preserve"><value>Elimina</value></data>
+  <data name="Actions_Redeliver" xml:space="preserve"><value>Riconsegna</value></data>
+
+  <!-- Issues page -->
+  <data name="Issues_Edit" xml:space="preserve"><value>Modifica</value></data>
+  <data name="Issues_Delete" xml:space="preserve"><value>Elimina</value></data>
+  <data name="Issues_Locked" xml:space="preserve"><value>Bloccata</value></data>
+
+  <!-- Stats page -->
+  <data name="Stats_Title" xml:space="preserve"><value>Statistiche della piattaforma</value></data>
+  <data name="Stats_LinesOfCode" xml:space="preserve"><value>Righe di codice</value></data>
+  <data name="Stats_Files" xml:space="preserve"><value>File</value></data>
+
+  <!-- Wiki page -->
+  <data name="Wiki_SearchPages" xml:space="preserve"><value>Cerca pagine...</value></data>
+  <data name="Wiki_RevertRevision" xml:space="preserve"><value>Ripristina questa revisione</value></data>
+
+  <!-- Snippets page -->
+  <data name="Snippets_PastePlaceholder" xml:space="preserve"><value>Incolla il tuo codice qui...</value></data>
+
+  <!-- UserProfilePage -->
+  <data name="Profile_UnpinRepo" xml:space="preserve"><value>Rimuovi fissaggio repository</value></data>
+  <data name="Profile_PinRepo" xml:space="preserve"><value>Fissa repository</value></data>
+
+  <!-- Notifications page -->
+  <data name="Notifications_AllCaughtUp" xml:space="preserve"><value>Sei in pari!</value></data>
+  <data name="Notifications_NoNotifications" xml:space="preserve"><value>Non hai ancora notifiche</value></data>
+
+  <!-- Organizations page -->
+  <data name="Org_AddUserPlaceholder" xml:space="preserve"><value>Nome utente da aggiungere...</value></data>
+  <data name="Org_SecretValue" xml:space="preserve"><value>Valore del segreto</value></data>
+
+  <!-- Projects page -->
+  <data name="Projects_Cards" xml:space="preserve"><value>schede</value></data>
+
+  <!-- Home page -->
+  <data name="Home_ProjectDescription" xml:space="preserve"><value>Breve descrizione del progetto</value></data>
+
+  <!-- TodoScanner page -->
+  <data name="Todo_Title" xml:space="preserve"><value>TODOs</value></data>
+  <data name="Todo_Scanning" xml:space="preserve"><value>Scansione del codice alla ricerca di TODO...</value></data>
+  <data name="Todo_ScannerHeading" xml:space="preserve"><value>Scanner TODO</value></data>
+
+  <!-- FooterPage -->
+  <data name="Footer_NoContent" xml:space="preserve"><value>Nessun contenuto configurato. Gli amministratori possono modificarlo in Admin > Impostazioni.</value></data>
 </root>

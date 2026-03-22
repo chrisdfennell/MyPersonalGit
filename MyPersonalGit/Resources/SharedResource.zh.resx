@@ -1321,4 +1321,101 @@
   <data name="Repo_DeployKeyRequired" xml:space="preserve"><value>标题和公钥是必填项。</value></data>
   <data name="Repo_RepoNotFound" xml:space="preserve"><value>仓库未找到。</value></data>
   <data name="Repo_DeployKeyFailed" xml:space="preserve"><value>添加部署密钥失败。具有此指纹的密钥可能已存在。</value></data>
+
+  <!-- NavMenu -->
+  <data name="Nav_Home" xml:space="preserve"><value>首页</value></data>
+  <data name="Nav_Explore" xml:space="preserve"><value>探索</value></data>
+  <data name="Nav_Organizations" xml:space="preserve"><value>组织</value></data>
+  <data name="Nav_Language" xml:space="preserve"><value>语言</value></data>
+  <data name="Nav_ToggleDarkMode" xml:space="preserve"><value>切换暗色模式</value></data>
+  <data name="Nav_NewRepository" xml:space="preserve"><value>新建仓库</value></data>
+  <data name="Footer_Stats" xml:space="preserve"><value>统计</value></data>
+
+  <!-- PullRequests inline comments -->
+  <data name="PR_AddComment" xml:space="preserve"><value>添加评论</value></data>
+  <data name="PR_Reply" xml:space="preserve"><value>回复</value></data>
+  <data name="PR_Delete" xml:space="preserve"><value>删除</value></data>
+  <data name="PR_ReplyPlaceholder" xml:space="preserve"><value>回复...</value></data>
+  <data name="PR_LeaveComment" xml:space="preserve"><value>留下评论...</value></data>
+  <data name="PR_LeaveCommentOnLine" xml:space="preserve"><value>在此行留下评论...</value></data>
+  <data name="PR_SuggestChanges" xml:space="preserve"><value>建议修改</value></data>
+  <data name="PR_ExplainSuggestion" xml:space="preserve"><value>说明建议...</value></data>
+  <data name="PR_Suggest" xml:space="preserve"><value>建议</value></data>
+  <data name="PR_SuggestedChange" xml:space="preserve"><value>建议的更改</value></data>
+  <data name="PR_SuggestedReplacementCode" xml:space="preserve"><value>建议的替换代码...</value></data>
+
+  <!-- Discussions detail -->
+  <data name="Discussion_StartedBy" xml:space="preserve"><value>发起者</value></data>
+  <data name="Discussion_Posted" xml:space="preserve"><value>发布于</value></data>
+  <data name="Discussion_Commented" xml:space="preserve"><value>发表了评论</value></data>
+
+  <!-- IDE -->
+  <data name="Ide_CommitSuccessful" xml:space="preserve"><value>提交成功</value></data>
+
+  <!-- Settings page -->
+  <data name="Settings_Confirm" xml:space="preserve"><value>确认</value></data>
+  <data name="Settings_Verify" xml:space="preserve"><value>验证</value></data>
+  <data name="Settings_SecretValue" xml:space="preserve"><value>密钥值</value></data>
+  <data name="Settings_SshKeyPlaceholder" xml:space="preserve"><value>我的SSH密钥</value></data>
+  <data name="Settings_AddKey" xml:space="preserve"><value>添加密钥</value></data>
+  <data name="Settings_TokenPlaceholder" xml:space="preserve"><value>我的令牌</value></data>
+  <data name="Settings_GenerateToken" xml:space="preserve"><value>生成令牌</value></data>
+
+  <!-- Admin page -->
+  <data name="Admin_SmtpFromDefault" xml:space="preserve"><value>为空时默认使用SMTP用户名</value></data>
+  <data name="Admin_BrandingHelp" xml:space="preserve"><value>自定义站点名称和页脚内容。使用Markdown。</value></data>
+  <data name="Admin_TermsOfService" xml:space="preserve"><value>服务条款</value></data>
+  <data name="Admin_PrivacyPolicy" xml:space="preserve"><value>隐私政策</value></data>
+  <data name="Admin_Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Admin_SaveChanges" xml:space="preserve"><value>保存更改</value></data>
+
+  <!-- Actions page -->
+  <data name="Actions_Edit" xml:space="preserve"><value>编辑</value></data>
+  <data name="Actions_Disable" xml:space="preserve"><value>禁用</value></data>
+  <data name="Actions_Enable" xml:space="preserve"><value>启用</value></data>
+  <data name="Actions_Delete" xml:space="preserve"><value>删除</value></data>
+  <data name="Actions_Redeliver" xml:space="preserve"><value>重新发送</value></data>
+
+  <!-- Issues page -->
+  <data name="Issues_Edit" xml:space="preserve"><value>编辑</value></data>
+  <data name="Issues_Delete" xml:space="preserve"><value>删除</value></data>
+  <data name="Issues_Locked" xml:space="preserve"><value>已锁定</value></data>
+
+  <!-- Stats page -->
+  <data name="Stats_Title" xml:space="preserve"><value>平台统计</value></data>
+  <data name="Stats_LinesOfCode" xml:space="preserve"><value>代码行数</value></data>
+  <data name="Stats_Files" xml:space="preserve"><value>文件</value></data>
+
+  <!-- Wiki page -->
+  <data name="Wiki_SearchPages" xml:space="preserve"><value>搜索页面...</value></data>
+  <data name="Wiki_RevertRevision" xml:space="preserve"><value>恢复到此版本</value></data>
+
+  <!-- Snippets page -->
+  <data name="Snippets_PastePlaceholder" xml:space="preserve"><value>在此粘贴您的代码...</value></data>
+
+  <!-- UserProfilePage -->
+  <data name="Profile_UnpinRepo" xml:space="preserve"><value>取消置顶仓库</value></data>
+  <data name="Profile_PinRepo" xml:space="preserve"><value>置顶仓库</value></data>
+
+  <!-- Notifications page -->
+  <data name="Notifications_AllCaughtUp" xml:space="preserve"><value>您已全部查看！</value></data>
+  <data name="Notifications_NoNotifications" xml:space="preserve"><value>您还没有任何通知</value></data>
+
+  <!-- Organizations page -->
+  <data name="Org_AddUserPlaceholder" xml:space="preserve"><value>要添加的用户名...</value></data>
+  <data name="Org_SecretValue" xml:space="preserve"><value>密钥值</value></data>
+
+  <!-- Projects page -->
+  <data name="Projects_Cards" xml:space="preserve"><value>卡片</value></data>
+
+  <!-- Home page -->
+  <data name="Home_ProjectDescription" xml:space="preserve"><value>项目的简短描述</value></data>
+
+  <!-- TodoScanner page -->
+  <data name="Todo_Title" xml:space="preserve"><value>TODOs</value></data>
+  <data name="Todo_Scanning" xml:space="preserve"><value>正在扫描代码中的TODO...</value></data>
+  <data name="Todo_ScannerHeading" xml:space="preserve"><value>TODO扫描器</value></data>
+
+  <!-- FooterPage -->
+  <data name="Footer_NoContent" xml:space="preserve"><value>尚未配置内容。管理员可以在Admin > 设置中编辑。</value></data>
 </root>
