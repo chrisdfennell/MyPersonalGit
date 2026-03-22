@@ -493,16 +493,16 @@ else
                 <!-- TLS / HTTPS -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-lock me-2"></i>TLS / HTTPS</h5>
+                        <h5 class="mb-0"><i class="bi bi-lock me-2"></i>@L["Admin_TlsHttps"]</h5>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted small mb-3">Enable HTTPS for secure connections. Required for WebAuthn/Passkeys and recommended for all deployments. <strong>Requires application restart.</strong></p>
+                        <p class="text-muted small mb-3">@L["Admin_TlsDescription"] <strong>@L["Admin_RequiresRestart"]</strong></p>
 
                         <div class="mb-3">
                             <div class="form-check form-switch">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableHttps" id="enableHttps" />
                                 <label class="form-check-label" for="enableHttps">
-                                    Enable HTTPS
+                                    @L["Admin_EnableHttps"]
                                 </label>
                             </div>
                         </div>
@@ -511,14 +511,14 @@ else
                         {
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Internal HTTPS Port</label>
+                                    <label class="form-label">@L["Admin_InternalHttpsPort"]</label>
                                     <InputNumber class="form-control" @bind-Value="Settings.HttpsPort" />
-                                    <small class="form-text text-muted">The port Kestrel listens on inside the container. Default: 8443.</small>
+                                    <small class="form-text text-muted">@L["Admin_InternalPortHelp"]</small>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">External HTTPS Port</label>
+                                    <label class="form-label">@L["Admin_ExternalHttpsPort"]</label>
                                     <InputNumber class="form-control" @bind-Value="Settings.HttpsExternalPort" />
-                                    <small class="form-text text-muted">The port users access from outside (Docker <code>-p</code> mapping). Used for redirects.</small>
+                                    <small class="form-text text-muted">@L["Admin_ExternalPortHelp"]</small>
                                 </div>
                             </div>
 
@@ -526,32 +526,30 @@ else
                                 <div class="form-check form-switch">
                                     <InputCheckbox class="form-check-input" @bind-Value="Settings.HttpsRedirect" id="httpsRedirect" />
                                     <label class="form-check-label" for="httpsRedirect">
-                                        Redirect HTTP to HTTPS
+                                        @L["Admin_RedirectHttps"]
                                     </label>
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Certificate Source</label>
+                                <label class="form-label">@L["Admin_CertSource"]</label>
                                 <select class="form-select" @bind="Settings.TlsCertSource">
-                                    <option value="selfSigned">Self-Signed Certificate (auto-generated)</option>
-                                    <option value="file">Certificate File (PEM or PFX)</option>
+                                    <option value="selfSigned">@L["Admin_CertSelfSigned"]</option>
+                                    <option value="file">@L["Admin_CertFile"]</option>
                                 </select>
                             </div>
 
                             @if (Settings.TlsCertSource == "selfSigned")
                             {
                                 <div class="alert alert-info py-2 small">
-                                    <i class="bi bi-info-circle me-1"></i>A self-signed certificate will be automatically generated and stored at <code>/data/tls/selfsigned.pfx</code>.
-                                    Browsers will show a security warning — you can add an exception or import the cert into your trusted store.
-                                    Valid for 2 years, auto-renewed on restart.
+                                    <i class="bi bi-info-circle me-1"></i>@L["Admin_SelfSignedInfo"]
                                 </div>
                                 <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="RegenerateSelfSignedCert" disabled="@regeneratingCert">
                                     @if (regeneratingCert)
                                     {
                                         <span class="spinner-border spinner-border-sm me-1"></span>
                                     }
-                                    <i class="bi bi-arrow-clockwise me-1"></i>Regenerate Certificate Now
+                                    <i class="bi bi-arrow-clockwise me-1"></i>@L["Admin_RegenerateCert"]
                                 </button>
                                 @if (!string.IsNullOrEmpty(certMessage))
                                 {
@@ -561,31 +559,31 @@ else
                             else if (Settings.TlsCertSource == "file")
                             {
                                 <div class="alert alert-info py-2 small mb-3">
-                                    <i class="bi bi-info-circle me-1"></i>Provide <strong>either</strong> a PFX file <strong>or</strong> a PEM certificate + key pair. Mount the files into the container.
+                                    <i class="bi bi-info-circle me-1"></i>@L["Admin_CertFileInfo"]
                                 </div>
 
-                                <h6 class="text-muted mb-2"><small>Option 1: PFX / PKCS#12</small></h6>
+                                <h6 class="text-muted mb-2"><small>@L["Admin_OptionPfx"]</small></h6>
                                 <div class="row">
                                     <div class="col-md-8 mb-3">
-                                        <label class="form-label">PFX File Path</label>
+                                        <label class="form-label">@L["Admin_PfxFilePath"]</label>
                                         <InputText class="form-control" @bind-Value="Settings.TlsPfxPath" placeholder="/data/tls/cert.pfx" />
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label">PFX Password</label>
+                                        <label class="form-label">@L["Admin_PfxPassword"]</label>
                                         <InputText type="password" class="form-control" @bind-Value="Settings.TlsPfxPassword" />
                                     </div>
                                 </div>
 
                                 <hr />
 
-                                <h6 class="text-muted mb-2"><small>Option 2: PEM Certificate + Key (e.g., Let's Encrypt)</small></h6>
+                                <h6 class="text-muted mb-2"><small>@L["Admin_OptionPem"]</small></h6>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">Certificate Path</label>
+                                        <label class="form-label">@L["Admin_CertPath"]</label>
                                         <InputText class="form-control" @bind-Value="Settings.TlsCertPath" placeholder="/data/tls/fullchain.pem" />
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">Private Key Path</label>
+                                        <label class="form-label">@L["Admin_PrivateKeyPath"]</label>
                                         <InputText class="form-control" @bind-Value="Settings.TlsKeyPath" placeholder="/data/tls/privkey.pem" />
                                     </div>
                                 </div>
