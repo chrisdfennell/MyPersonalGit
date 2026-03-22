@@ -387,6 +387,12 @@
 
             editor.setModel(model);
             editor.updateOptions({ readOnly: !!isReadOnly });
+
+            // Force layout recalculation — the container may have just become visible
+            // (it starts as display:none when no tabs are open)
+            setTimeout(function () {
+                editor.layout();
+            }, 50);
         },
 
         /**
