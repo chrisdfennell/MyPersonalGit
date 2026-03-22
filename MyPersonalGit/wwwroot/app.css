@@ -187,22 +187,4 @@ h1:focus {
     caret-color: #e6edf3;
 }
 
-/* Blazor reconnect overlay — dark mode */
-[data-bs-theme="dark"] .components-reconnect-dialog {
-    background-color: #1e1e2e !important;
-    color: #c9d1d9 !important;
-    border: 1px solid #444 !important;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.7) !important;
-}
-
-[data-bs-theme="dark"] .components-reconnect-dialog p {
-    color: #8b949e !important;
-}
-
-[data-bs-theme="dark"] .components-rejoining-animation div {
-    border-color: #58a6ff !important;
-}
-
-[data-bs-theme="dark"] .components-reconnect-overlay {
-    background-color: rgba(0, 0, 0, 0.6) !important;
-}
+/* Blazor reconnect overlay dark mode is injected into shadow DOM via JS in App.razor */
