@@ -278,6 +278,21 @@ public class RepositoryService : IRepositoryService
         using var db = _dbFactory.CreateDbContext();
         var repo = await db.Repositories.FirstOrDefaultAsync(r => r.Name.ToLower() == name.ToLower());
         if (repo == null) return false;
+
+        // If this repo is a fork, decrement the source repo's fork count and remove the fork record
+        var forkRecord = await db.RepositoryForks.FirstOrDefaultAsync(f => f.ForkedRepo == name || f.ForkedRepo == repo.Name);
+        if (forkRecord != null)
+        {
+            var sourceMeta = await db.Repositories.FirstOrDefaultAsync(r => r.Name == forkRecord.OriginalRepo);
+            if (sourceMeta != null && sourceMeta.Forks > 0)
+                sourceMeta.Forks--;
+            db.RepositoryForks.Remove(forkRecord);
+        }
+
+        // Also remove any fork records where this repo is the source
+        var childForks = await db.RepositoryForks.Where(f => f.OriginalRepo == name || f.OriginalRepo == repo.Name).ToListAsync();
+        db.RepositoryForks.RemoveRange(childForks);
+
         db.Repositories.Remove(repo);
         await db.SaveChangesAsync();
         return true;
