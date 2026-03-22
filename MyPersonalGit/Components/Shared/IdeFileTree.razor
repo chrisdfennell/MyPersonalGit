@@ -67,7 +67,81 @@
     private string? contextMenuPath;
     private bool contextMenuIsFolder;
 
-    private List<TreeNode>? filteredNodes => FilterNodes(Nodes);
+    private List<TreeNode>? filteredNodes => FilterNodes(NestFiles(Nodes));
+    private HashSet<string> nestedParents = new();
+
+    private List<TreeNode>? NestFiles(List<TreeNode>? nodes)
+    {
+        if (nodes == null) return null;
+
+        var result = new List<TreeNode>();
+        foreach (var node in nodes)
+        {
+            if (node.Type == "tree")
+            {
+                result.Add(node with { Children = NestFiles(node.Children) });
+            }
+            else
+            {
+                result.Add(node);
+            }
+        }
+
+        // Group files that share a base name (e.g., Foo.razor, Foo.razor.cs, Foo.razor.css)
+        var files = result.Where(n => n.Type != "tree").ToList();
+        var folders = result.Where(n => n.Type == "tree").ToList();
+
+        if (files.Count <= 1) return result;
+
+        var nested = new Dictionary<string, List<TreeNode>>(StringComparer.OrdinalIgnoreCase);
+        var remaining = new List<TreeNode>();
+
+        // Find potential parent files and their children
+        // Sort by name length (shortest first) so parents are found before children
+        var sortedFiles = files.OrderBy(f => f.Name.Length).ToList();
+
+        var claimed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var file in sortedFiles)
+        {
+            if (claimed.Contains(file.Name)) continue;
+
+            // Find children: files whose name starts with this file's name + "."
+            var children = sortedFiles
+                .Where(f => f.Name != file.Name &&
+                       !claimed.Contains(f.Name) &&
+                       f.Name.StartsWith(file.Name + ".", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (children.Count > 0)
+            {
+                nested[file.Name] = children;
+                foreach (var c in children) claimed.Add(c.Name);
+                nestedParents.Add(file.Path);
+            }
+        }
+
+        if (nested.Count == 0) return result;
+
+        // Rebuild: folders first, then files with nesting applied
+        var finalFiles = new List<TreeNode>();
+        foreach (var file in files)
+        {
+            if (claimed.Contains(file.Name)) continue; // skip children, they're nested
+
+            if (nested.TryGetValue(file.Name, out var children))
+            {
+                // Create a virtual folder-like node for this group
+                var nestedChildren = children.ToList();
+                finalFiles.Add(file with { Children = nestedChildren });
+            }
+            else
+            {
+                finalFiles.Add(file);
+            }
+        }
+
+        return folders.Concat(finalFiles).ToList();
+    }
 
     private List<TreeNode>? FilterNodes(List<TreeNode>? nodes)
     {
@@ -209,15 +283,30 @@
         {
             var isActive = node.Path == ActiveFilePath;
             var isModified = ModifiedFiles?.Contains(node.Path) == true;
+            var hasNestedChildren = node.Children != null && node.Children.Count > 0;
+            var isNestedExpanded = hasNestedChildren && IsExpanded("nested:" + node.Path);
             <li class="tree-node tree-file">
                 <div class="tree-node-label @(isActive ? "active" : "")"
                      @onclick="() => SelectFile(node.Path)"
                      @oncontextmenu="(e) => HandleNodeContextMenu(e, node)"
                      @oncontextmenu:preventDefault="true"
                      title="@node.Path">
-                    <span class="tree-arrow-spacer"></span>
+                    @if (hasNestedChildren)
+                    {
+                        var nestedKey = "nested:" + node.Path;
+                        <i class="bi @(isNestedExpanded ? "bi-chevron-down" : "bi-chevron-right") tree-arrow"
+                           @onclick="() => ToggleFolder(nestedKey)" @onclick:stopPropagation="true"></i>
+                    }
+                    else
+                    {
+                        <span class="tree-arrow-spacer"></span>
+                    }
                     <i class="bi @GetFileIcon(node.Name) tree-icon text-muted"></i>
                     <span class="tree-name">@node.Name</span>
+                    @if (hasNestedChildren)
+                    {
+                        <span class="tree-nested-badge">@(node.Children!.Count)</span>
+                    }
                     @if (isModified)
                     {
                         <span class="tree-modified-dot" title="Modified"></span>
@@ -229,9 +318,40 @@
                         </button>
                     }
                 </div>
+                @if (hasNestedChildren && isNestedExpanded)
+                {
+                    <ul class="tree-list tree-nested">
+                        @foreach (var child in node.Children!)
+                        {
+                            var childActive = child.Path == ActiveFilePath;
+                            var childModified = ModifiedFiles?.Contains(child.Path) == true;
+                            <li class="tree-node tree-file">
+                                <div class="tree-node-label @(childActive ? "active" : "")"
+                                     @onclick="() => SelectFile(child.Path)"
+                                     title="@child.Path">
+                                    <span class="tree-arrow-spacer"></span>
+                                    <i class="bi @GetFileIcon(child.Name) tree-icon text-muted"></i>
+                                    <span class="tree-name tree-nested-name">@GetNestedSuffix(node.Name, child.Name)</span>
+                                    @if (childModified)
+                                    {
+                                        <span class="tree-modified-dot" title="Modified"></span>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
             </li>
         }
     };
+
+    private static string GetNestedSuffix(string parentName, string childName)
+    {
+        // Show only the suffix: "WebIde.razor.css" under "WebIde.razor" shows as ".css"
+        if (childName.StartsWith(parentName, StringComparison.OrdinalIgnoreCase))
+            return childName[parentName.Length..];
+        return childName;
+    }
 }
 
 <style>
@@ -361,6 +481,22 @@
     .tree-name {
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+
+    .tree-nested-badge {
+        font-size: 10px;
+        color: #858585;
+        background: #3c3c3c;
+        border-radius: 8px;
+        padding: 0 5px;
+        margin-left: 4px;
+        flex-shrink: 0;
+        line-height: 16px;
+    }
+
+    .tree-nested-name {
+        color: #858585;
+        font-size: 12px;
     }
 
     .tree-modified-dot {

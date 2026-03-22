@@ -11,6 +11,7 @@ public record CommitRequest(string Branch, string Message, List<FileChange> Chan
 public record SearchResult(string FilePath, int LineNumber, string LineContent, string Context);
 public record BlameHunk(int StartLine, int EndLine, string CommitSha, string Author, DateTimeOffset Date, string Message);
 public record FileHistoryEntry(string Sha, string ShortSha, string Author, string Email, DateTimeOffset Date, string Message);
+public record CommitGraphEntry(string Sha, string ShortSha, string Author, DateTimeOffset Date, string Message, List<string> ParentShas, int Column, List<string> Branches);
 
 public interface IWebIdeService
 {
@@ -27,6 +28,7 @@ public interface IWebIdeService
     Task<List<BlameHunk>> GetFileBlameAsync(string repoName, string branch, string path);
     Task<List<FileHistoryEntry>> GetFileHistoryAsync(string repoName, string branch, string path);
     Task CreateBranchAsync(string repoName, string sourceBranch, string newBranchName);
+    Task<List<CommitGraphEntry>> GetCommitGraphAsync(string repoName, string branch, int maxCount = 100);
 }
 
 public class WebIdeService : IWebIdeService
@@ -609,6 +611,73 @@ public class WebIdeService : IWebIdeService
             ".graphql" or ".gql" => "graphql",
             _ => "plaintext"
         };
+    }
+
+    public async Task<List<CommitGraphEntry>> GetCommitGraphAsync(string repoName, string branch, int maxCount = 100)
+    {
+        var repoPath = await GetRepoPathAsync(repoName);
+        return await Task.Run(() =>
+        {
+            using var repo = new Repository(repoPath);
+            var targetBranch = ResolveBranch(repo, branch);
+            if (targetBranch?.Tip == null) return new List<CommitGraphEntry>();
+
+            // Map branch tips for labeling
+            var branchTips = new Dictionary<string, List<string>>();
+            foreach (var b in repo.Branches.Where(b => !b.IsRemote))
+            {
+                if (b.Tip != null)
+                {
+                    if (!branchTips.ContainsKey(b.Tip.Sha))
+                        branchTips[b.Tip.Sha] = new List<string>();
+                    branchTips[b.Tip.Sha].Add(b.FriendlyName);
+                }
+            }
+
+            // Simple column assignment: track active lanes
+            var activeLanes = new List<string>(); // SHA of commits expected in each lane
+            var entries = new List<CommitGraphEntry>();
+
+            foreach (var commit in targetBranch.Commits.Take(maxCount))
+            {
+                var parentShas = commit.Parents.Select(p => p.Sha).ToList();
+                var branches = branchTips.GetValueOrDefault(commit.Sha) ?? new List<string>();
+
+                // Find or assign lane
+                var column = activeLanes.IndexOf(commit.Sha);
+                if (column == -1)
+                {
+                    column = activeLanes.Count;
+                    activeLanes.Add(commit.Sha);
+                }
+
+                // Replace this lane with first parent, close lane if no parents
+                if (parentShas.Count > 0)
+                    activeLanes[column] = parentShas[0];
+                else
+                    activeLanes[column] = "";
+
+                // Additional parents get new lanes
+                for (int i = 1; i < parentShas.Count; i++)
+                {
+                    if (!activeLanes.Contains(parentShas[i]))
+                        activeLanes.Add(parentShas[i]);
+                }
+
+                entries.Add(new CommitGraphEntry(
+                    commit.Sha,
+                    commit.Sha[..7],
+                    commit.Author.Name,
+                    commit.Author.When,
+                    commit.MessageShort,
+                    parentShas,
+                    column,
+                    branches
+                ));
+            }
+
+            return entries;
+        });
     }
 
     public async Task CreateBranchAsync(string repoName, string sourceBranch, string newBranchName)

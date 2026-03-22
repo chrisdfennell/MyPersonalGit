@@ -5,6 +5,11 @@ All notable changes to MyPersonalGit are documented here.
 ## [Unreleased]
 
 ### Added
+- Web IDE: Drag-to-resize panels — sidebar and bottom panel are draggable with visual resize handles
+- Web IDE: File nesting — related files group together (e.g., WebIde.razor + .css + .cs) with expandable chevrons and count badges
+- Web IDE: CSS color previews — inline color swatches next to hex/rgb/hsl values in CSS/SCSS/Less files
+- Web IDE: Git commit graph — visual branch/merge timeline with colored lane lines, branch labels, and commit details
+- Web IDE: Minimap highlights — modified lines (blue), added lines (green), and conflict markers (red) shown in minimap gutter
 - Built-in TLS/HTTPS — enable HTTPS directly from admin settings with three cert options: self-signed (auto-generated), PFX file, or PEM cert+key (Let's Encrypt). Includes HTTP-to-HTTPS redirect toggle. Port 8443 exposed by default.
 - Web IDE: Git Branch Creation — create new branches from the IDE branch dropdown with source branch selection
 - Web IDE: Merge Conflict Resolution — inline Accept Current / Accept Incoming / Accept Both buttons with color-coded conflict regions

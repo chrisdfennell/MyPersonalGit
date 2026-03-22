@@ -15,8 +15,9 @@
 @inject IAdminService AdminService
 @implements IAsyncDisposable
 
-<div class="ide-container @(isZenMode ? "ide-zen-mode" : "")" @onkeydown="HandleGlobalKeyDown" tabindex="0" @ref="ideContainerRef">
-    <div class="ide-sidebar">
+<div class="ide-container @(isZenMode ? "ide-zen-mode" : "")" @onkeydown="HandleGlobalKeyDown" tabindex="0" @ref="ideContainerRef"
+     style="@(sidebarWidth > 0 ? $"grid-template-columns: {sidebarWidth}px auto 1fr;" : "")">
+    <div class="ide-sidebar" style="@(sidebarWidth > 0 ? $"width:{sidebarWidth}px;" : "")">
         <div class="ide-sidebar-tabs">
             <button class="ide-sidebar-tab @(sidebarMode == "files" ? "active" : "")" @onclick='() => sidebarMode = "files"' title="Explorer">
                 <i class="bi bi-files"></i>
@@ -139,6 +140,7 @@
             }
         </div>
     </div>
+    <div class="ide-resize-handle ide-resize-sidebar" @onmousedown="StartSidebarResize"></div>
 
     <div class="ide-tabs">
         <div class="ide-tabs-row">
@@ -258,10 +260,14 @@
         }
     </div>
 
-    <div class="ide-bottom-panel @(showHistory ? "expanded" : "")">
+    <div class="ide-resize-handle ide-resize-bottom" @onmousedown="StartBottomResize"></div>
+    <div class="ide-bottom-panel @(showHistory ? "expanded" : "")" style="@(bottomPanelHeight > 0 ? $"max-height:{bottomPanelHeight}px;height:{bottomPanelHeight}px;" : "")">
         <div class="ide-bottom-tabs">
             <button class="ide-bottom-tab @(bottomPanelMode == "commits" ? "active" : "")" @onclick='() => bottomPanelMode = "commits"'>
                 <i class="bi bi-git me-1"></i>Commits
+            </button>
+            <button class="ide-bottom-tab @(bottomPanelMode == "graph" ? "active" : "")" @onclick="LoadCommitGraph">
+                <i class="bi bi-diagram-3 me-1"></i>Graph
             </button>
             <button class="ide-bottom-tab @(bottomPanelMode == "terminal" ? "active" : "")" @onclick="ToggleTerminal">
                 <i class="bi bi-terminal me-1"></i>Terminal
@@ -300,6 +306,54 @@
             <IdeCommitPanel Changes="pendingChanges"
                             OnCommit="HandleCommit"
                             IsCommitting="isCommitting" />
+        }
+        else if (bottomPanelMode == "graph")
+        {
+            <div class="ide-graph-panel" style="flex: 1; overflow: auto;">
+                @if (isLoadingGraph)
+                {
+                    <div class="text-center py-3"><span class="spinner-border spinner-border-sm text-muted"></span></div>
+                }
+                else if (commitGraph.Count == 0)
+                {
+                    <div class="text-muted small px-3 py-2">No commits</div>
+                }
+                else
+                {
+                    <table class="ide-graph-table">
+                        @foreach (var entry in commitGraph)
+                        {
+                            <tr class="ide-graph-row">
+                                <td class="ide-graph-line" style="width: @((maxGraphColumn + 1) * 16 + 8)px;">
+                                    <svg height="24" width="@((maxGraphColumn + 1) * 16 + 8)">
+                                        <circle cx="@(entry.Column * 16 + 8)" cy="12" r="4" fill="@GetGraphColor(entry.Column)" />
+                                        @foreach (var parentSha in entry.ParentShas)
+                                        {
+                                            var parentEntry = commitGraph.FirstOrDefault(e => e.Sha == parentSha);
+                                            if (parentEntry != null)
+                                            {
+                                                var px = parentEntry.Column * 16 + 8;
+                                                var cx = entry.Column * 16 + 8;
+                                                <line x1="@cx" y1="12" x2="@px" y2="24" stroke="@GetGraphColor(Math.Min(entry.Column, parentEntry.Column))" stroke-width="1.5" />
+                                            }
+                                        }
+                                    </svg>
+                                </td>
+                                <td class="ide-graph-sha"><code>@entry.ShortSha</code></td>
+                                <td class="ide-graph-msg">
+                                    @entry.Message
+                                    @foreach (var b in entry.Branches)
+                                    {
+                                        <span class="ide-graph-branch">@b</span>
+                                    }
+                                </td>
+                                <td class="ide-graph-author">@entry.Author</td>
+                                <td class="ide-graph-date">@entry.Date.LocalDateTime.ToString("MMM dd")</td>
+                            </tr>
+                        }
+                    </table>
+                }
+            </div>
         }
         else if (bottomPanelMode == "terminal")
         {
@@ -510,6 +564,11 @@
     private List<ToastMessage> toasts = new();
     private int toastCounter;
 
+    // Git graph state
+    private List<CommitGraphEntry> commitGraph = new();
+    private bool isLoadingGraph;
+    private int maxGraphColumn;
+
     // Zen mode state
     private bool isZenMode;
 
@@ -520,6 +579,10 @@
 
     // Workspace state persistence
     private bool workspaceRestored;
+
+    // Panel resize state
+    private int sidebarWidth;
+    private int bottomPanelHeight;
 
     // Element reference for keyboard events
     private ElementReference ideContainerRef;
@@ -614,6 +677,8 @@
 
                 await JS.InvokeVoidAsync("monacoInterop.onDidChangeContent", editorId, dotNetRef, "OnEditorContentChanged");
                 await JS.InvokeVoidAsync("monacoInterop.onDidChangeCursorPosition", editorId, dotNetRef, "OnCursorPositionChanged");
+                await JS.InvokeVoidAsync("monacoInterop.enableColorDecorations", editorId);
+                await JS.InvokeVoidAsync("monacoInterop.enableMinimapHighlights", editorId);
 
                 // Set up drag-and-drop file upload on the file tree
                 await JS.InvokeVoidAsync("ideUpload.setupDropZone", "ide-file-tree-root", dotNetRef, "OnFilesDropped");
@@ -1427,6 +1492,71 @@
             await JS.InvokeVoidAsync("ideUnsaved.setHasChanges", modifiedFiles.Count > 0);
         }
         catch { }
+    }
+
+    // ---- Git Graph ----
+
+    private async Task LoadCommitGraph()
+    {
+        bottomPanelMode = "graph";
+        if (commitGraph.Count > 0) return; // already loaded
+
+        isLoadingGraph = true;
+        StateHasChanged();
+
+        try
+        {
+            commitGraph = await WebIdeService.GetCommitGraphAsync(RepoName, currentBranch);
+            maxGraphColumn = commitGraph.Count > 0 ? commitGraph.Max(e => e.Column) : 0;
+        }
+        catch { commitGraph = new(); }
+        finally
+        {
+            isLoadingGraph = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string GetGraphColor(int column)
+    {
+        var colors = new[] { "#4fc1ff", "#2ea043", "#e2b93d", "#f85149", "#a371f7", "#ff7b72", "#79c0ff", "#d2a8ff" };
+        return colors[column % colors.Length];
+    }
+
+    // ---- Panel Resize ----
+
+    private async Task StartSidebarResize(MouseEventArgs e)
+    {
+        await JS.InvokeVoidAsync("ideResize.startSidebarResize", dotNetRef, e.ClientX);
+    }
+
+    private async Task StartBottomResize(MouseEventArgs e)
+    {
+        await JS.InvokeVoidAsync("ideResize.startBottomResize", dotNetRef, e.ClientY);
+    }
+
+    [JSInvokable]
+    public Task OnSidebarResized(int width)
+    {
+        sidebarWidth = Math.Clamp(width, 150, 600);
+        return InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public Task OnBottomPanelResized(int height)
+    {
+        bottomPanelHeight = Math.Clamp(height, 80, 500);
+        return InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public async Task OnResizeEnd()
+    {
+        // Re-layout editors after resize
+        if (editorId != null)
+            try { await JS.InvokeVoidAsync("monacoInterop.layout", editorId); } catch { }
+        if (splitEditorId != null)
+            try { await JS.InvokeVoidAsync("monacoInterop.layout", splitEditorId); } catch { }
     }
 
     // ---- Merge Conflict Detection ----

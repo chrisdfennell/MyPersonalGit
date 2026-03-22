@@ -1117,6 +1117,83 @@
         },
 
         /**
+         * Add minimap highlights for modified lines (vs original content).
+         * Shows changed lines as colored markers in the overview ruler.
+         * @param {string} editorId - The editor instance ID.
+         */
+        enableMinimapHighlights: function (editorId) {
+            var editor = _editors[editorId];
+            if (!editor) return;
+
+            var updateHighlights = function () {
+                var model = editor.getModel();
+                if (!model) return;
+
+                var decorations = [];
+
+                // Find the file path for this model
+                var filePath = null;
+                var uri = model.uri.toString();
+                for (var key in _models) {
+                    if (_models[key] && !_models[key].isDisposed() && _models[key].uri.toString() === uri) {
+                        filePath = key;
+                        break;
+                    }
+                }
+
+                // Modified lines (vs original)
+                if (filePath && _originalContent[filePath] != null) {
+                    var original = _originalContent[filePath].split('\n');
+                    var current = model.getLinesContent();
+                    var maxLines = Math.max(original.length, current.length);
+                    for (var i = 0; i < maxLines; i++) {
+                        if (i >= original.length || i >= current.length || original[i] !== current[i]) {
+                            var lineNum = i + 1;
+                            if (lineNum <= current.length) {
+                                var color = i >= original.length ? '#2ea04370' : '#0078d470'; // added vs modified
+                                decorations.push({
+                                    range: new monaco.Range(lineNum, 1, lineNum, 1),
+                                    options: {
+                                        isWholeLine: true,
+                                        overviewRuler: { color: color, position: monaco.editor.OverviewRulerLane.Left },
+                                        minimap: { color: color, position: monaco.editor.MinimapPosition.Gutter }
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // Conflict markers
+                var text = model.getValue();
+                var lines = text.split('\n');
+                for (var i = 0; i < lines.length; i++) {
+                    if (lines[i].startsWith('<<<<<<<') || lines[i].startsWith('=======') || lines[i].startsWith('>>>>>>>')) {
+                        decorations.push({
+                            range: new monaco.Range(i + 1, 1, i + 1, 1),
+                            options: {
+                                isWholeLine: true,
+                                overviewRuler: { color: '#f8514970', position: monaco.editor.OverviewRulerLane.Full },
+                                minimap: { color: '#f8514970', position: monaco.editor.MinimapPosition.Gutter }
+                            }
+                        });
+                    }
+                }
+
+                if (editor._minimapDecorations) {
+                    try { editor._minimapDecorations.clear(); } catch (e) { }
+                }
+                if (decorations.length > 0) {
+                    editor._minimapDecorations = editor.createDecorationsCollection(decorations);
+                }
+            };
+
+            updateHighlights();
+            editor.onDidChangeModelContent(debounce(updateHighlights, 500));
+            editor.onDidChangeModel(updateHighlights);
+        },
+
+        /**
          * Detect and decorate merge conflicts in the current model.
          * Adds clickable "Accept Current", "Accept Incoming", "Accept Both" widgets.
          * @param {string} editorId - The editor instance ID.
@@ -1269,6 +1346,64 @@
         },
 
         /**
+         * Add inline color swatches for CSS color values.
+         * @param {string} editorId - The editor instance ID.
+         */
+        enableColorDecorations: function (editorId) {
+            var editor = _editors[editorId];
+            if (!editor) return;
+
+            var updateColors = function () {
+                var model = editor.getModel();
+                if (!model) return;
+                var lang = model.getLanguageId();
+                if (['css', 'scss', 'less', 'html', 'razor'].indexOf(lang) === -1) return;
+
+                var text = model.getValue();
+                var colorRegex = /#(?:[0-9a-fA-F]{3,4}){1,2}\b|rgba?\(\s*\d+[\s,]+\d+[\s,]+\d+(?:[\s,/]+[\d.]+%?)?\s*\)|hsla?\(\s*\d+[\s,]+[\d.]+%[\s,]+[\d.]+%(?:[\s,/]+[\d.]+%?)?\s*\)/g;
+
+                var decorations = [];
+                var match;
+                while ((match = colorRegex.exec(text)) !== null) {
+                    var pos = model.getPositionAt(match.index);
+                    var endPos = model.getPositionAt(match.index + match[0].length);
+
+                    // Create a unique CSS class for this color
+                    var color = match[0];
+                    var className = 'ide-color-' + match.index;
+
+                    // Inject a style for this specific swatch
+                    var styleId = 'color-swatch-' + editorId + '-' + match.index;
+                    var existing = document.getElementById(styleId);
+                    if (existing) existing.remove();
+                    var style = document.createElement('style');
+                    style.id = styleId;
+                    style.textContent = '.' + className + '::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 3px; border-radius: 2px; border: 1px solid #666; background: ' + color + '; vertical-align: middle; }';
+                    document.head.appendChild(style);
+
+                    decorations.push({
+                        range: new monaco.Range(pos.lineNumber, pos.column, endPos.lineNumber, endPos.column),
+                        options: {
+                            beforeContentClassName: className
+                        }
+                    });
+                }
+
+                if (editor._colorDecorations) {
+                    try { editor._colorDecorations.clear(); } catch (e) { }
+                }
+                if (decorations.length > 0) {
+                    editor._colorDecorations = editor.createDecorationsCollection(decorations);
+                }
+            };
+
+            // Run on file open and on content change
+            updateColors();
+            editor.onDidChangeModelContent(debounce(updateColors, 500));
+            editor.onDidChangeModel(updateColors);
+        },
+
+        /**
          * Update the stored original content for a file (after auto-save).
          * @param {string} editorId - The editor instance ID.
          * @param {string} filePath - The file path.
@@ -1276,6 +1411,76 @@
          */
         updateOriginalContent: function (editorId, filePath, content) {
             _originalContent[filePath] = content;
+        }
+    };
+
+    // ============================================================
+    // Panel resize helper
+    // ============================================================
+    window.ideResize = {
+        _active: null,
+
+        startSidebarResize: function (dotNetRef, startX) {
+            var sidebar = document.querySelector('.ide-sidebar');
+            if (!sidebar) return;
+            var startWidth = sidebar.offsetWidth;
+
+            this._active = {
+                type: 'sidebar',
+                dotNetRef: dotNetRef,
+                startX: startX,
+                startWidth: startWidth
+            };
+
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', this._onMouseMove);
+            document.addEventListener('mouseup', this._onMouseUp);
+        },
+
+        startBottomResize: function (dotNetRef, startY) {
+            var panel = document.querySelector('.ide-bottom-panel');
+            if (!panel) return;
+            var startHeight = panel.offsetHeight;
+
+            this._active = {
+                type: 'bottom',
+                dotNetRef: dotNetRef,
+                startY: startY,
+                startHeight: startHeight
+            };
+
+            document.body.style.cursor = 'row-resize';
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', this._onMouseMove);
+            document.addEventListener('mouseup', this._onMouseUp);
+        },
+
+        _onMouseMove: function (e) {
+            var ctx = window.ideResize._active;
+            if (!ctx) return;
+            e.preventDefault();
+
+            if (ctx.type === 'sidebar') {
+                var newWidth = ctx.startWidth + (e.clientX - ctx.startX);
+                try { ctx.dotNetRef.invokeMethodAsync('OnSidebarResized', Math.round(newWidth)); } catch (ex) { }
+            } else if (ctx.type === 'bottom') {
+                var newHeight = ctx.startHeight - (e.clientY - ctx.startY);
+                try { ctx.dotNetRef.invokeMethodAsync('OnBottomPanelResized', Math.round(newHeight)); } catch (ex) { }
+            }
+        },
+
+        _onMouseUp: function () {
+            var ctx = window.ideResize._active;
+            window.ideResize._active = null;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', window.ideResize._onMouseMove);
+            document.removeEventListener('mouseup', window.ideResize._onMouseUp);
+
+            if (ctx && ctx.dotNetRef) {
+                try { ctx.dotNetRef.invokeMethodAsync('OnResizeEnd'); } catch (ex) { }
+            }
         }
     };
 
