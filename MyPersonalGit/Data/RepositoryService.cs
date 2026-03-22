@@ -204,7 +204,10 @@ public class RepositoryService : IRepositoryService
 
         // Check if already forked by this user
         if (await db.RepositoryForks.AnyAsync(f => f.OriginalRepo == sourceRepoName && f.Owner == newOwner))
+        {
+            _logger.LogWarning("Fork already exists for {Owner} from {Source}", newOwner, sourceRepoName);
             return null;
+        }
 
         // Determine paths
         var sourcePath = Path.Combine(projectRoot, sourceRepoName);
@@ -212,7 +215,10 @@ public class RepositoryService : IRepositoryService
         {
             sourcePath = Path.Combine(projectRoot, sourceRepoName + ".git");
             if (!LibGit2Sharp.Repository.IsValid(sourcePath))
+            {
+                _logger.LogWarning("Source repo not found for fork: {Source}", sourceRepoName);
                 return null;
+            }
         }
 
         var forkedRepoName = $"{newOwner}-{sourceRepoName}";
@@ -220,8 +226,25 @@ public class RepositoryService : IRepositoryService
             forkedRepoName += ".git";
         var forkedPath = Path.Combine(projectRoot, forkedRepoName);
 
+        // If a stale directory exists from a previously deleted fork, clean it up
         if (Directory.Exists(forkedPath))
-            return null;
+        {
+            var hasDbRecord = await db.RepositoryForks.AnyAsync(f => f.ForkedRepo == forkedRepoName);
+            if (!hasDbRecord)
+            {
+                _logger.LogInformation("Cleaning up stale fork directory: {Path}", forkedPath);
+                try { Directory.Delete(forkedPath, true); }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to clean up stale fork directory: {Path}", forkedPath);
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
 
         // Clone the bare repo
         LibGit2Sharp.Repository.Clone(sourcePath, forkedPath, new CloneOptions { IsBare = true });
