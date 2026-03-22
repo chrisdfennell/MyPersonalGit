@@ -4402,6 +4402,7 @@ else
 
     private static readonly MarkdownPipeline _markdownPipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
+        .UseEmojiAndSmiley()
         .Build();
 
     private MarkupString RenderCsvTable(string content, char delimiter)

@@ -398,6 +398,7 @@
 
     private static readonly MarkdownPipeline _mdPipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
+        .UseEmojiAndSmiley()
         .Build();
 
     protected override async Task OnParametersSetAsync()

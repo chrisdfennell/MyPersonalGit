@@ -1120,6 +1120,7 @@
 
     private static readonly MarkdownPipeline _mdPipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
+        .UseEmojiAndSmiley()
         .Build();
 
     private List<PullRequest> filteredPRs => prs
