@@ -47,6 +47,32 @@
     opacity: 1;
 }
 
+/* Dark mode support — dialog is top-layer so needs explicit styling */
+:global([data-bs-theme="dark"]) #components-reconnect-modal {
+    background-color: #1e1e2e;
+    color: #c9d1d9;
+    border-color: #444;
+}
+
+:global([data-bs-theme="dark"]) #components-reconnect-modal p {
+    color: #8b949e;
+}
+
+:global([data-bs-theme="dark"]) #components-reconnect-modal::backdrop {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* Light mode — explicit to override any defaults */
+:global([data-bs-theme="light"]) #components-reconnect-modal {
+    background-color: #ffffff;
+    color: #1f2328;
+    border-color: #d0d7de;
+}
+
+:global([data-bs-theme="light"]) #components-reconnect-modal p {
+    color: #656d76;
+}
+
 @keyframes components-reconnect-modal-slideUp {
     0% {
         transform: translateY(30px) scale(0.95);
