@@ -99,6 +99,12 @@
                        OnTabClosed="HandleTabClosed" />
             @if (openTabs.Count > 0)
             {
+                @if (activeTabPath != null && IsMarkdownFile(activeTabPath))
+                {
+                    <button class="ide-action-btn @(showMarkdownPreview ? "active" : "")" @onclick="ToggleMarkdownPreview" title="Toggle Preview">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                }
                 <button class="ide-action-btn @(isBlameActive ? "active" : "")" @onclick="ToggleBlame" title="@(isBlameActive ? "Hide Git Blame" : "Show Git Blame")">
                     <i class="bi bi-person-lines-fill"></i>
                 </button>
@@ -155,8 +161,38 @@
             </div>
             <div id="diff-editor-container" style="width: 100%; flex: 1;"></div>
         }
+        else if (activeTabPath != null && IsImageFile(activeTabPath))
+        {
+            <div class="ide-preview ide-image-preview">
+                <img src="/api/v1/ide/@RepoName/raw/@activeTabPath?branch=@Uri.EscapeDataString(currentBranch)" alt="@System.IO.Path.GetFileName(activeTabPath)" />
+            </div>
+        }
+        else if (activeTabPath != null && IsMarkdownFile(activeTabPath) && showMarkdownPreview)
+        {
+            <div class="ide-preview ide-markdown-preview">
+                <div class="ide-markdown-toolbar">
+                    <button class="ide-action-btn active" title="Preview">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="ide-action-btn" @onclick="() => { showMarkdownPreview = false; StateHasChanged(); }" title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                </div>
+                <div class="ide-markdown-body" id="markdown-preview-container">
+                    @((MarkupString)renderedMarkdown)
+                </div>
+            </div>
+        }
         else
         {
+            @if (activeTabPath != null && IsMarkdownFile(activeTabPath) && !showMarkdownPreview)
+            {
+                <div class="ide-markdown-toolbar" style="position: absolute; top: 4px; right: 20px; z-index: 5;">
+                    <button class="ide-action-btn" @onclick="ToggleMarkdownPreview" title="Preview">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            }
             <div class="ide-editor-panes @(isSplit ? "split" : "")" style="@(openTabs.Count == 0 ? "display: none;" : "")">
                 <div id="monaco-container" class="ide-pane" @onclick="() => SetActivePane(1)"></div>
                 @if (isSplit)
@@ -341,6 +377,10 @@
     private string? diffFilePath;
     private string? diffEditorId;
 
+    // Preview state
+    private bool showMarkdownPreview;
+    private string renderedMarkdown = "";
+
     // Blame state
     private bool isBlameActive;
 
@@ -442,6 +482,9 @@
                 await JS.InvokeVoidAsync("monacoInterop.onDidChangeContent", editorId, dotNetRef, "OnEditorContentChanged");
                 await JS.InvokeVoidAsync("monacoInterop.onDidChangeCursorPosition", editorId, dotNetRef, "OnCursorPositionChanged");
 
+                // Set up drag-and-drop file upload on the file tree
+                await JS.InvokeVoidAsync("ideUpload.setupDropZone", "ide-file-tree-root", dotNetRef, "OnFilesDropped");
+
                 if (!string.IsNullOrEmpty(FilePath))
                 {
                     await HandleFileSelected(FilePath);
@@ -493,6 +536,9 @@
             await CloseDiffView();
         }
 
+        // Reset markdown preview when switching files
+        showMarkdownPreview = false;
+
         var existingTab = openTabs.FirstOrDefault(t => t.FilePath == path);
         if (existingTab != null)
         {
@@ -502,17 +548,33 @@
 
         try
         {
+            // Image files don't need content loaded into Monaco
+            if (IsImageFile(path))
+            {
+                var tab = new OpenTab
+                {
+                    FilePath = path,
+                    FileName = System.IO.Path.GetFileName(path),
+                    IsDirty = false,
+                    OriginalContent = ""
+                };
+                openTabs.Add(tab);
+                activeTabPath = path;
+                StateHasChanged();
+                return;
+            }
+
             var fileContent = await WebIdeService.GetFileContentAsync(RepoName, currentBranch, path);
             fileContents[path] = fileContent.Content;
 
-            var tab = new OpenTab
+            var openTab = new OpenTab
             {
                 FilePath = path,
                 FileName = System.IO.Path.GetFileName(path),
                 IsDirty = false,
                 OriginalContent = fileContent.Content
             };
-            openTabs.Add(tab);
+            openTabs.Add(openTab);
 
             activeTabPath = path;
             StateHasChanged();
@@ -919,6 +981,49 @@
     }
 
     [JSInvokable]
+    public async Task OnFilesDropped(string fileName, string base64Content)
+    {
+        if (!UserService.IsLoggedIn) return;
+
+        try
+        {
+            var content = Convert.FromBase64String(base64Content);
+            var contentStr = System.Text.Encoding.UTF8.GetString(content);
+
+            // Check if it's a binary file (image, etc.)
+            var ext = System.IO.Path.GetExtension(fileName).ToLowerInvariant();
+            var isBinary = ext is ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp" or ".ico" or ".bmp"
+                or ".zip" or ".tar" or ".gz" or ".pdf" or ".woff" or ".woff2" or ".ttf" or ".eot";
+
+            if (isBinary)
+            {
+                // For binary files, we need to commit them directly via the service
+                // Store as base64 in a special commit
+                await WebIdeService.CreateBinaryFileAsync(
+                    RepoName, currentBranch, fileName, content,
+                    UserService.Username, $"{UserService.Username}@personalgit.local"
+                );
+            }
+            else
+            {
+                await WebIdeService.CreateFileAsync(
+                    RepoName, currentBranch, fileName, contentStr,
+                    UserService.Username, $"{UserService.Username}@personalgit.local"
+                );
+            }
+
+            // Refresh tree and open the file
+            treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
+            await InvokeAsync(StateHasChanged);
+            await HandleFileSelected(fileName);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"File upload error: {ex.Message}");
+        }
+    }
+
+    [JSInvokable]
     public async Task OnEditorContentChanged(string filePath)
     {
         var tab = openTabs.FirstOrDefault(t => t.FilePath == filePath);
@@ -957,6 +1062,18 @@
                 return new FileChange(path, content, action);
             })
             .ToList();
+
+        // Update browser beforeunload warning
+        _ = UpdateUnsavedWarning();
+    }
+
+    private async Task UpdateUnsavedWarning()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("ideUnsaved.setHasChanges", modifiedFiles.Count > 0);
+        }
+        catch { }
     }
 
     // ---- Command Palette ----
@@ -1279,6 +1396,45 @@
         {
             showShortcutHelp = !showShortcutHelp;
             StateHasChanged();
+        }
+    }
+
+    // ---- Preview Helpers ----
+
+    private static bool IsImageFile(string path)
+    {
+        var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+        return ext is ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp" or ".svg" or ".ico" or ".bmp";
+    }
+
+    private static bool IsMarkdownFile(string path)
+    {
+        var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+        return ext is ".md" or ".markdown" or ".mdx";
+    }
+
+    private async Task ToggleMarkdownPreview()
+    {
+        showMarkdownPreview = !showMarkdownPreview;
+        if (showMarkdownPreview && activeTabPath != null)
+        {
+            await RenderMarkdown();
+        }
+        StateHasChanged();
+    }
+
+    private async Task RenderMarkdown()
+    {
+        if (activeTabPath == null) return;
+        var content = fileContents.GetValueOrDefault(activeTabPath, "");
+        try
+        {
+            renderedMarkdown = await JS.InvokeAsync<string>("idePreview.renderMarkdown", content);
+        }
+        catch
+        {
+            // Simple fallback - wrap in <pre> if JS rendering fails
+            renderedMarkdown = $"<pre>{System.Net.WebUtility.HtmlEncode(content)}</pre>";
         }
     }
 

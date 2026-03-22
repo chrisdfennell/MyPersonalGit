@@ -22,6 +22,8 @@ public interface IWebIdeService
     Task DeletePathAsync(string repoName, string branch, string path, string username, string email);
     Task RenamePathAsync(string repoName, string branch, string oldPath, string newPath, string username, string email);
     Task<List<SearchResult>> SearchFilesAsync(string repoName, string branch, string query, string? fileExtFilter = null);
+    Task<byte[]?> GetFileRawAsync(string repoName, string branch, string path);
+    Task CreateBinaryFileAsync(string repoName, string branch, string path, byte[] content, string username, string email);
     Task<List<BlameHunk>> GetFileBlameAsync(string repoName, string branch, string path);
     Task<List<FileHistoryEntry>> GetFileHistoryAsync(string repoName, string branch, string path);
 }
@@ -94,6 +96,25 @@ public class WebIdeService : IWebIdeService
             }
         }
         return nodes.OrderByDescending(n => n.Type == "tree").ThenBy(n => n.Name).ToList();
+    }
+
+    public async Task<byte[]?> GetFileRawAsync(string repoName, string branch, string path)
+    {
+        var repoPath = await GetRepoPathAsync(repoName);
+        return await Task.Run(() =>
+        {
+            using var repo = new Repository(repoPath);
+            var targetBranch = ResolveBranch(repo, branch);
+            if (targetBranch?.Tip == null) return null;
+
+            var entry = targetBranch.Tip[path];
+            if (entry == null || entry.TargetType != TreeEntryTargetType.Blob) return null;
+
+            var blob = (Blob)entry.Target;
+            using var ms = new MemoryStream();
+            blob.GetContentStream().CopyTo(ms);
+            return ms.ToArray();
+        });
     }
 
     public async Task<FileContent> GetFileContentAsync(string repoName, string branch, string path)
@@ -206,6 +227,41 @@ public class WebIdeService : IWebIdeService
             var author = new Signature(username, email, DateTimeOffset.Now);
             var parents = tipCommit != null ? new[] { tipCommit } : Array.Empty<Commit>();
             var commit = repo.ObjectDatabase.CreateCommit(author, author, message, tree, parents, true);
+
+            var targetBranchName = string.IsNullOrEmpty(branch) ? "main" : branch;
+            var branchRef = repo.Refs[$"refs/heads/{targetBranchName}"];
+            if (branchRef == null)
+            {
+                repo.Branches.Add(targetBranchName, commit);
+                repo.Refs.UpdateTarget("HEAD", $"refs/heads/{targetBranchName}");
+            }
+            else
+            {
+                repo.Refs.UpdateTarget(branchRef.CanonicalName, commit.Id.Sha);
+            }
+        });
+    }
+
+    public async Task CreateBinaryFileAsync(string repoName, string branch, string path, byte[] content, string username, string email)
+    {
+        var repoPath = await GetRepoPathAsync(repoName);
+        await Task.Run(() =>
+        {
+            using var repo = new Repository(repoPath);
+            var targetBranch = ResolveBranch(repo, branch);
+            var tipCommit = targetBranch?.Tip;
+
+            var treeDef = tipCommit != null
+                ? TreeDefinition.From(tipCommit.Tree)
+                : new TreeDefinition();
+
+            var blob = repo.ObjectDatabase.CreateBlob(new MemoryStream(content));
+            treeDef.Add(path, blob, Mode.NonExecutableFile);
+
+            var tree = repo.ObjectDatabase.CreateTree(treeDef);
+            var author = new Signature(username, email, DateTimeOffset.Now);
+            var parents = tipCommit != null ? new[] { tipCommit } : Array.Empty<Commit>();
+            var commit = repo.ObjectDatabase.CreateCommit(author, author, $"Upload {path}", tree, parents, true);
 
             var targetBranchName = string.IsNullOrEmpty(branch) ? "main" : branch;
             var branchRef = repo.Refs[$"refs/heads/{targetBranchName}"];
