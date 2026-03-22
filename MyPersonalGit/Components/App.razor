@@ -321,7 +321,27 @@
         };
     </script>
     <script src="js/monaco-interop.js"></script>
-    <!-- Reconnect dark mode styles are in app.css -->
+    <script>
+        // Inject dark mode styles into Blazor's reconnect shadow DOM
+        (function() {
+            var darkCss = '.components-reconnect-dialog { background-color: #1e1e2e !important; color: #c9d1d9 !important; border: 1px solid #444 !important; box-shadow: 0 4px 24px rgba(0,0,0,0.7) !important; } .components-reconnect-dialog p { color: #8b949e !important; } .components-rejoining-animation div { border-color: #58a6ff !important; } .components-reconnect-overlay { background-color: rgba(0,0,0,0.6) !important; }';
+            function injectIntoShadow() {
+                if (document.documentElement.getAttribute('data-bs-theme') !== 'dark') return;
+                document.querySelectorAll('.components-reconnect-modal').forEach(function(el) {
+                    if (el.shadowRoot && !el.shadowRoot.querySelector('#dark-reconnect-style')) {
+                        var style = document.createElement('style');
+                        style.id = 'dark-reconnect-style';
+                        style.textContent = darkCss;
+                        el.shadowRoot.appendChild(style);
+                    }
+                });
+            }
+            // Watch for the shadow host to appear and for theme changes
+            new MutationObserver(function() { injectIntoShadow(); }).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-bs-theme'] });
+            // Also poll as fallback
+            setInterval(injectIntoShadow, 1000);
+        })();
+    </script>
 </body>
 
 </html>
