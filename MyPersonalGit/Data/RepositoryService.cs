@@ -462,14 +462,50 @@ public class RepositoryService : IRepositoryService
             var head = repo.Head;
             if (head?.Tip == null) return Task.FromResult(contributors);
 
+            // Load .mailmap from repo root if it exists
+            var mailmap = new Dictionary<string, (string Name, string Email)>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                var mailmapBlob = head.Tip.Tree[".mailmap"]?.Target as LibGit2Sharp.Blob;
+                if (mailmapBlob != null)
+                {
+                    using var reader = new StreamReader(mailmapBlob.GetContentStream());
+                    string? line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        line = line.Trim();
+                        if (string.IsNullOrEmpty(line) || line.StartsWith('#')) continue;
+                        // Format: "Proper Name <proper@email> old name <old@email>"
+                        var match = System.Text.RegularExpressions.Regex.Match(line,
+                            @"^(.+?)\s+<([^>]+)>\s+.+?\s+<([^>]+)>$");
+                        if (match.Success)
+                        {
+                            mailmap[match.Groups[3].Value.ToLowerInvariant()] =
+                                (match.Groups[1].Value.Trim(), match.Groups[2].Value.Trim());
+                        }
+                    }
+                }
+            }
+            catch { }
+
             var authorCounts = new Dictionary<string, (string Name, string Email, int Count)>(StringComparer.OrdinalIgnoreCase);
             foreach (var commit in repo.Commits.Take(5000))
             {
-                var key = commit.Author.Email?.ToLowerInvariant() ?? commit.Author.Name;
+                var email = commit.Author.Email?.ToLowerInvariant() ?? "";
+                var name = commit.Author.Name;
+
+                // Apply mailmap
+                if (mailmap.TryGetValue(email, out var mapped))
+                {
+                    name = mapped.Name;
+                    email = mapped.Email.ToLowerInvariant();
+                }
+
+                var key = email != "" ? email : name;
                 if (authorCounts.TryGetValue(key, out var existing))
                     authorCounts[key] = (existing.Name, existing.Email, existing.Count + 1);
                 else
-                    authorCounts[key] = (commit.Author.Name, commit.Author.Email ?? "", 1);
+                    authorCounts[key] = (name, email, 1);
             }
 
             contributors = authorCounts.Values
