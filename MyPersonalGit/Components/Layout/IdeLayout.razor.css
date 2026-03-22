@@ -118,6 +118,27 @@
     color: #333333;
 }
 
+::deep [data-bs-theme="light"] .ide-topbar-branch .dropdown-item:hover,
+::deep [data-bs-theme="light"] .ide-topbar-branch .dropdown-item.active {
+    background: #e0e8f0;
+    color: #0078d4;
+}
+
+::deep [data-bs-theme="light"] .ide-topbar-back:hover {
+    color: #1a1a1a;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+::deep [data-bs-theme="light"] .ide-topbar-branch .btn:hover {
+    color: #1a1a1a;
+    border-color: #888888;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+::deep [data-bs-theme="light"] .ide-topbar-branch .dropdown-menu {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
 /* Branch creation dialog */
 .ide-branch-overlay {
     position: fixed;
@@ -193,4 +214,16 @@
     background: #ffffff;
     border-color: #cccccc;
     color: #333333;
+}
+
+::deep [data-bs-theme="light"] .ide-branch-body .form-control:focus,
+::deep [data-bs-theme="light"] .ide-branch-body .form-select:focus {
+    background: #ffffff;
+    border-color: #0078d4;
+    color: #333333;
+    box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.25);
+}
+
+::deep [data-bs-theme="light"] .ide-branch-dialog {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
