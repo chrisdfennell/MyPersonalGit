@@ -106,13 +106,13 @@
         {
             if (registerModel.Password != registerModel.ConfirmPassword)
             {
-                ErrorMessage = "Passwords do not match";
+                ErrorMessage = L["Register_PasswordsDontMatch"];
                 return;
             }
 
             if (registerModel.Password.Length < 6)
             {
-                ErrorMessage = "Password must be at least 6 characters long";
+                ErrorMessage = L["Register_PasswordTooShort"];
                 return;
             }
 
@@ -125,18 +125,18 @@
 
             if (user != null)
             {
-                SuccessMessage = "Account created successfully! Redirecting to login...";
+                SuccessMessage = L["Register_Success"];
                 await Task.Delay(2000);
                 Navigation.NavigateTo("/login");
             }
             else
             {
-                ErrorMessage = "Username or email already exists";
+                ErrorMessage = L["Register_UserExists"];
             }
         }
         catch (Exception)
         {
-            ErrorMessage = "An error occurred during registration. Please try again.";
+            ErrorMessage = L["Register_Error"];
         }
         finally
         {
