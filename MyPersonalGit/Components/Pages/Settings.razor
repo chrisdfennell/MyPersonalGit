@@ -531,7 +531,7 @@ else
                         @if (!webAuthnSupported)
                         {
                             <div class="alert alert-warning">
-                                <i class="bi bi-exclamation-triangle me-2"></i>Your browser does not support WebAuthn/Passkeys.
+                                <i class="bi bi-exclamation-triangle me-2"></i>@(webAuthnUnsupportedReason ?? "Your browser does not support WebAuthn/Passkeys.")
                             </div>
                         }
                         @if (!string.IsNullOrEmpty(webAuthnMessage))
@@ -922,6 +922,7 @@ else
     // WebAuthn / Passkeys
     private List<WebAuthnCredential> webAuthnCredentials = new();
     private bool webAuthnSupported = false;
+    private string? webAuthnUnsupportedReason;
     private string webAuthnMessage = "";
     private bool webAuthnMessageIsError = false;
     private bool showPasskeyNameInput = false;
@@ -979,6 +980,10 @@ else
             try
             {
                 webAuthnSupported = await JS.InvokeAsync<bool>("webAuthn.isSupported");
+                if (!webAuthnSupported)
+                {
+                    webAuthnUnsupportedReason = await JS.InvokeAsync<string?>("webAuthn.getUnsupportedReason");
+                }
                 StateHasChanged();
             }
             catch { }
