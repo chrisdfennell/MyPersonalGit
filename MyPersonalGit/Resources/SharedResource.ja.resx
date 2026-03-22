@@ -1418,4 +1418,31 @@
 
   <!-- FooterPage -->
   <data name="Footer_NoContent" xml:space="preserve"><value>まだコンテンツが設定されていません。管理者はAdmin > 設定で編集できます。</value></data>
+
+  <!-- IDE Go to Definition -->
+  <data name="Ide_GoToDefinition" xml:space="preserve"><value>定義へ移動</value></data>
+  <data name="Ide_NoDefinitionFound" xml:space="preserve"><value>定義が見つかりません</value></data>
+  <data name="Ide_DefinitionFoundIn" xml:space="preserve"><value>次の場所で見つかりました</value></data>
+  <data name="Ide_CmdGoToDefinition" xml:space="preserve"><value>定義へ移動</value></data>
+
+  <!-- IDE Git Stash -->
+  <data name="Ide_Stash" xml:space="preserve"><value>Stash</value></data>
+  <data name="Ide_StashChanges" xml:space="preserve"><value>変更をStashに保存</value></data>
+  <data name="Ide_PopStash" xml:space="preserve"><value>Pop Stash</value></data>
+  <data name="Ide_ApplyStash" xml:space="preserve"><value>Stashを適用</value></data>
+  <data name="Ide_DropStash" xml:space="preserve"><value>Stashを削除</value></data>
+  <data name="Ide_NoStashes" xml:space="preserve"><value>Stashがありません</value></data>
+  <data name="Ide_StashMessage" xml:space="preserve"><value>Stashメッセージ（任意）</value></data>
+  <data name="Ide_StashCreated" xml:space="preserve"><value>変更をStashに保存しました</value></data>
+  <data name="Ide_StashApplied" xml:space="preserve"><value>Stashを適用しました</value></data>
+  <data name="Ide_StashPopped" xml:space="preserve"><value>Stashを復元しました</value></data>
+  <data name="Ide_StashDropped" xml:space="preserve"><value>Stashを削除しました</value></data>
+  <data name="Ide_CmdStash" xml:space="preserve"><value>変更をStashに保存</value></data>
+  <data name="Ide_CmdPopStash" xml:space="preserve"><value>最新のStashをPop</value></data>
+
+  <!-- IDE Breadcrumb Dropdown -->
+  <data name="Ide_BreadcrumbSiblings" xml:space="preserve"><value>兄弟要素に移動</value></data>
+
+  <!-- IDE Recent Files -->
+  <data name="Ide_RecentFiles" xml:space="preserve"><value>最近のファイル</value></data>
 </root>
