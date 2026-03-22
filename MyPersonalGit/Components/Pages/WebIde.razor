@@ -37,6 +37,7 @@
                 <IdeFileTree Nodes="treeNodes"
                              ActiveFilePath="@activeTabPath"
                              ModifiedFiles="modifiedFiles"
+                             CanEdit="UserService.IsLoggedIn"
                              OnFileSelected="HandleFileSelected"
                              OnNewFile="HandleNewFile"
                              OnNewFolder="HandleNewFolder"
@@ -96,7 +97,8 @@
             <IdeTabBar Tabs="openTabs"
                        ActiveTabPath="@activeTabPath"
                        OnTabSelected="HandleTabSelected"
-                       OnTabClosed="HandleTabClosed" />
+                       OnTabClosed="HandleTabClosed"
+                       OnTabReordered="HandleTabReordered" />
             @if (openTabs.Count > 0)
             {
                 @if (activeTabPath != null && IsMarkdownFile(activeTabPath))
@@ -110,6 +112,9 @@
                 </button>
                 <button class="ide-action-btn" @onclick="ShowFileHistory" title="File History">
                     <i class="bi bi-clock-history"></i>
+                </button>
+                <button class="ide-action-btn" @onclick="HandleToggleMinimap" title="Toggle Minimap">
+                    <i class="bi bi-map"></i>
                 </button>
                 <button class="ide-split-btn" @onclick="ToggleSplitEditor" title="@(isSplit ? "Close Split" : "Split Editor")">
                     <i class="bi @(isSplit ? "bi-layout-sidebar-reverse" : "bi-layout-split")"></i>
@@ -212,6 +217,25 @@
             <button class="ide-bottom-tab @(bottomPanelMode == "terminal" ? "active" : "")" @onclick="ToggleTerminal">
                 <i class="bi bi-terminal me-1"></i>Terminal
             </button>
+            @if (bottomPanelMode == "terminal")
+            {
+                @foreach (var term in terminalTabs)
+                {
+                    <button class="ide-bottom-tab ide-term-tab @(term.Id == activeTerminalId ? "active" : "")"
+                            @onclick="() => SwitchTerminal(term.Id)">
+                        @term.Name
+                        @if (terminalTabs.Count > 1)
+                        {
+                            <span class="ide-term-close" @onclick="() => CloseTerminal(term.Id)" @onclick:stopPropagation="true">
+                                <i class="bi bi-x"></i>
+                            </span>
+                        }
+                    </button>
+                }
+                <button class="ide-bottom-tab ide-term-add" @onclick="AddTerminal" title="New Terminal">
+                    <i class="bi bi-plus"></i>
+                </button>
+            }
             @if (showHistory)
             {
                 <button class="ide-bottom-tab @(bottomPanelMode == "history" ? "active" : "")" @onclick='() => bottomPanelMode = "history"'>
@@ -231,7 +255,12 @@
         else if (bottomPanelMode == "terminal")
         {
             <div class="ide-terminal-wrapper" style="height: 200px;">
-                <IdeTerminal RepoName="@RepoName" IsVisible="@(bottomPanelMode == "terminal")" />
+                @foreach (var term in terminalTabs)
+                {
+                    <div style="@(term.Id == activeTerminalId ? "" : "display:none;") width:100%; height:100%;">
+                        <IdeTerminal RepoName="@RepoName" IsVisible="@(bottomPanelMode == "terminal" && term.Id == activeTerminalId)" />
+                    </div>
+                }
             </div>
         }
         else if (bottomPanelMode == "history" && showHistory)
@@ -357,6 +386,12 @@
 
     // Bottom panel state
     private string bottomPanelMode = "commits";
+
+    // Terminal tabs
+    private record TerminalTab(string Id, string Name);
+    private List<TerminalTab> terminalTabs = new() { new("term-1", "bash") };
+    private string activeTerminalId = "term-1";
+    private int terminalCounter = 1;
 
     // Quick open state
     private bool showQuickOpen;
@@ -605,6 +640,15 @@
         await SwitchToTab(path);
     }
 
+    private void HandleTabReordered((int from, int to) args)
+    {
+        if (args.from < 0 || args.from >= openTabs.Count || args.to < 0 || args.to >= openTabs.Count) return;
+        var tab = openTabs[args.from];
+        openTabs.RemoveAt(args.from);
+        openTabs.Insert(args.to, tab);
+        StateHasChanged();
+    }
+
     private async Task SwitchToTab(string path)
     {
         var targetEditorId = activePane == 2 && isSplit ? splitEditorId : editorId;
@@ -784,7 +828,11 @@
 
     private async Task HandleDeletePath(string path)
     {
-        if (!UserService.IsLoggedIn) return;
+        if (!UserService.IsLoggedIn)
+        {
+            Console.WriteLine("Delete failed: not logged in");
+            return;
+        }
 
         try
         {
@@ -805,7 +853,12 @@
             treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
             StateHasChanged();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Delete failed: {ex.Message}");
+            try { await JS.InvokeVoidAsync("alert", $"Failed to delete '{path}': {ex.Message}"); }
+            catch { }
+        }
     }
 
     private async Task HandleRenamePath((string oldPath, string newPath) args)
@@ -1107,6 +1160,14 @@
                 if (editorId != null)
                     await JS.InvokeVoidAsync("monacoInterop.triggerFindReplace", editorId);
                 break;
+            case "goToLine":
+                if (editorId != null)
+                    await JS.InvokeVoidAsync("monacoInterop.triggerGoToLine", editorId);
+                break;
+            case "toggleMinimap":
+                if (editorId != null)
+                    await JS.InvokeAsync<bool>("monacoInterop.toggleMinimap", editorId);
+                break;
             case "closeTab":
                 if (activeTabPath != null)
                     await HandleTabClosed(activeTabPath);
@@ -1363,6 +1424,38 @@
         bottomPanelMode = bottomPanelMode == "terminal" ? "commits" : "terminal";
     }
 
+    private void AddTerminal()
+    {
+        terminalCounter++;
+        var id = $"term-{terminalCounter}";
+        terminalTabs.Add(new TerminalTab(id, $"bash ({terminalCounter})"));
+        activeTerminalId = id;
+        StateHasChanged();
+    }
+
+    private void SwitchTerminal(string id)
+    {
+        activeTerminalId = id;
+    }
+
+    private void CloseTerminal(string id)
+    {
+        var idx = terminalTabs.FindIndex(t => t.Id == id);
+        terminalTabs.RemoveAll(t => t.Id == id);
+        if (activeTerminalId == id && terminalTabs.Count > 0)
+        {
+            activeTerminalId = terminalTabs[Math.Min(idx, terminalTabs.Count - 1)].Id;
+        }
+        if (terminalTabs.Count == 0)
+        {
+            terminalCounter++;
+            var newId = $"term-{terminalCounter}";
+            terminalTabs.Add(new TerminalTab(newId, "bash"));
+            activeTerminalId = newId;
+        }
+        StateHasChanged();
+    }
+
     // ---- Quick Open & Key Handling ----
 
     private void HandleGlobalKeyDown(KeyboardEventArgs e)
@@ -1396,6 +1489,17 @@
         {
             showShortcutHelp = !showShortcutHelp;
             StateHasChanged();
+        }
+    }
+
+    // ---- Minimap ----
+
+    private async Task HandleToggleMinimap()
+    {
+        if (editorId != null)
+        {
+            try { await JS.InvokeAsync<bool>("monacoInterop.toggleMinimap", editorId); }
+            catch { }
         }
     }
 

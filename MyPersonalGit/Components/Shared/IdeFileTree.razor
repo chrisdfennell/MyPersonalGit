@@ -57,6 +57,7 @@
     [Parameter] public EventCallback<string> OnNewFolder { get; set; }
     [Parameter] public EventCallback<string> OnDeletePath { get; set; }
     [Parameter] public EventCallback<(string oldPath, string newPath)> OnRenamePath { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
 
     private string filterText = "";
     private HashSet<string> expandedFolders = new();
@@ -221,6 +222,12 @@
                     {
                         <span class="tree-modified-dot" title="Modified"></span>
                     }
+                    @if (CanEdit)
+                    {
+                        <button class="tree-action-btn" @onclick="() => OnDeletePath.InvokeAsync(node.Path)" @onclick:stopPropagation="true" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    }
                 </div>
             </li>
         }
@@ -363,6 +370,30 @@
         background: #e2b93d;
         margin-left: auto;
         flex-shrink: 0;
+    }
+
+    .tree-action-btn {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        margin-left: auto;
+        border: none;
+        background: none;
+        color: #858585;
+        cursor: pointer;
+        padding: 0 4px;
+        font-size: 11px;
+        flex-shrink: 0;
+        border-radius: 3px;
+    }
+
+    .tree-action-btn:hover {
+        color: #e74c3c;
+        background: rgba(231, 76, 60, 0.15);
+    }
+
+    .tree-node-label:hover .tree-action-btn {
+        display: flex;
     }
 
     .ide-context-menu-backdrop {
