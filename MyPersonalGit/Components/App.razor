@@ -18,6 +18,34 @@
     <meta property="og:type" content="website" />
     <meta name="description" content="Self-hosted Git server with GitHub-like web interface" />
     <HeadOutlet @rendermode="InteractiveServer" />
+    <script>
+        // Dark mode for reconnect dialog — MutationObserver watches for any dialog appearing
+        (function() {
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(m) {
+                    m.addedNodes.forEach(function(node) {
+                        if (node.tagName === 'DIALOG' || (node.id && node.id.indexOf('reconnect') >= 0)) {
+                            applyDarkToNode(node);
+                        }
+                    });
+                    // Also check for open attribute changes on dialogs
+                    if (m.type === 'attributes' && m.target.tagName === 'DIALOG') {
+                        applyDarkToNode(m.target);
+                    }
+                });
+            });
+            observer.observe(document.body || document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['open'] });
+
+            function applyDarkToNode(el) {
+                if (document.documentElement.getAttribute('data-bs-theme') !== 'dark') return;
+                el.style.setProperty('background-color', '#1e1e2e', 'important');
+                el.style.setProperty('color', '#c9d1d9', 'important');
+                el.style.setProperty('border-color', '#444', 'important');
+                el.querySelectorAll('p').forEach(function(p) { p.style.setProperty('color', '#8b949e', 'important'); });
+                el.querySelectorAll('.components-rejoining-animation div').forEach(function(d) { d.style.setProperty('border-color', '#58a6ff', 'important'); });
+            }
+        })();
+    </script>
 </head>
 
 <body>
