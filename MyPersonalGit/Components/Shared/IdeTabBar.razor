@@ -76,6 +76,12 @@
                 <div class="ide-tab-context-item" @onclick="CloseOtherTabs">
                     <i class="bi bi-x-square me-2"></i>Close Other Tabs
                 </div>
+                <div class="ide-tab-context-item" @onclick="CloseTabsToRight">
+                    <i class="bi bi-chevron-bar-right me-2"></i>Close Tabs to the Right
+                </div>
+                <div class="ide-tab-context-item" @onclick="CloseSavedTabs">
+                    <i class="bi bi-check2-square me-2"></i>Close Saved Tabs
+                </div>
             }
         </div>
     </div>
@@ -216,6 +222,31 @@
         if (Tabs == null || contextMenuTab == null) return;
         CloseContextMenu();
         var toClose = Tabs.Where(t => t.FilePath != contextMenuTab && !t.IsPinned).Select(t => t.FilePath).ToList();
+        foreach (var path in toClose)
+        {
+            await OnTabClosed.InvokeAsync(path);
+        }
+    }
+
+    private async Task CloseTabsToRight()
+    {
+        if (Tabs == null || contextMenuTab == null) return;
+        CloseContextMenu();
+        var sorted = SortedTabs;
+        var idx = sorted.FindIndex(t => t.FilePath == contextMenuTab);
+        if (idx < 0) return;
+        var toClose = sorted.Skip(idx + 1).Where(t => !t.IsPinned).Select(t => t.FilePath).ToList();
+        foreach (var path in toClose)
+        {
+            await OnTabClosed.InvokeAsync(path);
+        }
+    }
+
+    private async Task CloseSavedTabs()
+    {
+        if (Tabs == null) return;
+        CloseContextMenu();
+        var toClose = Tabs.Where(t => !t.IsDirty && !t.IsPinned).Select(t => t.FilePath).ToList();
         foreach (var path in toClose)
         {
             await OnTabClosed.InvokeAsync(path);

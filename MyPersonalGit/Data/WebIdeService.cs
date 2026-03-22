@@ -26,6 +26,7 @@ public interface IWebIdeService
     Task CreateBinaryFileAsync(string repoName, string branch, string path, byte[] content, string username, string email);
     Task<List<BlameHunk>> GetFileBlameAsync(string repoName, string branch, string path);
     Task<List<FileHistoryEntry>> GetFileHistoryAsync(string repoName, string branch, string path);
+    Task CreateBranchAsync(string repoName, string sourceBranch, string newBranchName);
 }
 
 public class WebIdeService : IWebIdeService
@@ -608,5 +609,22 @@ public class WebIdeService : IWebIdeService
             ".graphql" or ".gql" => "graphql",
             _ => "plaintext"
         };
+    }
+
+    public async Task CreateBranchAsync(string repoName, string sourceBranch, string newBranchName)
+    {
+        var repoPath = await GetRepoPathAsync(repoName);
+        await Task.Run(() =>
+        {
+            using var repo = new Repository(repoPath);
+            var source = ResolveBranch(repo, sourceBranch);
+            if (source?.Tip == null)
+                throw new InvalidOperationException($"Source branch '{sourceBranch}' not found.");
+
+            if (repo.Branches[newBranchName] != null)
+                throw new InvalidOperationException($"Branch '{newBranchName}' already exists.");
+
+            repo.CreateBranch(newBranchName, source.Tip);
+        });
     }
 }

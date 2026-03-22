@@ -802,6 +802,7 @@
         {
             var options = new
             {
+                fontFamily = currentSettings.FontFamily,
                 fontSize = currentSettings.FontSize,
                 tabSize = currentSettings.TabSize,
                 wordWrap = currentSettings.WordWrap,
@@ -884,6 +885,9 @@
                 {
                     await LoadBlameForCurrentFile();
                 }
+
+                // Detect merge conflicts
+                await DetectConflicts();
             }
 
             QueueWorkspaceSave();
@@ -1418,6 +1422,48 @@
             await JS.InvokeVoidAsync("ideUnsaved.setHasChanges", modifiedFiles.Count > 0);
         }
         catch { }
+    }
+
+    // ---- Merge Conflict Detection ----
+
+    private async Task DetectConflicts()
+    {
+        if (editorId == null || dotNetRef == null) return;
+        try
+        {
+            var count = await JS.InvokeAsync<int>("monacoInterop.detectConflicts", editorId, dotNetRef);
+            if (count > 0)
+            {
+                ShowToast($"{count} merge conflict{(count > 1 ? "s" : "")} detected", "warning");
+            }
+        }
+        catch { }
+    }
+
+    [JSInvokable]
+    public async Task OnConflictResolved()
+    {
+        // A conflict was resolved — refresh the content tracking
+        if (editorId != null && activeTabPath != null)
+        {
+            try
+            {
+                var content = await JS.InvokeAsync<string>("monacoInterop.getFileContent", editorId, activeTabPath);
+                if (content != null)
+                {
+                    fileContents[activeTabPath] = content;
+                    var tab = openTabs.FirstOrDefault(t => t.FilePath == activeTabPath);
+                    if (tab != null)
+                    {
+                        tab.IsDirty = content != tab.OriginalContent;
+                        if (tab.IsDirty) modifiedFiles.Add(activeTabPath);
+                    }
+                    UpdatePendingChanges();
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+            catch { }
+        }
     }
 
     // ---- Command Palette ----

@@ -6,6 +6,20 @@
     </div>
     <div class="ide-settings-body">
         <div class="ide-settings-group">
+            <label class="ide-settings-label">Font Family</label>
+            <select class="form-select form-select-sm" @bind="fontFamily" @bind:after="ApplySettings">
+                <option value="'Cascadia Code', 'Fira Code', Consolas, monospace">Cascadia Code</option>
+                <option value="'Fira Code', Consolas, monospace">Fira Code</option>
+                <option value="'JetBrains Mono', Consolas, monospace">JetBrains Mono</option>
+                <option value="Consolas, 'Courier New', monospace">Consolas</option>
+                <option value="'Source Code Pro', Consolas, monospace">Source Code Pro</option>
+                <option value="'IBM Plex Mono', Consolas, monospace">IBM Plex Mono</option>
+                <option value="'Ubuntu Mono', Consolas, monospace">Ubuntu Mono</option>
+                <option value="'Courier New', monospace">Courier New</option>
+            </select>
+        </div>
+
+        <div class="ide-settings-group">
             <label class="ide-settings-label">Font Size</label>
             <div class="d-flex align-items-center gap-2">
                 <input type="range" class="form-range flex-grow-1" min="10" max="24" step="1"
@@ -129,6 +143,7 @@
     [Parameter] public string? SplitEditorId { get; set; }
     [Parameter] public EventCallback<EditorSettings> OnSettingsChanged { get; set; }
 
+    private string fontFamily = "'Cascadia Code', 'Fira Code', Consolas, monospace";
     private int fontSize = 14;
     private int tabSize = 4;
     private string wordWrap = "off";
@@ -156,6 +171,7 @@
                     var settings = System.Text.Json.JsonSerializer.Deserialize<EditorSettings>(saved);
                     if (settings != null)
                     {
+                        fontFamily = settings.FontFamily;
                         fontSize = settings.FontSize;
                         tabSize = settings.TabSize;
                         wordWrap = settings.WordWrap;
@@ -181,6 +197,7 @@
     {
         var settings = new EditorSettings
         {
+            FontFamily = fontFamily,
             FontSize = fontSize,
             TabSize = tabSize,
             WordWrap = wordWrap,
@@ -209,6 +226,7 @@
         {
             var options = new
             {
+                fontFamily = settings.FontFamily,
                 fontSize = settings.FontSize,
                 tabSize = settings.TabSize,
                 wordWrap = settings.WordWrap,
@@ -238,6 +256,7 @@
 
     public class EditorSettings
     {
+        public string FontFamily { get; set; } = "'Cascadia Code', 'Fira Code', Consolas, monospace";
         public int FontSize { get; set; } = 14;
         public int TabSize { get; set; } = 4;
         public string WordWrap { get; set; } = "off";

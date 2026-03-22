@@ -117,3 +117,80 @@
 ::deep [data-bs-theme="light"] .ide-topbar-branch .dropdown-item {
     color: #333333;
 }
+
+/* Branch creation dialog */
+.ide-branch-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    padding-top: 80px;
+}
+
+.ide-branch-dialog {
+    width: 400px;
+    max-width: 90vw;
+    background: #252526;
+    border: 1px solid #3c3c3c;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    align-self: flex-start;
+}
+
+.ide-branch-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #3c3c3c;
+    font-size: 0.9rem;
+}
+
+.ide-branch-body {
+    padding: 16px;
+}
+
+.ide-branch-body .form-label {
+    color: #cccccc;
+}
+
+.ide-branch-body .form-control,
+.ide-branch-body .form-select {
+    background: #3c3c3c;
+    border-color: #555555;
+    color: #cccccc;
+}
+
+.ide-branch-body .form-control:focus,
+.ide-branch-body .form-select:focus {
+    background: #3c3c3c;
+    border-color: #0078d4;
+    color: #cccccc;
+    box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.25);
+}
+
+::deep [data-bs-theme="light"] .ide-branch-dialog {
+    background: #ffffff;
+    border-color: #d0d0d0;
+}
+
+::deep [data-bs-theme="light"] .ide-branch-header {
+    border-bottom-color: #e0e0e0;
+}
+
+::deep [data-bs-theme="light"] .ide-branch-body .form-label {
+    color: #333333;
+}
+
+::deep [data-bs-theme="light"] .ide-branch-body .form-control,
+::deep [data-bs-theme="light"] .ide-branch-body .form-select {
+    background: #ffffff;
+    border-color: #cccccc;
+    color: #333333;
+}

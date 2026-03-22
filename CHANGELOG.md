@@ -5,6 +5,10 @@ All notable changes to MyPersonalGit are documented here.
 ## [Unreleased]
 
 ### Added
+- Web IDE: Git Branch Creation — create new branches from the IDE branch dropdown with source branch selection
+- Web IDE: Merge Conflict Resolution — inline Accept Current / Accept Incoming / Accept Both buttons with color-coded conflict regions
+- Web IDE: Tab Context Menu — Close Tabs to the Right and Close Saved Tabs actions
+- Web IDE: Font Family Picker — choose between Cascadia Code, Fira Code, JetBrains Mono, Consolas, and more
 - Web IDE: Auto-Save — optional auto-commit with configurable delay (500ms–5s), toggle in settings or command palette
 - Web IDE: Persistent Workspace — remembers open tabs, pinned tabs, active file, sidebar & panel state across sessions
 - Web IDE: Pinned Tabs — right-click to pin/unpin tabs; pinned tabs sort to the left and can't be accidentally closed
