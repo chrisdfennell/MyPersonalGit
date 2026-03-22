@@ -563,8 +563,8 @@ else
                             @if (!string.IsNullOrEmpty(repoWebsiteUrl))
                             {
                                 <div class="mb-2">
-                                    <a href="@repoWebsiteUrl" target="_blank" rel="noopener" class="small text-decoration-none">
-                                        <i class="bi bi-link-45deg me-1"></i>@repoWebsiteUrl
+                                    <a href="@repoWebsiteUrl" target="_blank" rel="noopener" class="small text-decoration-none text-truncate d-inline-block" style="max-width: 100%;">
+                                        <i class="bi bi-link-45deg me-1"></i>@GetDisplayUrl(repoWebsiteUrl)
                                     </a>
                                 </div>
                             }
@@ -5081,6 +5081,20 @@ else
             await RepoService.WatchRepositoryAsync(dirName, UserService.Username);
             repoIsWatched = true;
             repoWatchCount++;
+        }
+    }
+
+    private static string GetDisplayUrl(string url)
+    {
+        try
+        {
+            var uri = new Uri(url);
+            var display = uri.Host + uri.PathAndQuery.TrimEnd('/');
+            return display;
+        }
+        catch
+        {
+            return url;
         }
     }
 
