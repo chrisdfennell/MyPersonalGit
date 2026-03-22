@@ -188,422 +188,488 @@ else
     {
         <div class="row">
             <div class="col-md-8">
-                <div class="card">
+
+                <!-- Database -->
+                <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0">@L["Admin_SystemSettings"]</h5>
+                        <h5 class="mb-0"><i class="bi bi-database me-2"></i>@L["Admin_Database"]</h5>
                     </div>
                     <div class="card-body">
-                        <h6 class="mb-3">@L["Admin_Database"]</h6>
-                        <div class="card mb-4 @(DbConfig.Provider != "sqlite" ? "border-primary" : "")">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="bi bi-database me-2" style="font-size: 1.2rem;"></i>
-                                    <strong>Active Provider:</strong>
-                                    <span class="badge @(DbConfig.Provider != "sqlite" ? "bg-primary" : "bg-secondary") ms-2">@DbConfig.Provider.ToUpperInvariant()</span>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Database Provider</label>
-                                    <select class="form-select" @bind="DbConfig.Provider">
-                                        <option value="sqlite">SQLite (default — zero config)</option>
-                                        <option value="postgresql">PostgreSQL (for larger deployments)</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Connection String</label>
-                                    <input type="text" class="form-control font-monospace" @bind="DbConfig.ConnectionString" />
-                                    <small class="form-text text-muted">
-                                        @if (DbConfig.Provider == "postgresql")
-                                        {
-                                            <span>Example: <code>Host=localhost;Database=mypersonalgit;Username=mypg;Password=secret</code></span>
-                                        }
-                                        else
-                                        {
-                                            <span>Example: <code>Data Source=/data/mypersonalgit.db</code></span>
-                                        }
-                                    </small>
-                                </div>
-                                @if (!string.IsNullOrEmpty(DbConfigMessage))
+                        <div class="d-flex align-items-center mb-3">
+                            <strong>Active Provider:</strong>
+                            <span class="badge @(DbConfig.Provider != "sqlite" ? "bg-primary" : "bg-secondary") ms-2">@DbConfig.Provider.ToUpperInvariant()</span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Database Provider</label>
+                            <select class="form-select" @bind="DbConfig.Provider">
+                                <option value="sqlite">SQLite (default — zero config)</option>
+                                <option value="postgresql">PostgreSQL (for larger deployments)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Connection String</label>
+                            <input type="text" class="form-control font-monospace" @bind="DbConfig.ConnectionString" />
+                            <small class="form-text text-muted">
+                                @if (DbConfig.Provider == "postgresql")
                                 {
-                                    <div class="alert @(DbConfigSuccess ? "alert-success" : "alert-danger") py-2">@DbConfigMessage</div>
+                                    <span>Example: <code>Host=localhost;Database=mypersonalgit;Username=mypg;Password=secret</code></span>
                                 }
-                                <button type="button" class="btn btn-outline-primary" @onclick="SaveDatabaseConfig">
-                                    <i class="bi bi-save me-1"></i> Save Database Settings
-                                </button>
-                                <small class="text-muted ms-2">
-                                    <i class="bi bi-exclamation-triangle text-warning"></i> Requires application restart to take effect
-                                </small>
+                                else
+                                {
+                                    <span>Example: <code>Data Source=/data/mypersonalgit.db</code></span>
+                                }
+                            </small>
+                        </div>
+                        @if (!string.IsNullOrEmpty(DbConfigMessage))
+                        {
+                            <div class="alert @(DbConfigSuccess ? "alert-success" : "alert-danger") py-2">@DbConfigMessage</div>
+                        }
+                        <button type="button" class="btn btn-outline-primary" @onclick="SaveDatabaseConfig">
+                            <i class="bi bi-save me-1"></i> Save Database Settings
+                        </button>
+                        <small class="text-muted ms-2">
+                            <i class="bi bi-exclamation-triangle text-warning"></i> Requires application restart to take effect
+                        </small>
+                    </div>
+                </div>
+
+                <EditForm Model="Settings" OnValidSubmit="SaveSettings">
+
+                <!-- General Settings -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-gear me-2"></i>General</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Project Root Directory</label>
+                            <InputText class="form-control" @bind-Value="Settings.ProjectRoot" />
+                            <small class="form-text text-muted">The root directory where repositories are stored</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.RequireAuth" id="requireAuth" />
+                                <label class="form-check-label" for="requireAuth">
+                                    Require Authentication
+                                </label>
                             </div>
                         </div>
 
-                        <EditForm Model="Settings" OnValidSubmit="SaveSettings">
-                            <div class="mb-3">
-                                <label class="form-label">Project Root Directory</label>
-                                <InputText class="form-control" @bind-Value="Settings.ProjectRoot" />
-                                <small class="form-text text-muted">The root directory where repositories are stored</small>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.AllowUserRegistration" id="allowReg" />
+                                <label class="form-check-label" for="allowReg">
+                                    Allow User Registration
+                                </label>
                             </div>
+                        </div>
 
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.RequireAuth" id="requireAuth" />
-                                    <label class="form-check-label" for="requireAuth">
-                                        Require Authentication
-                                    </label>
-                                </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.RequireEmailVerification" id="requireEmail" />
+                                <label class="form-check-label" for="requireEmail">
+                                    Require Email Verification
+                                </label>
                             </div>
+                        </div>
 
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.AllowUserRegistration" id="allowReg" />
-                                    <label class="form-check-label" for="allowReg">
-                                        Allow User Registration
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.RequireEmailVerification" id="requireEmail" />
-                                    <label class="form-check-label" for="requireEmail">
-                                        Require Email Verification
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">Max Repositories Per User</label>
                                 <InputNumber class="form-control" @bind-Value="Settings.MaxRepositoriesPerUser" />
                             </div>
-
-                            <div class="mb-3">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">Max Repository Size (bytes)</label>
                                 <InputNumber class="form-control" @bind-Value="Settings.MaxRepositorySize" />
                                 <small class="form-text text-muted">Current: @FormatBytes(Settings.MaxRepositorySize)</small>
                             </div>
+                        </div>
+                    </div>
+                </div>
 
-                            <h6 class="mt-4 mb-3">@L["Admin_FeatureToggles"]</h6>
-
-                            <div class="mb-3">
-                                <div class="form-check">
+                <!-- Feature Toggles -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-toggles me-2"></i>@L["Admin_FeatureToggles"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check form-switch">
                                     <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableActions" id="enableActions" />
                                     <label class="form-check-label" for="enableActions">
-                                        Enable Actions/CI-CD
+                                        Actions / CI-CD
                                     </label>
                                 </div>
                             </div>
-
-                            <div class="mb-3">
-                                <div class="form-check">
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check form-switch">
                                     <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableWiki" id="enableWiki" />
                                     <label class="form-check-label" for="enableWiki">
-                                        Enable Wiki
+                                        Wiki
                                     </label>
                                 </div>
                             </div>
-
-                            <div class="mb-3">
-                                <div class="form-check">
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check form-switch">
                                     <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableIssues" id="enableIssues" />
                                     <label class="form-check-label" for="enableIssues">
-                                        Enable Issues
+                                        Issues
                                     </label>
                                 </div>
                             </div>
-
-                            <div class="mb-3">
-                                <div class="form-check">
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check form-switch">
                                     <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableProjects" id="enableProjects" />
                                     <label class="form-check-label" for="enableProjects">
-                                        Enable Projects
+                                        Projects
                                     </label>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
 
-                            <h6 class="mt-4 mb-3">@L["Admin_EmailNotifications"]</h6>
-
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.EmailNotificationsEnabled" id="emailEnabled" />
-                                    <label class="form-check-label" for="emailEnabled">
-                                        Enable Email Notifications
-                                    </label>
-                                </div>
+                <!-- Email Notifications -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>@L["Admin_EmailNotifications"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.EmailNotificationsEnabled" id="emailEnabled" />
+                                <label class="form-check-label" for="emailEnabled">
+                                    Enable Email Notifications
+                                </label>
                             </div>
+                        </div>
 
-                            <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
                                 <label class="form-label">SMTP Server</label>
                                 <InputText class="form-control" @bind-Value="Settings.SmtpServer" />
                             </div>
-
-                            <div class="mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label class="form-label">SMTP Port</label>
                                 <InputNumber class="form-control" @bind-Value="Settings.SmtpPort" />
                             </div>
+                        </div>
 
-                            <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">SMTP Username</label>
                                 <InputText class="form-control" @bind-Value="Settings.SmtpUsername" />
                             </div>
-
-                            <div class="mb-3">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">SMTP Password</label>
                                 <InputText type="password" class="form-control" @bind-Value="Settings.SmtpPassword" />
                             </div>
+                        </div>
 
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.SmtpEnableSsl" id="smtpSsl" />
-                                    <label class="form-check-label" for="smtpSsl">
-                                        Enable SSL/TLS
-                                    </label>
-                                </div>
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.SmtpEnableSsl" id="smtpSsl" />
+                                <label class="form-check-label" for="smtpSsl">
+                                    Enable SSL/TLS
+                                </label>
                             </div>
+                        </div>
 
-                            <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">From Address</label>
                                 <InputText class="form-control" @bind-Value="Settings.SmtpFromAddress" placeholder="noreply@example.com" />
                                 <small class="form-text text-muted">Defaults to SMTP username if empty</small>
                             </div>
-
-                            <div class="mb-3">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">From Name</label>
                                 <InputText class="form-control" @bind-Value="Settings.SmtpFromName" placeholder="MyPersonalGit" />
                             </div>
+                        </div>
 
-                            <div class="mb-3">
-                                <div class="input-group">
-                                    <input type="email" class="form-control" @bind="TestEmailAddress" placeholder="test@example.com" />
-                                    <button type="button" class="btn btn-outline-secondary" @onclick="SendTestEmail" disabled="@SendingTestEmail">
-                                        @if (SendingTestEmail)
-                                        {
-                                            <span class="spinner-border spinner-border-sm me-1"></span>
-                                        }
-                                        <i class="bi bi-envelope"></i> Send Test Email
-                                    </button>
-                                </div>
-                                @if (!string.IsNullOrEmpty(TestEmailMessage))
-                                {
-                                    <div class="alert @(TestEmailSuccess ? "alert-success" : "alert-danger") mt-2 py-2">@TestEmailMessage</div>
-                                }
-                            </div>
-
-                            <h6 class="mt-4 mb-3">@L["Admin_PushNotifications"]</h6>
-
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.EnablePushNotifications" id="enablePush" />
-                                    <label class="form-check-label" for="enablePush">
-                                        Enable Push Notifications
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">ntfy Server URL</label>
-                                <InputText class="form-control" @bind-Value="Settings.NtfyUrl" placeholder="https://ntfy.sh" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">ntfy Topic</label>
-                                <InputText class="form-control" @bind-Value="Settings.NtfyTopic" placeholder="mypersonalgit" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">ntfy Access Token <span class="text-muted small">(optional)</span></label>
-                                <InputText type="password" class="form-control" @bind-Value="Settings.NtfyAccessToken" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Gotify Server URL</label>
-                                <InputText class="form-control" @bind-Value="Settings.GotifyUrl" placeholder="https://gotify.example.com" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Gotify App Token</label>
-                                <InputText type="password" class="form-control" @bind-Value="Settings.GotifyAppToken" />
-                            </div>
-
-                            <h6 class="mt-4 mb-3">@L["Admin_SiteBranding"]</h6>
-                            <p class="text-muted small">Customize the site name and footer page content. Uses Markdown.</p>
-
-                            <div class="mb-3">
-                                <label class="form-label">Site Name</label>
-                                <InputText class="form-control" @bind-Value="Settings.SiteName" placeholder="PersonalGit" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Terms of Service <a href="/terms" target="_blank" class="small">(preview)</a></label>
-                                <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterTerms" rows="4" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Privacy Policy <a href="/privacy" target="_blank" class="small">(preview)</a></label>
-                                <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterPrivacy" rows="4" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Documentation <a href="/docs" target="_blank" class="small">(preview)</a></label>
-                                <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterDocs" rows="4" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Contact <a href="/contact" target="_blank" class="small">(preview)</a></label>
-                                <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterContact" rows="4" />
-                            </div>
-
-                            <h6 class="mt-4 mb-3">@L["Admin_SSHServer"]</h6>
-                            <p class="text-muted small">Run a native SSH server for Git operations without requiring system OpenSSH. Users can clone/push via <code>git clone ssh://user@host:port/repo.git</code></p>
-
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableBuiltInSshServer" id="enableSsh" />
-                                    <label class="form-check-label" for="enableSsh">
-                                        Enable Built-in SSH Server
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">SSH Port</label>
-                                <InputNumber class="form-control" @bind-Value="Settings.SshServerPort" />
-                                <small class="form-text text-muted">Default: 2222. Use 22 if not running system SSH. Requires restart.</small>
-                            </div>
-
-                            <h6 class="mt-4 mb-3">@L["Admin_MergeCommitSigning"]</h6>
-                            <p class="text-muted small">GPG-sign merge, squash, and rebase commits created through the web UI. The GPG key must be imported into the server's keyring (<code>gpg --import</code>).</p>
-
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.SignMergeCommits" id="signMergeCommits" />
-                                    <label class="form-check-label" for="signMergeCommits">
-                                        Sign merge commits with GPG
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Server GPG Key ID</label>
-                                <InputText class="form-control" @bind-Value="Settings.ServerGpgKeyId" placeholder="e.g. ABCD1234..." />
-                                <small class="form-text text-muted">The long or short key ID of the GPG key to use for signing</small>
-                            </div>
-
-                            <h6 class="mt-4 mb-3">@L["Admin_LDAPAuth"]</h6>
-                            <p class="text-muted small">Enable LDAP/AD authentication to let users sign in with their domain credentials. Users are auto-provisioned on first login.</p>
-
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapEnabled" id="ldapEnabled" />
-                                    <label class="form-check-label" for="ldapEnabled">
-                                        Enable LDAP Authentication
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-8 mb-3">
-                                    <label class="form-label">LDAP Server</label>
-                                    <InputText class="form-control" @bind-Value="Settings.LdapServer" placeholder="ldap.example.com or dc01.corp.local" />
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Port</label>
-                                    <InputNumber class="form-control" @bind-Value="Settings.LdapPort" />
-                                    <small class="form-text text-muted">389 (LDAP) or 636 (LDAPS)</small>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <div class="form-check form-check-inline">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapUseSsl" id="ldapSsl" />
-                                    <label class="form-check-label" for="ldapSsl">
-                                        Use SSL (LDAPS)
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapStartTls" id="ldapStartTls" />
-                                    <label class="form-check-label" for="ldapStartTls">
-                                        Use StartTLS
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapSkipCertificateValidation" id="ldapSkipCert" />
-                                    <label class="form-check-label" for="ldapSkipCert">
-                                        Skip Certificate Validation
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Bind DN <span class="text-muted small">(service account)</span></label>
-                                <InputText class="form-control" @bind-Value="Settings.LdapBindDn" placeholder="CN=svc-git,OU=Service Accounts,DC=corp,DC=local" />
-                                <small class="form-text text-muted">Leave empty for anonymous bind (if your LDAP allows it)</small>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Bind Password</label>
-                                <InputText type="password" class="form-control" @bind-Value="Settings.LdapBindPassword" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Search Base DN</label>
-                                <InputText class="form-control" @bind-Value="Settings.LdapSearchBase" placeholder="OU=Users,DC=corp,DC=local" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">User Search Filter</label>
-                                <InputText class="form-control" @bind-Value="Settings.LdapUserFilter" placeholder="(sAMAccountName={0})" />
-                                <small class="form-text text-muted">
-                                    <code>{0}</code> is replaced with the username. Examples:
-                                    <br/>Active Directory: <code>(sAMAccountName={0})</code>
-                                    <br/>OpenLDAP: <code>(uid={0})</code>
-                                    <br/>Email login: <code>(mail={0})</code>
-                                </small>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Username Attribute</label>
-                                    <InputText class="form-control" @bind-Value="Settings.LdapUsernameAttribute" placeholder="sAMAccountName" />
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Email Attribute</label>
-                                    <InputText class="form-control" @bind-Value="Settings.LdapEmailAttribute" placeholder="mail" />
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Display Name Attribute</label>
-                                    <InputText class="form-control" @bind-Value="Settings.LdapDisplayNameAttribute" placeholder="displayName" />
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Admin Group DN <span class="text-muted small">(optional)</span></label>
-                                <InputText class="form-control" @bind-Value="Settings.LdapAdminGroupDn" placeholder="CN=GitAdmins,OU=Groups,DC=corp,DC=local" />
-                                <small class="form-text text-muted">Members of this group are auto-promoted to admin. Leave empty to skip.</small>
-                            </div>
-
-                            <div class="mb-3">
-                                <button type="button" class="btn btn-outline-secondary" @onclick="TestLdapConnection" disabled="@TestingLdap">
-                                    @if (TestingLdap)
+                        <div class="mb-0">
+                            <div class="input-group">
+                                <input type="email" class="form-control" @bind="TestEmailAddress" placeholder="test@example.com" />
+                                <button type="button" class="btn btn-outline-secondary" @onclick="SendTestEmail" disabled="@SendingTestEmail">
+                                    @if (SendingTestEmail)
                                     {
                                         <span class="spinner-border spinner-border-sm me-1"></span>
                                     }
-                                    <i class="bi bi-plug"></i> Test LDAP Connection
+                                    <i class="bi bi-envelope"></i> Send Test Email
                                 </button>
-                                @if (!string.IsNullOrEmpty(LdapTestMessage))
-                                {
-                                    <div class="alert @(LdapTestSuccess ? "alert-success" : "alert-danger") mt-2 py-2">@LdapTestMessage</div>
-                                }
                             </div>
-
-                            @if (!string.IsNullOrEmpty(SettingsMessage))
+                            @if (!string.IsNullOrEmpty(TestEmailMessage))
                             {
-                                <div class="alert alert-success">@SettingsMessage</div>
+                                <div class="alert @(TestEmailSuccess ? "alert-success" : "alert-danger") mt-2 py-2">@TestEmailMessage</div>
                             }
-
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Save Settings
-                            </button>
-                        </EditForm>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Push Notifications -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-bell me-2"></i>@L["Admin_PushNotifications"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.EnablePushNotifications" id="enablePush" />
+                                <label class="form-check-label" for="enablePush">
+                                    Enable Push Notifications
+                                </label>
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted mb-2"><small>ntfy</small></h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Server URL</label>
+                                <InputText class="form-control" @bind-Value="Settings.NtfyUrl" placeholder="https://ntfy.sh" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Topic</label>
+                                <InputText class="form-control" @bind-Value="Settings.NtfyTopic" placeholder="mypersonalgit" />
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Access Token <span class="text-muted small">(optional)</span></label>
+                            <InputText type="password" class="form-control" @bind-Value="Settings.NtfyAccessToken" />
+                        </div>
+
+                        <hr />
+
+                        <h6 class="text-muted mb-2"><small>Gotify</small></h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Server URL</label>
+                                <InputText class="form-control" @bind-Value="Settings.GotifyUrl" placeholder="https://gotify.example.com" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">App Token</label>
+                                <InputText type="password" class="form-control" @bind-Value="Settings.GotifyAppToken" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Site Branding -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-palette me-2"></i>@L["Admin_SiteBranding"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Customize the site name and footer page content. Uses Markdown.</p>
+
+                        <div class="mb-3">
+                            <label class="form-label">Site Name</label>
+                            <InputText class="form-control" @bind-Value="Settings.SiteName" placeholder="PersonalGit" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Terms of Service <a href="/terms" target="_blank" class="small">(preview)</a></label>
+                            <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterTerms" rows="4" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Privacy Policy <a href="/privacy" target="_blank" class="small">(preview)</a></label>
+                            <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterPrivacy" rows="4" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Documentation <a href="/docs" target="_blank" class="small">(preview)</a></label>
+                            <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterDocs" rows="4" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Contact <a href="/contact" target="_blank" class="small">(preview)</a></label>
+                            <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterContact" rows="4" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SSH Server -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-terminal me-2"></i>@L["Admin_SSHServer"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Run a native SSH server for Git operations without requiring system OpenSSH. Users can clone/push via <code>git clone ssh://user@host:port/repo.git</code></p>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableBuiltInSshServer" id="enableSsh" />
+                                <label class="form-check-label" for="enableSsh">
+                                    Enable Built-in SSH Server
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-0">
+                            <label class="form-label">SSH Port</label>
+                            <InputNumber class="form-control" @bind-Value="Settings.SshServerPort" style="max-width: 200px;" />
+                            <small class="form-text text-muted">Default: 2222. Use 22 if not running system SSH. Requires restart.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Merge Commit Signing -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-shield-lock me-2"></i>@L["Admin_MergeCommitSigning"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">GPG-sign merge, squash, and rebase commits created through the web UI. The GPG key must be imported into the server's keyring (<code>gpg --import</code>).</p>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.SignMergeCommits" id="signMergeCommits" />
+                                <label class="form-check-label" for="signMergeCommits">
+                                    Sign merge commits with GPG
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-0">
+                            <label class="form-label">Server GPG Key ID</label>
+                            <InputText class="form-control" @bind-Value="Settings.ServerGpgKeyId" placeholder="e.g. ABCD1234..." />
+                            <small class="form-text text-muted">The long or short key ID of the GPG key to use for signing</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LDAP Authentication -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>@L["Admin_LDAPAuth"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Enable LDAP/AD authentication to let users sign in with their domain credentials. Users are auto-provisioned on first login.</p>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapEnabled" id="ldapEnabled" />
+                                <label class="form-check-label" for="ldapEnabled">
+                                    Enable LDAP Authentication
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">LDAP Server</label>
+                                <InputText class="form-control" @bind-Value="Settings.LdapServer" placeholder="ldap.example.com or dc01.corp.local" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Port</label>
+                                <InputNumber class="form-control" @bind-Value="Settings.LdapPort" />
+                                <small class="form-text text-muted">389 (LDAP) or 636 (LDAPS)</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-check-inline">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapUseSsl" id="ldapSsl" />
+                                <label class="form-check-label" for="ldapSsl">
+                                    Use SSL (LDAPS)
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapStartTls" id="ldapStartTls" />
+                                <label class="form-check-label" for="ldapStartTls">
+                                    Use StartTLS
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapSkipCertificateValidation" id="ldapSkipCert" />
+                                <label class="form-check-label" for="ldapSkipCert">
+                                    Skip Certificate Validation
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Bind DN <span class="text-muted small">(service account)</span></label>
+                                <InputText class="form-control" @bind-Value="Settings.LdapBindDn" placeholder="CN=svc-git,OU=Service Accounts,DC=corp,DC=local" />
+                                <small class="form-text text-muted">Leave empty for anonymous bind</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Bind Password</label>
+                                <InputText type="password" class="form-control" @bind-Value="Settings.LdapBindPassword" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Search Base DN</label>
+                            <InputText class="form-control" @bind-Value="Settings.LdapSearchBase" placeholder="OU=Users,DC=corp,DC=local" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">User Search Filter</label>
+                            <InputText class="form-control" @bind-Value="Settings.LdapUserFilter" placeholder="(sAMAccountName={0})" />
+                            <small class="form-text text-muted">
+                                <code>{0}</code> is replaced with the username. Examples:
+                                AD: <code>(sAMAccountName={0})</code> &middot;
+                                OpenLDAP: <code>(uid={0})</code> &middot;
+                                Email: <code>(mail={0})</code>
+                            </small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Username Attribute</label>
+                                <InputText class="form-control" @bind-Value="Settings.LdapUsernameAttribute" placeholder="sAMAccountName" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Email Attribute</label>
+                                <InputText class="form-control" @bind-Value="Settings.LdapEmailAttribute" placeholder="mail" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Display Name Attribute</label>
+                                <InputText class="form-control" @bind-Value="Settings.LdapDisplayNameAttribute" placeholder="displayName" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Admin Group DN <span class="text-muted small">(optional)</span></label>
+                            <InputText class="form-control" @bind-Value="Settings.LdapAdminGroupDn" placeholder="CN=GitAdmins,OU=Groups,DC=corp,DC=local" />
+                            <small class="form-text text-muted">Members of this group are auto-promoted to admin. Leave empty to skip.</small>
+                        </div>
+
+                        <div class="mb-0">
+                            <button type="button" class="btn btn-outline-secondary" @onclick="TestLdapConnection" disabled="@TestingLdap">
+                                @if (TestingLdap)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1"></span>
+                                }
+                                <i class="bi bi-plug"></i> Test LDAP Connection
+                            </button>
+                            @if (!string.IsNullOrEmpty(LdapTestMessage))
+                            {
+                                <div class="alert @(LdapTestSuccess ? "alert-success" : "alert-danger") mt-2 py-2">@LdapTestMessage</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <div class="card mb-4">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        @if (!string.IsNullOrEmpty(SettingsMessage))
+                        {
+                            <div class="alert alert-success mb-0 py-2 flex-grow-1">@SettingsMessage</div>
+                        }
+                        <button type="submit" class="btn btn-primary btn-lg ms-auto">
+                            <i class="bi bi-save me-1"></i> Save All Settings
+                        </button>
+                    </div>
+                </div>
+
+                </EditForm>
+
             </div>
         </div>
     }
