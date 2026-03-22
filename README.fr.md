@@ -113,6 +113,25 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Sujets de dépôt** — Taguez les dépôts avec des sujets pour la découverte et le filtrage sur la page Explorer
 - **Activity Pulse** — Page de résumé hebdomadaire par dépôt affichant les PRs fusionnées, les issues ouvertes/fermées, les commits, les principaux contributeurs et les branches actives au cours des 7 derniers jours
 
+### Web IDE
+- **Editeur de Code Complet** — IDE basé sur Monaco Editor avec coloration syntaxique pour plus de 30 langages, thèmes multiples, expansion des abréviations Emmet pour HTML/CSS et formatage au collage
+- **Gestion des Fichiers** — Arborescence hiérarchique avec imbrication de fichiers (regroupe `.razor` + `.razor.css` + `.razor.cs`), recherche/filtrage, envoi de fichiers par glisser-déposer et menus contextuels pour nouveau fichier/dossier/renommer/supprimer
+- **Gestion des Onglets** — Interface multi-onglets avec réorganisation par glissement, onglets épinglés, menu contextuel clic droit (Fermer, Fermer les Autres, Fermer à Droite, Fermer les Enregistrés) et chevrons de défilement pour le débordement
+- **Editeur Divisé et Vue Diff** — Edition côte à côte avec défilement indépendant, et vue des différences pour comparer les modifications avant le commit
+- **Terminal Intégré** — Terminal basé sur xterm.js avec plusieurs onglets de terminal et accès shell via WebSocket
+- **Intégration Git** — Création de branches, vue blame, historique des fichiers, panneau de commits, contrôle de source avec sélection de fichiers et graphe visuel des commits avec lignes de couleur et étiquettes de branches
+- **Résolution des Conflits de Fusion** — Boutons en ligne Accepter Actuel / Accepter Entrant / Accepter les Deux avec régions de conflit codées par couleur (vert/bleu)
+- **Rechercher et Remplacer** — Recherche globale dans tous les fichiers avec filtrage par extension de fichier, résultats ligne par ligne et remplacement global
+- **Navigation dans le Code** — Ouverture rapide (Ctrl+P), Palette de commandes (Ctrl+Shift+P), Aller à la ligne (Ctrl+G), panneau de plan/symboles et navigation par fil d'Ariane
+- **Aperçus de Couleurs CSS** — Échantillons de couleur en ligne à côté des valeurs hex/rgb/hsl dans les fichiers CSS, SCSS et Less
+- **Surlignages du Minimap** — Lignes modifiées, lignes ajoutées et marqueurs de conflit affichés comme marqueurs colorés dans la gouttière du minimap
+- **Aperçu Markdown et Images** — Basculer entre l'édition et l'aperçu rendu pour les fichiers Markdown ; affichage en ligne des images pour les formats courants
+- **Sauvegarde Automatique** — Auto-commit optionnel avec délai configurable (500ms–5s), activable dans les paramètres ou la palette de commandes
+- **Espace de Travail Persistant** — Mémorise les onglets ouverts, onglets épinglés, fichier actif, état de la barre latérale et mode du panneau entre les sessions navigateur
+- **Panneaux Redimensionnables** — Barre latérale et panneau inférieur redimensionnables par glissement avec poignées visuelles
+- **Paramètres Personnalisables** — Sélecteur de police (8 polices), taille de police, taille de tabulation, retour à la ligne, minimap, numéros de ligne, guides de crochets, défilement collant, pliage de code, ligatures de police, formatage au collage et options d'affichage des espaces
+- **Mode Zen** — Edition plein écran sans distraction (Echap pour quitter)
+
 ### CI/CD et DevOps
 - **Runner CI/CD** — Définissez des workflows dans `.github/workflows/*.yml` et exécutez-les dans des conteneurs Docker. Déclenchement automatique sur les événements push et pull request
 - **Compatibilité GitHub Actions** — Le même YAML de workflow fonctionne sur MyPersonalGit et GitHub Actions. Traduit les actions `uses:` (`actions/checkout`, `actions/setup-dotnet`, `actions/setup-node`, `actions/setup-python`, `actions/setup-java`, `docker/login-action`, `docker/build-push-action`, `softprops/action-gh-release`) en commandes shell équivalentes
@@ -180,7 +199,8 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Comptes liés** — Les utilisateurs peuvent lier plusieurs fournisseurs OAuth à leur compte depuis les paramètres
 
 ### Administration
-- **Tableau de bord Admin** — Paramètres système (incluant le fournisseur de base de données, le serveur SSH, LDAP/AD, les pages de pied de page), gestion des utilisateurs, journaux d'audit et statistiques
+- **Tableau de bord Admin** — Paramètres système (incluant le fournisseur de base de données, TLS/HTTPS, le serveur SSH, LDAP/AD, les pages de pied de page), gestion des utilisateurs, journaux d'audit et statistiques organisés en cartes séparées par section
+- **TLS/HTTPS Intégré** — Activer HTTPS directement depuis les paramètres d'administration avec trois options de certificat : auto-signé (généré automatiquement, validité 2 ans), fichier PFX/PKCS#12 ou paire certificat PEM + clé (ex. Let's Encrypt). Ports internes/externes configurables pour le mappage de ports Docker, redirection HTTP vers HTTPS optionnelle
 - **Pages de pied de page personnalisables** — Pages Conditions d'utilisation, Politique de confidentialité, Documentation et Contact avec contenu Markdown éditable depuis Admin > Settings
 - **Profils utilisateurs** — Carte thermique des contributions, flux d'activité et statistiques par utilisateur
 - **Gravatar Avatars** — Les avatars utilisateur dans toute l'interface utilisent les identicons Gravatar basés sur le nom d'utilisateur, avec repli automatique
@@ -194,6 +214,7 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Multi-langue / i18n** — Localisation complète sur les 30 pages avec 930 clés de ressources. Livré avec 11 langues : anglais, espagnol, français, allemand, japonais, coréen, chinois (simplifié), portugais, russe, italien et turc. Sélecteur de langue dans l'en-tête. Ajoutez-en d'autres en créant des fichiers `SharedResource.{locale}.resx`
 - **Swagger / OpenAPI** — Documentation interactive de l'API à `/swagger` avec tous les endpoints REST découvrables et testables
 - **Open Graph Meta Tags** — Les pages de dépôts, d'issues et de PRs incluent og:title et og:description pour des aperçus de liens enrichis dans Slack, Discord et les réseaux sociaux
+- **Emoji Shortcodes** — Codes courts emoji style GitHub (`:white_check_mark:`, `:rocket:`, etc.) rendus en vrais emoji dans toutes les vues Markdown
 - **Mermaid Diagrams** — Rendu de diagrammes Mermaid dans les fichiers Markdown (organigrammes, diagrammes de séquence, diagrammes de Gantt, etc.)
 - **Math Rendering** — Expressions mathématiques LaTeX/KaTeX dans le Markdown (syntaxe `$inline$` et `$$display$$`)
 - **CSV/TSV Viewer** — Les fichiers CSV et TSV sont affichés sous forme de tableaux formatés et triables au lieu de texte brut

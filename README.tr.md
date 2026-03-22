@@ -113,6 +113,25 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Depo Konuları** — Keşfet sayfasında bulma ve filtreleme için depoları konularla etiketleyin
 - **Activity Pulse** — Depo başına haftalık özet sayfası; son 7 günde birleştirilen PR'lar, açılan/kapatılan sorunlar, commitler, en çok katkıda bulunanlar ve aktif dalları gösterir
 
+### Web IDE
+- **Tam Donanımlı Kod Editörü** — Monaco Editor tabanlı IDE; 30'dan fazla dil için söz dizimi vurgulama, birden fazla tema, HTML/CSS için Emmet kısaltma genişletme ve yapıştırma sırasında biçimlendirme
+- **Dosya Yönetimi** — Dosya iç içe geçirme özellikli hiyerarşik dosya ağacı (`.razor` + `.razor.css` + `.razor.cs` gruplama), arama/filtreleme, sürükle-bırak dosya yükleme ve yeni dosya/klasör/yeniden adlandırma/silme için bağlam menüleri
+- **Sekme Yönetimi** — Sürükleyerek yeniden sıralama, sabitlenmiş sekmeler, sağ tıklama bağlam menüsü (Kapat, Diğerlerini Kapat, Sağdakileri Kapat, Kaydedilenleri Kapat) ve taşma için kaydırma oklarıyla çoklu sekme arayüzü
+- **Bölünmüş Editör & Diff Görünümü** — Bağımsız kaydırmalı yan yana düzenleme ve commit öncesi değişiklikleri karşılaştırma için diff görünümü
+- **Entegre Terminal** — xterm.js tabanlı terminal; birden fazla terminal sekmesi ve WebSocket kabuk erişimi
+- **Git Entegrasyonu** — Dal oluşturma, blame görünümü, dosya geçmişi, commit paneli, dosya seçimli kaynak kontrol ve renkli şerit çizgileri ve dal etiketleriyle görsel commit grafiği
+- **Birleştirme Çakışması Çözümü** — Satır içi Mevcut Kabul Et / Gelen Kabul Et / Her İkisini Kabul Et düğmeleri; renk kodlu çakışma bölgeleri (yeşil/mavi)
+- **Ara ve Değiştir** — Dosya uzantısı filtreleme, satır satır sonuçlar ve tümünü değiştir ile tüm dosyalarda küresel arama
+- **Kod Navigasyonu** — Hızlı Aç (Ctrl+P), Komut Paleti (Ctrl+Shift+P), Satıra Git (Ctrl+G), ana hat/sembol paneli ve ekmek kırıntısı navigasyonu
+- **CSS Renk Önizlemeleri** — CSS, SCSS ve Less dosyalarında hex/rgb/hsl değerlerinin yanında satır içi renk örnekleri
+- **Minimap Vurguları** — Değiştirilen satırlar, eklenen satırlar ve çakışma işaretçileri minimap kenarında renkli işaretçiler olarak gösterilir
+- **Markdown & Görüntü Önizleme** — Markdown dosyaları için düzenleme ve işlenmiş önizleme arasında geçiş; yaygın biçimler için satır içi görüntü gösterimi
+- **Otomatik Kaydetme** — Yapılandırılabilir gecikme (500ms–5s) ile isteğe bağlı otomatik commit; ayarlardan veya komut paletinden açılıp kapatılabilir
+- **Kalıcı Çalışma Alanı** — Açık sekmeler, sabitlenmiş sekmeler, aktif dosya, kenar çubuğu durumu ve panel modunu tarayıcı oturumları arasında hatırlar
+- **Yeniden Boyutlandırılabilir Paneller** — Görsel tutamaçlarla kenar çubuğu ve alt paneli sürükleyerek yeniden boyutlandırma
+- **Özelleştirilebilir Ayarlar** — Yazı tipi ailesi seçici (8 yazı tipi), yazı tipi boyutu, sekme boyutu, sözcük kaydırma, minimap, satır numaraları, parantez kılavuzları, yapışkan kaydırma, kod katlama, yazı tipi bitişikleri, yapıştırma sırasında biçimlendirme ve boşluk gösterme seçenekleri
+- **Zen Modu** — Dikkat dağıtmayan tam ekran düzenleme (çıkmak için Escape)
+
 ### CI/CD ve DevOps
 - **CI/CD Runner** — `.github/workflows/*.yml` dosyalarında iş akışlarını tanımlayın ve Docker container'larında çalıştırın. Push ve pull request olaylarında otomatik tetikleme
 - **GitHub Actions Uyumluluğu** — Aynı iş akışı YAML'ı hem MyPersonalGit'te hem de GitHub Actions'ta çalışır. `uses:` eylemlerini (`actions/checkout`, `actions/setup-dotnet`, `actions/setup-node`, `actions/setup-python`, `actions/setup-java`, `docker/login-action`, `docker/build-push-action`, `softprops/action-gh-release`) eşdeğer shell komutlarına çevirir
@@ -180,7 +199,8 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Bağlı Hesaplar** — Kullanıcılar Ayarlar'dan hesaplarına birden fazla OAuth sağlayıcı bağlayabilir
 
 ### Yönetim
-- **Yönetici Paneli** — Sistem ayarları (veritabanı sağlayıcı, SSH sunucusu, LDAP/AD, alt bilgi sayfaları dahil), kullanıcı yönetimi, denetim günlükleri ve istatistikler
+- **Yönetici Paneli** — Sistem ayarları (veritabanı sağlayıcı, TLS/HTTPS, SSH sunucusu, LDAP/AD, alt bilgi sayfaları dahil), kullanıcı yönetimi, denetim günlükleri ve istatistikler; bölüm başına ayrı kartlarda düzenlenmiş
+- **Yerleşik TLS/HTTPS** — Yönetim ayarlarından doğrudan HTTPS etkinleştirme; üç sertifika seçeneği: kendinden imzalı (otomatik oluşturulmuş, 2 yıl geçerlilik), PFX/PKCS#12 dosyası veya PEM sertifika+anahtar çifti (ör. Let's Encrypt). Docker port eşleme için yapılandırılabilir dahili/harici portlar, isteğe bağlı HTTP'den HTTPS'ye yönlendirme
 - **Özelleştirilebilir Alt Bilgi Sayfaları** — Admin > Settings'den düzenlenebilir Markdown içerikli Kullanım Koşulları, Gizlilik Politikası, Dokümantasyon ve İletişim sayfaları
 - **Kullanıcı Profilleri** — Kullanıcı başına katkı ısı haritası, etkinlik akışı ve istatistikler
 - **Gravatar Avatars** — Arayüz genelindeki kullanıcı avatarları, kullanıcı adına dayalı Gravatar identicon'ları kullanır, otomatik yedek desteğiyle
@@ -194,6 +214,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Çoklu Dil / i18n** — 930 kaynak anahtarı ile tüm 30 sayfada tam yerelleştirme. 11 dil ile birlikte gelir: İngilizce, İspanyolca, Fransızca, Almanca, Japonca, Korece, Çince (Basitleştirilmiş), Portekizce, Rusça, İtalyanca ve Türkçe. `SharedResource.{locale}.resx` dosyaları oluşturarak daha fazla dil ekleyin. Başlıktaki dil seçici ile geçiş yapın
 - **Swagger / OpenAPI** — `/swagger` adresinde etkileşimli API belgeleri; tüm REST uç noktaları keşfedilebilir ve test edilebilir
 - **Open Graph Meta Tags** — Depo, sorun ve PR sayfaları, Slack, Discord ve sosyal medyada zengin bağlantı önizlemeleri için og:title ve og:description içerir
+- **Emoji Kısa Kodları** — GitHub tarzı emoji kısa kodları (`:white_check_mark:`, `:rocket:`, vb.) tüm Markdown görünümlerinde gerçek emoji olarak işlenir
 - **Mermaid Diyagramları** — Markdown dosyalarında Mermaid diyagram oluşturma (akış şemaları, sıralama diyagramları, Gantt grafikleri vb.)
 - **Matematik Oluşturma** — Markdown'da LaTeX/KaTeX matematik ifadeleri (`$inline$` ve `$$display$$` söz dizimi)
 - **CSV/TSV Görüntüleyici** — CSV ve TSV dosyaları düz metin yerine biçimlendirilmiş, sıralanabilir tablolar olarak görüntülenir
