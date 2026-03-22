@@ -83,61 +83,7 @@
     overflow: hidden;
 }
 
-/* Light mode */
-::deep [data-bs-theme="light"] .ide-layout {
-    background: #ffffff;
-    color: #333333;
-}
-
-::deep [data-bs-theme="light"] .ide-topbar {
-    background: #dddddd;
-    color: #333333;
-    border-bottom-color: #c8c8c8;
-}
-
-::deep [data-bs-theme="light"] .ide-topbar-back {
-    color: #333333;
-}
-
-::deep [data-bs-theme="light"] .ide-topbar-repo {
-    color: #333333;
-}
-
-::deep [data-bs-theme="light"] .ide-topbar-branch .btn {
-    color: #333333;
-    border-color: #b0b0b0;
-    background: rgba(0, 0, 0, 0.05);
-}
-
-::deep [data-bs-theme="light"] .ide-topbar-branch .dropdown-menu {
-    background: #f8f8f8;
-    border-color: #c8c8c8;
-}
-
-::deep [data-bs-theme="light"] .ide-topbar-branch .dropdown-item {
-    color: #333333;
-}
-
-::deep [data-bs-theme="light"] .ide-topbar-branch .dropdown-item:hover,
-::deep [data-bs-theme="light"] .ide-topbar-branch .dropdown-item.active {
-    background: #e0e8f0;
-    color: #0078d4;
-}
-
-::deep [data-bs-theme="light"] .ide-topbar-back:hover {
-    color: #1a1a1a;
-    background: rgba(0, 0, 0, 0.08);
-}
-
-::deep [data-bs-theme="light"] .ide-topbar-branch .btn:hover {
-    color: #1a1a1a;
-    border-color: #888888;
-    background: rgba(0, 0, 0, 0.08);
-}
-
-::deep [data-bs-theme="light"] .ide-topbar-branch .dropdown-menu {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
+/* Light mode overrides moved to app.css (scoped ::deep [data-bs-theme] selectors cannot match ancestor attributes) */
 
 /* Branch creation dialog */
 .ide-branch-overlay {
@@ -196,34 +142,4 @@
     box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.25);
 }
 
-::deep [data-bs-theme="light"] .ide-branch-dialog {
-    background: #ffffff;
-    border-color: #d0d0d0;
-}
-
-::deep [data-bs-theme="light"] .ide-branch-header {
-    border-bottom-color: #e0e0e0;
-}
-
-::deep [data-bs-theme="light"] .ide-branch-body .form-label {
-    color: #333333;
-}
-
-::deep [data-bs-theme="light"] .ide-branch-body .form-control,
-::deep [data-bs-theme="light"] .ide-branch-body .form-select {
-    background: #ffffff;
-    border-color: #cccccc;
-    color: #333333;
-}
-
-::deep [data-bs-theme="light"] .ide-branch-body .form-control:focus,
-::deep [data-bs-theme="light"] .ide-branch-body .form-select:focus {
-    background: #ffffff;
-    border-color: #0078d4;
-    color: #333333;
-    box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.25);
-}
-
-::deep [data-bs-theme="light"] .ide-branch-dialog {
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-}
+/* Light mode branch dialog overrides moved to app.css */
