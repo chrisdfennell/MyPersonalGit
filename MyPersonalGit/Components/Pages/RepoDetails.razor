@@ -5295,13 +5295,18 @@ else
         showDeleteModal = false; Path = GetParentPath(); LoadRepoData();
     }
 
-    private void DeleteRepository()
+    private async Task DeleteRepository()
     {
         if (!UserService.IsLoggedIn) return;
         try
         {
             var repoPath = RepoFullPath;
+            var dirName = System.IO.Path.GetFileName(repoPath);
 
+            // Delete from DB first (handles fork count, fork records, child forks, etc.)
+            await RepoService.DeleteRepositoryAsync(dirName);
+
+            // Then delete from disk
             if (Repository.IsValid(repoPath))
             {
                 using (var repo = new Repository(repoPath))
