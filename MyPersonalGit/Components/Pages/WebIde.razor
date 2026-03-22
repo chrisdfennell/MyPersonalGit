@@ -738,10 +738,15 @@
 
                 foreach (var fileEl in filesEl.EnumerateArray())
                 {
-                    var filePath = fileEl.GetProperty("filePath").GetString();
+                    // Support both PascalCase and camelCase (anonymous type serializes as PascalCase)
+                    string? filePath = null;
+                    if (fileEl.TryGetProperty("FilePath", out var fpEl))
+                        filePath = fpEl.GetString();
+                    else if (fileEl.TryGetProperty("filePath", out var fpEl2))
+                        filePath = fpEl2.GetString();
                     if (string.IsNullOrEmpty(filePath)) continue;
 
-                    var isPinned = fileEl.TryGetProperty("isPinned", out var pinnedEl) && pinnedEl.GetBoolean();
+                    var isPinned = (fileEl.TryGetProperty("IsPinned", out var pinnedEl) || fileEl.TryGetProperty("isPinned", out pinnedEl)) && pinnedEl.GetBoolean();
 
                     try
                     {
