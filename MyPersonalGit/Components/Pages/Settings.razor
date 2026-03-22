@@ -522,9 +522,9 @@ else
             {
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Passkeys & Security Keys</h5>
+                        <h5 class="mb-0">@L["Settings_PasskeysTitle"]</h5>
                         <button class="btn btn-primary btn-sm" @onclick="RegisterPasskey" disabled="@(!webAuthnSupported)">
-                            <i class="bi bi-plus-lg"></i> Register New Key
+                            <i class="bi bi-plus-lg"></i> @L["Settings_RegisterNewKey"]
                         </button>
                     </div>
                     <div class="card-body">
@@ -544,18 +544,18 @@ else
                         @if (showPasskeyNameInput)
                         {
                             <div class="mb-3">
-                                <label class="form-label">Key Name</label>
+                                <label class="form-label">@L["Settings_KeyName"]</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" @bind="newPasskeyName" placeholder="e.g. YubiKey 5, iPhone" />
-                                    <button class="btn btn-primary" @onclick="CompletePasskeyRegistration">Register</button>
-                                    <button class="btn btn-secondary" @onclick='() => showPasskeyNameInput = false'>Cancel</button>
+                                    <input type="text" class="form-control" @bind="newPasskeyName" placeholder="@L["Settings_KeyNamePlaceholder"]" />
+                                    <button class="btn btn-primary" @onclick="CompletePasskeyRegistration">@L["Settings_Register"]</button>
+                                    <button class="btn btn-secondary" @onclick='() => showPasskeyNameInput = false'>@L["Settings_Cancel"]</button>
                                 </div>
                             </div>
                         }
                         @if (webAuthnCredentials.Count == 0)
                         {
-                            <p class="text-muted">No passkeys or security keys registered.</p>
-                            <p class="small text-muted">Add a passkey (Face ID, Windows Hello, Touch ID) or hardware security key (YubiKey) for secure two-factor authentication.</p>
+                            <p class="text-muted">@L["Settings_NoPasskeys"]</p>
+                            <p class="small text-muted">@L["Settings_PasskeysHelp"]</p>
                         }
                         else
                         {
@@ -1316,7 +1316,7 @@ else
     {
         if (string.IsNullOrWhiteSpace(newPasskeyName))
         {
-            webAuthnMessage = "Please enter a name for this key.";
+            webAuthnMessage = L["Settings_EnterKeyName"];
             webAuthnMessageIsError = true;
             return;
         }
@@ -1330,7 +1330,7 @@ else
             var credential = await WebAuthnService.VerifyRegistrationAsync(UserService.Username, newPasskeyName, attestationJson);
             if (credential != null)
             {
-                webAuthnMessage = $"Passkey \"{newPasskeyName}\" registered successfully.";
+                webAuthnMessage = L["Settings_PasskeyRegistered"];
                 webAuthnMessageIsError = false;
                 showPasskeyNameInput = false;
                 webAuthnCredentials = await WebAuthnService.GetCredentialsAsync(UserService.Username);
@@ -1352,7 +1352,7 @@ else
     {
         await WebAuthnService.DeleteCredentialAsync(UserService.Username, id);
         webAuthnCredentials = await WebAuthnService.GetCredentialsAsync(UserService.Username);
-        webAuthnMessage = "Passkey removed.";
+        webAuthnMessage = L["Settings_PasskeyRemoved"];
         webAuthnMessageIsError = false;
     }
 
