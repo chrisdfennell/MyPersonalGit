@@ -151,6 +151,35 @@
         };
     }
 
+    /**
+     * Load Emmet abbreviation support for HTML/CSS languages.
+     * Uses emmet-monaco-es from CDN with AMD define temporarily hidden.
+     */
+    function loadEmmetSupport() {
+        var savedDefine = window.define;
+        window.define = undefined;
+
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/emmet-monaco-es@5.4.0/dist/emmet-monaco.min.js';
+        script.onload = function () {
+            window.define = savedDefine;
+            try {
+                if (window.emmetMonaco && window.emmetMonaco.emmetHTML) {
+                    window.emmetMonaco.emmetHTML(monaco, ['html', 'razor', 'php']);
+                    window.emmetMonaco.emmetCSS(monaco, ['css', 'scss', 'less']);
+                    console.log('Emmet support loaded successfully.');
+                }
+            } catch (e) {
+                console.warn('Emmet initialization error:', e);
+            }
+        };
+        script.onerror = function () {
+            window.define = savedDefine;
+            console.warn('Failed to load Emmet support from CDN.');
+        };
+        document.head.appendChild(script);
+    }
+
     window.monacoInterop = {
 
         /**
@@ -214,6 +243,9 @@
                     // Watch for future theme changes
                     setupThemeObserver();
 
+                    // Load Emmet support for HTML/CSS
+                    loadEmmetSupport();
+
                     resolve();
                 }, function (err) {
                     _initPromise = null;
@@ -258,10 +290,16 @@
                 scrollBeyondLastLine: false,
                 renderWhitespace: 'selection',
                 bracketPairColorization: { enabled: true },
-                guides: { bracketPairs: true },
+                matchBrackets: 'always',
+                guides: { bracketPairs: true, indentation: true, highlightActiveBracketPair: true, highlightActiveIndentation: true },
+                folding: true,
+                foldingStrategy: 'auto',
+                showFoldingControls: 'always',
+                stickyScroll: { enabled: false },
                 smoothScrolling: true,
                 cursorBlinking: 'smooth',
                 cursorSmoothCaretAnimation: 'on',
+                formatOnPaste: true,
                 padding: { top: 8 }
             });
 
@@ -587,10 +625,16 @@
                 scrollBeyondLastLine: false,
                 renderWhitespace: options.renderWhitespace || 'selection',
                 bracketPairColorization: { enabled: true },
-                guides: { bracketPairs: true },
+                matchBrackets: 'always',
+                guides: { bracketPairs: true, indentation: true, highlightActiveBracketPair: true, highlightActiveIndentation: true },
+                folding: true,
+                foldingStrategy: 'auto',
+                showFoldingControls: 'always',
+                stickyScroll: { enabled: false },
                 smoothScrolling: true,
                 cursorBlinking: 'smooth',
                 cursorSmoothCaretAnimation: 'on',
+                formatOnPaste: true,
                 padding: { top: 8 }
             });
 
@@ -879,6 +923,178 @@
             var model = editor.getModel();
             if (!model) return null;
             return model.getLanguageId();
+        },
+
+        /**
+         * Toggle word wrap and return the new state.
+         * @param {string} editorId - The editor instance ID.
+         * @returns {string} New word wrap state ('on' or 'off').
+         */
+        toggleWordWrap: function (editorId) {
+            var editor = _editors[editorId];
+            if (!editor) return 'off';
+            var current = editor.getRawOptions().wordWrap || 'off';
+            var newVal = current === 'off' ? 'on' : 'off';
+            editor.updateOptions({ wordWrap: newVal });
+            return newVal;
+        },
+
+        /**
+         * Get document symbols (outline) for the current model.
+         * Uses Monaco's built-in document symbol provider.
+         * @param {string} editorId - The editor instance ID.
+         * @returns {Promise<Array>} Array of symbol objects.
+         */
+        getDocumentSymbols: function (editorId) {
+            var editor = _editors[editorId];
+            if (!editor) return Promise.resolve([]);
+            var model = editor.getModel();
+            if (!model) return Promise.resolve([]);
+
+            // Try to get symbols from Monaco's built-in providers
+            return monaco.editor.getModel(model.uri) ?
+                new Promise(function (resolve) {
+                    // Use a timeout to allow language services to initialize
+                    setTimeout(function () {
+                        try {
+                            // Access the document symbol provider
+                            var symbols = [];
+                            var lines = model.getLinesContent();
+                            var language = model.getLanguageId();
+
+                            // Parse symbols from code using regex patterns
+                            var patterns = [];
+
+                            if (['csharp', 'java', 'kotlin', 'typescript', 'javascript'].indexOf(language) >= 0) {
+                                patterns.push({ regex: /(?:public|private|protected|internal|static|async|abstract|virtual|override|sealed|partial)?\s*(?:class|interface|struct|enum|record)\s+(\w+)/g, kind: 'class' });
+                                patterns.push({ regex: /(?:public|private|protected|internal|static|async|abstract|virtual|override)?\s*(?:[\w<>\[\]?,\s]+)\s+(\w+)\s*\([^)]*\)\s*(?:\{|=>|;)/g, kind: 'method' });
+                                patterns.push({ regex: /(?:public|private|protected|internal|static)?\s*(?:[\w<>\[\]?,]+)\s+(\w+)\s*\{\s*(?:get|set)/g, kind: 'property' });
+                            }
+                            if (['python'].indexOf(language) >= 0) {
+                                patterns.push({ regex: /^class\s+(\w+)/gm, kind: 'class' });
+                                patterns.push({ regex: /^(?:\s*)def\s+(\w+)/gm, kind: 'method' });
+                            }
+                            if (['go'].indexOf(language) >= 0) {
+                                patterns.push({ regex: /^func\s+(?:\(\w+\s+\*?\w+\)\s+)?(\w+)/gm, kind: 'method' });
+                                patterns.push({ regex: /^type\s+(\w+)\s+(?:struct|interface)/gm, kind: 'class' });
+                            }
+                            if (['rust'].indexOf(language) >= 0) {
+                                patterns.push({ regex: /^(?:pub\s+)?fn\s+(\w+)/gm, kind: 'method' });
+                                patterns.push({ regex: /^(?:pub\s+)?(?:struct|enum|trait)\s+(\w+)/gm, kind: 'class' });
+                                patterns.push({ regex: /^(?:pub\s+)?impl(?:<[^>]*>)?\s+(\w+)/gm, kind: 'class' });
+                            }
+                            if (['html', 'xml', 'razor'].indexOf(language) >= 0) {
+                                patterns.push({ regex: /<(h[1-6]|section|article|nav|header|footer|main|div)\b[^>]*(?:id|class)="([^"]+)"/gi, kind: 'property' });
+                            }
+                            if (['css', 'scss', 'less'].indexOf(language) >= 0) {
+                                patterns.push({ regex: /^([.#@][\w-]+(?:\s*[,>+~]\s*[.#@]?[\w-]+)*)\s*\{/gm, kind: 'property' });
+                            }
+                            if (['ruby'].indexOf(language) >= 0) {
+                                patterns.push({ regex: /^class\s+(\w+)/gm, kind: 'class' });
+                                patterns.push({ regex: /^\s*def\s+(\w+[?!]?)/gm, kind: 'method' });
+                            }
+                            if (['php'].indexOf(language) >= 0) {
+                                patterns.push({ regex: /(?:public|private|protected|static)?\s*function\s+(\w+)/g, kind: 'method' });
+                                patterns.push({ regex: /class\s+(\w+)/g, kind: 'class' });
+                            }
+                            // Fallback: any language - look for common patterns
+                            if (patterns.length === 0) {
+                                patterns.push({ regex: /(?:function|def|fn|func|sub)\s+(\w+)/gm, kind: 'method' });
+                                patterns.push({ regex: /(?:class|struct|interface|enum|type)\s+(\w+)/gm, kind: 'class' });
+                            }
+
+                            var fullText = model.getValue();
+                            for (var p = 0; p < patterns.length; p++) {
+                                var pattern = patterns[p];
+                                var match;
+                                pattern.regex.lastIndex = 0;
+                                while ((match = pattern.regex.exec(fullText)) !== null) {
+                                    var name = match[1] || match[2] || match[0];
+                                    // Calculate line number from offset
+                                    var pos = model.getPositionAt(match.index);
+                                    symbols.push({
+                                        name: name,
+                                        kind: pattern.kind,
+                                        line: pos.lineNumber,
+                                        column: pos.column
+                                    });
+                                }
+                            }
+
+                            // Sort by line number
+                            symbols.sort(function (a, b) { return a.line - b.line; });
+                            resolve(symbols);
+                        } catch (e) {
+                            console.warn('Symbol parsing error:', e);
+                            resolve([]);
+                        }
+                    }, 100);
+                }) : Promise.resolve([]);
+        },
+
+        /**
+         * Navigate to a specific position in the editor.
+         * @param {string} editorId - The editor instance ID.
+         * @param {number} lineNumber - Line number.
+         * @param {number} column - Column number.
+         */
+        goToPosition: function (editorId, lineNumber, column) {
+            var editor = _editors[editorId];
+            if (!editor) return;
+            editor.revealLineInCenter(lineNumber);
+            editor.setPosition({ lineNumber: lineNumber, column: column || 1 });
+            editor.focus();
+        },
+
+        /**
+         * Fold all regions in the editor.
+         * @param {string} editorId - The editor instance ID.
+         */
+        foldAll: function (editorId) {
+            var editor = _editors[editorId];
+            if (editor) {
+                editor.trigger('keyboard', 'editor.foldAll');
+            }
+        },
+
+        /**
+         * Unfold all regions in the editor.
+         * @param {string} editorId - The editor instance ID.
+         */
+        unfoldAll: function (editorId) {
+            var editor = _editors[editorId];
+            if (editor) {
+                editor.trigger('keyboard', 'editor.unfoldAll');
+            }
+        },
+
+        /**
+         * Update the stored original content for a file (after auto-save).
+         * @param {string} editorId - The editor instance ID.
+         * @param {string} filePath - The file path.
+         * @param {string} content - The new original content.
+         */
+        updateOriginalContent: function (editorId, filePath, content) {
+            _originalContent[filePath] = content;
+        }
+    };
+
+    // ============================================================
+    // Tab scroll helper
+    // ============================================================
+    window.ideTabScroll = {
+        getScrollState: function (el) {
+            if (!el) return { scrollLeft: 0, clientWidth: 0, scrollWidth: 0 };
+            return {
+                scrollLeft: el.scrollLeft,
+                clientWidth: el.clientWidth,
+                scrollWidth: el.scrollWidth
+            };
+        },
+        scroll: function (el, delta) {
+            if (el) {
+                el.scrollBy({ left: delta, behavior: 'smooth' });
+            }
         }
     };
 

@@ -5,6 +5,21 @@ All notable changes to MyPersonalGit are documented here.
 ## [Unreleased]
 
 ### Added
+- Web IDE: Auto-Save — optional auto-commit with configurable delay (500ms–5s), toggle in settings or command palette
+- Web IDE: Persistent Workspace — remembers open tabs, pinned tabs, active file, sidebar & panel state across sessions
+- Web IDE: Pinned Tabs — right-click to pin/unpin tabs; pinned tabs sort to the left and can't be accidentally closed
+- Web IDE: Tab Overflow Handling — scroll chevrons appear when tabs overflow the tab bar
+- Web IDE: Tab Context Menu — right-click tabs for Pin, Close, and Close Other Tabs actions
+- Web IDE: Format on Paste — auto-reindent pasted code to match surrounding context (toggleable in settings)
+- Web IDE: Emmet Support — HTML/CSS abbreviation expansion in HTML, Razor, CSS, SCSS, and Less files
+- Web IDE: Code Folding — collapse/expand code blocks with always-visible fold controls
+- Web IDE: Bracket Matching & Indent Guides — enhanced bracket pair colorization, active bracket highlighting, and indentation guides
+- Web IDE: Word Wrap Toggle — status bar button to toggle word wrap on/off
+- Web IDE: Outline/Symbol Panel — sidebar panel showing classes, methods, and properties with click-to-navigate
+- Web IDE: Toast Notifications — non-intrusive feedback for commits, file operations, and errors
+- Web IDE: Zen Mode — distraction-free editing that hides sidebar, tabs, and panels (Escape to exit)
+- Web IDE: Enhanced Settings — code folding, sticky scroll, bracket guides, and font ligatures toggles
+- Web IDE: Command Palette additions — zen mode, word wrap toggle, fold/unfold all, outline panel
 - TODO Scanner — scan code for TODO/FIXME/HACK/XXX comments with filterable dashboard
 - Repository Health Score — A-F grade with checklist (README, LICENSE, CI, etc.)
 - Repo Size Analytics — directory breakdown, largest files, per-extension sizes

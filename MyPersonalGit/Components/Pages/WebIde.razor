@@ -15,7 +15,7 @@
 @inject IAdminService AdminService
 @implements IAsyncDisposable
 
-<div class="ide-container" @onkeydown="HandleGlobalKeyDown" tabindex="0" @ref="ideContainerRef">
+<div class="ide-container @(isZenMode ? "ide-zen-mode" : "")" @onkeydown="HandleGlobalKeyDown" tabindex="0" @ref="ideContainerRef">
     <div class="ide-sidebar">
         <div class="ide-sidebar-tabs">
             <button class="ide-sidebar-tab @(sidebarMode == "files" ? "active" : "")" @onclick='() => sidebarMode = "files"' title="Explorer">
@@ -26,6 +26,9 @@
             </button>
             <button class="ide-sidebar-tab @(sidebarMode == "sourcecontrol" ? "active" : "")" @onclick='() => sidebarMode = "sourcecontrol"' title="Source Control">
                 <i class="bi bi-git"></i>
+            </button>
+            <button class="ide-sidebar-tab @(sidebarMode == "outline" ? "active" : "")" @onclick="OpenOutlinePanel" title="Outline">
+                <i class="bi bi-list-nested"></i>
             </button>
             <button class="ide-sidebar-tab @(sidebarMode == "settings" ? "active" : "")" @onclick='() => sidebarMode = "settings"' title="Settings" style="margin-top: auto;">
                 <i class="bi bi-gear"></i>
@@ -83,6 +86,51 @@
                     }
                 </div>
             }
+            else if (sidebarMode == "outline")
+            {
+                <div class="ide-source-control">
+                    <div class="ide-sc-header px-3 py-2">
+                        <span class="small fw-semibold">Outline</span>
+                        @if (activeTabPath != null)
+                        {
+                            <button class="btn btn-sm btn-link text-muted p-0 ms-auto" @onclick="RefreshOutline" title="Refresh">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        }
+                    </div>
+                    @if (activeTabPath == null)
+                    {
+                        <div class="text-muted small px-3 py-2">
+                            <i class="bi bi-info-circle me-1"></i>Open a file to see its outline
+                        </div>
+                    }
+                    else if (isLoadingOutline)
+                    {
+                        <div class="text-center py-3">
+                            <span class="spinner-border spinner-border-sm text-muted"></span>
+                        </div>
+                    }
+                    else if (outlineSymbols.Count == 0)
+                    {
+                        <div class="text-muted small px-3 py-2">
+                            <i class="bi bi-info-circle me-1"></i>No symbols found
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="ide-sc-files">
+                            @foreach (var symbol in outlineSymbols)
+                            {
+                                <div class="ide-sc-file" @onclick="() => GoToSymbol(symbol)" title="@symbol.Name — Line @symbol.Line">
+                                    <i class="bi @GetSymbolIcon(symbol.Kind) me-2" style="color: @GetSymbolColor(symbol.Kind);"></i>
+                                    <span class="ide-sc-filename">@symbol.Name</span>
+                                    <span class="ide-sc-filepath text-muted ms-2">Ln @symbol.Line</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
             else if (sidebarMode == "settings")
             {
                 <IdeSettingsPanel EditorId="@editorId"
@@ -98,7 +146,8 @@
                        ActiveTabPath="@activeTabPath"
                        OnTabSelected="HandleTabSelected"
                        OnTabClosed="HandleTabClosed"
-                       OnTabReordered="HandleTabReordered" />
+                       OnTabReordered="HandleTabReordered"
+                       OnTabPinToggled="HandleTabPinToggled" />
             @if (openTabs.Count > 0)
             {
                 @if (activeTabPath != null && IsMarkdownFile(activeTabPath))
@@ -326,6 +375,9 @@
                         (@selectionLength selected)
                     </span>
                 }
+                <button class="ide-status-item ide-status-btn" @onclick="HandleToggleWordWrap" title="Toggle Word Wrap">
+                    <i class="bi bi-text-wrap me-1"></i>@(currentWordWrap == "on" ? "Wrap: On" : "Wrap: Off")
+                </button>
                 <span class="ide-status-item" title="Language">
                     @GetLanguageDisplayName(activeTabPath)
                 </span>
@@ -333,6 +385,9 @@
                     UTF-8
                 </span>
             }
+            <button class="ide-status-item ide-status-btn" @onclick="ToggleZenMode" title="Zen Mode">
+                <i class="bi bi-arrows-fullscreen"></i>
+            </button>
             <button class="ide-status-item ide-status-btn" @onclick="() => { showShortcutHelp = true; StateHasChanged(); }" title="Keyboard Shortcuts">
                 <i class="bi bi-keyboard me-1"></i>Shortcuts
             </button>
@@ -358,6 +413,23 @@
 @if (showShortcutHelp)
 {
     <IdeShortcutHelp OnClose="() => { showShortcutHelp = false; StateHasChanged(); }" />
+}
+
+@* Toast notifications *@
+@if (toasts.Count > 0)
+{
+    <div class="ide-toast-container">
+        @foreach (var toast in toasts)
+        {
+            <div class="ide-toast ide-toast-@toast.Type">
+                <i class="bi @GetToastIcon(toast.Type) me-2"></i>
+                <span>@toast.Message</span>
+                <button class="ide-toast-close" @onclick="() => DismissToast(toast.Id)">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        }
+    </div>
 }
 
 @code {
@@ -427,8 +499,34 @@
     // Settings
     private EditorSettings? currentSettings;
 
+    // Word wrap state
+    private string currentWordWrap = "off";
+
+    // Outline state
+    private bool isLoadingOutline;
+    private List<DocumentSymbol> outlineSymbols = new();
+
+    // Toast notification state
+    private List<ToastMessage> toasts = new();
+    private int toastCounter;
+
+    // Zen mode state
+    private bool isZenMode;
+
+    // Auto-save state
+    private System.Threading.Timer? autoSaveTimer;
+    private bool autoSaveEnabled;
+    private int autoSaveDelay = 1000;
+
+    // Workspace state persistence
+    private bool workspaceRestored;
+
     // Element reference for keyboard events
     private ElementReference ideContainerRef;
+
+    // Helper types
+    private record DocumentSymbol(string Name, string Kind, int Line, int Column);
+    private record ToastMessage(int Id, string Message, string Type);
 
     protected override async Task OnInitializedAsync()
     {
@@ -520,9 +618,14 @@
                 // Set up drag-and-drop file upload on the file tree
                 await JS.InvokeVoidAsync("ideUpload.setupDropZone", "ide-file-tree-root", dotNetRef, "OnFilesDropped");
 
+                // Restore workspace state (open tabs, sidebar, etc.)
                 if (!string.IsNullOrEmpty(FilePath))
                 {
                     await HandleFileSelected(FilePath);
+                }
+                else if (!workspaceRestored)
+                {
+                    await RestoreWorkspaceState();
                 }
             }
             catch (Exception ex)
@@ -540,7 +643,154 @@
             if (!string.IsNullOrEmpty(saved))
             {
                 currentSettings = System.Text.Json.JsonSerializer.Deserialize<EditorSettings>(saved);
+                if (currentSettings != null)
+                {
+                    autoSaveEnabled = currentSettings.AutoSaveEnabled;
+                    autoSaveDelay = currentSettings.AutoSaveDelay;
+                }
             }
+        }
+        catch { }
+    }
+
+    private async Task AutoSaveFile(string filePath)
+    {
+        if (!UserService.IsLoggedIn || editorId == null) return;
+
+        try
+        {
+            var content = await JS.InvokeAsync<string>("monacoInterop.getFileContent", editorId, filePath);
+            if (content == null) return;
+
+            fileContents[filePath] = content;
+
+            await WebIdeService.CommitMultipleFilesAsync(
+                RepoName,
+                currentBranch,
+                UserService.Username,
+                $"{UserService.Username}@personalgit.local",
+                $"Auto-save: {System.IO.Path.GetFileName(filePath)}",
+                new List<FileChange> { new FileChange(filePath, content, "modify") }
+            );
+
+            modifiedFiles.Remove(filePath);
+            var tab = openTabs.FirstOrDefault(t => t.FilePath == filePath);
+            if (tab != null)
+            {
+                tab.IsDirty = false;
+                tab.OriginalContent = content;
+            }
+
+            // Update original content in Monaco so dirty tracking is correct
+            await JS.InvokeVoidAsync("monacoInterop.updateOriginalContent", editorId, filePath, content);
+
+            UpdatePendingChanges();
+            ShowToast($"Auto-saved {System.IO.Path.GetFileName(filePath)}", "info");
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Auto-save failed: {ex.Message}");
+        }
+    }
+
+    private async Task SaveWorkspaceState()
+    {
+        try
+        {
+            var state = new
+            {
+                openFiles = openTabs.Select(t => new { t.FilePath, t.IsPinned }).ToList(),
+                activeFile = activeTabPath,
+                sidebarMode = sidebarMode,
+                bottomPanel = bottomPanelMode,
+                branch = currentBranch
+            };
+            var json = System.Text.Json.JsonSerializer.Serialize(state);
+            await JS.InvokeVoidAsync("localStorage.setItem", $"ide-workspace-{RepoName}", json);
+        }
+        catch { }
+    }
+
+    private async Task RestoreWorkspaceState()
+    {
+        try
+        {
+            var json = await JS.InvokeAsync<string?>("localStorage.getItem", $"ide-workspace-{RepoName}");
+            if (string.IsNullOrEmpty(json)) return;
+
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            // Only restore if same branch
+            if (root.TryGetProperty("branch", out var branchEl) && branchEl.GetString() != currentBranch)
+                return;
+
+            if (root.TryGetProperty("sidebarMode", out var sidebarEl))
+                sidebarMode = sidebarEl.GetString() ?? "files";
+
+            if (root.TryGetProperty("bottomPanel", out var bottomEl))
+                bottomPanelMode = bottomEl.GetString() ?? "commits";
+
+            if (root.TryGetProperty("openFiles", out var filesEl))
+            {
+                var activeFile = root.TryGetProperty("activeFile", out var activeEl) ? activeEl.GetString() : null;
+
+                foreach (var fileEl in filesEl.EnumerateArray())
+                {
+                    var filePath = fileEl.GetProperty("filePath").GetString();
+                    if (string.IsNullOrEmpty(filePath)) continue;
+
+                    var isPinned = fileEl.TryGetProperty("isPinned", out var pinnedEl) && pinnedEl.GetBoolean();
+
+                    try
+                    {
+                        if (IsImageFile(filePath))
+                        {
+                            openTabs.Add(new OpenTab
+                            {
+                                FilePath = filePath,
+                                FileName = System.IO.Path.GetFileName(filePath),
+                                IsDirty = false,
+                                OriginalContent = "",
+                                IsPinned = isPinned
+                            });
+                        }
+                        else
+                        {
+                            var fileContent = await WebIdeService.GetFileContentAsync(RepoName, currentBranch, filePath);
+                            fileContents[filePath] = fileContent.Content;
+                            openTabs.Add(new OpenTab
+                            {
+                                FilePath = filePath,
+                                FileName = System.IO.Path.GetFileName(filePath),
+                                IsDirty = false,
+                                OriginalContent = fileContent.Content,
+                                IsPinned = isPinned
+                            });
+
+                            if (editorId != null)
+                            {
+                                await JS.InvokeVoidAsync("monacoInterop.openFile", editorId, filePath, fileContent.Content, !UserService.IsLoggedIn);
+                            }
+                        }
+                    }
+                    catch { /* file may have been deleted */ }
+                }
+
+                // Switch to the previously active tab
+                if (activeFile != null && openTabs.Any(t => t.FilePath == activeFile))
+                {
+                    await SwitchToTab(activeFile);
+                }
+                else if (openTabs.Count > 0)
+                {
+                    await SwitchToTab(openTabs[0].FilePath);
+                }
+            }
+
+            workspaceRestored = true;
+            StateHasChanged();
         }
         catch { }
     }
@@ -557,9 +807,15 @@
                 wordWrap = currentSettings.WordWrap,
                 minimap = new { enabled = currentSettings.MinimapEnabled },
                 lineNumbers = currentSettings.LineNumbers ? "on" : "off",
-                renderWhitespace = currentSettings.RenderWhitespace
+                renderWhitespace = currentSettings.RenderWhitespace,
+                folding = currentSettings.FoldingEnabled,
+                stickyScroll = new { enabled = currentSettings.StickyScrollEnabled },
+                guides = new { bracketPairs = currentSettings.BracketGuides, indentation = currentSettings.BracketGuides, highlightActiveBracketPair = currentSettings.BracketGuides, highlightActiveIndentation = currentSettings.BracketGuides },
+                fontLigatures = currentSettings.FontLigatures,
+                formatOnPaste = currentSettings.FormatOnPaste
             };
             await JS.InvokeVoidAsync("monacoInterop.updateEditorOptions", targetEditorId, options);
+            currentWordWrap = currentSettings.WordWrap;
         }
         catch { }
     }
@@ -595,6 +851,7 @@
                 };
                 openTabs.Add(tab);
                 activeTabPath = path;
+                QueueWorkspaceSave();
                 StateHasChanged();
                 return;
             }
@@ -628,6 +885,8 @@
                     await LoadBlameForCurrentFile();
                 }
             }
+
+            QueueWorkspaceSave();
         }
         catch (Exception ex)
         {
@@ -640,12 +899,19 @@
         await SwitchToTab(path);
     }
 
+    private void HandleTabPinToggled(string filePath)
+    {
+        QueueWorkspaceSave();
+        StateHasChanged();
+    }
+
     private void HandleTabReordered((int from, int to) args)
     {
         if (args.from < 0 || args.from >= openTabs.Count || args.to < 0 || args.to >= openTabs.Count) return;
         var tab = openTabs[args.from];
         openTabs.RemoveAt(args.from);
         openTabs.Insert(args.to, tab);
+        QueueWorkspaceSave();
         StateHasChanged();
     }
 
@@ -716,6 +982,7 @@
         }
 
         UpdatePendingChanges();
+        QueueWorkspaceSave();
         StateHasChanged();
     }
 
@@ -768,10 +1035,12 @@
 
             treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
             UpdatePendingChanges();
+            ShowToast("Commit successful", "success");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Commit failed: {ex.Message}");
+            ShowToast($"Commit failed: {ex.Message}", "error");
         }
         finally
         {
@@ -799,8 +1068,12 @@
             treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
             StateHasChanged();
             await HandleFileSelected(newPath);
+            ShowToast($"Created {fileName}", "success");
         }
-        catch { }
+        catch (Exception ex)
+        {
+            ShowToast($"Failed to create file: {ex.Message}", "error");
+        }
     }
 
     private async Task HandleNewFolder(string folderPath)
@@ -852,12 +1125,12 @@
 
             treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
             StateHasChanged();
+            ShowToast($"Deleted '{System.IO.Path.GetFileName(path)}'", "success");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Delete failed: {ex.Message}");
-            try { await JS.InvokeVoidAsync("alert", $"Failed to delete '{path}': {ex.Message}"); }
-            catch { }
+            ShowToast($"Failed to delete '{path}': {ex.Message}", "error");
         }
     }
 
@@ -1097,11 +1370,29 @@
                 else
                     modifiedFiles.Remove(filePath);
 
+                // Auto-save: reset timer on each change
+                if (autoSaveEnabled && isDirty)
+                {
+                    autoSaveTimer?.Dispose();
+                    autoSaveTimer = new System.Threading.Timer(async _ =>
+                    {
+                        await InvokeAsync(async () =>
+                        {
+                            await AutoSaveFile(filePath);
+                        });
+                    }, null, autoSaveDelay, System.Threading.Timeout.Infinite);
+                }
+
                 UpdatePendingChanges();
                 await InvokeAsync(StateHasChanged);
             }
             catch { }
         }
+    }
+
+    private void QueueWorkspaceSave()
+    {
+        _ = SaveWorkspaceState();
     }
 
     private void UpdatePendingChanges()
@@ -1185,8 +1476,39 @@
             case "explorer":
                 sidebarMode = "files";
                 break;
+            case "outline":
+                await OpenOutlinePanel();
+                break;
+            case "zenMode":
+                await ToggleZenMode();
+                break;
+            case "toggleWordWrap":
+                await HandleToggleWordWrap();
+                break;
+            case "foldAll":
+                if (editorId != null)
+                    await JS.InvokeVoidAsync("monacoInterop.foldAll", editorId);
+                break;
+            case "unfoldAll":
+                if (editorId != null)
+                    await JS.InvokeVoidAsync("monacoInterop.unfoldAll", editorId);
+                break;
             case "showShortcuts":
                 showShortcutHelp = true;
+                break;
+            case "toggleAutoSave":
+                autoSaveEnabled = !autoSaveEnabled;
+                if (currentSettings != null)
+                {
+                    currentSettings.AutoSaveEnabled = autoSaveEnabled;
+                    try
+                    {
+                        var json = System.Text.Json.JsonSerializer.Serialize(currentSettings);
+                        await JS.InvokeVoidAsync("localStorage.setItem", "ide-settings", json);
+                    }
+                    catch { }
+                }
+                ShowToast(autoSaveEnabled ? "Auto-save enabled" : "Auto-save disabled", "info");
                 break;
         }
         StateHasChanged();
@@ -1484,6 +1806,21 @@
             sidebarMode = "search";
             StateHasChanged();
         }
+        // Escape: Exit zen mode
+        else if (e.Key == "Escape" && isZenMode)
+        {
+            isZenMode = false;
+            StateHasChanged();
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(50);
+                await InvokeAsync(async () =>
+                {
+                    if (editorId != null)
+                        try { await JS.InvokeVoidAsync("monacoInterop.layout", editorId); } catch { }
+                });
+            });
+        }
         // ?: Show shortcut help (only when no modals open and not typing in editor)
         else if (e.Key == "?" && !e.CtrlKey && !e.AltKey && openTabs.Count == 0)
         {
@@ -1609,17 +1946,148 @@
         };
     }
 
+    // ---- Word Wrap Toggle ----
+
+    private async Task HandleToggleWordWrap()
+    {
+        if (editorId != null)
+        {
+            try
+            {
+                currentWordWrap = await JS.InvokeAsync<string>("monacoInterop.toggleWordWrap", editorId);
+                StateHasChanged();
+            }
+            catch { }
+        }
+    }
+
+    // ---- Outline / Symbols ----
+
+    private async Task OpenOutlinePanel()
+    {
+        sidebarMode = "outline";
+        await RefreshOutline();
+    }
+
+    private async Task RefreshOutline()
+    {
+        if (activeTabPath == null || editorId == null)
+        {
+            outlineSymbols = new();
+            StateHasChanged();
+            return;
+        }
+
+        isLoadingOutline = true;
+        StateHasChanged();
+
+        try
+        {
+            var symbols = await JS.InvokeAsync<List<DocumentSymbol>>("monacoInterop.getDocumentSymbols", editorId);
+            outlineSymbols = symbols ?? new();
+        }
+        catch
+        {
+            outlineSymbols = new();
+        }
+        finally
+        {
+            isLoadingOutline = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task GoToSymbol(DocumentSymbol symbol)
+    {
+        if (editorId != null)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("monacoInterop.goToPosition", editorId, symbol.Line, symbol.Column);
+            }
+            catch { }
+        }
+    }
+
+    private static string GetSymbolIcon(string kind) => kind switch
+    {
+        "class" => "bi-diagram-3",
+        "method" => "bi-box",
+        "property" => "bi-wrench",
+        _ => "bi-code-slash"
+    };
+
+    private static string GetSymbolColor(string kind) => kind switch
+    {
+        "class" => "#e2c08d",
+        "method" => "#dcdcaa",
+        "property" => "#9cdcfe",
+        _ => "#cccccc"
+    };
+
+    // ---- Toast Notifications ----
+
+    private void ShowToast(string message, string type = "info")
+    {
+        var id = ++toastCounter;
+        toasts.Add(new ToastMessage(id, message, type));
+        StateHasChanged();
+
+        // Auto-dismiss after 4 seconds
+        _ = Task.Delay(4000).ContinueWith(_ =>
+        {
+            InvokeAsync(() =>
+            {
+                toasts.RemoveAll(t => t.Id == id);
+                StateHasChanged();
+            });
+        });
+    }
+
+    private void DismissToast(int id)
+    {
+        toasts.RemoveAll(t => t.Id == id);
+        StateHasChanged();
+    }
+
+    private static string GetToastIcon(string type) => type switch
+    {
+        "success" => "bi-check-circle-fill",
+        "error" => "bi-exclamation-triangle-fill",
+        "warning" => "bi-exclamation-circle-fill",
+        _ => "bi-info-circle-fill"
+    };
+
+    // ---- Zen Mode ----
+
+    private async Task ToggleZenMode()
+    {
+        isZenMode = !isZenMode;
+        StateHasChanged();
+
+        if (editorId != null)
+        {
+            await Task.Delay(50);
+            try { await JS.InvokeVoidAsync("monacoInterop.layout", editorId); }
+            catch { }
+        }
+    }
+
     // ---- Settings ----
 
     private void HandleSettingsChanged(EditorSettings settings)
     {
         currentSettings = settings;
+        autoSaveEnabled = settings.AutoSaveEnabled;
+        autoSaveDelay = settings.AutoSaveDelay;
     }
 
     // ---- Dispose ----
 
     public async ValueTask DisposeAsync()
     {
+        autoSaveTimer?.Dispose();
+
         if (diffEditorId != null)
         {
             try { await JS.InvokeVoidAsync("monacoInterop.disposeDiffEditor", diffEditorId); }
