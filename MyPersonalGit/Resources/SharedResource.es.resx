@@ -1236,4 +1236,89 @@
   <data name="Settings_EnterKeyName" xml:space="preserve"><value>Por favor ingrese un nombre para esta clave.</value></data>
   <data name="Settings_PasskeyRegistered" xml:space="preserve"><value>Passkey registrada exitosamente.</value></data>
   <data name="Settings_PasskeyRemoved" xml:space="preserve"><value>Passkey eliminada.</value></data>
+  <!-- Register error/success messages -->
+  <data name="Register_PasswordsDontMatch" xml:space="preserve"><value>Las contraseñas no coinciden</value></data>
+  <data name="Register_PasswordTooShort" xml:space="preserve"><value>La contraseña debe tener al menos 6 caracteres</value></data>
+  <data name="Register_Success" xml:space="preserve"><value>¡Cuenta creada exitosamente! Redirigiendo al inicio de sesión...</value></data>
+  <data name="Register_UserExists" xml:space="preserve"><value>El nombre de usuario o correo electrónico ya existe</value></data>
+  <data name="Register_Error" xml:space="preserve"><value>Ocurrió un error durante el registro. Por favor, inténtelo de nuevo.</value></data>
+
+  <!-- RepoDetails: badges and action buttons -->
+  <data name="Repo_Private" xml:space="preserve"><value>Privado</value></data>
+  <data name="Repo_Public" xml:space="preserve"><value>Público</value></data>
+  <data name="Repo_TemplateBadge" xml:space="preserve"><value>Plantilla</value></data>
+  <data name="Repo_ArchivedBadge" xml:space="preserve"><value>Archivado</value></data>
+  <data name="Repo_Watch" xml:space="preserve"><value>Seguir</value></data>
+  <data name="Repo_Unwatch" xml:space="preserve"><value>Dejar de seguir</value></data>
+  <data name="Repo_Star" xml:space="preserve"><value>Estrella</value></data>
+  <data name="Repo_Starred" xml:space="preserve"><value>Con estrella</value></data>
+  <data name="Repo_Fork" xml:space="preserve"><value>Fork</value></data>
+  <data name="Repo_Forked" xml:space="preserve"><value>Bifurcado</value></data>
+
+  <!-- RepoDetails: clone/download section -->
+  <data name="Repo_CopyToClipboard" xml:space="preserve"><value>Copiar al portapapeles</value></data>
+  <data name="Repo_CloneHelp" xml:space="preserve"><value>Use la URL HTTP de Git para clonar este repositorio.</value></data>
+  <data name="Repo_DownloadZip" xml:space="preserve"><value>Descargar ZIP</value></data>
+  <data name="Repo_DownloadTarGz" xml:space="preserve"><value>Descargar TAR.GZ</value></data>
+
+  <!-- RepoDetails: file actions -->
+  <data name="Repo_CreateNewFile" xml:space="preserve"><value>Crear nuevo archivo</value></data>
+  <data name="Repo_UploadFiles" xml:space="preserve"><value>Subir archivos</value></data>
+  <data name="Repo_UploadFolder" xml:space="preserve"><value>Subir carpeta</value></data>
+
+  <!-- RepoDetails: commit signatures -->
+  <data name="Repo_Verified" xml:space="preserve"><value>Verificado</value></data>
+  <data name="Repo_SignedBadge" xml:space="preserve"><value>Firmado</value></data>
+
+  <!-- RepoDetails: danger zone -->
+  <data name="Repo_DangerZone" xml:space="preserve"><value>Zona de peligro</value></data>
+  <data name="Repo_DeleteThisRepo" xml:space="preserve"><value>Eliminar este repositorio</value></data>
+  <data name="Repo_DeleteRepoWarning" xml:space="preserve"><value>Una vez que elimine un repositorio, no hay vuelta atrás.</value></data>
+
+  <!-- RepoDetails: editor/commit -->
+  <data name="Repo_CommitChanges" xml:space="preserve"><value>Confirmar cambios</value></data>
+  <data name="Repo_CommitMessagePlaceholder" xml:space="preserve"><value>Mensaje de commit</value></data>
+  <data name="Repo_AddDescriptionPlaceholder" xml:space="preserve"><value>Agregar descripción...</value></data>
+  <data name="Repo_MustBeLoggedIn" xml:space="preserve"><value>Debe iniciar sesión para editar archivos.</value></data>
+  <data name="Repo_ClearFilter" xml:space="preserve"><value>Limpiar filtro</value></data>
+  <data name="Repo_UnableToLoadBlame" xml:space="preserve"><value>No se pudo cargar la información de blame.</value></data>
+
+  <!-- RepoDetails: diff view -->
+  <data name="Repo_Unified" xml:space="preserve"><value>Unificado</value></data>
+  <data name="Repo_Split" xml:space="preserve"><value>Dividido</value></data>
+  <data name="Repo_ChangedFiles" xml:space="preserve"><value>Archivos modificados</value></data>
+
+  <!-- RepoDetails: commit comments -->
+  <data name="Repo_AddComment" xml:space="preserve"><value>Agregar un comentario</value></data>
+  <data name="Repo_CommentPlaceholder" xml:space="preserve"><value>Deje un comentario en este commit...</value></data>
+  <data name="Repo_CommentButton" xml:space="preserve"><value>Comentar</value></data>
+
+  <!-- RepoDetails: archive -->
+  <data name="Repo_ArchiveHeader" xml:space="preserve"><value>Archivar</value></data>
+  <data name="Repo_ArchiveThisRepo" xml:space="preserve"><value>Archivar este repositorio</value></data>
+  <data name="Repo_UnarchiveThisRepo" xml:space="preserve"><value>Desarchivar este repositorio</value></data>
+  <data name="Repo_ArchiveDesc" xml:space="preserve"><value>Archivar hace el repositorio de solo lectura. No se permiten nuevos pushes, issues ni PRs.</value></data>
+  <data name="Repo_UnarchiveDesc" xml:space="preserve"><value>Desarchivar reactivará los pushes, issues y PRs.</value></data>
+  <data name="Repo_ArchiveButton" xml:space="preserve"><value>Archivar</value></data>
+  <data name="Repo_UnarchiveButton" xml:space="preserve"><value>Desarchivar</value></data>
+
+  <!-- RepoDetails: upload modals -->
+  <data name="Repo_DragDropFiles" xml:space="preserve"><value>Arrastre y suelte archivos aquí</value></data>
+  <data name="Repo_Or" xml:space="preserve"><value>o</value></data>
+  <data name="Repo_ChooseFiles" xml:space="preserve"><value>Elegir archivos</value></data>
+  <data name="Repo_SelectedFiles" xml:space="preserve"><value>Archivos seleccionados:</value></data>
+  <data name="Repo_CommitMessageLabel" xml:space="preserve"><value>Mensaje de commit</value></data>
+  <data name="Repo_AddFilesViaUpload" xml:space="preserve"><value>Agregar archivos mediante carga</value></data>
+  <data name="Repo_UploadFolderTo" xml:space="preserve"><value>Subir carpeta a</value></data>
+  <data name="Repo_SelectFolderToUpload" xml:space="preserve"><value>Seleccione una carpeta para subir</value></data>
+  <data name="Repo_AllFilesWillBeAdded" xml:space="preserve"><value>Todos los archivos de la carpeta se agregarán al repositorio</value></data>
+  <data name="Repo_ChooseFolder" xml:space="preserve"><value>Elegir carpeta</value></data>
+
+  <!-- RepoDetails: C# error messages -->
+  <data name="Repo_AutolinkPrefixRequired" xml:space="preserve"><value>El prefijo es obligatorio.</value></data>
+  <data name="Repo_AutolinkUrlRequired" xml:space="preserve"><value>La plantilla de URL es obligatoria y debe contener {0}.</value></data>
+  <data name="Repo_InvalidSecretName" xml:space="preserve"><value>Nombre de secreto no válido. Use solo letras mayúsculas, números y guiones bajos (ej. MY_SECRET).</value></data>
+  <data name="Repo_DeployKeyRequired" xml:space="preserve"><value>El título y la clave pública son obligatorios.</value></data>
+  <data name="Repo_RepoNotFound" xml:space="preserve"><value>Repositorio no encontrado.</value></data>
+  <data name="Repo_DeployKeyFailed" xml:space="preserve"><value>Error al agregar la clave de despliegue. Es posible que ya exista una clave con esta huella digital.</value></data>
 </root>

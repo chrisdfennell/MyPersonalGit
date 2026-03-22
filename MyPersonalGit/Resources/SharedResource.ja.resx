@@ -1236,4 +1236,89 @@
   <data name="Settings_EnterKeyName" xml:space="preserve"><value>このキーの名前を入力してください。</value></data>
   <data name="Settings_PasskeyRegistered" xml:space="preserve"><value>パスキーが正常に登録されました。</value></data>
   <data name="Settings_PasskeyRemoved" xml:space="preserve"><value>パスキーが削除されました。</value></data>
+  <!-- Register error/success messages -->
+  <data name="Register_PasswordsDontMatch" xml:space="preserve"><value>パスワードが一致しません</value></data>
+  <data name="Register_PasswordTooShort" xml:space="preserve"><value>パスワードは6文字以上である必要があります</value></data>
+  <data name="Register_Success" xml:space="preserve"><value>アカウントが正常に作成されました！ログインページにリダイレクトしています...</value></data>
+  <data name="Register_UserExists" xml:space="preserve"><value>ユーザー名またはメールアドレスは既に存在します</value></data>
+  <data name="Register_Error" xml:space="preserve"><value>登録中にエラーが発生しました。もう一度お試しください。</value></data>
+
+  <!-- RepoDetails: badges and action buttons -->
+  <data name="Repo_Private" xml:space="preserve"><value>プライベート</value></data>
+  <data name="Repo_Public" xml:space="preserve"><value>パブリック</value></data>
+  <data name="Repo_TemplateBadge" xml:space="preserve"><value>テンプレート</value></data>
+  <data name="Repo_ArchivedBadge" xml:space="preserve"><value>アーカイブ済み</value></data>
+  <data name="Repo_Watch" xml:space="preserve"><value>ウォッチ</value></data>
+  <data name="Repo_Unwatch" xml:space="preserve"><value>ウォッチ解除</value></data>
+  <data name="Repo_Star" xml:space="preserve"><value>スター</value></data>
+  <data name="Repo_Starred" xml:space="preserve"><value>スター済み</value></data>
+  <data name="Repo_Fork" xml:space="preserve"><value>Fork</value></data>
+  <data name="Repo_Forked" xml:space="preserve"><value>フォーク済み</value></data>
+
+  <!-- RepoDetails: clone/download section -->
+  <data name="Repo_CopyToClipboard" xml:space="preserve"><value>クリップボードにコピー</value></data>
+  <data name="Repo_CloneHelp" xml:space="preserve"><value>Git HTTP URLを使用してこのリポジトリをクローンしてください。</value></data>
+  <data name="Repo_DownloadZip" xml:space="preserve"><value>ZIP をダウンロード</value></data>
+  <data name="Repo_DownloadTarGz" xml:space="preserve"><value>TAR.GZ をダウンロード</value></data>
+
+  <!-- RepoDetails: file actions -->
+  <data name="Repo_CreateNewFile" xml:space="preserve"><value>新しいファイルを作成</value></data>
+  <data name="Repo_UploadFiles" xml:space="preserve"><value>ファイルをアップロード</value></data>
+  <data name="Repo_UploadFolder" xml:space="preserve"><value>フォルダをアップロード</value></data>
+
+  <!-- RepoDetails: commit signatures -->
+  <data name="Repo_Verified" xml:space="preserve"><value>検証済み</value></data>
+  <data name="Repo_SignedBadge" xml:space="preserve"><value>署名済み</value></data>
+
+  <!-- RepoDetails: danger zone -->
+  <data name="Repo_DangerZone" xml:space="preserve"><value>危険ゾーン</value></data>
+  <data name="Repo_DeleteThisRepo" xml:space="preserve"><value>このリポジトリを削除</value></data>
+  <data name="Repo_DeleteRepoWarning" xml:space="preserve"><value>リポジトリを削除すると、元に戻すことはできません。</value></data>
+
+  <!-- RepoDetails: editor/commit -->
+  <data name="Repo_CommitChanges" xml:space="preserve"><value>変更をコミット</value></data>
+  <data name="Repo_CommitMessagePlaceholder" xml:space="preserve"><value>コミットメッセージ</value></data>
+  <data name="Repo_AddDescriptionPlaceholder" xml:space="preserve"><value>説明を追加...</value></data>
+  <data name="Repo_MustBeLoggedIn" xml:space="preserve"><value>ファイルを編集するにはログインが必要です。</value></data>
+  <data name="Repo_ClearFilter" xml:space="preserve"><value>フィルターをクリア</value></data>
+  <data name="Repo_UnableToLoadBlame" xml:space="preserve"><value>Blame情報を読み込めませんでした。</value></data>
+
+  <!-- RepoDetails: diff view -->
+  <data name="Repo_Unified" xml:space="preserve"><value>統合</value></data>
+  <data name="Repo_Split" xml:space="preserve"><value>分割</value></data>
+  <data name="Repo_ChangedFiles" xml:space="preserve"><value>変更されたファイル</value></data>
+
+  <!-- RepoDetails: commit comments -->
+  <data name="Repo_AddComment" xml:space="preserve"><value>コメントを追加</value></data>
+  <data name="Repo_CommentPlaceholder" xml:space="preserve"><value>このコミットにコメントを残す...</value></data>
+  <data name="Repo_CommentButton" xml:space="preserve"><value>コメント</value></data>
+
+  <!-- RepoDetails: archive -->
+  <data name="Repo_ArchiveHeader" xml:space="preserve"><value>アーカイブ</value></data>
+  <data name="Repo_ArchiveThisRepo" xml:space="preserve"><value>このリポジトリをアーカイブ</value></data>
+  <data name="Repo_UnarchiveThisRepo" xml:space="preserve"><value>このリポジトリのアーカイブを解除</value></data>
+  <data name="Repo_ArchiveDesc" xml:space="preserve"><value>アーカイブするとリポジトリは読み取り専用になります。新しいプッシュ、Issue、PRはできなくなります。</value></data>
+  <data name="Repo_UnarchiveDesc" xml:space="preserve"><value>アーカイブ解除するとプッシュ、Issue、PRが再び有効になります。</value></data>
+  <data name="Repo_ArchiveButton" xml:space="preserve"><value>アーカイブ</value></data>
+  <data name="Repo_UnarchiveButton" xml:space="preserve"><value>アーカイブ解除</value></data>
+
+  <!-- RepoDetails: upload modals -->
+  <data name="Repo_DragDropFiles" xml:space="preserve"><value>ここにファイルをドラッグ＆ドロップ</value></data>
+  <data name="Repo_Or" xml:space="preserve"><value>または</value></data>
+  <data name="Repo_ChooseFiles" xml:space="preserve"><value>ファイルを選択</value></data>
+  <data name="Repo_SelectedFiles" xml:space="preserve"><value>選択されたファイル:</value></data>
+  <data name="Repo_CommitMessageLabel" xml:space="preserve"><value>コミットメッセージ</value></data>
+  <data name="Repo_AddFilesViaUpload" xml:space="preserve"><value>アップロードでファイルを追加</value></data>
+  <data name="Repo_UploadFolderTo" xml:space="preserve"><value>フォルダをアップロード先</value></data>
+  <data name="Repo_SelectFolderToUpload" xml:space="preserve"><value>アップロードするフォルダを選択</value></data>
+  <data name="Repo_AllFilesWillBeAdded" xml:space="preserve"><value>フォルダ内のすべてのファイルがリポジトリに追加されます</value></data>
+  <data name="Repo_ChooseFolder" xml:space="preserve"><value>フォルダを選択</value></data>
+
+  <!-- RepoDetails: C# error messages -->
+  <data name="Repo_AutolinkPrefixRequired" xml:space="preserve"><value>プレフィックスは必須です。</value></data>
+  <data name="Repo_AutolinkUrlRequired" xml:space="preserve"><value>URLテンプレートは必須で、{0}を含む必要があります。</value></data>
+  <data name="Repo_InvalidSecretName" xml:space="preserve"><value>無効なシークレット名です。大文字、数字、アンダースコアのみを使用してください（例: MY_SECRET）。</value></data>
+  <data name="Repo_DeployKeyRequired" xml:space="preserve"><value>タイトルと公開鍵は必須です。</value></data>
+  <data name="Repo_RepoNotFound" xml:space="preserve"><value>リポジトリが見つかりません。</value></data>
+  <data name="Repo_DeployKeyFailed" xml:space="preserve"><value>デプロイキーの追加に失敗しました。このフィンガープリントのキーが既に存在する可能性があります。</value></data>
 </root>
