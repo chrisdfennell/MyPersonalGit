@@ -397,13 +397,13 @@
                                     @if (UserService.IsLoggedIn)
                                     {
                                         <div class="btn-group" @onclick:stopPropagation="true">
-                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => StartEditWebhook(webhook)" title="Edit">
+                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => StartEditWebhook(webhook)" title="@L["Actions_Edit"]">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => ToggleWebhook(webhook.Id)" title="@(webhook.IsActive ? "Disable" : "Enable")">
+                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => ToggleWebhook(webhook.Id)" title="@(webhook.IsActive ? L["Actions_Disable"] : L["Actions_Enable"])">
                                                 <i class="bi bi-@(webhook.IsActive ? "pause" : "play")-circle"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteWebhook(webhook.Id)" title="Delete">
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteWebhook(webhook.Id)" title="@L["Actions_Delete"]">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -493,7 +493,7 @@
                                         </button>
                                         @if (UserService.IsLoggedIn)
                                         {
-                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => RedeliverWebhook(delivery.Id)" title="Redeliver">
+                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => RedeliverWebhook(delivery.Id)" title="@L["Actions_Redeliver"]">
                                                 <i class="bi bi-arrow-repeat"></i>
                                             </button>
                                         }

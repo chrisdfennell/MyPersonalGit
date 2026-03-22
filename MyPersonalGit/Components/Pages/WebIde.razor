@@ -96,7 +96,7 @@
                         <span class="small fw-semibold">@L["Ide_Outline"]</span>
                         @if (activeTabPath != null)
                         {
-                            <button class="btn btn-sm btn-link text-muted p-0 ms-auto" @onclick="RefreshOutline" title="Refresh">
+                            <button class="btn btn-sm btn-link text-muted p-0 ms-auto" @onclick="RefreshOutline" title="@L["Ide_Refresh"]">
                                 <i class="bi bi-arrow-clockwise"></i>
                             </button>
                         }
@@ -1111,7 +1111,7 @@
 
             treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
             UpdatePendingChanges();
-            ShowToast("Commit successful", "success");
+            ShowToast(L["Ide_CommitSuccessful"], "success");
         }
         catch (Exception ex)
         {

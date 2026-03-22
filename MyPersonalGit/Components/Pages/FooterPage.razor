@@ -65,7 +65,7 @@
 
         pageTitle = title;
         content = new MarkupString(MarkdownService.RenderToHtml(
-            string.IsNullOrWhiteSpace(markdown) ? $"## {title}\n\nNo content configured yet. Admins can edit this in Admin > Settings." : markdown));
+            string.IsNullOrWhiteSpace(markdown) ? $"## {title}\n\n{L["Footer_NoContent"]}" : markdown));
 
         await InvokeAsync(StateHasChanged);
     }

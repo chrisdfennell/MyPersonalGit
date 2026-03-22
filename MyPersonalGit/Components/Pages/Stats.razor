@@ -14,7 +14,7 @@
 @inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>@(string.IsNullOrEmpty(RepoName) ? "Platform Stats" : $"Stats · {RepoName}") · Personal Git</PageTitle>
+<PageTitle>@(string.IsNullOrEmpty(RepoName) ? L["Stats_Title"] : $"{L["Stats_Title"]} · {RepoName}") · Personal Git</PageTitle>
 
 <div class="container-xl px-3 py-4">
     @if (!string.IsNullOrEmpty(RepoName))
@@ -24,7 +24,7 @@
                 <ol class="breadcrumb mb-0 h4">
                     <li class="breadcrumb-item"><a href="/" class="text-decoration-none">@L["Nav_Repositories"]</a></li>
                     <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
-                    <li class="breadcrumb-item active fw-bold">Stats</li>
+                    <li class="breadcrumb-item active fw-bold">@L["Stats_Title"]</li>
                 </ol>
             </nav>
         </div>
@@ -34,7 +34,7 @@
                 <div class="card text-center border shadow-sm">
                     <div class="card-body py-3">
                         <div class="h2 fw-bold text-primary mb-0">@totalLines.ToString("N0")</div>
-                        <small class="text-muted">Lines of code</small>
+                        <small class="text-muted">@L["Stats_LinesOfCode"]</small>
                     </div>
                 </div>
             </div>
@@ -42,7 +42,7 @@
                 <div class="card text-center border shadow-sm">
                     <div class="card-body py-3">
                         <div class="h2 fw-bold text-success mb-0">@totalFiles.ToString("N0")</div>
-                        <small class="text-muted">Files</small>
+                        <small class="text-muted">@L["Stats_Files"]</small>
                     </div>
                 </div>
             </div>
@@ -265,7 +265,7 @@
     {
         @* Platform-level stats *@
         <div class="text-center mb-5">
-            <h1 class="display-5 fw-bold mb-2"><i class="bi bi-bar-chart-line me-2"></i>Platform Stats</h1>
+            <h1 class="display-5 fw-bold mb-2"><i class="bi bi-bar-chart-line me-2"></i>@L["Stats_Title"]</h1>
             <p class="text-muted lead">Live statistics for this Personal Git instance</p>
         </div>
 

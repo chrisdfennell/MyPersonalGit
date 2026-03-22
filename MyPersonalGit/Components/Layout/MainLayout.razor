@@ -43,14 +43,14 @@
                 @if (UserService.IsAdmin)
                 {
                     <a href="/admin" class="text-white text-opacity-75 text-decoration-none small fw-semibold">
-                        <i class="bi bi-shield-lock me-1"></i>Admin
+                        <i class="bi bi-shield-lock me-1"></i>@L["Nav_Admin"]
                     </a>
                 }
             </nav>
 
             <div class="ms-auto d-flex align-items-center gap-3">
                 <div class="dropdown">
-                    <button class="btn btn-link text-white text-opacity-75 p-0" type="button" data-bs-toggle="dropdown" title="Language">
+                    <button class="btn btn-link text-white text-opacity-75 p-0" type="button" data-bs-toggle="dropdown" title="@L["Nav_Language"]">
                         <i class="bi bi-translate"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" style="min-width: 140px;">
@@ -64,7 +64,7 @@
                         }
                     </ul>
                 </div>
-                <button class="btn btn-link text-white text-opacity-75 p-0" @onclick="ToggleTheme" title="Toggle dark mode">
+                <button class="btn btn-link text-white text-opacity-75 p-0" @onclick="ToggleTheme" title="@L["Nav_ToggleDarkMode"]">
                     <i class="bi @(currentTheme == "dark" ? "bi-sun-fill" : "bi-moon-fill")"></i>
                 </button>
                 @if (UserService.IsLoggedIn)
@@ -84,9 +84,9 @@
                             <i class="bi bi-caret-down-fill ms-1" style="font-size: 0.6rem;"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="/">New repository</a></li>
-                            <li><a class="dropdown-item" href="/search?type=issues">Issues</a></li>
-                            <li><a class="dropdown-item" href="/search?type=pulls">Pull requests</a></li>
+                            <li><a class="dropdown-item" href="/">@L["Nav_NewRepository"]</a></li>
+                            <li><a class="dropdown-item" href="/search?type=issues">@L["Nav_Issues"]</a></li>
+                            <li><a class="dropdown-item" href="/search?type=pulls">@L["Nav_PullRequests"]</a></li>
                         </ul>
                     </div>
                     <div class="dropdown">
@@ -154,7 +154,7 @@
             <a href="/privacy" class="text-decoration-none text-primary-emphasis">@L["Footer_Privacy"]</a>
             <a href="/docs" class="text-decoration-none text-primary-emphasis">@L["Footer_Docs"]</a>
             <a href="/contact" class="text-decoration-none text-primary-emphasis">@L["Footer_Contact"]</a>
-            <a href="/stats" class="text-decoration-none text-primary-emphasis">Stats</a>
+            <a href="/stats" class="text-decoration-none text-primary-emphasis">@L["Footer_Stats"]</a>
         </div>
     </footer>
 </div>
