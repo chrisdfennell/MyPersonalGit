@@ -86,6 +86,59 @@
                                 </div>
                             }
                         </div>
+                        @if (UserService.IsLoggedIn && modifiedFiles.Count > 0)
+                        {
+                            <div class="px-3 py-2 border-top" style="border-color: #3c3c3c !important;">
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" style="background:#3c3c3c;border-color:#555;color:#ccc;"
+                                           @bind="stashMessage" placeholder="@L["Ide_StashMessage"]" />
+                                    <button class="btn btn-outline-secondary btn-sm" @onclick="StashChanges" title="@L["Ide_StashChanges"]">
+                                        <i class="bi bi-archive"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    }
+
+                    <!-- Stashes -->
+                    <div class="ide-sc-header px-3 py-2" style="border-top: 1px solid #3c3c3c;">
+                        <span class="small fw-semibold">@L["Ide_Stash"]</span>
+                        <button class="btn btn-sm btn-link text-muted p-0 ms-auto" @onclick="LoadStashes" title="@L["Ide_Refresh"]">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                    @if (isLoadingStashes)
+                    {
+                        <div class="text-center py-2"><span class="spinner-border spinner-border-sm text-muted"></span></div>
+                    }
+                    else if (stashes.Count == 0)
+                    {
+                        <div class="text-muted small px-3 py-1"><i class="bi bi-archive me-1"></i>@L["Ide_NoStashes"]</div>
+                    }
+                    else
+                    {
+                        <div class="ide-sc-files">
+                            @foreach (var stash in stashes)
+                            {
+                                <div class="ide-sc-file">
+                                    <i class="bi bi-archive me-2 text-info"></i>
+                                    <span class="ide-sc-filename" style="font-size:0.75rem;">@stash.Message</span>
+                                    <span class="ms-auto d-flex gap-1">
+                                        <button class="btn btn-link btn-sm text-muted p-0" @onclick="() => ApplyStash(stash.Index)" title="@L["Ide_ApplyStash"]">
+                                            <i class="bi bi-box-arrow-down" style="font-size:0.7rem;"></i>
+                                        </button>
+                                        <button class="btn btn-link btn-sm text-muted p-0" @onclick="() => DropStash(stash.Index)" title="@L["Ide_DropStash"]">
+                                            <i class="bi bi-trash" style="font-size:0.7rem;"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                        <div class="px-3 py-1">
+                            <button class="btn btn-outline-info btn-sm w-100" @onclick="PopStash">
+                                <i class="bi bi-box-arrow-up me-1"></i>@L["Ide_PopStash"]
+                            </button>
+                        </div>
                     }
                 </div>
             }
@@ -183,8 +236,31 @@
             @foreach (var segment in GetBreadcrumbSegments(activeTabPath))
             {
                 <i class="bi bi-chevron-right ide-breadcrumb-sep"></i>
-                <span class="ide-breadcrumb @(segment.IsLast ? "active" : "")"
-                      @onclick="() => { if (!segment.IsLast) HandleBreadcrumbClick(segment.Path); }">@segment.Name</span>
+                <span class="ide-breadcrumb-wrapper">
+                    <span class="ide-breadcrumb @(segment.IsLast ? "active" : "")"
+                          @onclick="() => { if (!segment.IsLast) ShowBreadcrumbSiblings(segment.Path); else ShowBreadcrumbSiblings(GetParentBreadcrumbPath(segment.Path)); }">@segment.Name</span>
+                    @if (breadcrumbDropdownPath != null && (breadcrumbDropdownPath == segment.Path || (segment.IsLast && breadcrumbDropdownPath == GetParentBreadcrumbPath(segment.Path))))
+                    {
+                        <div class="ide-breadcrumb-dropdown">
+                            @if (breadcrumbSiblings != null)
+                            {
+                                @foreach (var sibling in breadcrumbSiblings.Take(20))
+                                {
+                                    var sibIsFolder = sibling.Type == "tree";
+                                    <div class="ide-breadcrumb-item @(sibling.Path == activeTabPath ? "active" : "")"
+                                         @onclick="() => BreadcrumbSiblingClicked(sibling)">
+                                        <i class="bi @(sibIsFolder ? "bi-folder text-warning" : "bi-file-earmark text-muted") me-2" style="font-size:0.75rem;"></i>
+                                        <span>@sibling.Name</span>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                </span>
+            }
+            @if (breadcrumbDropdownPath != null)
+            {
+                <div class="ide-breadcrumb-backdrop" @onclick="() => breadcrumbDropdownPath = null"></div>
             }
         </div>
     }
@@ -454,6 +530,7 @@
 @if (showQuickOpen)
 {
     <IdeQuickOpen TreeNodes="treeNodes"
+                  RecentFiles="recentFiles"
                   OnFileSelected="HandleFileSelected"
                   OnClose="() => { showQuickOpen = false; StateHasChanged(); }" />
 }
@@ -681,6 +758,7 @@
                 await JS.InvokeVoidAsync("monacoInterop.onDidChangeCursorPosition", editorId, dotNetRef, "OnCursorPositionChanged");
                 await JS.InvokeVoidAsync("monacoInterop.enableColorDecorations", editorId);
                 await JS.InvokeVoidAsync("monacoInterop.enableMinimapHighlights", editorId);
+                await JS.InvokeVoidAsync("monacoInterop.registerDefinitionProvider", editorId, dotNetRef);
 
                 // Set up drag-and-drop file upload on the file tree
                 await JS.InvokeVoidAsync("ideUpload.setupDropZone", "ide-file-tree-root", dotNetRef, "OnFilesDropped");
@@ -924,6 +1002,7 @@
                 };
                 openTabs.Add(tab);
                 activeTabPath = path;
+                TrackRecentFile(path);
                 QueueWorkspaceSave();
                 StateHasChanged();
                 return;
@@ -962,6 +1041,7 @@
                 await DetectConflicts();
             }
 
+            TrackRecentFile(path);
             QueueWorkspaceSave();
         }
         catch (Exception ex)
@@ -1561,6 +1641,172 @@
             try { await JS.InvokeVoidAsync("monacoInterop.layout", splitEditorId); } catch { }
     }
 
+    // ---- Go to Definition ----
+
+    [JSInvokable]
+    public async Task OnGoToDefinition(string symbol)
+    {
+        // Search repo for symbol definition when not found in loaded models
+        try
+        {
+            var results = await WebIdeService.SearchFilesAsync(RepoName, currentBranch, symbol);
+            var definitionPatterns = new[] { "class ", "interface ", "struct ", "enum ", "record ", "function ", "def ", "fn ", "func " };
+            var match = results.FirstOrDefault(r =>
+                definitionPatterns.Any(p => r.LineContent.Contains(p + symbol)));
+
+            if (match != null)
+            {
+                await HandleFileSelected(match.FilePath);
+                if (editorId != null)
+                {
+                    await Task.Delay(100);
+                    await JS.InvokeVoidAsync("monacoInterop.revealLine", editorId, match.LineNumber);
+                }
+                ShowToast($"{L["Ide_DefinitionFoundIn"]} {System.IO.Path.GetFileName(match.FilePath)}:{match.LineNumber}", "info");
+            }
+            else
+            {
+                ShowToast(L["Ide_NoDefinitionFound"], "warning");
+            }
+        }
+        catch { }
+    }
+
+    // ---- Git Stash ----
+
+    private List<StashEntry> stashes = new();
+    private bool isLoadingStashes;
+    private string stashMessage = "";
+
+    private async Task LoadStashes()
+    {
+        isLoadingStashes = true;
+        StateHasChanged();
+        try
+        {
+            stashes = await WebIdeService.GetStashesAsync(RepoName);
+        }
+        catch { stashes = new(); }
+        finally
+        {
+            isLoadingStashes = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task StashChanges()
+    {
+        if (!UserService.IsLoggedIn) return;
+        try
+        {
+            await WebIdeService.StashAsync(RepoName, UserService.Username,
+                $"{UserService.Username}@personalgit.local", string.IsNullOrWhiteSpace(stashMessage) ? null : stashMessage);
+            stashMessage = "";
+            modifiedFiles.Clear();
+            UpdatePendingChanges();
+            ShowToast(L["Ide_StashCreated"], "success");
+            await LoadStashes();
+        }
+        catch (Exception ex) { ShowToast(ex.Message, "error"); }
+    }
+
+    private async Task PopStash()
+    {
+        try
+        {
+            await WebIdeService.StashPopAsync(RepoName);
+            ShowToast(L["Ide_StashPopped"], "success");
+            await LoadStashes();
+            treeNodes = await WebIdeService.GetFullTreeAsync(RepoName, currentBranch);
+            StateHasChanged();
+        }
+        catch (Exception ex) { ShowToast(ex.Message, "error"); }
+    }
+
+    private async Task ApplyStash(int index)
+    {
+        try
+        {
+            await WebIdeService.StashApplyAsync(RepoName, index);
+            ShowToast(L["Ide_StashApplied"], "success");
+        }
+        catch (Exception ex) { ShowToast(ex.Message, "error"); }
+    }
+
+    private async Task DropStash(int index)
+    {
+        try
+        {
+            await WebIdeService.StashDropAsync(RepoName, index);
+            ShowToast(L["Ide_StashDropped"], "success");
+            await LoadStashes();
+        }
+        catch (Exception ex) { ShowToast(ex.Message, "error"); }
+    }
+
+    // ---- Recent Files ----
+
+    private List<string> recentFiles = new();
+    private const int MaxRecentFiles = 10;
+
+    private void TrackRecentFile(string filePath)
+    {
+        recentFiles.Remove(filePath);
+        recentFiles.Insert(0, filePath);
+        if (recentFiles.Count > MaxRecentFiles)
+            recentFiles.RemoveRange(MaxRecentFiles, recentFiles.Count - MaxRecentFiles);
+    }
+
+    // ---- Breadcrumb Siblings ----
+
+    private List<TreeNode>? breadcrumbSiblings;
+    private string? breadcrumbDropdownPath;
+
+    private void ShowBreadcrumbSiblings(string folderPath)
+    {
+        if (breadcrumbDropdownPath == folderPath)
+        {
+            breadcrumbDropdownPath = null;
+            breadcrumbSiblings = null;
+            return;
+        }
+
+        breadcrumbDropdownPath = folderPath;
+        breadcrumbSiblings = FindSiblingsAtPath(treeNodes, folderPath);
+        StateHasChanged();
+    }
+
+    private List<TreeNode>? FindSiblingsAtPath(List<TreeNode>? nodes, string path)
+    {
+        if (nodes == null) return null;
+
+        // Root level
+        if (string.IsNullOrEmpty(path)) return nodes;
+
+        foreach (var node in nodes)
+        {
+            if (node.Type == "tree" && node.Path == path)
+                return node.Children;
+
+            if (node.Type == "tree" && node.Children != null && path.StartsWith(node.Path + "/"))
+            {
+                var result = FindSiblingsAtPath(node.Children, path);
+                if (result != null) return result;
+            }
+        }
+
+        // Return parent level siblings
+        var parentPath = path.Contains('/') ? path[..path.LastIndexOf('/')] : "";
+        return FindSiblingsAtPath(nodes, parentPath);
+    }
+
+    private async Task BreadcrumbSiblingClicked(TreeNode sibling)
+    {
+        breadcrumbDropdownPath = null;
+        if (sibling.Type != "tree")
+            await HandleFileSelected(sibling.Path);
+    }
+
     // ---- Merge Conflict Detection ----
 
     private async Task DetectConflicts()
@@ -1692,6 +1938,16 @@
                     catch { }
                 }
                 ShowToast(autoSaveEnabled ? "Auto-save enabled" : "Auto-save disabled", "info");
+                break;
+            case "goToDefinition":
+                if (editorId != null)
+                    await JS.InvokeVoidAsync("eval", $"var e = monacoInterop._editors ? Object.values(monacoInterop._editors)[0] : null; if(e) e.trigger('keyboard', 'editor.action.revealDefinition');");
+                break;
+            case "stashChanges":
+                await StashChanges();
+                break;
+            case "popStash":
+                await PopStash();
                 break;
         }
         StateHasChanged();
@@ -2108,6 +2364,12 @@
         // Expand folder in file tree
         sidebarMode = "files";
         StateHasChanged();
+    }
+
+    private static string GetParentBreadcrumbPath(string path)
+    {
+        var lastSlash = path.LastIndexOf('/');
+        return lastSlash > 0 ? path[..lastSlash] : "";
     }
 
     // ---- Language Display ----
