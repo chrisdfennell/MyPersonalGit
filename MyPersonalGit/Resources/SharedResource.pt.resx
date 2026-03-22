@@ -1418,4 +1418,31 @@
 
   <!-- FooterPage -->
   <data name="Footer_NoContent" xml:space="preserve"><value>Nenhum conteúdo configurado ainda. Administradores podem editar em Admin > Configurações.</value></data>
+
+  <!-- IDE Go to Definition -->
+  <data name="Ide_GoToDefinition" xml:space="preserve"><value>Ir para definição</value></data>
+  <data name="Ide_NoDefinitionFound" xml:space="preserve"><value>Nenhuma definição encontrada</value></data>
+  <data name="Ide_DefinitionFoundIn" xml:space="preserve"><value>Encontrado em</value></data>
+  <data name="Ide_CmdGoToDefinition" xml:space="preserve"><value>Ir para definição</value></data>
+
+  <!-- IDE Git Stash -->
+  <data name="Ide_Stash" xml:space="preserve"><value>Stash</value></data>
+  <data name="Ide_StashChanges" xml:space="preserve"><value>Guardar alterações no Stash</value></data>
+  <data name="Ide_PopStash" xml:space="preserve"><value>Pop Stash</value></data>
+  <data name="Ide_ApplyStash" xml:space="preserve"><value>Aplicar Stash</value></data>
+  <data name="Ide_DropStash" xml:space="preserve"><value>Descartar Stash</value></data>
+  <data name="Ide_NoStashes" xml:space="preserve"><value>Nenhum stash</value></data>
+  <data name="Ide_StashMessage" xml:space="preserve"><value>Mensagem do Stash (opcional)</value></data>
+  <data name="Ide_StashCreated" xml:space="preserve"><value>Alterações guardadas no Stash</value></data>
+  <data name="Ide_StashApplied" xml:space="preserve"><value>Stash aplicado</value></data>
+  <data name="Ide_StashPopped" xml:space="preserve"><value>Stash restaurado</value></data>
+  <data name="Ide_StashDropped" xml:space="preserve"><value>Stash descartado</value></data>
+  <data name="Ide_CmdStash" xml:space="preserve"><value>Guardar alterações no Stash</value></data>
+  <data name="Ide_CmdPopStash" xml:space="preserve"><value>Pop último Stash</value></data>
+
+  <!-- IDE Breadcrumb Dropdown -->
+  <data name="Ide_BreadcrumbSiblings" xml:space="preserve"><value>Navegar para item irmão</value></data>
+
+  <!-- IDE Recent Files -->
+  <data name="Ide_RecentFiles" xml:space="preserve"><value>Ficheiros recentes</value></data>
 </root>

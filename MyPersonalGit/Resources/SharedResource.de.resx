@@ -1418,4 +1418,31 @@
 
   <!-- FooterPage -->
   <data name="Footer_NoContent" xml:space="preserve"><value>Noch kein Inhalt konfiguriert. Administratoren können dies unter Admin > Einstellungen bearbeiten.</value></data>
+
+  <!-- IDE Go to Definition -->
+  <data name="Ide_GoToDefinition" xml:space="preserve"><value>Zur Definition springen</value></data>
+  <data name="Ide_NoDefinitionFound" xml:space="preserve"><value>Keine Definition gefunden</value></data>
+  <data name="Ide_DefinitionFoundIn" xml:space="preserve"><value>Gefunden in</value></data>
+  <data name="Ide_CmdGoToDefinition" xml:space="preserve"><value>Zur Definition springen</value></data>
+
+  <!-- IDE Git Stash -->
+  <data name="Ide_Stash" xml:space="preserve"><value>Stash</value></data>
+  <data name="Ide_StashChanges" xml:space="preserve"><value>Änderungen in Stash ablegen</value></data>
+  <data name="Ide_PopStash" xml:space="preserve"><value>Pop Stash</value></data>
+  <data name="Ide_ApplyStash" xml:space="preserve"><value>Stash anwenden</value></data>
+  <data name="Ide_DropStash" xml:space="preserve"><value>Stash verwerfen</value></data>
+  <data name="Ide_NoStashes" xml:space="preserve"><value>Keine Stashes</value></data>
+  <data name="Ide_StashMessage" xml:space="preserve"><value>Stash-Nachricht (optional)</value></data>
+  <data name="Ide_StashCreated" xml:space="preserve"><value>Änderungen in Stash abgelegt</value></data>
+  <data name="Ide_StashApplied" xml:space="preserve"><value>Stash angewendet</value></data>
+  <data name="Ide_StashPopped" xml:space="preserve"><value>Stash wiederhergestellt</value></data>
+  <data name="Ide_StashDropped" xml:space="preserve"><value>Stash verworfen</value></data>
+  <data name="Ide_CmdStash" xml:space="preserve"><value>Änderungen in Stash ablegen</value></data>
+  <data name="Ide_CmdPopStash" xml:space="preserve"><value>Letzten Stash wiederherstellen</value></data>
+
+  <!-- IDE Breadcrumb Dropdown -->
+  <data name="Ide_BreadcrumbSiblings" xml:space="preserve"><value>Zu Geschwisterelement navigieren</value></data>
+
+  <!-- IDE Recent Files -->
+  <data name="Ide_RecentFiles" xml:space="preserve"><value>Zuletzt verwendete Dateien</value></data>
 </root>

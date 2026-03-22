@@ -1418,4 +1418,31 @@
 
   <!-- FooterPage -->
   <data name="Footer_NoContent" xml:space="preserve"><value>Henüz yapılandırılmış içerik yok. Yöneticiler Admin > Ayarlar'dan düzenleyebilir.</value></data>
+
+  <!-- IDE Go to Definition -->
+  <data name="Ide_GoToDefinition" xml:space="preserve"><value>Tanıma git</value></data>
+  <data name="Ide_NoDefinitionFound" xml:space="preserve"><value>Tanım bulunamadı</value></data>
+  <data name="Ide_DefinitionFoundIn" xml:space="preserve"><value>Şurada bulundu</value></data>
+  <data name="Ide_CmdGoToDefinition" xml:space="preserve"><value>Tanıma git</value></data>
+
+  <!-- IDE Git Stash -->
+  <data name="Ide_Stash" xml:space="preserve"><value>Stash</value></data>
+  <data name="Ide_StashChanges" xml:space="preserve"><value>Değişiklikleri Stash'e kaydet</value></data>
+  <data name="Ide_PopStash" xml:space="preserve"><value>Pop Stash</value></data>
+  <data name="Ide_ApplyStash" xml:space="preserve"><value>Stash uygula</value></data>
+  <data name="Ide_DropStash" xml:space="preserve"><value>Stash sil</value></data>
+  <data name="Ide_NoStashes" xml:space="preserve"><value>Stash yok</value></data>
+  <data name="Ide_StashMessage" xml:space="preserve"><value>Stash mesajı (isteğe bağlı)</value></data>
+  <data name="Ide_StashCreated" xml:space="preserve"><value>Değişiklikler Stash'e kaydedildi</value></data>
+  <data name="Ide_StashApplied" xml:space="preserve"><value>Stash uygulandı</value></data>
+  <data name="Ide_StashPopped" xml:space="preserve"><value>Stash geri yüklendi</value></data>
+  <data name="Ide_StashDropped" xml:space="preserve"><value>Stash silindi</value></data>
+  <data name="Ide_CmdStash" xml:space="preserve"><value>Değişiklikleri Stash'e kaydet</value></data>
+  <data name="Ide_CmdPopStash" xml:space="preserve"><value>Son Stash'i Pop et</value></data>
+
+  <!-- IDE Breadcrumb Dropdown -->
+  <data name="Ide_BreadcrumbSiblings" xml:space="preserve"><value>Kardeş öğeye git</value></data>
+
+  <!-- IDE Recent Files -->
+  <data name="Ide_RecentFiles" xml:space="preserve"><value>Son dosyalar</value></data>
 </root>

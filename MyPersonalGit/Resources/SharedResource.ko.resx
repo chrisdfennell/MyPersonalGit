@@ -1418,4 +1418,31 @@
 
   <!-- FooterPage -->
   <data name="Footer_NoContent" xml:space="preserve"><value>아직 구성된 콘텐츠가 없습니다. 관리자는 Admin > 설정에서 편집할 수 있습니다.</value></data>
+
+  <!-- IDE Go to Definition -->
+  <data name="Ide_GoToDefinition" xml:space="preserve"><value>정의로 이동</value></data>
+  <data name="Ide_NoDefinitionFound" xml:space="preserve"><value>정의를 찾을 수 없음</value></data>
+  <data name="Ide_DefinitionFoundIn" xml:space="preserve"><value>다음에서 찾음</value></data>
+  <data name="Ide_CmdGoToDefinition" xml:space="preserve"><value>정의로 이동</value></data>
+
+  <!-- IDE Git Stash -->
+  <data name="Ide_Stash" xml:space="preserve"><value>Stash</value></data>
+  <data name="Ide_StashChanges" xml:space="preserve"><value>변경사항 Stash</value></data>
+  <data name="Ide_PopStash" xml:space="preserve"><value>Pop Stash</value></data>
+  <data name="Ide_ApplyStash" xml:space="preserve"><value>Stash 적용</value></data>
+  <data name="Ide_DropStash" xml:space="preserve"><value>Stash 삭제</value></data>
+  <data name="Ide_NoStashes" xml:space="preserve"><value>Stash 없음</value></data>
+  <data name="Ide_StashMessage" xml:space="preserve"><value>Stash 메시지 (선택사항)</value></data>
+  <data name="Ide_StashCreated" xml:space="preserve"><value>변경사항이 Stash에 저장됨</value></data>
+  <data name="Ide_StashApplied" xml:space="preserve"><value>Stash 적용됨</value></data>
+  <data name="Ide_StashPopped" xml:space="preserve"><value>Stash 복원됨</value></data>
+  <data name="Ide_StashDropped" xml:space="preserve"><value>Stash 삭제됨</value></data>
+  <data name="Ide_CmdStash" xml:space="preserve"><value>변경사항 Stash</value></data>
+  <data name="Ide_CmdPopStash" xml:space="preserve"><value>최신 Stash Pop</value></data>
+
+  <!-- IDE Breadcrumb Dropdown -->
+  <data name="Ide_BreadcrumbSiblings" xml:space="preserve"><value>형제 항목으로 이동</value></data>
+
+  <!-- IDE Recent Files -->
+  <data name="Ide_RecentFiles" xml:space="preserve"><value>최근 파일</value></data>
 </root>
