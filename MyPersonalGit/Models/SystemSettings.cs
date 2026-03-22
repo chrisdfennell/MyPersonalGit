@@ -63,6 +63,7 @@ public class SystemSettings
     // TLS / HTTPS
     public bool EnableHttps { get; set; }
     public int HttpsPort { get; set; } = 8443;
+    public int HttpsExternalPort { get; set; } = 8443;
     public bool HttpsRedirect { get; set; }
     public string TlsCertSource { get; set; } = "none"; // "none", "file", "selfSigned"
     public string TlsCertPath { get; set; } = string.Empty;

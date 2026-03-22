@@ -509,10 +509,17 @@ else
 
                         @if (Settings.EnableHttps)
                         {
-                            <div class="mb-3">
-                                <label class="form-label">HTTPS Port</label>
-                                <InputNumber class="form-control" @bind-Value="Settings.HttpsPort" style="max-width: 200px;" />
-                                <small class="form-text text-muted">Default: 8443. HTTP will continue on port 8080.</small>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Internal HTTPS Port</label>
+                                    <InputNumber class="form-control" @bind-Value="Settings.HttpsPort" />
+                                    <small class="form-text text-muted">The port Kestrel listens on inside the container. Default: 8443.</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">External HTTPS Port</label>
+                                    <InputNumber class="form-control" @bind-Value="Settings.HttpsExternalPort" />
+                                    <small class="form-text text-muted">The port users access from outside (Docker <code>-p</code> mapping). Used for redirects.</small>
+                                </div>
                             </div>
 
                             <div class="mb-3">
