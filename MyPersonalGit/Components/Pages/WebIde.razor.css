@@ -1041,6 +1041,51 @@
     }
 }
 
+/* ============ Merge Conflict Styles ============ */
+:global(.ide-conflict-current) {
+    background: rgba(46, 160, 67, 0.15) !important;
+    border-left: 3px solid #2ea043 !important;
+}
+
+:global(.ide-conflict-incoming) {
+    background: rgba(0, 120, 212, 0.15) !important;
+    border-left: 3px solid #0078d4 !important;
+}
+
+:global(.ide-conflict-separator) {
+    background: rgba(128, 128, 128, 0.2) !important;
+}
+
+:global(.ide-conflict-actions) {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #858585;
+    pointer-events: auto;
+    user-select: none;
+}
+
+:global(.ide-conflict-btn) {
+    cursor: pointer;
+    padding: 1px 6px;
+    border-radius: 3px;
+    transition: color 0.1s, background 0.1s;
+    color: #4fc1ff;
+}
+
+:global(.ide-conflict-btn:hover) {
+    background: rgba(79, 193, 255, 0.15);
+    color: #80d4ff;
+}
+
+:global(.ide-conflict-btn-sep) {
+    color: #555555;
+    margin: 0 2px;
+}
+
 /* ============ Light mode overrides ============ */
 ::deep [data-bs-theme="light"] .ide-container {
     background: #ffffff;

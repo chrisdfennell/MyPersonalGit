@@ -28,6 +28,15 @@
                         </button>
                     </li>
                 }
+                @if (UserService.IsLoggedIn)
+                {
+                    <li><hr class="dropdown-divider" /></li>
+                    <li>
+                        <button class="dropdown-item small text-primary" @onclick="ShowCreateBranch">
+                            <i class="bi bi-plus-circle me-1"></i>New Branch
+                        </button>
+                    </li>
+                }
             </ul>
         </div>
         <div class="ms-auto d-flex align-items-center gap-2">
@@ -44,6 +53,47 @@
         @Body
     </div>
 </div>
+
+@if (showCreateBranch)
+{
+    <div class="ide-branch-overlay" @onclick="() => showCreateBranch = false">
+        <div class="ide-branch-dialog" @onclick:stopPropagation="true">
+            <div class="ide-branch-header">
+                <span class="fw-semibold"><i class="bi bi-git me-2"></i>Create New Branch</span>
+                <button class="btn btn-sm btn-link text-muted p-0" @onclick="() => showCreateBranch = false">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="ide-branch-body">
+                <div class="mb-3">
+                    <label class="form-label small">Branch from</label>
+                    <select class="form-select form-select-sm" @bind="newBranchSource">
+                        @foreach (var branch in Branches)
+                        {
+                            <option value="@branch">@branch</option>
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">New branch name</label>
+                    <input type="text" class="form-control form-control-sm" @bind="newBranchName" placeholder="feature/my-branch"
+                           @onkeydown="HandleBranchKeyDown" />
+                </div>
+                @if (!string.IsNullOrEmpty(createBranchError))
+                {
+                    <div class="alert alert-danger py-1 small">@createBranchError</div>
+                }
+                <button class="btn btn-primary btn-sm w-100" @onclick="CreateBranch" disabled="@creatingBranch">
+                    @if (creatingBranch)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                    }
+                    Create Branch
+                </button>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     [CascadingParameter]
@@ -138,6 +188,56 @@
 
         if (!Branches.Contains(CurrentBranch) && Branches.Count > 0)
             CurrentBranch = Branches[0];
+    }
+
+    // Branch creation state
+    private bool showCreateBranch;
+    private string newBranchName = "";
+    private string newBranchSource = "";
+    private string? createBranchError;
+    private bool creatingBranch;
+
+    private void ShowCreateBranch()
+    {
+        newBranchName = "";
+        newBranchSource = CurrentBranch;
+        createBranchError = null;
+        showCreateBranch = true;
+    }
+
+    private async Task HandleBranchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await CreateBranch();
+        else if (e.Key == "Escape") showCreateBranch = false;
+    }
+
+    private async Task CreateBranch()
+    {
+        if (string.IsNullOrWhiteSpace(newBranchName))
+        {
+            createBranchError = "Branch name is required.";
+            return;
+        }
+
+        creatingBranch = true;
+        createBranchError = null;
+        StateHasChanged();
+
+        try
+        {
+            await WebIdeService.CreateBranchAsync(RepoName, newBranchSource, newBranchName.Trim());
+            showCreateBranch = false;
+            Navigation.NavigateTo($"/repo/{RepoName}/ide?branch={Uri.EscapeDataString(newBranchName.Trim())}", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            createBranchError = ex.Message;
+        }
+        finally
+        {
+            creatingBranch = false;
+            StateHasChanged();
+        }
     }
 
     private void OnBranchChanged(string branch)

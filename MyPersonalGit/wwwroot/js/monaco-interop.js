@@ -152,6 +152,54 @@
     }
 
     /**
+     * Resolve a single merge conflict by replacing the conflict block.
+     * @param {object} editor - Monaco editor instance.
+     * @param {object} conflict - Conflict range object.
+     * @param {string} resolution - 'current', 'incoming', or 'both'.
+     */
+    function resolveConflict(editor, conflict, resolution) {
+        var model = editor.getModel();
+        if (!model) return;
+
+        var currentLines = [];
+        for (var i = conflict.currentStart; i <= conflict.currentEnd; i++) {
+            currentLines.push(model.getLineContent(i));
+        }
+
+        var incomingLines = [];
+        for (var i = conflict.incomingStart; i <= conflict.incomingEnd; i++) {
+            incomingLines.push(model.getLineContent(i));
+        }
+
+        var replacement;
+        if (resolution === 'current') {
+            replacement = currentLines.join('\n');
+        } else if (resolution === 'incoming') {
+            replacement = incomingLines.join('\n');
+        } else {
+            replacement = currentLines.join('\n') + '\n' + incomingLines.join('\n');
+        }
+
+        var range = new monaco.Range(
+            conflict.markerStart, 1,
+            conflict.markerEnd, model.getLineMaxColumn(conflict.markerEnd)
+        );
+
+        editor.executeEdits('conflict-resolve', [{
+            range: range,
+            text: replacement
+        }]);
+
+        // Re-detect remaining conflicts after a short delay
+        setTimeout(function () {
+            window.monacoInterop.detectConflicts(
+                Object.keys(_editors).find(function (k) { return _editors[k] === editor; }),
+                null
+            );
+        }, 100);
+    }
+
+    /**
      * Load Emmet abbreviation support for HTML/CSS languages.
      * Uses emmet-monaco-es from CDN with AMD define temporarily hidden.
      */
@@ -1066,6 +1114,158 @@
             if (editor) {
                 editor.trigger('keyboard', 'editor.unfoldAll');
             }
+        },
+
+        /**
+         * Detect and decorate merge conflicts in the current model.
+         * Adds clickable "Accept Current", "Accept Incoming", "Accept Both" widgets.
+         * @param {string} editorId - The editor instance ID.
+         * @param {object} dotNetObjRef - .NET object reference for callbacks.
+         * @returns {number} Number of conflicts found.
+         */
+        detectConflicts: function (editorId, dotNetObjRef) {
+            var editor = _editors[editorId];
+            if (!editor) return 0;
+            var model = editor.getModel();
+            if (!model) return 0;
+
+            // Clear previous conflict decorations
+            if (editor._conflictDecorations) {
+                try { editor._conflictDecorations.clear(); } catch (e) { }
+            }
+            if (editor._conflictWidgets) {
+                editor._conflictWidgets.forEach(function (w) {
+                    try { editor.removeContentWidget(w); } catch (e) { }
+                });
+            }
+            editor._conflictWidgets = [];
+
+            var text = model.getValue();
+            var lines = text.split('\n');
+            var conflicts = [];
+            var i = 0;
+
+            while (i < lines.length) {
+                if (lines[i].startsWith('<<<<<<<')) {
+                    var startLine = i + 1; // 1-based
+                    var separatorLine = -1;
+                    var endLine = -1;
+
+                    for (var j = i + 1; j < lines.length; j++) {
+                        if (lines[j].startsWith('=======')) {
+                            separatorLine = j + 1;
+                        } else if (lines[j].startsWith('>>>>>>>')) {
+                            endLine = j + 1;
+                            break;
+                        }
+                    }
+
+                    if (separatorLine > 0 && endLine > 0) {
+                        conflicts.push({
+                            markerStart: startLine,
+                            currentStart: startLine + 1,
+                            currentEnd: separatorLine - 1,
+                            separator: separatorLine,
+                            incomingStart: separatorLine + 1,
+                            incomingEnd: endLine - 1,
+                            markerEnd: endLine
+                        });
+                        i = endLine; // skip past this conflict (0-based: endLine is 1-based)
+                    } else {
+                        i++;
+                    }
+                } else {
+                    i++;
+                }
+            }
+
+            if (conflicts.length === 0) return 0;
+
+            var decorations = [];
+            var widgetCounter = 0;
+
+            conflicts.forEach(function (c) {
+                // Highlight current (green)
+                decorations.push({
+                    range: new monaco.Range(c.markerStart, 1, c.currentEnd, model.getLineMaxColumn(c.currentEnd)),
+                    options: {
+                        isWholeLine: true,
+                        className: 'ide-conflict-current',
+                        overviewRuler: { color: '#2ea04370', position: monaco.editor.OverviewRulerLane.Full }
+                    }
+                });
+
+                // Highlight incoming (blue)
+                decorations.push({
+                    range: new monaco.Range(c.incomingStart, 1, c.markerEnd, model.getLineMaxColumn(c.markerEnd)),
+                    options: {
+                        isWholeLine: true,
+                        className: 'ide-conflict-incoming',
+                        overviewRuler: { color: '#0078d470', position: monaco.editor.OverviewRulerLane.Full }
+                    }
+                });
+
+                // Separator line
+                decorations.push({
+                    range: new monaco.Range(c.separator, 1, c.separator, 1),
+                    options: { isWholeLine: true, className: 'ide-conflict-separator' }
+                });
+
+                // Add a content widget with action buttons above the conflict marker
+                widgetCounter++;
+                var widgetId = 'conflict-widget-' + widgetCounter;
+                var conflict = c;
+
+                var widget = {
+                    getId: function () { return widgetId; },
+                    getDomNode: function () {
+                        if (this._node) return this._node;
+                        var node = document.createElement('div');
+                        node.className = 'ide-conflict-actions';
+                        node.innerHTML =
+                            '<span class="ide-conflict-btn ide-conflict-accept-current" title="Accept Current">Accept Current</span>' +
+                            '<span class="ide-conflict-btn-sep">|</span>' +
+                            '<span class="ide-conflict-btn ide-conflict-accept-incoming" title="Accept Incoming">Accept Incoming</span>' +
+                            '<span class="ide-conflict-btn-sep">|</span>' +
+                            '<span class="ide-conflict-btn ide-conflict-accept-both" title="Accept Both">Accept Both</span>';
+
+                        var cc = conflict;
+                        node.querySelector('.ide-conflict-accept-current').onclick = function () {
+                            resolveConflict(editor, cc, 'current');
+                            if (dotNetObjRef) {
+                                try { dotNetObjRef.invokeMethodAsync('OnConflictResolved'); } catch (e) { }
+                            }
+                        };
+                        node.querySelector('.ide-conflict-accept-incoming').onclick = function () {
+                            resolveConflict(editor, cc, 'incoming');
+                            if (dotNetObjRef) {
+                                try { dotNetObjRef.invokeMethodAsync('OnConflictResolved'); } catch (e) { }
+                            }
+                        };
+                        node.querySelector('.ide-conflict-accept-both').onclick = function () {
+                            resolveConflict(editor, cc, 'both');
+                            if (dotNetObjRef) {
+                                try { dotNetObjRef.invokeMethodAsync('OnConflictResolved'); } catch (e) { }
+                            }
+                        };
+
+                        this._node = node;
+                        return node;
+                    },
+                    getPosition: function () {
+                        return {
+                            position: { lineNumber: conflict.markerStart, column: 1 },
+                            preference: [monaco.editor.ContentWidgetPositionPreference.ABOVE]
+                        };
+                    }
+                };
+
+                editor.addContentWidget(widget);
+                editor._conflictWidgets.push(widget);
+            });
+
+            editor._conflictDecorations = editor.createDecorationsCollection(decorations);
+            return conflicts.length;
         },
 
         /**
