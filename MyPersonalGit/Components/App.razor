@@ -262,6 +262,13 @@
             isSupported: function() {
                 return !!window.PublicKeyCredential;
             },
+            getUnsupportedReason: function() {
+                if (window.PublicKeyCredential) return null;
+                if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                    return 'WebAuthn requires a secure context (HTTPS). You are accessing this site over HTTP (' + location.hostname + '). Set up a reverse proxy with TLS or access via localhost.';
+                }
+                return 'Your browser does not support WebAuthn/Passkeys.';
+            },
             register: async function(options) {
                 const publicKey = {
                     challenge: Uint8Array.from(atob(options.challenge.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0)),
