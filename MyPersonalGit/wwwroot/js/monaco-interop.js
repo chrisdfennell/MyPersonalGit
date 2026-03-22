@@ -842,6 +842,33 @@
         },
 
         /**
+         * Trigger Monaco's Go to Line dialog.
+         * @param {string} editorId - The editor instance ID.
+         */
+        triggerGoToLine: function (editorId) {
+            var editor = _editors[editorId];
+            if (editor) {
+                editor.trigger('keyboard', 'editor.action.gotoLine');
+            }
+        },
+
+        /**
+         * Toggle minimap visibility.
+         * @param {string} editorId - The editor instance ID.
+         * @returns {boolean} New minimap state.
+         */
+        toggleMinimap: function (editorId) {
+            var editor = _editors[editorId];
+            if (!editor) return false;
+            var opts = editor.getOptions();
+            // Monaco option ID for minimap.enabled is 73 in recent versions
+            var current = editor.getRawOptions().minimap?.enabled !== false;
+            var newVal = !current;
+            editor.updateOptions({ minimap: { enabled: newVal } });
+            return newVal;
+        },
+
+        /**
          * Get the language ID of the current model.
          * @param {string} editorId - The editor instance ID.
          * @returns {string|null} The language ID.

@@ -11,7 +11,15 @@
             @foreach (var tab in Tabs)
             {
                 var isActive = tab.FilePath == ActiveTabPath;
-                <div class="ide-tab @(isActive ? "active" : "")" title="@tab.FilePath" @onclick="() => OnTabSelected.InvokeAsync(tab.FilePath)">
+                <div class="ide-tab @(isActive ? "active" : "") @(dragOverTab == tab.FilePath ? "drag-over" : "")"
+                     title="@tab.FilePath"
+                     draggable="true"
+                     @onclick="() => OnTabSelected.InvokeAsync(tab.FilePath)"
+                     @ondragstart="() => OnDragStart(tab.FilePath)"
+                     @ondragover:preventDefault="true"
+                     @ondragover="() => OnDragOver(tab.FilePath)"
+                     @ondragleave="() => dragOverTab = null"
+                     @ondrop="() => OnDrop(tab.FilePath)">
                     <i class="bi @GetFileIcon(tab.FileName) me-1" style="font-size: 0.75rem;"></i>
                     <span class="ide-tab-name">@tab.FileName</span>
                     @if (tab.IsDirty)
@@ -32,6 +40,38 @@
     [Parameter] public string? ActiveTabPath { get; set; }
     [Parameter] public EventCallback<string> OnTabSelected { get; set; }
     [Parameter] public EventCallback<string> OnTabClosed { get; set; }
+    [Parameter] public EventCallback<(int from, int to)> OnTabReordered { get; set; }
+
+    private string? draggedTab;
+    private string? dragOverTab;
+
+    private void OnDragStart(string filePath)
+    {
+        draggedTab = filePath;
+    }
+
+    private void OnDragOver(string filePath)
+    {
+        if (draggedTab != null && draggedTab != filePath)
+        {
+            dragOverTab = filePath;
+        }
+    }
+
+    private async Task OnDrop(string targetPath)
+    {
+        dragOverTab = null;
+        if (draggedTab == null || Tabs == null || draggedTab == targetPath) return;
+
+        var fromIndex = Tabs.FindIndex(t => t.FilePath == draggedTab);
+        var toIndex = Tabs.FindIndex(t => t.FilePath == targetPath);
+        draggedTab = null;
+
+        if (fromIndex >= 0 && toIndex >= 0)
+        {
+            await OnTabReordered.InvokeAsync((fromIndex, toIndex));
+        }
+    }
 
     private async Task CloseTab(string filePath)
     {
@@ -49,6 +89,7 @@
             ".css" or ".scss" => "bi-filetype-css",
             ".json" => "bi-filetype-json",
             ".md" => "bi-filetype-md",
+            ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp" or ".svg" => "bi-file-earmark-image",
             _ => "bi-file-earmark"
         };
     }
@@ -109,6 +150,7 @@
         background: #2d2d2d;
         border-top: 2px solid transparent;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        transition: border-left-color 0.1s;
     }
 
     .ide-tab:hover {
@@ -120,6 +162,10 @@
         color: #ffffff;
         background: #1e1e1e;
         border-top-color: #0078d4;
+    }
+
+    .ide-tab.drag-over {
+        border-left: 2px solid #0078d4;
     }
 
     .ide-tab-name {

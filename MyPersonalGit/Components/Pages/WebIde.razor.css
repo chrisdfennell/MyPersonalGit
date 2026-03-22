@@ -888,6 +888,40 @@
     color: #aaa;
 }
 
+/* Terminal tabs */
+.ide-term-tab {
+    font-size: 0.7rem !important;
+    padding: 2px 8px !important;
+    gap: 4px;
+}
+
+.ide-term-close {
+    cursor: pointer;
+    opacity: 0;
+    font-size: 0.7rem;
+    padding: 0 2px;
+    border-radius: 3px;
+    transition: opacity 0.1s;
+}
+
+.ide-term-tab:hover .ide-term-close {
+    opacity: 1;
+}
+
+.ide-term-close:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.ide-term-add {
+    font-size: 0.8rem !important;
+    padding: 2px 6px !important;
+    color: #858585 !important;
+}
+
+.ide-term-add:hover {
+    color: #ffffff !important;
+}
+
 /* Drag-and-drop active state */
 :global(.ide-drop-active) {
     outline: 2px dashed #0078d4 !important;
