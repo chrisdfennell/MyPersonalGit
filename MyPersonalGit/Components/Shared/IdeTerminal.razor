@@ -36,11 +36,11 @@
         }
         else if (IsVisible && _initialized)
         {
-            try
-            {
-                await JS.InvokeVoidAsync("ideTerminal.fit", _containerId);
-            }
-            catch { }
+            // Delay to let the container reach its final size, then fit
+            await Task.Delay(50);
+            try { await JS.InvokeVoidAsync("ideTerminal.fit", _containerId); } catch { }
+            await Task.Delay(200);
+            try { await JS.InvokeVoidAsync("ideTerminal.fit", _containerId); } catch { }
         }
     }
 
@@ -73,6 +73,12 @@
 
             await JS.InvokeVoidAsync("ideTerminal.init", _containerId, wsUrl);
             _initialized = true;
+
+            // Fit after init and again after a delay to handle late container sizing
+            await Task.Delay(100);
+            try { await JS.InvokeVoidAsync("ideTerminal.fit", _containerId); } catch { }
+            await Task.Delay(300);
+            try { await JS.InvokeVoidAsync("ideTerminal.fit", _containerId); } catch { }
         }
         catch (Exception ex)
         {
