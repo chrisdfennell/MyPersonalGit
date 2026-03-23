@@ -2585,20 +2585,42 @@
         ["csharp"] = "csharp",
         ["javascript"] = "typescript",
         ["typescript"] = "typescript",
-        ["python"] = "python"
+        ["python"] = "python",
+        ["go"] = "go",
+        ["rust"] = "rust",
+        ["html"] = "html",
+        ["css"] = "css",
+        ["scss"] = "css",
+        ["less"] = "css",
+        ["json"] = "json",
+        ["yaml"] = "yaml",
+        ["shell"] = "bash",
+        ["dockerfile"] = "dockerfile",
+        ["markdown"] = "markdown"
     };
 
     private string? GetLspLanguage(string? filePath)
     {
         if (string.IsNullOrEmpty(filePath)) return null;
         var ext = System.IO.Path.GetExtension(filePath)?.ToLowerInvariant();
+        var fileName = System.IO.Path.GetFileName(filePath)?.ToLowerInvariant();
         var monacoLang = ext switch
         {
             ".cs" => "csharp",
             ".js" or ".jsx" => "javascript",
             ".ts" or ".tsx" => "typescript",
             ".py" => "python",
-            _ => null
+            ".go" => "go",
+            ".rs" => "rust",
+            ".html" or ".htm" => "html",
+            ".css" => "css",
+            ".scss" => "scss",
+            ".less" => "less",
+            ".json" => "json",
+            ".yml" or ".yaml" => "yaml",
+            ".sh" or ".bash" => "shell",
+            ".md" => "markdown",
+            _ => fileName == "dockerfile" ? "dockerfile" : null
         };
         if (monacoLang == null) return null;
         return LspLanguageMap.GetValueOrDefault(monacoLang);
@@ -2607,13 +2629,24 @@
     private string GetMonacoLanguageId(string filePath)
     {
         var ext = System.IO.Path.GetExtension(filePath)?.ToLowerInvariant();
+        var fileName = System.IO.Path.GetFileName(filePath)?.ToLowerInvariant();
         return ext switch
         {
             ".cs" => "csharp",
             ".js" or ".jsx" => "javascript",
             ".ts" or ".tsx" => "typescript",
             ".py" => "python",
-            _ => "plaintext"
+            ".go" => "go",
+            ".rs" => "rust",
+            ".html" or ".htm" => "html",
+            ".css" => "css",
+            ".scss" => "scss",
+            ".less" => "less",
+            ".json" => "json",
+            ".yml" or ".yaml" => "yaml",
+            ".sh" or ".bash" => "shell",
+            ".md" => "markdown",
+            _ => fileName == "dockerfile" ? "dockerfile" : "plaintext"
         };
     }
 

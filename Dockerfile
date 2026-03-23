@@ -22,6 +22,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         nodejs npm python3 python3-pip curl \
     && git lfs install \
     && npm install -g typescript typescript-language-server \
+        vscode-langservers-extracted yaml-language-server \
+        bash-language-server dockerfile-language-server-nodejs \
     && pip3 install --break-system-packages python-lsp-server \
     && rm -rf /var/lib/apt/lists/* /root/.npm /root/.cache
 
@@ -30,6 +32,27 @@ RUN curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
     && chmod +x /tmp/dotnet-install.sh \
     && /tmp/dotnet-install.sh --channel 8.0 --install-dir /usr/share/dotnet \
     && rm /tmp/dotnet-install.sh
+
+# Go + gopls language server
+RUN ARCH=$(dpkg --print-architecture) && \
+    curl -sSL "https://go.dev/dl/go1.23.6.linux-${ARCH}.tar.gz" | tar xz -C /usr/local && \
+    /usr/local/go/bin/go install golang.org/x/tools/gopls@latest && \
+    rm -rf /root/.cache/go-build
+ENV PATH="${PATH}:/usr/local/go/bin:/root/go/bin"
+
+# Rust-analyzer language server (standalone binary)
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "amd64" ]; then RARCH="x86_64"; else RARCH="aarch64"; fi && \
+    curl -sSL "https://github.com/rust-lang/rust-analyzer/releases/latest/download/rust-analyzer-${RARCH}-unknown-linux-gnu.gz" \
+    | gunzip > /usr/local/bin/rust-analyzer && \
+    chmod +x /usr/local/bin/rust-analyzer
+
+# Marksman markdown language server (standalone binary)
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "amd64" ]; then MARCH="linux-x64"; else MARCH="linux-arm64"; fi && \
+    curl -sSL "https://github.com/artempyanykh/marksman/releases/latest/download/marksman-${MARCH}" \
+    -o /usr/local/bin/marksman && \
+    chmod +x /usr/local/bin/marksman
 
 # OmniSharp C# language server
 RUN ARCH=$(dpkg --print-architecture) && \

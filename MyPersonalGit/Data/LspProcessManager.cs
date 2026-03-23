@@ -56,6 +56,15 @@ public sealed class LspProcessManager : IDisposable
         ["csharp"] = new("/usr/local/bin/omnisharp/OmniSharp", "--languageserver", new[] { ".cs", ".csproj" }),
         ["typescript"] = new("typescript-language-server", "--stdio", new[] { ".ts", ".tsx", ".js", ".jsx" }),
         ["python"] = new("pylsp", "", new[] { ".py" }),
+        ["go"] = new("gopls", "serve", new[] { ".go" }),
+        ["rust"] = new("rust-analyzer", "", new[] { ".rs" }),
+        ["html"] = new("vscode-html-language-server", "--stdio", new[] { ".html", ".htm" }),
+        ["css"] = new("vscode-css-language-server", "--stdio", new[] { ".css", ".scss", ".less" }),
+        ["json"] = new("vscode-json-language-server", "--stdio", new[] { ".json" }),
+        ["yaml"] = new("yaml-language-server", "--stdio", new[] { ".yml", ".yaml" }),
+        ["bash"] = new("bash-language-server", "start", new[] { ".sh", ".bash" }),
+        ["dockerfile"] = new("docker-langserver", "--stdio", new[] { ".dockerfile" }),
+        ["markdown"] = new("marksman", "server", new[] { ".md" }),
     };
 
     private readonly ConcurrentDictionary<string, LspSession> _sessions = new();
