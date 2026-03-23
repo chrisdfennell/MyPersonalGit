@@ -115,22 +115,30 @@ Un servidor Git autoalojado con una interfaz web similar a GitHub, construido co
 
 ### Web IDE
 - **Editor de Codigo Completo** — IDE basado en Monaco Editor con resaltado de sintaxis para mas de 30 lenguajes, multiples temas, expansion de abreviaturas Emmet para HTML/CSS y formato al pegar
+- **Language Server Protocol (LSP)** — IntelliSense, autocompletado, informacion al pasar el cursor, ir a definicion, buscar referencias, ayuda de firma, formato de codigo, renombrar simbolo, acciones de codigo y diagnosticos en tiempo real para 12 lenguajes: C# (OmniSharp), TypeScript/JavaScript, Python, Go, Rust, HTML, CSS, JSON, YAML, Bash, Dockerfile y Markdown
+- **Completado de Codigo con IA** — Sugerencias en linea tipo texto fantasma mientras escribes, impulsadas por cualquier API compatible con OpenAI (OpenAI, Ollama, LM Studio, etc.). Endpoint, clave API y modelo configurables en ajustes de administracion. Tab para aceptar
+- **Depurador Integrado** — Depuracion de Python via debugpy/DAP con puntos de interrupcion (clic en el margen), paso por encima/dentro/fuera, continuar, inspeccion de variables, navegacion de pila de llamadas y salida de consola de depuracion
+- **Panel de Problemas** — Pestana del panel inferior que agrega todos los diagnosticos LSP (errores/advertencias) de archivos abiertos, agrupados por archivo con clic para navegar. Contadores de errores/advertencias en la barra de estado
+- **Ejecutor de Tareas** — Pestana del panel inferior para ejecutar comandos de compilacion/pruebas (dotnet build, npm test, go build, make, pytest, etc.) con salida en tiempo real, ubicaciones de error clicables y soporte de cancelacion
+- **Diff de Ramas** — Panel lateral para comparar dos ramas lado a lado. Muestra lista de archivos modificados con estado de agregar/modificar/eliminar/renombrar, clic para ver diff en el editor diff de Monaco
+- **Indicadores Diff en el Margen** — Indicadores verdes, azules y rojos en el margen del editor mostrando lineas agregadas, modificadas y eliminadas respecto al ultimo commit
 - **Gestion de Archivos** — Arbol de archivos jerarquico con anidacion de archivos (agrupa `.razor` + `.razor.css` + `.razor.cs`), busqueda/filtro, carga de archivos mediante arrastrar y soltar, y menus contextuales para nuevo archivo/carpeta/renombrar/eliminar
 - **Gestion de Pestanas** — Interfaz con multiples pestanas con reordenamiento por arrastre, pestanas fijadas, menu contextual de clic derecho (Cerrar, Cerrar Otras, Cerrar a la Derecha, Cerrar Guardadas), y flechas de desplazamiento para desbordamiento
 - **Editor Dividido y Vista Diff** — Edicion lado a lado con desplazamiento independiente, y vista de diferencias para comparar cambios antes de confirmar
-- **Terminal Integrado** — Terminal basado en xterm.js con multiples pestanas de terminal y acceso a shell mediante WebSocket
+- **Terminal Integrado** — Terminal basado en xterm.js con multiples pestanas de terminal, acceso a shell mediante WebSocket y modo claro/oscuro segun el tema
 - **Integracion Git** — Creacion de ramas, vista blame, historial de archivos, panel de commits, control de fuente con seleccion de archivos, y grafico visual de commits con lineas de carril coloreadas y etiquetas de rama
 - **Resolucion de Conflictos de Fusion** — Botones en linea Aceptar Actual / Aceptar Entrante / Aceptar Ambos con regiones de conflicto codificadas por color (verde/azul)
 - **Buscar y Reemplazar** — Busqueda global en todos los archivos con filtrado por extension de archivo, resultados linea por linea, y reemplazar todo
 - **Navegacion de Codigo** — Apertura Rapida (Ctrl+P), Paleta de Comandos (Ctrl+Shift+P), Ir a Linea (Ctrl+G), panel de esquema/simbolos y navegacion por migas de pan
+- **Atajos de Teclado** — Atajos estilo VS Code (Ctrl+Shift+P, Ctrl+P, Ctrl+Shift+F, Ctrl+Shift+M, Ctrl+`, Escape) interceptados a nivel de documento para evitar comportamientos por defecto del navegador
 - **Previsualizacion de Colores CSS** — Muestras de color en linea junto a valores hex/rgb/hsl en archivos CSS, SCSS y Less
 - **Resaltados en Minimapa** — Lineas modificadas, lineas anadidas y marcadores de conflicto mostrados como marcadores coloreados en el margen del minimapa
 - **Vista Previa de Markdown e Imagenes** — Alternar entre edicion y vista previa renderizada para archivos Markdown; visualizacion de imagenes en linea para formatos comunes
-- **Autoguardado** — Auto-commit opcional con retraso configurable (500ms-5s), activable en ajustes o paleta de comandos
+- **Autoguardado** — Auto-commit opcional con retraso configurable (500ms–5s), activable en ajustes o paleta de comandos
 - **Espacio de Trabajo Persistente** — Recuerda pestanas abiertas, pestanas fijadas, archivo activo, estado de la barra lateral y modo de panel entre sesiones del navegador
 - **Paneles Redimensionables** — Redimensionar barra lateral y panel inferior arrastrando con controles visuales
 - **Ajustes Personalizables** — Selector de familia de fuente (8 fuentes), tamano de fuente, tamano de tabulacion, ajuste de linea, minimapa, numeros de linea, guias de corchetes, desplazamiento adhesivo, plegado de codigo, ligaduras de fuente, formato al pegar y opciones de representacion de espacios en blanco
-- **Modo Zen** — Edicion a pantalla completa sin distracciones (Escape para salir)
+- **Modo Zen** — Edicion a pantalla completa sin distracciones con boton de salida visible
 
 ### CI/CD y DevOps
 - **Runner de CI/CD** — Define flujos de trabajo en `.github/workflows/*.yml` y ejecutalos en contenedores Docker. Se activa automaticamente en eventos de push y pull request

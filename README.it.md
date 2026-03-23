@@ -115,14 +115,22 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 
 ### Web IDE
 - **Editor di Codice Completo** — IDE basato su Monaco Editor con evidenziazione della sintassi per oltre 30 linguaggi, temi multipli, espansione delle abbreviazioni Emmet per HTML/CSS e formattazione all'incollaggio
+- **Language Server Protocol (LSP)** — IntelliSense, autocompletamento, info al passaggio del mouse, vai alla definizione, trova riferimenti, guida alla firma, formattazione del codice, rinomina simbolo, azioni di codice e diagnostica in tempo reale per 12 linguaggi: C# (OmniSharp), TypeScript/JavaScript, Python, Go, Rust, HTML, CSS, JSON, YAML, Bash, Dockerfile e Markdown
+- **Completamento Codice con IA** — Suggerimenti inline in testo fantasma durante la digitazione, alimentati da qualsiasi API compatibile con OpenAI (OpenAI, Ollama, LM Studio, ecc.). Endpoint, chiave API e modello configurabili nelle impostazioni admin. Tab per accettare
+- **Debugger Integrato** — Debug Python tramite debugpy/DAP con breakpoint (clic sul margine), step over/into/out, continua, ispezione variabili, navigazione dello stack delle chiamate e output della console di debug
+- **Pannello Problemi** — Scheda del pannello inferiore che aggrega tutte le diagnostiche LSP (errori/avvisi) dei file aperti, raggruppate per file con clic per navigare. Contatori errori/avvisi nella barra di stato
+- **Esecutore di Task** — Scheda del pannello inferiore per eseguire comandi di build/test (dotnet build, npm test, go build, make, pytest, ecc.) con output in tempo reale, posizioni errore cliccabili e supporto annullamento
+- **Diff tra Branch** — Pannello laterale per confrontare due branch affiancati. Mostra l'elenco dei file modificati con stato aggiungi/modifica/elimina/rinomina, clic per visualizzare il diff nell'editor diff di Monaco
+- **Indicatori Diff nel Margine** — Indicatori verdi, blu e rossi nel margine dell'editor che mostrano righe aggiunte, modificate ed eliminate rispetto all'ultimo commit
 - **Gestione File** — Albero dei file gerarchico con annidamento dei file (raggruppa `.razor` + `.razor.css` + `.razor.cs`), ricerca/filtro, caricamento file tramite trascinamento e menu contestuali per nuovo file/cartella/rinomina/elimina
 - **Gestione Schede** — Interfaccia multi-scheda con riordinamento tramite trascinamento, schede fissate, menu contestuale clic destro (Chiudi, Chiudi Altre, Chiudi a Destra, Chiudi Salvate) e frecce di scorrimento per l'overflow
 - **Editor Diviso & Vista Diff** — Modifica affiancata con scorrimento indipendente e vista diff per confrontare le modifiche prima del commit
-- **Terminale Integrato** — Terminale basato su xterm.js con schede terminale multiple e accesso shell tramite WebSocket
+- **Terminale Integrato** — Terminale basato su xterm.js con schede terminale multiple, accesso shell tramite WebSocket e modalità chiara/scura in base al tema
 - **Integrazione Git** — Creazione branch, vista blame, cronologia file, pannello commit, controllo sorgente con selezione file e grafico visuale dei commit con linee colorate e etichette dei branch
 - **Risoluzione Conflitti di Merge** — Pulsanti inline Accetta Corrente / Accetta In Arrivo / Accetta Entrambi con regioni di conflitto codificate per colore (verde/blu)
 - **Cerca e Sostituisci** — Ricerca globale in tutti i file con filtraggio per estensione file, risultati riga per riga e sostituisci tutto
 - **Navigazione del Codice** — Apertura Rapida (Ctrl+P), Palette dei Comandi (Ctrl+Shift+P), Vai alla Riga (Ctrl+G), pannello struttura/simboli e navigazione breadcrumb
+- **Scorciatoie da Tastiera** — Scorciatoie stile VS Code (Ctrl+Shift+P, Ctrl+P, Ctrl+Shift+F, Ctrl+Shift+M, Ctrl+`, Escape) intercettate a livello di documento per impedire i comportamenti predefiniti del browser
 - **Anteprime Colori CSS** — Campioni di colore inline accanto ai valori hex/rgb/hsl nei file CSS, SCSS e Less
 - **Evidenziazioni sulla Minimap** — Righe modificate, righe aggiunte e marcatori di conflitto mostrati come marcatori colorati nel margine della minimap
 - **Anteprima Markdown e Immagini** — Alterna tra modifica e anteprima renderizzata per i file Markdown; visualizzazione inline delle immagini per i formati comuni
@@ -130,7 +138,7 @@ Un server Git self-hosted con un'interfaccia web simile a GitHub, costruito con 
 - **Spazio di Lavoro Persistente** — Ricorda le schede aperte, le schede fissate, il file attivo, lo stato della barra laterale e la modalità pannello tra le sessioni del browser
 - **Pannelli Ridimensionabili** — Barra laterale e pannello inferiore ridimensionabili trascinando con maniglie visive
 - **Impostazioni Personalizzabili** — Selettore famiglia di font (8 font), dimensione font, dimensione tabulazione, a capo automatico, minimap, numeri di riga, guide parentesi, scorrimento fisso, piegamento codice, legature font, formattazione all'incollaggio e opzioni di visualizzazione degli spazi
-- **Modalità Zen** — Modifica a schermo intero senza distrazioni (Escape per uscire)
+- **Modalità Zen** — Modifica a schermo intero senza distrazioni con pulsante di uscita visibile
 
 ### CI/CD e DevOps
 - **CI/CD Runner** — Definisci workflow in `.github/workflows/*.yml` ed eseguili in container Docker. Attivazione automatica su eventi push e pull request

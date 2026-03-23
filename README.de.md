@@ -115,14 +115,22 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 
 ### Web IDE
 - **Vollwertiger Code-Editor** — Monaco Editor-basierte IDE mit Syntaxhervorhebung für über 30 Sprachen, mehreren Themes, Emmet-Abkürzungserweiterung für HTML/CSS und Format beim Einfügen
+- **Language Server Protocol (LSP)** — IntelliSense, Autovervollständigung, Hover-Info, Gehe zu Definition, Referenzen finden, Signaturhilfe, Code-Formatierung, Symbol umbenennen, Code-Aktionen und Echtzeit-Diagnosen für 12 Sprachen: C# (OmniSharp), TypeScript/JavaScript, Python, Go, Rust, HTML, CSS, JSON, YAML, Bash, Dockerfile und Markdown
+- **KI-Code-Vervollständigung** — Inline-Geistertext-Vorschläge beim Tippen, betrieben durch jede OpenAI-kompatible API (OpenAI, Ollama, LM Studio, etc.). Konfigurierbarer Endpunkt, API-Schlüssel und Modell in den Admin-Einstellungen. Tab zum Akzeptieren
+- **Integrierter Debugger** — Python-Debugging über debugpy/DAP mit Haltepunkten (Klick in den Rand), Schritt über/hinein/heraus, Fortfahren, Variableninspektion, Aufrufstapel-Navigation und Debug-Konsolenausgabe
+- **Probleme-Panel** — Tab im unteren Panel, das alle LSP-Diagnosen (Fehler/Warnungen) offener Dateien aggregiert, gruppiert nach Datei mit Klick-zum-Navigieren. Fehler-/Warnungszähler in der Statusleiste
+- **Aufgabenausführung** — Tab im unteren Panel zum Ausführen von Build-/Test-Befehlen (dotnet build, npm test, go build, make, pytest, etc.) mit Echtzeit-Streaming-Ausgabe, klickbaren Fehlerpositionen und Abbruch-Unterstützung
+- **Branch-Diff** — Seitenleisten-Panel zum Vergleichen zweier Branches nebeneinander. Zeigt Liste geänderter Dateien mit Hinzufügen/Ändern/Löschen/Umbenennen-Status, Klick zum Anzeigen des Diffs im Monaco-Diff-Editor
+- **Inline-Diff-Markierungen** — Grüne, blaue und rote Indikatoren im Editor-Rand, die hinzugefügte, geänderte und gelöschte Zeilen gegenüber dem letzten Commit anzeigen
 - **Dateiverwaltung** — Hierarchischer Dateibaum mit Dateiverschachtelung (gruppiert `.razor` + `.razor.css` + `.razor.cs`), Suche/Filter, Datei-Upload per Drag-and-Drop und Kontextmenüs für neue Datei/Ordner/Umbenennen/Löschen
 - **Tab-Verwaltung** — Multi-Tab-Oberfläche mit Drag-to-Reorder, angehefteten Tabs, Rechtsklick-Kontextmenü (Schließen, Andere schließen, Rechts schließen, Gespeicherte schließen) und Scroll-Pfeilen bei Überlauf
 - **Split-Editor & Diff-Ansicht** — Nebeneinander-Bearbeitung mit unabhängigem Scrollen und Diff-Ansicht zum Vergleichen von Änderungen vor dem Commit
-- **Integriertes Terminal** — xterm.js-basiertes Terminal mit mehreren Terminal-Tabs und WebSocket-Shell-Zugang
+- **Integriertes Terminal** — xterm.js-basiertes Terminal mit mehreren Terminal-Tabs, WebSocket-Shell-Zugang und themenabhängigem Hell-/Dunkelmodus
 - **Git-Integration** — Branch-Erstellung, Blame-Ansicht, Dateiverlauf, Commit-Panel, Quellkontrolle mit Dateiauswahl und visueller Commit-Graph mit farbigen Spurlinien und Branch-Labels
 - **Merge-Konflikt-Auflösung** — Inline-Schaltflächen Aktuell akzeptieren / Eingehend akzeptieren / Beide akzeptieren mit farbcodierten Konfliktregionen (grün/blau)
 - **Suchen & Ersetzen** — Globale Suche über alle Dateien mit Dateierweiterungs-Filterung, zeilenweise Ergebnisse und Alle ersetzen
-- **Code-Navigation** — Schnellöffnung (Strg+P), Befehlspalette (Strg+Umschalt+P), Gehe zu Zeile (Strg+G), Gliederungs-/Symbolpanel und Breadcrumb-Navigation
+- **Code-Navigation** — Schnellöffnung (Ctrl+P), Befehlspalette (Ctrl+Shift+P), Gehe zu Zeile (Ctrl+G), Gliederungs-/Symbolpanel und Breadcrumb-Navigation
+- **Tastaturkürzel** — VS Code-Tastaturkürzel (Ctrl+Shift+P, Ctrl+P, Ctrl+Shift+F, Ctrl+Shift+M, Ctrl+`, Escape) auf Dokumentebene abgefangen, um Browser-Standardverhalten zu verhindern
 - **CSS-Farbvorschauen** — Inline-Farbmuster neben hex/rgb/hsl-Werten in CSS-, SCSS- und Less-Dateien
 - **Minimap-Hervorhebungen** — Geänderte Zeilen, hinzugefügte Zeilen und Konfliktmarkierungen als farbige Marker im Minimap-Rand angezeigt
 - **Markdown- & Bildvorschau** — Umschalten zwischen Bearbeitung und gerenderter Vorschau für Markdown-Dateien; Inline-Bildanzeige für gängige Formate
@@ -130,7 +138,7 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Persistenter Arbeitsbereich** — Merkt sich geöffnete Tabs, angeheftete Tabs, aktive Datei, Seitenleistenstatus und Panel-Modus über Browser-Sitzungen hinweg
 - **Größenveränderbare Panels** — Seitenleiste und unteres Panel per Drag mit visuellen Griffen größenveränderbar
 - **Anpassbare Einstellungen** — Schriftfamilienauswahl (8 Schriften), Schriftgröße, Tab-Größe, Zeilenumbruch, Minimap, Zeilennummern, Klammer-Hilfslinien, Sticky Scroll, Code-Faltung, Schriftligaturen, Format beim Einfügen und Leerzeichenanzeige-Optionen
-- **Zen-Modus** — Ablenkungsfreie Vollbildbearbeitung (Escape zum Beenden)
+- **Zen-Modus** — Ablenkungsfreie Vollbildbearbeitung mit sichtbarer Beenden-Schaltfläche
 
 ### CI/CD & DevOps
 - **CI/CD Runner** — Definieren Sie Workflows in `.github/workflows/*.yml` und führen Sie sie in Docker-Containern aus. Automatische Auslösung bei Push- und Pull-Request-Events
