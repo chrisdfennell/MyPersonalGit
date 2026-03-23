@@ -115,14 +115,22 @@ Um servidor Git auto-hospedado com interface web semelhante ao GitHub, construí
 
 ### Web IDE
 - **Editor de Código Completo** — IDE baseada no Monaco Editor com destaque de sintaxe para mais de 30 linguagens, múltiplos temas, expansão de abreviações Emmet para HTML/CSS e formatação ao colar
+- **Language Server Protocol (LSP)** — IntelliSense, autocompletar, info ao passar o mouse, ir para definição, encontrar referências, ajuda de assinatura, formatação de código, renomear símbolo, ações de código e diagnósticos em tempo real para 12 linguagens: C# (OmniSharp), TypeScript/JavaScript, Python, Go, Rust, HTML, CSS, JSON, YAML, Bash, Dockerfile e Markdown
+- **Completação de Código com IA** — Sugestões inline em texto fantasma enquanto digita, alimentadas por qualquer API compatível com OpenAI (OpenAI, Ollama, LM Studio, etc.). Endpoint, chave de API e modelo configuráveis nas configurações de admin. Tab para aceitar
+- **Depurador Integrado** — Depuração Python via debugpy/DAP com pontos de interrupção (clique na calha), step over/into/out, continuar, inspeção de variáveis, navegação na pilha de chamadas e saída do console de depuração
+- **Painel de Problemas** — Aba do painel inferior que agrega todos os diagnósticos LSP (erros/avisos) dos arquivos abertos, agrupados por arquivo com clique para navegar. Contadores de erros/avisos na barra de status
+- **Executor de Tarefas** — Aba do painel inferior para executar comandos de build/teste (dotnet build, npm test, go build, make, pytest, etc.) com saída em tempo real, localizações de erro clicáveis e suporte a cancelamento
+- **Diff de Branches** — Painel lateral para comparar duas branches lado a lado. Mostra lista de arquivos alterados com status de adição/modificação/exclusão/renomeação, clique para ver diff no editor diff do Monaco
+- **Indicadores Diff na Calha** — Indicadores verdes, azuis e vermelhos na calha do editor mostrando linhas adicionadas, modificadas e excluídas em relação ao último commit
 - **Gerenciamento de Arquivos** — Árvore de arquivos hierárquica com aninhamento de arquivos (agrupa `.razor` + `.razor.css` + `.razor.cs`), busca/filtro, upload de arquivos por arrastar e soltar e menus de contexto para novo arquivo/pasta/renomear/excluir
 - **Gerenciamento de Abas** — Interface com múltiplas abas com reordenação por arraste, abas fixadas, menu de contexto com clique direito (Fechar, Fechar Outras, Fechar à Direita, Fechar Salvas) e setas de rolagem para overflow
 - **Editor Dividido & Visualização Diff** — Edição lado a lado com rolagem independente e visualização de diferenças para comparar alterações antes do commit
-- **Terminal Integrado** — Terminal baseado em xterm.js com múltiplas abas de terminal e acesso shell via WebSocket
+- **Terminal Integrado** — Terminal baseado em xterm.js com múltiplas abas de terminal, acesso shell via WebSocket e modo claro/escuro conforme o tema
 - **Integração Git** — Criação de branches, visualização blame, histórico de arquivos, painel de commits, controle de código-fonte com seleção de arquivos e gráfico visual de commits com linhas coloridas e rótulos de branches
 - **Resolução de Conflitos de Merge** — Botões inline Aceitar Atual / Aceitar Recebido / Aceitar Ambos com regiões de conflito codificadas por cor (verde/azul)
 - **Buscar & Substituir** — Busca global em todos os arquivos com filtragem por extensão de arquivo, resultados linha por linha e substituir tudo
 - **Navegação de Código** — Abertura Rápida (Ctrl+P), Paleta de Comandos (Ctrl+Shift+P), Ir para Linha (Ctrl+G), painel de estrutura/símbolos e navegação por trilhas
+- **Atalhos de Teclado** — Atalhos estilo VS Code (Ctrl+Shift+P, Ctrl+P, Ctrl+Shift+F, Ctrl+Shift+M, Ctrl+`, Escape) interceptados no nível do documento para evitar comportamentos padrão do navegador
 - **Pré-visualização de Cores CSS** — Amostras de cores inline ao lado de valores hex/rgb/hsl em arquivos CSS, SCSS e Less
 - **Destaques no Minimap** — Linhas modificadas, linhas adicionadas e marcadores de conflito mostrados como marcadores coloridos na calha do minimap
 - **Pré-visualização de Markdown & Imagens** — Alterne entre edição e pré-visualização renderizada para arquivos Markdown; exibição inline de imagens para formatos comuns
@@ -130,7 +138,7 @@ Um servidor Git auto-hospedado com interface web semelhante ao GitHub, construí
 - **Espaço de Trabalho Persistente** — Lembra abas abertas, abas fixadas, arquivo ativo, estado da barra lateral e modo do painel entre sessões do navegador
 - **Painéis Redimensionáveis** — Redimensione a barra lateral e o painel inferior arrastando com alças visuais
 - **Configurações Personalizáveis** — Seletor de família de fontes (8 fontes), tamanho da fonte, tamanho da tabulação, quebra de linha, minimap, números de linha, guias de colchetes, rolagem fixa, dobramento de código, ligaduras de fonte, formatação ao colar e opções de exibição de espaços em branco
-- **Modo Zen** — Edição em tela cheia sem distrações (Escape para sair)
+- **Modo Zen** — Edição em tela cheia sem distrações com botão de saída visível
 
 ### CI/CD e DevOps
 - **Runner CI/CD** — Defina workflows em `.github/workflows/*.yml` e execute-os em contêineres Docker. Disparo automático em eventos de push e pull request

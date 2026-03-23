@@ -115,14 +115,22 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 
 ### Web IDE
 - **Tam Donanımlı Kod Editörü** — Monaco Editor tabanlı IDE; 30'dan fazla dil için söz dizimi vurgulama, birden fazla tema, HTML/CSS için Emmet kısaltma genişletme ve yapıştırma sırasında biçimlendirme
+- **Language Server Protocol (LSP)** — IntelliSense, otomatik tamamlama, üzerine gelme bilgisi, tanıma git, referansları bul, imza yardımı, kod biçimlendirme, sembol yeniden adlandırma, kod eylemleri ve 12 dil için gerçek zamanlı tanılama: C# (OmniSharp), TypeScript/JavaScript, Python, Go, Rust, HTML, CSS, JSON, YAML, Bash, Dockerfile ve Markdown
+- **AI Kod Tamamlama** — Yazarken satır içi hayalet metin önerileri, herhangi bir OpenAI uyumlu API (OpenAI, Ollama, LM Studio, vb.) ile desteklenir. Yönetici ayarlarında yapılandırılabilir uç nokta, API anahtarı ve model. Kabul etmek için Tab
+- **Entegre Hata Ayıklayıcı** — debugpy/DAP aracılığıyla Python hata ayıklama; kesme noktaları (kenar boşluğuna tıklama), adım atlama/içine/dışına, devam et, değişken inceleme, çağrı yığını navigasyonu ve hata ayıklama konsol çıktısı
+- **Sorunlar Paneli** — Açık dosyalardaki tüm LSP tanılamalarını (hatalar/uyarılar) dosyaya göre gruplandırarak toplayan alt panel sekmesi; navigasyon için tıklama. Durum çubuğunda hata/uyarı sayaçları
+- **Görev Çalıştırıcı** — Derleme/test komutlarını (dotnet build, npm test, go build, make, pytest, vb.) gerçek zamanlı akış çıktısı, tıklanabilir hata konumları ve iptal desteğiyle çalıştırmak için alt panel sekmesi
+- **Dal Karşılaştırması** — İki dalı yan yana karşılaştırmak için kenar çubuğu paneli. Ekleme/değiştirme/silme/yeniden adlandırma durumuyla değişen dosya listesini gösterir, Monaco'nun diff editöründe farkı görüntülemek için tıklayın
+- **Satır İçi Diff Göstergeleri** — Editör kenar boşluğunda son commit'e kıyasla eklenen, değiştirilen ve silinen satırları gösteren yeşil, mavi ve kırmızı göstergeler
 - **Dosya Yönetimi** — Dosya iç içe geçirme özellikli hiyerarşik dosya ağacı (`.razor` + `.razor.css` + `.razor.cs` gruplama), arama/filtreleme, sürükle-bırak dosya yükleme ve yeni dosya/klasör/yeniden adlandırma/silme için bağlam menüleri
 - **Sekme Yönetimi** — Sürükleyerek yeniden sıralama, sabitlenmiş sekmeler, sağ tıklama bağlam menüsü (Kapat, Diğerlerini Kapat, Sağdakileri Kapat, Kaydedilenleri Kapat) ve taşma için kaydırma oklarıyla çoklu sekme arayüzü
 - **Bölünmüş Editör & Diff Görünümü** — Bağımsız kaydırmalı yan yana düzenleme ve commit öncesi değişiklikleri karşılaştırma için diff görünümü
-- **Entegre Terminal** — xterm.js tabanlı terminal; birden fazla terminal sekmesi ve WebSocket kabuk erişimi
+- **Entegre Terminal** — xterm.js tabanlı terminal; birden fazla terminal sekmesi, WebSocket kabuk erişimi ve tema duyarlı açık/koyu mod
 - **Git Entegrasyonu** — Dal oluşturma, blame görünümü, dosya geçmişi, commit paneli, dosya seçimli kaynak kontrol ve renkli şerit çizgileri ve dal etiketleriyle görsel commit grafiği
 - **Birleştirme Çakışması Çözümü** — Satır içi Mevcut Kabul Et / Gelen Kabul Et / Her İkisini Kabul Et düğmeleri; renk kodlu çakışma bölgeleri (yeşil/mavi)
 - **Ara ve Değiştir** — Dosya uzantısı filtreleme, satır satır sonuçlar ve tümünü değiştir ile tüm dosyalarda küresel arama
 - **Kod Navigasyonu** — Hızlı Aç (Ctrl+P), Komut Paleti (Ctrl+Shift+P), Satıra Git (Ctrl+G), ana hat/sembol paneli ve ekmek kırıntısı navigasyonu
+- **Klavye Kısayolları** — VS Code tarzı kısayollar (Ctrl+Shift+P, Ctrl+P, Ctrl+Shift+F, Ctrl+Shift+M, Ctrl+`, Escape) tarayıcı varsayılanlarını önlemek için belge düzeyinde yakalanır
 - **CSS Renk Önizlemeleri** — CSS, SCSS ve Less dosyalarında hex/rgb/hsl değerlerinin yanında satır içi renk örnekleri
 - **Minimap Vurguları** — Değiştirilen satırlar, eklenen satırlar ve çakışma işaretçileri minimap kenarında renkli işaretçiler olarak gösterilir
 - **Markdown & Görüntü Önizleme** — Markdown dosyaları için düzenleme ve işlenmiş önizleme arasında geçiş; yaygın biçimler için satır içi görüntü gösterimi
@@ -130,7 +138,7 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Kalıcı Çalışma Alanı** — Açık sekmeler, sabitlenmiş sekmeler, aktif dosya, kenar çubuğu durumu ve panel modunu tarayıcı oturumları arasında hatırlar
 - **Yeniden Boyutlandırılabilir Paneller** — Görsel tutamaçlarla kenar çubuğu ve alt paneli sürükleyerek yeniden boyutlandırma
 - **Özelleştirilebilir Ayarlar** — Yazı tipi ailesi seçici (8 yazı tipi), yazı tipi boyutu, sekme boyutu, sözcük kaydırma, minimap, satır numaraları, parantez kılavuzları, yapışkan kaydırma, kod katlama, yazı tipi bitişikleri, yapıştırma sırasında biçimlendirme ve boşluk gösterme seçenekleri
-- **Zen Modu** — Dikkat dağıtmayan tam ekran düzenleme (çıkmak için Escape)
+- **Zen Modu** — Dikkat dağıtmayan tam ekran düzenleme, görünür çıkış düğmesiyle
 
 ### CI/CD ve DevOps
 - **CI/CD Runner** — `.github/workflows/*.yml` dosyalarında iş akışlarını tanımlayın ve Docker container'larında çalıştırın. Push ve pull request olaylarında otomatik tetikleme

@@ -115,14 +115,22 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 
 ### Web IDE
 - **Editeur de Code Complet** — IDE basé sur Monaco Editor avec coloration syntaxique pour plus de 30 langages, thèmes multiples, expansion des abréviations Emmet pour HTML/CSS et formatage au collage
+- **Language Server Protocol (LSP)** — IntelliSense, autocomplétion, info au survol, aller à la définition, trouver les références, aide à la signature, formatage du code, renommer le symbole, actions de code et diagnostics en temps réel pour 12 langages : C# (OmniSharp), TypeScript/JavaScript, Python, Go, Rust, HTML, CSS, JSON, YAML, Bash, Dockerfile et Markdown
+- **Complétion de Code par IA** — Suggestions en texte fantôme en ligne pendant la saisie, alimentées par toute API compatible OpenAI (OpenAI, Ollama, LM Studio, etc.). Point de terminaison, clé API et modèle configurables dans les paramètres admin. Tab pour accepter
+- **Débogueur Intégré** — Débogage Python via debugpy/DAP avec points d'arrêt (clic dans la gouttière), pas à pas principal/entrant/sortant, continuer, inspection des variables, navigation dans la pile d'appels et sortie de la console de débogage
+- **Panneau des Problèmes** — Onglet du panneau inférieur agrégeant tous les diagnostics LSP (erreurs/avertissements) des fichiers ouverts, regroupés par fichier avec clic pour naviguer. Compteurs d'erreurs/avertissements dans la barre d'état
+- **Exécuteur de Tâches** — Onglet du panneau inférieur pour exécuter des commandes de build/test (dotnet build, npm test, go build, make, pytest, etc.) avec sortie en temps réel, emplacements d'erreur cliquables et support d'annulation
+- **Diff de Branches** — Panneau latéral pour comparer deux branches côte à côte. Affiche la liste des fichiers modifiés avec statut ajout/modification/suppression/renommage, clic pour voir le diff dans l'éditeur diff de Monaco
+- **Indicateurs Diff dans la Gouttière** — Indicateurs verts, bleus et rouges dans la gouttière de l'éditeur montrant les lignes ajoutées, modifiées et supprimées par rapport au dernier commit
 - **Gestion des Fichiers** — Arborescence hiérarchique avec imbrication de fichiers (regroupe `.razor` + `.razor.css` + `.razor.cs`), recherche/filtrage, envoi de fichiers par glisser-déposer et menus contextuels pour nouveau fichier/dossier/renommer/supprimer
 - **Gestion des Onglets** — Interface multi-onglets avec réorganisation par glissement, onglets épinglés, menu contextuel clic droit (Fermer, Fermer les Autres, Fermer à Droite, Fermer les Enregistrés) et chevrons de défilement pour le débordement
 - **Editeur Divisé et Vue Diff** — Edition côte à côte avec défilement indépendant, et vue des différences pour comparer les modifications avant le commit
-- **Terminal Intégré** — Terminal basé sur xterm.js avec plusieurs onglets de terminal et accès shell via WebSocket
+- **Terminal Intégré** — Terminal basé sur xterm.js avec plusieurs onglets de terminal, accès shell via WebSocket et mode clair/sombre selon le thème
 - **Intégration Git** — Création de branches, vue blame, historique des fichiers, panneau de commits, contrôle de source avec sélection de fichiers et graphe visuel des commits avec lignes de couleur et étiquettes de branches
 - **Résolution des Conflits de Fusion** — Boutons en ligne Accepter Actuel / Accepter Entrant / Accepter les Deux avec régions de conflit codées par couleur (vert/bleu)
 - **Rechercher et Remplacer** — Recherche globale dans tous les fichiers avec filtrage par extension de fichier, résultats ligne par ligne et remplacement global
 - **Navigation dans le Code** — Ouverture rapide (Ctrl+P), Palette de commandes (Ctrl+Shift+P), Aller à la ligne (Ctrl+G), panneau de plan/symboles et navigation par fil d'Ariane
+- **Raccourcis Clavier** — Raccourcis style VS Code (Ctrl+Shift+P, Ctrl+P, Ctrl+Shift+F, Ctrl+Shift+M, Ctrl+`, Escape) interceptés au niveau du document pour empêcher les comportements par défaut du navigateur
 - **Aperçus de Couleurs CSS** — Échantillons de couleur en ligne à côté des valeurs hex/rgb/hsl dans les fichiers CSS, SCSS et Less
 - **Surlignages du Minimap** — Lignes modifiées, lignes ajoutées et marqueurs de conflit affichés comme marqueurs colorés dans la gouttière du minimap
 - **Aperçu Markdown et Images** — Basculer entre l'édition et l'aperçu rendu pour les fichiers Markdown ; affichage en ligne des images pour les formats courants
@@ -130,7 +138,7 @@ Un serveur Git auto-hébergé avec une interface web similaire à GitHub, constr
 - **Espace de Travail Persistant** — Mémorise les onglets ouverts, onglets épinglés, fichier actif, état de la barre latérale et mode du panneau entre les sessions navigateur
 - **Panneaux Redimensionnables** — Barre latérale et panneau inférieur redimensionnables par glissement avec poignées visuelles
 - **Paramètres Personnalisables** — Sélecteur de police (8 polices), taille de police, taille de tabulation, retour à la ligne, minimap, numéros de ligne, guides de crochets, défilement collant, pliage de code, ligatures de police, formatage au collage et options d'affichage des espaces
-- **Mode Zen** — Edition plein écran sans distraction (Echap pour quitter)
+- **Mode Zen** — Edition plein écran sans distraction avec bouton de sortie visible
 
 ### CI/CD et DevOps
 - **Runner CI/CD** — Définissez des workflows dans `.github/workflows/*.yml` et exécutez-les dans des conteneurs Docker. Déclenchement automatique sur les événements push et pull request
