@@ -25,13 +25,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && pip3 install --break-system-packages python-lsp-server \
     && rm -rf /var/lib/apt/lists/* /root/.npm /root/.cache
 
-# .NET SDK for C# language server (csharp-ls)
+# .NET 8 SDK (needed by OmniSharp C# language server)
 RUN curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
     && chmod +x /tmp/dotnet-install.sh \
     && /tmp/dotnet-install.sh --channel 8.0 --install-dir /usr/share/dotnet \
-    && rm /tmp/dotnet-install.sh \
-    && dotnet tool install --global csharp-ls
-ENV PATH="${PATH}:/root/.dotnet/tools"
+    && rm /tmp/dotnet-install.sh
+
+# OmniSharp C# language server
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "amd64" ]; then OSARCH="linux-x64"; else OSARCH="linux-arm64"; fi && \
+    mkdir -p /usr/local/bin/omnisharp && \
+    curl -sSL "https://github.com/OmniSharp/omnisharp-roslyn/releases/latest/download/omnisharp-${OSARCH}-net6.0.tar.gz" \
+    | tar xz -C /usr/local/bin/omnisharp && \
+    chmod +x /usr/local/bin/omnisharp/OmniSharp
 
 # Create a non-root user and the repos/data directories
 # Add appuser to docker group for socket access
