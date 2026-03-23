@@ -846,7 +846,6 @@
   <data name="Login_AuthCodeHelp" xml:space="preserve"><value>Kimlik doğrulama uygulamanızdaki 6 haneli kodu girin.</value></data>
   <data name="Login_UsePasskey" xml:space="preserve"><value>Geçiş anahtarı kullan</value></data>
   <data name="Login_UseAuthenticatorInstead" xml:space="preserve"><value>Bunun yerine doğrulama kodu kullan</value></data>
-  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>Kurtarma kodu kullan</value></data>
   <data name="Login_BackToLogin" xml:space="preserve"><value>Girişe geri dön</value></data>
   <data name="Login_NoAccount" xml:space="preserve"><value>Hesabınız yok mu?</value></data>
   <data name="Login_UsernamePlaceholder" xml:space="preserve"><value>Kullanıcı adı veya e-posta girin</value></data>
@@ -948,7 +947,6 @@
   <!-- Contributing / Download -->
   <data name="Issues_ContributingAlert" xml:space="preserve"><value>Bir konu göndermeden önce lütfen katkı kurallarını okuyun.</value></data>
   <data name="Issues_ViewContributing" xml:space="preserve"><value>Katkı kurallarını görüntüle</value></data>
-  <data name="Repo_Download" xml:space="preserve"><value>İndir</value></data>
 
   <!-- Pulse page -->
   <data name="Pulse_Title" xml:space="preserve"><value>Nabız</value></data>

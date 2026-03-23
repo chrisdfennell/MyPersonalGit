@@ -846,7 +846,6 @@
   <data name="Login_AuthCodeHelp" xml:space="preserve"><value>인증 앱의 6자리 코드를 입력하세요.</value></data>
   <data name="Login_UsePasskey" xml:space="preserve"><value>패스키 사용</value></data>
   <data name="Login_UseAuthenticatorInstead" xml:space="preserve"><value>대신 인증 코드 사용</value></data>
-  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>복구 코드 사용</value></data>
   <data name="Login_BackToLogin" xml:space="preserve"><value>로그인으로 돌아가기</value></data>
   <data name="Login_NoAccount" xml:space="preserve"><value>계정이 없으신가요?</value></data>
   <data name="Login_UsernamePlaceholder" xml:space="preserve"><value>사용자 이름 또는 이메일 입력</value></data>
@@ -948,7 +947,6 @@
   <!-- Contributing / Download -->
   <data name="Issues_ContributingAlert" xml:space="preserve"><value>이슈를 제출하기 전에 기여 가이드라인을 읽어주세요.</value></data>
   <data name="Issues_ViewContributing" xml:space="preserve"><value>기여 가이드라인 보기</value></data>
-  <data name="Repo_Download" xml:space="preserve"><value>다운로드</value></data>
 
   <!-- Pulse page -->
   <data name="Pulse_Title" xml:space="preserve"><value>펄스</value></data>

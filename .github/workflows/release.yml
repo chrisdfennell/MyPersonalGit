@@ -23,7 +23,9 @@ jobs:
           dotnet --version
 
       - name: Build
-        run: dotnet build --configuration Release
+        run: dotnet build --configuration Release -maxcpucount:1
+        env:
+          DOTNET_GCHeapHardLimit: 0x100000000
 
       - name: Test
         run: dotnet test --configuration Release --no-build --verbosity normal
