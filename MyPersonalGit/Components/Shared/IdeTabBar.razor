@@ -88,6 +88,29 @@
     </div>
 }
 
+@if (showUnsavedModal)
+{
+    <div class="ide-unsaved-overlay" @onclick="UnsavedModalCancel">
+        <div class="ide-unsaved-dialog" @onclick:stopPropagation="true">
+            <div class="ide-unsaved-icon">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <div class="ide-unsaved-title">Unsaved Changes</div>
+            <div class="ide-unsaved-message">
+                <strong>@unsavedModalFileName</strong> has been modified. Your changes will be lost if you close this tab.
+            </div>
+            <div class="ide-unsaved-actions">
+                <button class="ide-unsaved-btn ide-unsaved-btn-cancel" @onclick="UnsavedModalCancel">
+                    Keep Open
+                </button>
+                <button class="ide-unsaved-btn ide-unsaved-btn-close" @onclick="UnsavedModalConfirm">
+                    Close Without Saving
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @inject IJSRuntime JS
 @using Microsoft.Extensions.Localization
 @using MyPersonalGit.Resources
@@ -198,16 +221,34 @@
         }
     }
 
+    // Unsaved changes modal state
+    private bool showUnsavedModal;
+    private string? unsavedModalFilePath;
+    private string? unsavedModalFileName;
+    private TaskCompletionSource<bool>? unsavedModalTcs;
+
     private async Task CloseTab(string filePath)
     {
         var tab = Tabs?.FirstOrDefault(t => t.FilePath == filePath);
         if (tab?.IsDirty == true)
         {
-            var confirmed = await JS.InvokeAsync<bool>("confirm", $"'{tab.FileName}' has unsaved changes. Close anyway?");
+            unsavedModalFilePath = filePath;
+            unsavedModalFileName = tab.FileName;
+            unsavedModalTcs = new TaskCompletionSource<bool>();
+            showUnsavedModal = true;
+            StateHasChanged();
+
+            var confirmed = await unsavedModalTcs.Task;
+            showUnsavedModal = false;
+            StateHasChanged();
+
             if (!confirmed) return;
         }
         await OnTabClosed.InvokeAsync(filePath);
     }
+
+    private void UnsavedModalConfirm() { unsavedModalTcs?.TrySetResult(true); }
+    private void UnsavedModalCancel() { unsavedModalTcs?.TrySetResult(false); }
 
     private void HandleContextMenu(MouseEventArgs e, string filePath)
     {
