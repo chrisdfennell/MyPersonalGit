@@ -846,7 +846,6 @@
   <data name="Login_AuthCodeHelp" xml:space="preserve"><value>認証アプリの6桁のコードを入力してください。</value></data>
   <data name="Login_UsePasskey" xml:space="preserve"><value>パスキーを使用</value></data>
   <data name="Login_UseAuthenticatorInstead" xml:space="preserve"><value>代わりに認証コードを使用</value></data>
-  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>リカバリーコードを使用</value></data>
   <data name="Login_BackToLogin" xml:space="preserve"><value>ログインに戻る</value></data>
   <data name="Login_NoAccount" xml:space="preserve"><value>アカウントをお持ちでないですか？</value></data>
   <data name="Login_UsernamePlaceholder" xml:space="preserve"><value>ユーザー名またはメールアドレスを入力</value></data>
@@ -948,7 +947,6 @@
   <!-- Contributing / Download -->
   <data name="Issues_ContributingAlert" xml:space="preserve"><value>イシューを送信する前に、コントリビューションガイドラインをお読みください。</value></data>
   <data name="Issues_ViewContributing" xml:space="preserve"><value>コントリビューションガイドラインを見る</value></data>
-  <data name="Repo_Download" xml:space="preserve"><value>ダウンロード</value></data>
 
   <!-- Pulse page -->
   <data name="Pulse_Title" xml:space="preserve"><value>パルス</value></data>

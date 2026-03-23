@@ -4,7 +4,7 @@ WORKDIR /src
 COPY ["MyPersonalGit/MyPersonalGit.csproj", "MyPersonalGit/"]
 RUN dotnet restore "MyPersonalGit/MyPersonalGit.csproj"
 COPY MyPersonalGit/ MyPersonalGit/
-RUN dotnet publish "MyPersonalGit/MyPersonalGit.csproj" -c Release -o /app/publish
+RUN dotnet publish "MyPersonalGit/MyPersonalGit.csproj" -c Release -o /app/publish -maxcpucount:1
 
 # Run Stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final

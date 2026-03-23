@@ -846,7 +846,6 @@
   <data name="Login_AuthCodeHelp" xml:space="preserve"><value>Ingresa el código de 6 dígitos de tu aplicación de autenticación.</value></data>
   <data name="Login_UsePasskey" xml:space="preserve"><value>Usar una passkey</value></data>
   <data name="Login_UseAuthenticatorInstead" xml:space="preserve"><value>Usar código de autenticación en su lugar</value></data>
-  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>Usar un código de recuperación</value></data>
   <data name="Login_BackToLogin" xml:space="preserve"><value>Volver al inicio de sesión</value></data>
   <data name="Login_NoAccount" xml:space="preserve"><value>¿No tienes cuenta?</value></data>
   <data name="Login_UsernamePlaceholder" xml:space="preserve"><value>Ingresa nombre de usuario o correo</value></data>
@@ -948,7 +947,6 @@
   <!-- Contributing / Download -->
   <data name="Issues_ContributingAlert" xml:space="preserve"><value>Por favor, lea las pautas de contribución antes de enviar un issue.</value></data>
   <data name="Issues_ViewContributing" xml:space="preserve"><value>Ver pautas de contribución</value></data>
-  <data name="Repo_Download" xml:space="preserve"><value>Descargar</value></data>
 
   <!-- Pulse page -->
   <data name="Pulse_Title" xml:space="preserve"><value>Pulse</value></data>

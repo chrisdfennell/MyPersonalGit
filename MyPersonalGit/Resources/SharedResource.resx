@@ -836,7 +836,6 @@
   <data name="Login_AuthCodeHelp" xml:space="preserve"><value>Enter the 6-digit code from your authenticator app.</value></data>
   <data name="Login_UsePasskey" xml:space="preserve"><value>Use a passkey</value></data>
   <data name="Login_UseAuthenticatorInstead" xml:space="preserve"><value>Use authenticator code instead</value></data>
-  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>Use a recovery code</value></data>
   <data name="Login_BackToLogin" xml:space="preserve"><value>Back to login</value></data>
   <data name="Login_NoAccount" xml:space="preserve"><value>Don't have an account?</value></data>
   <data name="Login_UsernamePlaceholder" xml:space="preserve"><value>Enter username or email</value></data>
@@ -941,9 +940,6 @@
   <!-- Contributing awareness -->
   <data name="Issues_ContributingAlert" xml:space="preserve"><value>Please read the contributing guidelines before submitting an issue.</value></data>
   <data name="Issues_ViewContributing" xml:space="preserve"><value>View contributing guidelines</value></data>
-
-  <!-- File download -->
-  <data name="Repo_Download" xml:space="preserve"><value>Download</value></data>
 
   <!-- Pulse page -->
   <data name="Pulse_Title" xml:space="preserve"><value>Pulse</value></data>
@@ -1378,7 +1374,6 @@
   <!-- Issues page -->
   <data name="Issues_Edit" xml:space="preserve"><value>Edit</value></data>
   <data name="Issues_Delete" xml:space="preserve"><value>Delete</value></data>
-  <data name="Issues_Pinned" xml:space="preserve"><value>Pinned</value></data>
   <data name="Issues_Locked" xml:space="preserve"><value>Locked</value></data>
 
   <!-- Stats page -->
@@ -1394,7 +1389,6 @@
   <data name="Snippets_PastePlaceholder" xml:space="preserve"><value>Paste your code here...</value></data>
 
   <!-- UserProfilePage -->
-  <data name="Profile_Unpin" xml:space="preserve"><value>Unpin</value></data>
   <data name="Profile_UnpinRepo" xml:space="preserve"><value>Unpin repository</value></data>
   <data name="Profile_PinRepo" xml:space="preserve"><value>Pin repository</value></data>
 

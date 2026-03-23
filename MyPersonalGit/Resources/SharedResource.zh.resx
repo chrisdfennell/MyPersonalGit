@@ -846,7 +846,6 @@
   <data name="Login_AuthCodeHelp" xml:space="preserve"><value>输入认证应用中的6位数代码。</value></data>
   <data name="Login_UsePasskey" xml:space="preserve"><value>使用通行密钥</value></data>
   <data name="Login_UseAuthenticatorInstead" xml:space="preserve"><value>改用验证码</value></data>
-  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>使用恢复代码</value></data>
   <data name="Login_BackToLogin" xml:space="preserve"><value>返回登录</value></data>
   <data name="Login_NoAccount" xml:space="preserve"><value>还没有账户？</value></data>
   <data name="Login_UsernamePlaceholder" xml:space="preserve"><value>输入用户名或邮箱</value></data>
@@ -948,7 +947,6 @@
   <!-- Contributing / Download -->
   <data name="Issues_ContributingAlert" xml:space="preserve"><value>请在提交议题前阅读贡献指南。</value></data>
   <data name="Issues_ViewContributing" xml:space="preserve"><value>查看贡献指南</value></data>
-  <data name="Repo_Download" xml:space="preserve"><value>下载</value></data>
 
   <!-- Pulse page -->
   <data name="Pulse_Title" xml:space="preserve"><value>脉搏</value></data>

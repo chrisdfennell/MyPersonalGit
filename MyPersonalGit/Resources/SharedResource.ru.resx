@@ -846,7 +846,6 @@
   <data name="Login_AuthCodeHelp" xml:space="preserve"><value>Введите 6-значный код из вашего приложения аутентификации.</value></data>
   <data name="Login_UsePasskey" xml:space="preserve"><value>Использовать ключ доступа</value></data>
   <data name="Login_UseAuthenticatorInstead" xml:space="preserve"><value>Использовать код аутентификации вместо этого</value></data>
-  <data name="Login_UseRecoveryCode" xml:space="preserve"><value>Использовать код восстановления</value></data>
   <data name="Login_BackToLogin" xml:space="preserve"><value>Вернуться к входу</value></data>
   <data name="Login_NoAccount" xml:space="preserve"><value>Нет аккаунта?</value></data>
   <data name="Login_UsernamePlaceholder" xml:space="preserve"><value>Введите имя пользователя или email</value></data>
@@ -948,7 +947,6 @@
   <!-- Contributing / Download -->
   <data name="Issues_ContributingAlert" xml:space="preserve"><value>Пожалуйста, прочитайте руководство по внесению вклада перед созданием issue.</value></data>
   <data name="Issues_ViewContributing" xml:space="preserve"><value>Просмотреть руководство</value></data>
-  <data name="Repo_Download" xml:space="preserve"><value>Скачать</value></data>
 
   <!-- Pulse page -->
   <data name="Pulse_Title" xml:space="preserve"><value>Пульс</value></data>
