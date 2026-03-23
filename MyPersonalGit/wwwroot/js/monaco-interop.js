@@ -1894,10 +1894,10 @@
          * Connect to a language server for a given language.
          * @param {string} language - LSP server key (csharp, typescript, python).
          * @param {string} wsUrl - WebSocket URL for the LSP relay.
-         * @param {string} rootUri - The workspace root URI (file:///repos/repoName).
+         * @param {string} wsUrl - WebSocket URL for the LSP relay.
          * @returns {Promise<boolean>} Whether connection and initialization succeeded.
          */
-        connect: function (language, wsUrl, rootUri) {
+        connect: function (language, wsUrl) {
             var self = this;
 
             if (this._connections[language]) {
@@ -1909,68 +1909,81 @@
                 var conn = {
                     ws: ws,
                     ready: false,
-                    rootUri: rootUri,
+                    rootUri: null,
+                    gotInit: false,
                     openDocuments: {} // uri -> version
                 };
 
                 ws.onopen = function () {
                     self._connections[language] = conn;
-                    // Send LSP initialize request
-                    self._sendRequest(language, 'initialize', {
-                        processId: null,
-                        capabilities: {
-                            textDocument: {
-                                completion: {
-                                    completionItem: {
-                                        snippetSupport: true,
-                                        commitCharactersSupport: true,
-                                        documentationFormat: ['markdown', 'plaintext'],
-                                        resolveSupport: { properties: ['documentation', 'detail'] }
-                                    },
-                                    contextSupport: true
-                                },
-                                hover: { contentFormat: ['markdown', 'plaintext'] },
-                                signatureHelp: { signatureInformation: { documentationFormat: ['markdown', 'plaintext'], parameterInformation: { labelOffsetSupport: true } } },
-                                definition: { linkSupport: false },
-                                references: {},
-                                documentSymbol: { hierarchicalDocumentSymbolSupport: true },
-                                formatting: {},
-                                rangeFormatting: {},
-                                rename: { prepareSupport: true },
-                                codeAction: { codeActionLiteralSupport: { codeActionKind: { valueSet: ['quickfix', 'refactor', 'source'] } } },
-                                publishDiagnostics: { relatedInformation: true }
-                            },
-                            workspace: {
-                                workspaceFolders: true,
-                                didChangeConfiguration: {}
-                            }
-                        },
-                        rootUri: rootUri,
-                        workspaceFolders: [{ uri: rootUri, name: 'workspace' }]
-                    }).then(function (result) {
-                        self._serverCapabilities[language] = result.capabilities || {};
-                        conn.ready = true;
-
-                        // Send initialized notification
-                        self._sendNotification(language, 'initialized', {});
-
-                        // Register Monaco providers for this language
-                        self._registerProviders(language);
-
-                        // Notify Blazor
-                        if (self._dotNetRef) {
-                            try { self._dotNetRef.invokeMethodAsync('OnLspStatusChanged', language, 'running'); } catch (e) { }
-                        }
-
-                        resolve(true);
-                    }).catch(function () {
-                        resolve(false);
-                    });
+                    // Wait for the init message from the server with the rootUri
                 };
 
                 ws.onmessage = function (event) {
                     try {
                         var msg = JSON.parse(event.data);
+
+                        // First message from server is the init message with rootUri
+                        if (!conn.gotInit && msg.type === 'init' && msg.rootUri) {
+                            conn.gotInit = true;
+                            conn.rootUri = msg.rootUri;
+                            console.log('[LSP] Got worktree rootUri:', msg.rootUri);
+
+                            // Now send LSP initialize request
+                            self._sendRequest(language, 'initialize', {
+                                processId: null,
+                                capabilities: {
+                                    textDocument: {
+                                        completion: {
+                                            completionItem: {
+                                                snippetSupport: true,
+                                                commitCharactersSupport: true,
+                                                documentationFormat: ['markdown', 'plaintext'],
+                                                resolveSupport: { properties: ['documentation', 'detail'] }
+                                            },
+                                            contextSupport: true
+                                        },
+                                        hover: { contentFormat: ['markdown', 'plaintext'] },
+                                        signatureHelp: { signatureInformation: { documentationFormat: ['markdown', 'plaintext'], parameterInformation: { labelOffsetSupport: true } } },
+                                        definition: { linkSupport: false },
+                                        references: {},
+                                        documentSymbol: { hierarchicalDocumentSymbolSupport: true },
+                                        formatting: {},
+                                        rangeFormatting: {},
+                                        rename: { prepareSupport: true },
+                                        codeAction: { codeActionLiteralSupport: { codeActionKind: { valueSet: ['quickfix', 'refactor', 'source'] } } },
+                                        publishDiagnostics: { relatedInformation: true }
+                                    },
+                                    workspace: {
+                                        workspaceFolders: true,
+                                        didChangeConfiguration: {}
+                                    }
+                                },
+                                rootUri: conn.rootUri,
+                                workspaceFolders: [{ uri: conn.rootUri, name: 'workspace' }]
+                            }).then(function (result) {
+                                self._serverCapabilities[language] = result.capabilities || {};
+                                conn.ready = true;
+
+                                // Send initialized notification
+                                self._sendNotification(language, 'initialized', {});
+
+                                // Register Monaco providers for this language
+                                self._registerProviders(language);
+
+                                // Notify Blazor
+                                if (self._dotNetRef) {
+                                    try { self._dotNetRef.invokeMethodAsync('OnLspStatusChanged', language, 'running'); } catch (e) { }
+                                }
+
+                                resolve(true);
+                            }).catch(function (err) {
+                                console.error('[LSP] Initialize failed:', err);
+                                resolve(false);
+                            });
+                            return;
+                        }
+
                         self._handleMessage(language, msg);
                     } catch (e) {
                         console.error('[LSP] Failed to parse message:', e);

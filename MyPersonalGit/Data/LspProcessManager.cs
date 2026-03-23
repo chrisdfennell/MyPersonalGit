@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
+using LibGit2Sharp;
 
 namespace MyPersonalGit.Data;
 
@@ -16,6 +17,7 @@ public sealed class LspSession : IDisposable
 {
     public string Key { get; init; } = "";
     public Process? Process { get; set; }
+    public string? WorkTree { get; set; }
     public DateTime LastActivity { get; set; } = DateTime.UtcNow;
     public SemaphoreSlim WriteLock { get; } = new(1, 1);
     private bool _disposed;
@@ -32,12 +34,20 @@ public sealed class LspSession : IDisposable
             try { p.Kill(entireProcessTree: true); } catch { }
         }
         Process?.Dispose();
+
+        // Clean up the temporary working directory
+        if (!string.IsNullOrEmpty(WorkTree) && Directory.Exists(WorkTree))
+        {
+            try { Directory.Delete(WorkTree, recursive: true); }
+            catch (Exception ex) { Console.WriteLine($"[LSP] Failed to clean up worktree {WorkTree}: {ex.Message}"); }
+        }
     }
 }
 
 /// <summary>
 /// Manages language server process lifecycles.
 /// Spawns one language server per (repo, language, user) and reuses it across WebSocket reconnections.
+/// Because repos are bare, each session checks out the branch into a temporary working directory.
 /// </summary>
 public sealed class LspProcessManager : IDisposable
 {
@@ -69,8 +79,9 @@ public sealed class LspProcessManager : IDisposable
 
     /// <summary>
     /// Get or start a language server session.
+    /// Checks out the specified branch from the bare repo into a temporary directory.
     /// </summary>
-    public LspSession? GetOrStartSession(string repoName, string language, string userId, string workingDirectory)
+    public LspSession? GetOrStartSession(string repoName, string language, string userId, string repoPath, string branch)
     {
         if (!Servers.TryGetValue(language, out var config))
             return null;
@@ -79,8 +90,15 @@ public sealed class LspProcessManager : IDisposable
 
         return _sessions.GetOrAdd(key, _ =>
         {
-            var session = new LspSession { Key = key };
-            session.Process = StartLanguageServer(config, workingDirectory);
+            var workTree = CheckoutToTempDirectory(repoPath, branch);
+            if (workTree == null)
+            {
+                Console.WriteLine($"[LSP] Failed to checkout {repoName}/{branch} to temp directory");
+                return new LspSession { Key = key };
+            }
+
+            var session = new LspSession { Key = key, WorkTree = workTree };
+            session.Process = StartLanguageServer(config, workTree);
             return session;
         });
     }
@@ -93,6 +111,64 @@ public sealed class LspProcessManager : IDisposable
         if (_sessions.TryRemove(key, out var session))
         {
             session.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Checkout a branch from a bare repo into a temporary working directory.
+    /// </summary>
+    private static string? CheckoutToTempDirectory(string repoPath, string branch)
+    {
+        try
+        {
+            var tempDir = Path.Combine(Path.GetTempPath(), "lsp-workdir", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+
+            using var repo = new Repository(repoPath);
+
+            // Resolve the branch
+            var targetBranch = repo.Branches[branch]
+                ?? repo.Branches["main"]
+                ?? repo.Branches["master"]
+                ?? repo.Head;
+
+            if (targetBranch?.Tip == null)
+            {
+                Directory.Delete(tempDir, recursive: true);
+                return null;
+            }
+
+            // Recursively write all blobs to the temp directory
+            WriteTree(repo, targetBranch.Tip.Tree, tempDir);
+
+            Console.WriteLine($"[LSP] Checked out {branch} ({targetBranch.Tip.Id.Sha[..7]}) to {tempDir}");
+            return tempDir;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[LSP] Checkout failed: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static void WriteTree(Repository repo, Tree tree, string basePath)
+    {
+        foreach (var entry in tree)
+        {
+            var fullPath = Path.Combine(basePath, entry.Name);
+
+            if (entry.TargetType == TreeEntryTargetType.Tree)
+            {
+                Directory.CreateDirectory(fullPath);
+                WriteTree(repo, (Tree)entry.Target, fullPath);
+            }
+            else if (entry.TargetType == TreeEntryTargetType.Blob)
+            {
+                var blob = (Blob)entry.Target;
+                using var contentStream = blob.GetContentStream();
+                using var fileStream = File.Create(fullPath);
+                contentStream.CopyTo(fileStream);
+            }
         }
     }
 
@@ -114,7 +190,9 @@ public sealed class LspProcessManager : IDisposable
 
         try
         {
-            return Process.Start(psi);
+            var process = Process.Start(psi);
+            Console.WriteLine($"[LSP] Started {config.Command} in {workingDirectory} (PID: {process?.Id})");
+            return process;
         }
         catch (Exception ex)
         {
