@@ -1880,7 +1880,18 @@
             'csharp': 'csharp',
             'javascript': 'typescript',
             'typescript': 'typescript',
-            'python': 'python'
+            'python': 'python',
+            'go': 'go',
+            'rust': 'rust',
+            'html': 'html',
+            'css': 'css',
+            'scss': 'css',
+            'less': 'css',
+            'json': 'json',
+            'yaml': 'yaml',
+            'shell': 'bash',
+            'dockerfile': 'dockerfile',
+            'markdown': 'markdown'
         },
 
         /**
