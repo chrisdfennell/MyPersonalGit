@@ -106,6 +106,9 @@ public sealed class LspProcessManager : IDisposable
                 return new LspSession { Key = key };
             }
 
+            // Restore dependencies BEFORE starting the language server
+            RestoreDependencies(workTree);
+
             var session = new LspSession { Key = key, WorkTree = workTree };
             session.Process = StartLanguageServer(config, workTree);
             return session;
@@ -151,10 +154,6 @@ public sealed class LspProcessManager : IDisposable
             WriteTree(repo, targetBranch.Tip.Tree, tempDir);
 
             Console.WriteLine($"[LSP] Checked out {branch} ({targetBranch.Tip.Id.Sha[..7]}) to {tempDir}");
-
-            // Restore dependencies in the background so the language server can resolve types
-            _ = Task.Run(() => RestoreDependencies(tempDir));
-
             return tempDir;
         }
         catch (Exception ex)
