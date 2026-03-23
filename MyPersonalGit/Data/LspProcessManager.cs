@@ -53,7 +53,7 @@ public sealed class LspProcessManager : IDisposable
 {
     private static readonly Dictionary<string, LspServerConfig> Servers = new()
     {
-        ["csharp"] = new("/usr/local/bin/omnisharp/OmniSharp", "--languageserver", new[] { ".cs", ".csproj" }),
+        ["csharp"] = new("csharp-ls", "", new[] { ".cs", ".csproj" }),
         ["typescript"] = new("typescript-language-server", "--stdio", new[] { ".ts", ".tsx", ".js", ".jsx" }),
         ["python"] = new("pylsp", "", new[] { ".py" }),
     };
