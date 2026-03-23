@@ -910,7 +910,8 @@
                 await JS.InvokeVoidAsync("monacoInterop.enableMinimapHighlights", editorId);
                 await JS.InvokeVoidAsync("monacoInterop.registerDefinitionProvider", editorId, dotNetRef);
 
-                // Initialize LSP client
+                // Initialize keyboard shortcut interceptor and LSP client
+                await JS.InvokeVoidAsync("ideKeys.init", dotNetRef);
                 await JS.InvokeVoidAsync("ideLsp.init", dotNetRef);
 
                 // Set up drag-and-drop file upload on the file tree
@@ -2395,49 +2396,46 @@
 
     // ---- Quick Open & Key Handling ----
 
-    private void HandleGlobalKeyDown(KeyboardEventArgs e)
+    [JSInvokable]
+    public async Task OnIdeKeyDown(string action)
     {
-        // Ctrl+Shift+P: Command Palette
-        if (e.CtrlKey && e.ShiftKey && e.Key == "P")
+        switch (action)
         {
-            showCommandPalette = !showCommandPalette;
-            StateHasChanged();
-        }
-        // Ctrl+P: Quick Open
-        else if (e.CtrlKey && !e.ShiftKey && e.Key == "p")
-        {
-            showQuickOpen = !showQuickOpen;
-            StateHasChanged();
-        }
-        // Ctrl+` (backtick): Toggle Terminal
-        else if (e.CtrlKey && e.Key == "`")
-        {
-            ToggleTerminal();
-            StateHasChanged();
-        }
-        // Ctrl+Shift+F: Focus search
-        else if (e.CtrlKey && e.ShiftKey && e.Key == "F")
-        {
-            sidebarMode = "search";
-            StateHasChanged();
-        }
-        // Escape: Exit zen mode
-        else if (e.Key == "Escape" && isZenMode)
-        {
-            isZenMode = false;
-            StateHasChanged();
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(50);
-                await InvokeAsync(async () =>
+            case "commandPalette":
+                showCommandPalette = !showCommandPalette;
+                break;
+            case "quickOpen":
+                showQuickOpen = !showQuickOpen;
+                break;
+            case "search":
+                sidebarMode = "search";
+                break;
+            case "terminal":
+                ToggleTerminal();
+                break;
+            case "problems":
+                bottomPanelMode = "problems";
+                break;
+            case "escape":
+                if (showCommandPalette) showCommandPalette = false;
+                else if (showQuickOpen) showQuickOpen = false;
+                else if (showShortcutHelp) showShortcutHelp = false;
+                else if (isZenMode)
                 {
+                    isZenMode = false;
+                    await Task.Delay(50);
                     if (editorId != null)
                         try { await JS.InvokeVoidAsync("monacoInterop.layout", editorId); } catch { }
-                });
-            });
+                }
+                break;
         }
-        // ?: Show shortcut help (only when no modals open and not typing in editor)
-        else if (e.Key == "?" && !e.CtrlKey && !e.AltKey && openTabs.Count == 0)
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleGlobalKeyDown(KeyboardEventArgs e)
+    {
+        // ?: Show shortcut help (only when not typing in editor)
+        if (e.Key == "?" && !e.CtrlKey && !e.AltKey && openTabs.Count == 0)
         {
             showShortcutHelp = !showShortcutHelp;
             StateHasChanged();

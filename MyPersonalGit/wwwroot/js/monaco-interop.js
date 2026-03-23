@@ -1914,6 +1914,69 @@
     };
 
     // ============================================================
+    // IDE keyboard shortcut interceptor (prevents browser defaults)
+    // ============================================================
+    window.ideKeys = {
+        _dotNetRef: null,
+
+        init: function (dotNetRef) {
+            this._dotNetRef = dotNetRef;
+            var self = this;
+
+            document.addEventListener('keydown', function (e) {
+                // Ctrl+Shift+P: Command Palette (prevent browser print)
+                if (e.ctrlKey && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (self._dotNetRef) {
+                        try { self._dotNetRef.invokeMethodAsync('OnIdeKeyDown', 'commandPalette'); } catch (ex) { }
+                    }
+                    return;
+                }
+                // Ctrl+P: Quick Open (prevent browser print)
+                if (e.ctrlKey && !e.shiftKey && (e.key === 'p' || e.key === 'P')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (self._dotNetRef) {
+                        try { self._dotNetRef.invokeMethodAsync('OnIdeKeyDown', 'quickOpen'); } catch (ex) { }
+                    }
+                    return;
+                }
+                // Ctrl+Shift+F: Search files (prevent browser find)
+                if (e.ctrlKey && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
+                    e.preventDefault();
+                    if (self._dotNetRef) {
+                        try { self._dotNetRef.invokeMethodAsync('OnIdeKeyDown', 'search'); } catch (ex) { }
+                    }
+                    return;
+                }
+                // Ctrl+`: Toggle terminal
+                if (e.ctrlKey && e.key === '`') {
+                    e.preventDefault();
+                    if (self._dotNetRef) {
+                        try { self._dotNetRef.invokeMethodAsync('OnIdeKeyDown', 'terminal'); } catch (ex) { }
+                    }
+                    return;
+                }
+                // Ctrl+Shift+M: Toggle problems panel
+                if (e.ctrlKey && e.shiftKey && (e.key === 'M' || e.key === 'm')) {
+                    e.preventDefault();
+                    if (self._dotNetRef) {
+                        try { self._dotNetRef.invokeMethodAsync('OnIdeKeyDown', 'problems'); } catch (ex) { }
+                    }
+                    return;
+                }
+                // Escape in zen mode
+                if (e.key === 'Escape') {
+                    if (self._dotNetRef) {
+                        try { self._dotNetRef.invokeMethodAsync('OnIdeKeyDown', 'escape'); } catch (ex) { }
+                    }
+                }
+            }, true); // capture phase to beat Monaco
+        }
+    };
+
+    // ============================================================
     // Task runner
     // ============================================================
     window.ideTaskRunner = {
