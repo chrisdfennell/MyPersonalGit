@@ -187,4 +187,150 @@ h1:focus {
     caret-color: #e6edf3;
 }
 
+/* ============ IDE Light Mode ============ */
+/* These must be in app.css (global) — not scoped .razor.css files.
+   Blazor scoped CSS generates [b-scope] [data-bs-theme] selectors that
+   cannot match because data-bs-theme is on <html> (an ancestor), not a
+   descendant of the scoped component.
+   Using html[...] prefix for specificity above scoped [class][b-scope]. */
+
+/* IdeLayout */
+html[data-bs-theme="light"] .ide-layout { background: #ffffff; color: #333333; }
+html[data-bs-theme="light"] .ide-topbar { background: #dddddd; color: #333333; border-bottom-color: #c8c8c8; }
+html[data-bs-theme="light"] .ide-topbar-back { color: #333333; }
+html[data-bs-theme="light"] .ide-topbar-back:hover { color: #1a1a1a; background: rgba(0,0,0,0.08); }
+html[data-bs-theme="light"] .ide-topbar-repo { color: #333333; }
+html[data-bs-theme="light"] .ide-topbar-branch .btn { color: #333333; border-color: #b0b0b0; background: rgba(0,0,0,0.05); }
+html[data-bs-theme="light"] .ide-topbar-branch .btn:hover { color: #1a1a1a; border-color: #888; background: rgba(0,0,0,0.08); }
+html[data-bs-theme="light"] .ide-topbar-branch .dropdown-menu { background: #f8f8f8; border-color: #c8c8c8; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+html[data-bs-theme="light"] .ide-topbar-branch .dropdown-item { color: #333333; }
+html[data-bs-theme="light"] .ide-topbar-branch .dropdown-item:hover,
+html[data-bs-theme="light"] .ide-topbar-branch .dropdown-item.active { background: #e0e8f0; color: #0078d4; }
+html[data-bs-theme="light"] .ide-branch-dialog { background: #fff; border-color: #d0d0d0; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+html[data-bs-theme="light"] .ide-branch-header { border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-branch-body .form-label { color: #333; }
+html[data-bs-theme="light"] .ide-branch-body .form-control,
+html[data-bs-theme="light"] .ide-branch-body .form-select { background: #fff; border-color: #ccc; color: #333; }
+html[data-bs-theme="light"] .ide-branch-body .form-control:focus,
+html[data-bs-theme="light"] .ide-branch-body .form-select:focus { background: #fff; border-color: #0078d4; color: #333; box-shadow: 0 0 0 2px rgba(0,120,212,0.25); }
+
+/* WebIde — core layout */
+html[data-bs-theme="light"] .ide-container { background: #fff; color: #333; }
+html[data-bs-theme="light"] .ide-sidebar { background: #f3f3f3; border-right-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-sidebar-tabs { background: #e8e8e8; }
+html[data-bs-theme="light"] .ide-sidebar-tab { color: #888; }
+html[data-bs-theme="light"] .ide-sidebar-tab:hover { color: #333; }
+html[data-bs-theme="light"] .ide-sidebar-tab.active { color: #333; background: #f3f3f3; }
+html[data-bs-theme="light"] .ide-tabs { background: #ececec; border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-editor { background: #fff; }
+html[data-bs-theme="light"] .ide-breadcrumbs { background: #f3f3f3; border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-breadcrumb { color: #666; }
+html[data-bs-theme="light"] .ide-breadcrumb:hover { color: #333; background: #e0e0e0; }
+html[data-bs-theme="light"] .ide-breadcrumb.active { color: #333; }
+html[data-bs-theme="light"] .ide-breadcrumb-sep { color: #999; }
+html[data-bs-theme="light"] .ide-breadcrumb-dropdown { background: #fff; border-color: #d0d0d0; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+html[data-bs-theme="light"] .ide-breadcrumb-item { color: #333; }
+html[data-bs-theme="light"] .ide-breadcrumb-item:hover { background: #e0e8f0; }
+html[data-bs-theme="light"] .ide-breadcrumb-item.active { background: #cce0f0; color: #0078d4; }
+
+/* WebIde — bottom panel */
+html[data-bs-theme="light"] .ide-bottom-panel { background: #f3f3f3; border-top-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-bottom-tabs { background: #e8e8e8; border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-bottom-tab { color: #666; }
+html[data-bs-theme="light"] .ide-bottom-tab.active { color: #333; }
+
+/* WebIde — editor & split */
+html[data-bs-theme="light"] .ide-split-btn { color: #666; }
+html[data-bs-theme="light"] .ide-split-btn:hover { color: #333; background: #e0e0e0; }
+html[data-bs-theme="light"] .ide-pane-divider { background: #e0e0e0; }
+html[data-bs-theme="light"] .ide-action-btn { color: #666; }
+html[data-bs-theme="light"] .ide-action-btn:hover { color: #333; background: #e0e0e0; }
+html[data-bs-theme="light"] .ide-action-btn.active { color: #0078d4; background: #e8e8e8; }
+
+/* WebIde — source control & history */
+html[data-bs-theme="light"] .ide-sc-file:hover { background: #e8e8e8; }
+html[data-bs-theme="light"] .ide-sc-header { border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-sc-filepath { color: #888; }
+html[data-bs-theme="light"] .ide-diff-header { background: #e8e8e8; border-bottom-color: #d0d0d0; }
+html[data-bs-theme="light"] .ide-history-entry:hover { background: #e8e8e8; }
+html[data-bs-theme="light"] .ide-history-header { border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-history-entry { border-bottom-color: #e8e8e8; }
+
+/* WebIde — preview & markdown */
+html[data-bs-theme="light"] .ide-preview { background: #fff; }
+html[data-bs-theme="light"] .ide-image-preview img { background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 20px 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+html[data-bs-theme="light"] .ide-markdown-toolbar { background: #f0f0f0; border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-markdown-body { color: #333; }
+html[data-bs-theme="light"] .ide-markdown-body h1,
+html[data-bs-theme="light"] .ide-markdown-body h2,
+html[data-bs-theme="light"] .ide-markdown-body h3 { color: #1a1a1a; border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-markdown-body code { background: #f0f0f0; }
+html[data-bs-theme="light"] .ide-markdown-body pre { background: #f6f6f6; border-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-markdown-body a { color: #0078d4; }
+html[data-bs-theme="light"] .ide-markdown-body th,
+html[data-bs-theme="light"] .ide-markdown-body td { border-color: #d0d7de; }
+html[data-bs-theme="light"] .ide-markdown-body th { background: #f6f8fa; }
+html[data-bs-theme="light"] .ide-markdown-body blockquote { border-left-color: #d0d7de; color: #656d76; }
+
+/* WebIde — dialogs */
+html[data-bs-theme="light"] .ide-quick-open-dialog { background: #fff; border-color: #d0d0d0; }
+html[data-bs-theme="light"] .ide-quick-open-input { color: #333; }
+html[data-bs-theme="light"] .ide-quick-open-input-wrapper { border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-quick-open-input::placeholder { color: #999; }
+html[data-bs-theme="light"] .ide-quick-open-item:hover,
+html[data-bs-theme="light"] .ide-quick-open-item.selected { background: #e0e8f0; }
+html[data-bs-theme="light"] .ide-quick-open-filepath { color: #888; }
+html[data-bs-theme="light"] .ide-quick-open-section { color: #888; }
+html[data-bs-theme="light"] .ide-quick-open-divider { background: #e0e0e0; }
+html[data-bs-theme="light"] .ide-quick-open-empty { color: #888; }
+html[data-bs-theme="light"] .ide-command-palette-dialog { background: #fff; border-color: #d0d0d0; }
+html[data-bs-theme="light"] .ide-command-palette-input { color: #333; }
+html[data-bs-theme="light"] .ide-command-palette-input-wrapper { border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-command-palette-input::placeholder { color: #999; }
+html[data-bs-theme="light"] .ide-command-palette-item:hover,
+html[data-bs-theme="light"] .ide-command-palette-item.selected { background: #e0e8f0; }
+html[data-bs-theme="light"] .ide-command-palette-shortcut { color: #888; }
+html[data-bs-theme="light"] .ide-command-palette-empty { color: #888; }
+html[data-bs-theme="light"] .ide-shortcut-dialog { background: #fff; border-color: #d0d0d0; }
+html[data-bs-theme="light"] .ide-shortcut-header { border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-shortcut-row kbd { background: #e8e8e8; border-color: #ccc; color: #333; }
+html[data-bs-theme="light"] .ide-shortcut-row span { color: #333; }
+html[data-bs-theme="light"] .ide-shortcut-section-title { color: #888; border-bottom-color: #e0e0e0; }
+
+/* WebIde — settings */
+html[data-bs-theme="light"] .ide-settings-body .form-select { background-color: #fff; border-color: #ccc; color: #333; }
+html[data-bs-theme="light"] .ide-settings-body .form-check-input { background-color: #fff; border-color: #ccc; }
+html[data-bs-theme="light"] .ide-settings-body .btn-outline-secondary { color: #333; border-color: #ccc; }
+html[data-bs-theme="light"] .ide-settings-label { color: #333; }
+html[data-bs-theme="light"] .ide-settings-value { color: #888; }
+html[data-bs-theme="light"] .ide-settings-body .form-check-label { color: #333; }
+
+/* WebIde — git graph */
+html[data-bs-theme="light"] .ide-graph-row { border-bottom-color: #e8e8e8; }
+html[data-bs-theme="light"] .ide-graph-row:hover { background: #f0f4f8; }
+html[data-bs-theme="light"] .ide-graph-sha { color: #0078d4; }
+html[data-bs-theme="light"] .ide-graph-msg { color: #333; }
+html[data-bs-theme="light"] .ide-graph-author,
+html[data-bs-theme="light"] .ide-graph-date { color: #888; }
+
+/* WebIde — terminal tabs */
+html[data-bs-theme="light"] .ide-term-close:hover { background: rgba(0,0,0,0.1); }
+html[data-bs-theme="light"] .ide-term-add { color: #888 !important; }
+html[data-bs-theme="light"] .ide-term-add:hover { color: #333 !important; }
+
+/* WebIde — zen mode & misc */
+html[data-bs-theme="light"] .ide-container.ide-zen-mode .ide-status-bar { background: #fff; }
+html[data-bs-theme="light"] .ide-blame-annotation { color: #999 !important; }
+html[data-bs-theme="light"] .ide-blame-line-even { background: rgba(0,0,0,0.02) !important; }
+html[data-bs-theme="light"] .ide-blame-line-odd { background: rgba(0,0,0,0.04) !important; }
+
+/* WebIde — toasts */
+html[data-bs-theme="light"] .ide-toast { background: #f0f0f0; border-color: #d0d0d0; color: #333; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+html[data-bs-theme="light"] .ide-toast-success { background: #d4edda; border-color: #b1dfbb; color: #155724; }
+html[data-bs-theme="light"] .ide-toast-error { background: #f8d7da; border-color: #f1aeb5; color: #721c24; }
+html[data-bs-theme="light"] .ide-toast-warning { background: #fff3cd; border-color: #ffeaa7; color: #856404; }
+html[data-bs-theme="light"] .ide-toast-info { background: #d1ecf1; border-color: #b6e0fe; color: #0c5460; }
+html[data-bs-theme="light"] .ide-toast-close { color: rgba(0,0,0,0.4); }
+html[data-bs-theme="light"] .ide-toast-close:hover { color: #333; }
+
 /* Blazor reconnect overlay dark mode is injected into shadow DOM via JS in App.razor */
