@@ -28,6 +28,16 @@ public class WorkflowSchedulerService : BackgroundService
         // Wait a bit on startup for other services to initialize
         await Task.Delay(10_000, stoppingToken);
 
+        // Scan all repos on startup to register any cron schedules
+        try
+        {
+            await SyncAllRepoSchedules(stoppingToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to sync schedules on startup");
+        }
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -298,6 +308,37 @@ public class WorkflowSchedulerService : BackgroundService
 
         // Fallback: 1 hour from now
         return after.AddHours(1);
+    }
+
+    private async Task SyncAllRepoSchedules(CancellationToken ct)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
+        var parser = scope.ServiceProvider.GetRequiredService<WorkflowYamlParser>();
+        var adminService = scope.ServiceProvider.GetRequiredService<IAdminService>();
+        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
+        var systemSettings = await adminService.GetSystemSettingsAsync();
+        var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot)
+            ? systemSettings.ProjectRoot
+            : config["Git:ProjectRoot"] ?? "/repos";
+
+        if (!Directory.Exists(projectRoot)) return;
+
+        foreach (var dir in Directory.GetDirectories(projectRoot))
+        {
+            if (!GitRepository.IsValid(dir)) continue;
+            var repoName = Path.GetFileName(dir);
+            try
+            {
+                await SyncSchedulesFromYamlAsync(db, parser, repoName, dir);
+                _logger.LogInformation("Synced workflow schedules for {RepoName}", repoName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to sync schedules for {RepoName}", repoName);
+            }
+        }
     }
 
     private static string? FindRepoPath(string projectRoot, string repoName)

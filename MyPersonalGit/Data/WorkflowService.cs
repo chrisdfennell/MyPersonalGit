@@ -275,6 +275,17 @@ public class WorkflowService : IWorkflowService
 
                 await CreateWorkflowRunWithJobsAsync(repoName, workflow, branch, sha, commitMessage, pushedBy);
             }
+
+            // Sync cron schedules from workflow YAML so the scheduler picks them up
+            try
+            {
+                using var db = _dbFactory.CreateDbContext();
+                await WorkflowSchedulerService.SyncSchedulesFromYamlAsync(db, parser, repoName, repoPath);
+            }
+            catch (Exception syncEx)
+            {
+                _logger.LogWarning(syncEx, "Failed to sync workflow schedules for {RepoName}", repoName);
+            }
         }
         catch (Exception ex)
         {
