@@ -109,7 +109,7 @@ jobs:
         run: |
           NEW_TAG=$(cat /tmp/new_tag 2>/dev/null || echo "latest")
           echo "Building with tag: $NEW_TAG"
-          docker build --no-cache -t fennch/mypersonalgit:latest -t "fennch/mypersonalgit:${NEW_TAG}" .
-          docker push fennch/mypersonalgit:latest
+          docker build --no-cache -t fennch/mypersonalgit:nightly -t "fennch/mypersonalgit:${NEW_TAG}" .
+          docker push fennch/mypersonalgit:nightly
           docker push "fennch/mypersonalgit:${NEW_TAG}"
-          echo "Pushed fennch/mypersonalgit:latest and fennch/mypersonalgit:${NEW_TAG}"
+          echo "Pushed fennch/mypersonalgit:nightly and fennch/mypersonalgit:${NEW_TAG}"

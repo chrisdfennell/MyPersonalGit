@@ -827,6 +827,7 @@
 
     private List<TreeNode>? treeNodes;
     private List<OpenTab> openTabs = new();
+    private Stack<string> closedTabHistory = new();
     private string? activeTabPath;
     private string currentBranch = "main";
     private List<string> branches = new();
@@ -1451,6 +1452,10 @@
             }
             catch { }
         }
+
+        // Track closed tab for undo (Ctrl+Shift+T)
+        closedTabHistory.Push(path);
+        if (closedTabHistory.Count > 20) { var temp = new Stack<string>(closedTabHistory.Take(20).Reverse()); closedTabHistory = temp; }
 
         var tabIndex = openTabs.FindIndex(t => t.FilePath == path);
         openTabs.RemoveAll(t => t.FilePath == path);
@@ -2587,6 +2592,9 @@
             case "problems":
                 bottomPanelMode = "problems";
                 break;
+            case "reopenTab":
+                await ReopenClosedTab();
+                break;
             case "escape":
                 if (showCommandPalette) showCommandPalette = false;
                 else if (showQuickOpen) showQuickOpen = false;
@@ -3019,6 +3027,20 @@
     {
         if (editorId != null)
             await JS.InvokeVoidAsync("ideDebugger.highlightLine", editorId, frame.Line);
+    }
+
+    // ---- Undo close tab ----
+
+    private async Task ReopenClosedTab()
+    {
+        while (closedTabHistory.Count > 0)
+        {
+            var path = closedTabHistory.Pop();
+            // Skip if already open
+            if (openTabs.Any(t => t.FilePath == path)) continue;
+            await HandleFileSelected(path);
+            return;
+        }
     }
 
     // ---- AI completion ----

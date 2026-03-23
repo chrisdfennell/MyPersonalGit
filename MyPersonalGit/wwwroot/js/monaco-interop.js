@@ -1966,6 +1966,14 @@
                     }
                     return;
                 }
+                // Ctrl+Shift+T: Reopen closed tab
+                if (e.ctrlKey && e.shiftKey && (e.key === 'T' || e.key === 't')) {
+                    e.preventDefault();
+                    if (self._dotNetRef) {
+                        try { self._dotNetRef.invokeMethodAsync('OnIdeKeyDown', 'reopenTab'); } catch (ex) { }
+                    }
+                    return;
+                }
                 // Ctrl+Shift+M: Toggle problems panel
                 if (e.ctrlKey && e.shiftKey && (e.key === 'M' || e.key === 'm')) {
                     e.preventDefault();
