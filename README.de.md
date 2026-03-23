@@ -121,16 +121,17 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Probleme-Panel** — Tab im unteren Panel, das alle LSP-Diagnosen (Fehler/Warnungen) offener Dateien aggregiert, gruppiert nach Datei mit Klick-zum-Navigieren. Fehler-/Warnungszähler in der Statusleiste
 - **Aufgabenausführung** — Tab im unteren Panel zum Ausführen von Build-/Test-Befehlen (dotnet build, npm test, go build, make, pytest, etc.) mit Echtzeit-Streaming-Ausgabe, klickbaren Fehlerpositionen und Abbruch-Unterstützung
 - **Branch-Diff** — Seitenleisten-Panel zum Vergleichen zweier Branches nebeneinander. Zeigt Liste geänderter Dateien mit Hinzufügen/Ändern/Löschen/Umbenennen-Status, Klick zum Anzeigen des Diffs im Monaco-Diff-Editor
-- **Inline-Diff-Markierungen** — Grüne, blaue und rote Indikatoren im Editor-Rand, die hinzugefügte, geänderte und gelöschte Zeilen gegenüber dem letzten Commit anzeigen
-- **Dateiverwaltung** — Hierarchischer Dateibaum mit Dateiverschachtelung (gruppiert `.razor` + `.razor.css` + `.razor.cs`), Suche/Filter, Datei-Upload per Drag-and-Drop und Kontextmenüs für neue Datei/Ordner/Umbenennen/Löschen
-- **Tab-Verwaltung** — Multi-Tab-Oberfläche mit Drag-to-Reorder, angehefteten Tabs, Rechtsklick-Kontextmenü (Schließen, Andere schließen, Rechts schließen, Gespeicherte schließen) und Scroll-Pfeilen bei Überlauf
+- **Inline-Diff-Markierungen** — Grüne, blaue und rote Indikatoren im Editor-Rand, die hinzugefügte, geänderte und gelöschte Zeilen gegenüber dem letzten Commit anzeigen. Klicken Sie auf eine Randleiste, um den ursprünglichen Inhalt inline anzuzeigen
+- **Code Snippets** — Benutzerdefinierte Code-Snippets, pro Browser gespeichert. Definieren Sie Präfix, Sprache und Inhalt in Settings; geben Sie den Präfix ein und drücken Sie Tab zum Erweitern. Unterstützt VS Code-Snippet-Syntax ($1, $2, $0 Platzhalter)
+- **Dateiverwaltung** — Hierarchischer Dateibaum mit sprachspezifischen farbigen Symbolen (über 40 Dateitypen), Dateiverschachtelung (gruppiert `.razor` + `.razor.css` + `.razor.cs`), Suche/Filter, Datei-Upload per Drag-and-Drop und Kontextmenüs für neue Datei/Ordner/Umbenennen/Löschen
+- **Tab-Verwaltung** — Multi-Tab-Oberfläche mit farbigen Dateisymbolen, Drag-to-Reorder, angehefteten Tabs, Schließbestätigung bei ungespeicherten Änderungen, Tab-Schließen rückgängig machen (Ctrl+Shift+T), Rechtsklick-Kontextmenü (Schließen, Andere schließen, Rechts schließen, Gespeicherte schließen) und Scroll-Pfeilen bei Überlauf
 - **Split-Editor & Diff-Ansicht** — Nebeneinander-Bearbeitung mit unabhängigem Scrollen und Diff-Ansicht zum Vergleichen von Änderungen vor dem Commit
 - **Integriertes Terminal** — xterm.js-basiertes Terminal mit mehreren Terminal-Tabs, WebSocket-Shell-Zugang und themenabhängigem Hell-/Dunkelmodus
 - **Git-Integration** — Branch-Erstellung, Blame-Ansicht, Dateiverlauf, Commit-Panel, Quellkontrolle mit Dateiauswahl und visueller Commit-Graph mit farbigen Spurlinien und Branch-Labels
 - **Merge-Konflikt-Auflösung** — Inline-Schaltflächen Aktuell akzeptieren / Eingehend akzeptieren / Beide akzeptieren mit farbcodierten Konfliktregionen (grün/blau)
 - **Suchen & Ersetzen** — Globale Suche über alle Dateien mit Dateierweiterungs-Filterung, zeilenweise Ergebnisse und Alle ersetzen
-- **Code-Navigation** — Schnellöffnung (Ctrl+P), Befehlspalette (Ctrl+Shift+P), Gehe zu Zeile (Ctrl+G), Gliederungs-/Symbolpanel und Breadcrumb-Navigation
-- **Tastaturkürzel** — VS Code-Tastaturkürzel (Ctrl+Shift+P, Ctrl+P, Ctrl+Shift+F, Ctrl+Shift+M, Ctrl+`, Escape) auf Dokumentebene abgefangen, um Browser-Standardverhalten zu verhindern
+- **Code-Navigation** — Schnellöffnung (Ctrl+P), Befehlspalette (Ctrl+Shift+P), Gehe zu Zeile (Ctrl+G), Go to Definition (F12), Peek Definition (Alt+F12), Find References (Shift+F12), Rename Symbol (F2), Gliederungs-/Symbolpanel und Breadcrumb-Navigation
+- **Tastaturkürzel** — VS Code-Tastaturkürzel (Ctrl+Shift+P, Ctrl+P, Ctrl+Shift+F, Ctrl+Shift+M, Ctrl+Shift+T, Ctrl+`, F5, F9, Escape) auf Dokumentebene abgefangen, um Browser-Standardverhalten zu verhindern
 - **CSS-Farbvorschauen** — Inline-Farbmuster neben hex/rgb/hsl-Werten in CSS-, SCSS- und Less-Dateien
 - **Minimap-Hervorhebungen** — Geänderte Zeilen, hinzugefügte Zeilen und Konfliktmarkierungen als farbige Marker im Minimap-Rand angezeigt
 - **Markdown- & Bildvorschau** — Umschalten zwischen Bearbeitung und gerenderter Vorschau für Markdown-Dateien; Inline-Bildanzeige für gängige Formate
