@@ -2920,8 +2920,10 @@
             }
 
             var wsUrl = $"{wsScheme}://{baseUri.Host}:{baseUri.Port}/ws/lsp/{RepoName}/{lspLanguage}?session={Uri.EscapeDataString(sessionId)}&branch={currentBranch}";
+            Console.WriteLine($"[LSP] Connecting to {wsUrl}");
 
             var connected = await JS.InvokeAsync<bool>("ideLsp.connect", lspLanguage, wsUrl);
+            Console.WriteLine($"[LSP] Connect result for {lspLanguage}: {connected}");
             if (connected)
             {
                 lspStatus[lspLanguage] = "running";
@@ -2930,7 +2932,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[LSP] Failed to connect {lspLanguage}: {ex.Message}");
+            Console.WriteLine($"[LSP] Failed to connect {lspLanguage}: {ex.Message}\n{ex.StackTrace}");
         }
     }
 
