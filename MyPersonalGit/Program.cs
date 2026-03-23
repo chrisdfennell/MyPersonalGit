@@ -800,6 +800,9 @@ app.MapTerminalWebSocket();
 // Language Server Protocol WebSocket endpoint
 app.MapLspWebSocket();
 
+// Task runner WebSocket endpoint
+app.MapTaskRunnerWebSocket();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

@@ -347,6 +347,20 @@
             <button class="ide-bottom-tab @(bottomPanelMode == "graph" ? "active" : "")" @onclick="LoadCommitGraph">
                 <i class="bi bi-diagram-3 me-1"></i>@L["Ide_Graph"]
             </button>
+            <button class="ide-bottom-tab @(bottomPanelMode == "problems" ? "active" : "")" @onclick='() => bottomPanelMode = "problems"'>
+                <i class="bi bi-exclamation-triangle me-1"></i>Problems
+                @if (errorCount > 0)
+                {
+                    <span class="ide-problems-badge ide-badge-error">@errorCount</span>
+                }
+                @if (warningCount > 0)
+                {
+                    <span class="ide-problems-badge ide-badge-warning">@warningCount</span>
+                }
+            </button>
+            <button class="ide-bottom-tab @(bottomPanelMode == "tasks" ? "active" : "")" @onclick='() => bottomPanelMode = "tasks"'>
+                <i class="bi bi-play-circle me-1"></i>Tasks
+            </button>
             <button class="ide-bottom-tab @(bottomPanelMode == "terminal" ? "active" : "")" @onclick="ToggleTerminal">
                 <i class="bi bi-terminal me-1"></i>@L["Ide_Terminal"]
             </button>
@@ -433,6 +447,84 @@
                 }
             </div>
         }
+        else if (bottomPanelMode == "problems")
+        {
+            <div class="ide-problems-panel">
+                @if (allDiagnostics.Count == 0)
+                {
+                    <div class="text-muted small px-3 py-2">No problems detected.</div>
+                }
+                else
+                {
+                    @foreach (var group in allDiagnostics.GroupBy(d => d.FilePath))
+                    {
+                        <div class="ide-problems-file">
+                            <div class="ide-problems-file-header">
+                                <i class="bi bi-file-earmark-code me-1"></i>
+                                <span>@System.IO.Path.GetFileName(group.Key)</span>
+                                <span class="text-muted ms-1 small">@group.Key</span>
+                                <span class="ide-problems-count ms-auto">@group.Count()</span>
+                            </div>
+                            @foreach (var diag in group.OrderBy(d => d.StartLineNumber))
+                            {
+                                <div class="ide-problems-item" @onclick="() => NavigateToDiagnostic(diag)">
+                                    <i class="bi @(diag.Severity == 8 ? "bi-x-circle-fill text-danger" : diag.Severity == 4 ? "bi-exclamation-triangle-fill text-warning" : "bi-info-circle-fill text-info") me-1"></i>
+                                    <span class="ide-problems-msg">@diag.Message</span>
+                                    <span class="text-muted small ms-auto">[@diag.StartLineNumber, @diag.StartColumn]</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        }
+        else if (bottomPanelMode == "tasks")
+        {
+            <div class="ide-taskrunner">
+                <div class="ide-taskrunner-toolbar">
+                    <select @bind="selectedTask" class="ide-taskrunner-select">
+                        @foreach (var task in availableTasks)
+                        {
+                            <option value="@task.Command">@task.Label</option>
+                        }
+                    </select>
+                    <input @bind="customTaskCommand" class="ide-taskrunner-select" style="flex:1;" placeholder="or type a command..." />
+                    <button class="ide-taskrunner-run" @onclick="RunTask" disabled="@isTaskRunning">
+                        <i class="bi bi-play-fill"></i> Run
+                    </button>
+                    @if (isTaskRunning)
+                    {
+                        <button class="ide-taskrunner-stop" @onclick="StopTask">
+                            <i class="bi bi-stop-fill"></i> Stop
+                        </button>
+                    }
+                    <button class="ide-taskrunner-clear" @onclick="ClearTaskOutput">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <div class="ide-taskrunner-output">
+                    @foreach (var line in taskOutputLines)
+                    {
+                        <div class="ide-taskrunner-line @(line.IsError ? "ide-taskrunner-stderr" : "")">
+                            @if (line.FilePath != null)
+                            {
+                                <span class="ide-taskrunner-link" @onclick="() => NavigateToTaskError(line)">@line.Text</span>
+                            }
+                            else
+                            {
+                                @line.Text
+                            }
+                        </div>
+                    }
+                    @if (taskExitCode.HasValue)
+                    {
+                        <div class="ide-taskrunner-line" style="color: @(taskExitCode == 0 ? "#2ea043" : "#f85149"); font-weight: 600; margin-top: 4px;">
+                            Process exited with code @taskExitCode
+                        </div>
+                    }
+                </div>
+            </div>
+        }
         else if (bottomPanelMode == "terminal")
         {
             <div class="ide-terminal-wrapper">
@@ -493,6 +585,19 @@
                 <span class="ide-status-item text-warning" title="@L["Ide_UnsavedChanges"]">
                     <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>@modifiedFiles.Count @L["Ide_Change"]
                 </span>
+            }
+            @if (errorCount > 0 || warningCount > 0)
+            {
+                <button class="ide-status-item ide-status-btn" @onclick='() => bottomPanelMode = "problems"' title="Problems">
+                    @if (errorCount > 0)
+                    {
+                        <i class="bi bi-x-circle-fill me-1" style="color:#f85149;font-size:0.6rem;"></i><span>@errorCount</span>
+                    }
+                    @if (warningCount > 0)
+                    {
+                        <i class="bi bi-exclamation-triangle-fill ms-1 me-1" style="color:#d29922;font-size:0.6rem;"></i><span>@warningCount</span>
+                    }
+                </button>
             }
         </div>
         <div class="ide-status-right">
@@ -632,6 +737,33 @@
 
     // LSP state
     private Dictionary<string, string> lspStatus = new(); // language -> "running"|"error"|"disconnected"
+
+    // Problems panel state
+    private List<DiagnosticItem> allDiagnostics = new();
+    private int errorCount;
+    private int warningCount;
+    private record DiagnosticItem(string FilePath, int StartLineNumber, int StartColumn, int EndLineNumber, int EndColumn, string Message, int Severity, string Source, string Code);
+
+    // Task runner state
+    private record TaskDef(string Label, string Command);
+    private record TaskOutputLine(string Text, bool IsError, string? FilePath, int Line, int Column);
+    private List<TaskDef> availableTasks = new()
+    {
+        new("dotnet build", "dotnet build"),
+        new("dotnet test", "dotnet test"),
+        new("npm install", "npm install"),
+        new("npm run build", "npm run build"),
+        new("npm test", "npm test"),
+        new("go build ./...", "go build ./..."),
+        new("go test ./...", "go test ./..."),
+        new("make", "make"),
+        new("python -m pytest", "python -m pytest"),
+    };
+    private string selectedTask = "dotnet build";
+    private string customTaskCommand = "";
+    private bool isTaskRunning;
+    private List<TaskOutputLine> taskOutputLines = new();
+    private int? taskExitCode;
 
     // Blame state
     private bool isBlameActive;
@@ -2576,6 +2708,122 @@
         currentSettings = settings;
         autoSaveEnabled = settings.AutoSaveEnabled;
         autoSaveDelay = settings.AutoSaveDelay;
+    }
+
+    // ---- Problems panel ----
+
+    [JSInvokable]
+    public async Task OnDiagnosticsChanged()
+    {
+        try
+        {
+            allDiagnostics = await JS.InvokeAsync<List<DiagnosticItem>>("monacoInterop.getAllDiagnostics");
+            errorCount = allDiagnostics.Count(d => d.Severity == 8);
+            warningCount = allDiagnostics.Count(d => d.Severity == 4);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch { }
+    }
+
+    private async Task NavigateToDiagnostic(DiagnosticItem diag)
+    {
+        await HandleFileSelected(diag.FilePath);
+        if (editorId != null)
+            await JS.InvokeVoidAsync("monacoInterop.revealLine", editorId, diag.StartLineNumber);
+    }
+
+    // ---- Task runner ----
+
+    private async Task RunTask()
+    {
+        var command = !string.IsNullOrWhiteSpace(customTaskCommand) ? customTaskCommand : selectedTask;
+        if (string.IsNullOrWhiteSpace(command)) return;
+
+        isTaskRunning = true;
+        taskExitCode = null;
+        taskOutputLines.Clear();
+        taskOutputLines.Add(new TaskOutputLine($"> {command}", false, null, 0, 0));
+        StateHasChanged();
+
+        try
+        {
+            var baseUri = new Uri(Navigation.BaseUri);
+            var wsScheme = baseUri.Scheme == "https" ? "wss" : "ws";
+            var sessionId = UserService.SessionId;
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                try { sessionId = await JS.InvokeAsync<string?>("localStorage.getItem", "sessionId"); }
+                catch { }
+            }
+            if (string.IsNullOrEmpty(sessionId)) return;
+
+            var wsUrl = $"{wsScheme}://{baseUri.Host}:{baseUri.Port}/ws/taskrunner/{RepoName}?session={Uri.EscapeDataString(sessionId)}";
+            await JS.InvokeVoidAsync("ideTaskRunner.connect", wsUrl, dotNetRef);
+            await JS.InvokeVoidAsync("ideTaskRunner.run", command);
+        }
+        catch (Exception ex)
+        {
+            taskOutputLines.Add(new TaskOutputLine($"Error: {ex.Message}", true, null, 0, 0));
+            isTaskRunning = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task StopTask()
+    {
+        try { await JS.InvokeVoidAsync("ideTaskRunner.cancel"); }
+        catch { }
+    }
+
+    private void ClearTaskOutput()
+    {
+        taskOutputLines.Clear();
+        taskExitCode = null;
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void OnTaskOutput(string type, string data, int code)
+    {
+        if (type == "exit")
+        {
+            taskExitCode = code;
+            isTaskRunning = false;
+        }
+        else if (type == "stdout" || type == "stderr")
+        {
+            var lines = data.Split('\n', StringSplitOptions.None);
+            foreach (var line in lines)
+            {
+                if (string.IsNullOrEmpty(line)) continue;
+                var parsed = ParseErrorLocation(line);
+                taskOutputLines.Add(new TaskOutputLine(line, type == "stderr", parsed.file, parsed.line, parsed.col));
+            }
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    private (string? file, int line, int col) ParseErrorLocation(string text)
+    {
+        // MSBuild style: path(line,col)
+        var msbuild = System.Text.RegularExpressions.Regex.Match(text, @"(\S+)\((\d+),(\d+)\)");
+        if (msbuild.Success)
+            return (msbuild.Groups[1].Value, int.Parse(msbuild.Groups[2].Value), int.Parse(msbuild.Groups[3].Value));
+
+        // GCC/Go/TS style: path:line:col
+        var gcc = System.Text.RegularExpressions.Regex.Match(text, @"(\S+):(\d+):(\d+)");
+        if (gcc.Success)
+            return (gcc.Groups[1].Value, int.Parse(gcc.Groups[2].Value), int.Parse(gcc.Groups[3].Value));
+
+        return (null, 0, 0);
+    }
+
+    private async Task NavigateToTaskError(TaskOutputLine line)
+    {
+        if (line.FilePath == null) return;
+        await HandleFileSelected(line.FilePath);
+        if (editorId != null)
+            await JS.InvokeVoidAsync("monacoInterop.revealLine", editorId, line.Line);
     }
 
     // ---- LSP helpers ----
