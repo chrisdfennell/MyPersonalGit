@@ -123,16 +123,17 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Problems Panel** — Bottom panel tab aggregating all LSP diagnostics (errors/warnings) across open files, grouped by file with click-to-navigate. Error/warning counts in the status bar
 - **Task Runner** — Bottom panel tab to run build/test commands (dotnet build, npm test, go build, make, pytest, etc.) with real-time streamed output, clickable error locations, and cancel support
 - **Branch Diff** — Sidebar panel to compare two branches side-by-side. Shows list of changed files with add/modify/delete/rename status, click to view diff in Monaco's diff editor
-- **Inline Diff Gutters** — Green, blue, and red indicators in the editor gutter showing added, modified, and deleted lines vs the last commit
-- **File Management** — Hierarchical file tree with file nesting (groups `.razor` + `.razor.css` + `.razor.cs`), search/filter, drag-and-drop file upload, and context menus for new file/folder/rename/delete
-- **Tab Management** — Multi-tab interface with drag-to-reorder, pinned tabs, right-click context menu (Close, Close Others, Close to the Right, Close Saved), and scroll chevrons for overflow
+- **Inline Diff Gutters** — Green, blue, and red indicators in the editor gutter showing added, modified, and deleted lines vs the last commit. Click a gutter bar to see the original content inline
+- **Code Snippets** — User-defined code snippets stored per-browser. Define prefix, language, and body in Settings; type the prefix and Tab to expand. Supports VS Code snippet syntax ($1, $2, $0 placeholders)
+- **File Management** — Hierarchical file tree with language-specific colored icons (40+ file types), file nesting (groups `.razor` + `.razor.css` + `.razor.cs`), search/filter, drag-and-drop file upload, and context menus for new file/folder/rename/delete
+- **Tab Management** — Multi-tab interface with colored file icons, drag-to-reorder, pinned tabs, unsaved changes close confirmation, undo close tab (Ctrl+Shift+T), right-click context menu (Close, Close Others, Close to the Right, Close Saved), and scroll chevrons for overflow
 - **Split Editor & Diff View** — Side-by-side editing with independent scroll, and diff view for comparing changes before commit
 - **Integrated Terminal** — xterm.js-based terminal with multiple terminal tabs, WebSocket shell access, and theme-aware light/dark mode
 - **Git Integration** — Branch creation, blame view, file history, commit panel, source control with file selection, and a visual commit graph with colored lane lines and branch labels
 - **Merge Conflict Resolution** — Inline Accept Current / Accept Incoming / Accept Both buttons with color-coded conflict regions (green/blue)
 - **Search & Replace** — Global search across all files with file extension filtering, line-by-line results, and replace all
-- **Code Navigation** — Quick Open (Ctrl+P), Command Palette (Ctrl+Shift+P), Go to Line (Ctrl+G), outline/symbols panel, and breadcrumb navigation
-- **Keyboard Shortcuts** — VS Code-style shortcuts (Ctrl+Shift+P, Ctrl+P, Ctrl+Shift+F, Ctrl+Shift+M, Ctrl+`, Escape) intercepted at document level to prevent browser defaults
+- **Code Navigation** — Quick Open (Ctrl+P), Command Palette (Ctrl+Shift+P), Go to Line (Ctrl+G), Go to Definition (F12), Peek Definition (Alt+F12), Find References (Shift+F12), Rename Symbol (F2), outline/symbols panel, and breadcrumb navigation
+- **Keyboard Shortcuts** — VS Code-style shortcuts (Ctrl+Shift+P, Ctrl+P, Ctrl+Shift+F, Ctrl+Shift+M, Ctrl+Shift+T, Ctrl+`, F5, F9, Escape) intercepted at document level to prevent browser defaults
 - **CSS Color Previews** — Inline color swatches next to hex/rgb/hsl values in CSS, SCSS, and Less files
 - **Minimap Highlights** — Modified lines, added lines, and conflict markers shown as colored markers in the minimap gutter
 - **Markdown & Image Preview** — Toggle between edit and rendered preview for Markdown files; inline image display for common formats

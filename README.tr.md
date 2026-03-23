@@ -121,16 +121,17 @@ ASP.NET Core ve Blazor Server ile oluşturulmuş, GitHub benzeri web arayüzüne
 - **Sorunlar Paneli** — Açık dosyalardaki tüm LSP tanılamalarını (hatalar/uyarılar) dosyaya göre gruplandırarak toplayan alt panel sekmesi; navigasyon için tıklama. Durum çubuğunda hata/uyarı sayaçları
 - **Görev Çalıştırıcı** — Derleme/test komutlarını (dotnet build, npm test, go build, make, pytest, vb.) gerçek zamanlı akış çıktısı, tıklanabilir hata konumları ve iptal desteğiyle çalıştırmak için alt panel sekmesi
 - **Dal Karşılaştırması** — İki dalı yan yana karşılaştırmak için kenar çubuğu paneli. Ekleme/değiştirme/silme/yeniden adlandırma durumuyla değişen dosya listesini gösterir, Monaco'nun diff editöründe farkı görüntülemek için tıklayın
-- **Satır İçi Diff Göstergeleri** — Editör kenar boşluğunda son commit'e kıyasla eklenen, değiştirilen ve silinen satırları gösteren yeşil, mavi ve kırmızı göstergeler
-- **Dosya Yönetimi** — Dosya iç içe geçirme özellikli hiyerarşik dosya ağacı (`.razor` + `.razor.css` + `.razor.cs` gruplama), arama/filtreleme, sürükle-bırak dosya yükleme ve yeni dosya/klasör/yeniden adlandırma/silme için bağlam menüleri
-- **Sekme Yönetimi** — Sürükleyerek yeniden sıralama, sabitlenmiş sekmeler, sağ tıklama bağlam menüsü (Kapat, Diğerlerini Kapat, Sağdakileri Kapat, Kaydedilenleri Kapat) ve taşma için kaydırma oklarıyla çoklu sekme arayüzü
+- **Satır İçi Diff Göstergeleri** — Editör kenar boşluğunda son commit'e kıyasla eklenen, değiştirilen ve silinen satırları gösteren yeşil, mavi ve kırmızı göstergeler. Orijinal içeriği satır içinde görmek için kenar çubuğuna tıklayın
+- **Code Snippets** — Tarayıcı başına depolanan kullanıcı tanımlı kod parçacıkları. Settings'de önek, dil ve gövdeyi tanımlayın; öneki yazın ve genişletmek için Tab'a basın. VS Code snippet söz dizimini destekler ($1, $2, $0 yer tutucular)
+- **Dosya Yönetimi** — Dile özgü renkli simgeler (40'tan fazla dosya türü), dosya iç içe geçirme özellikli hiyerarşik dosya ağacı (`.razor` + `.razor.css` + `.razor.cs` gruplama), arama/filtreleme, sürükle-bırak dosya yükleme ve yeni dosya/klasör/yeniden adlandırma/silme için bağlam menüleri
+- **Sekme Yönetimi** — Renkli dosya simgeleri, sürükleyerek yeniden sıralama, sabitlenmiş sekmeler, kaydedilmemiş değişiklikler için kapatma onayı, sekme kapatmayı geri al (Ctrl+Shift+T), sağ tıklama bağlam menüsü (Kapat, Diğerlerini Kapat, Sağdakileri Kapat, Kaydedilenleri Kapat) ve taşma için kaydırma oklarıyla çoklu sekme arayüzü
 - **Bölünmüş Editör & Diff Görünümü** — Bağımsız kaydırmalı yan yana düzenleme ve commit öncesi değişiklikleri karşılaştırma için diff görünümü
 - **Entegre Terminal** — xterm.js tabanlı terminal; birden fazla terminal sekmesi, WebSocket kabuk erişimi ve tema duyarlı açık/koyu mod
 - **Git Entegrasyonu** — Dal oluşturma, blame görünümü, dosya geçmişi, commit paneli, dosya seçimli kaynak kontrol ve renkli şerit çizgileri ve dal etiketleriyle görsel commit grafiği
 - **Birleştirme Çakışması Çözümü** — Satır içi Mevcut Kabul Et / Gelen Kabul Et / Her İkisini Kabul Et düğmeleri; renk kodlu çakışma bölgeleri (yeşil/mavi)
 - **Ara ve Değiştir** — Dosya uzantısı filtreleme, satır satır sonuçlar ve tümünü değiştir ile tüm dosyalarda küresel arama
-- **Kod Navigasyonu** — Hızlı Aç (Ctrl+P), Komut Paleti (Ctrl+Shift+P), Satıra Git (Ctrl+G), ana hat/sembol paneli ve ekmek kırıntısı navigasyonu
-- **Klavye Kısayolları** — VS Code tarzı kısayollar (Ctrl+Shift+P, Ctrl+P, Ctrl+Shift+F, Ctrl+Shift+M, Ctrl+`, Escape) tarayıcı varsayılanlarını önlemek için belge düzeyinde yakalanır
+- **Kod Navigasyonu** — Hızlı Aç (Ctrl+P), Komut Paleti (Ctrl+Shift+P), Satıra Git (Ctrl+G), Go to Definition (F12), Peek Definition (Alt+F12), Find References (Shift+F12), Rename Symbol (F2), ana hat/sembol paneli ve ekmek kırıntısı navigasyonu
+- **Klavye Kısayolları** — VS Code tarzı kısayollar (Ctrl+Shift+P, Ctrl+P, Ctrl+Shift+F, Ctrl+Shift+M, Ctrl+Shift+T, Ctrl+`, F5, F9, Escape) tarayıcı varsayılanlarını önlemek için belge düzeyinde yakalanır
 - **CSS Renk Önizlemeleri** — CSS, SCSS ve Less dosyalarında hex/rgb/hsl değerlerinin yanında satır içi renk örnekleri
 - **Minimap Vurguları** — Değiştirilen satırlar, eklenen satırlar ve çakışma işaretçileri minimap kenarında renkli işaretçiler olarak gösterilir
 - **Markdown & Görüntü Önizleme** — Markdown dosyaları için düzenleme ve işlenmiş önizleme arasında geçiş; yaygın biçimler için satır içi görüntü gösterimi
