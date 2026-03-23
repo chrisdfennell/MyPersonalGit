@@ -1141,7 +1141,7 @@
                     }
                 }
 
-                // Modified lines (vs original)
+                // Modified/added/deleted lines (vs original) with gutter indicators
                 if (filePath && _originalContent[filePath] != null) {
                     var original = _originalContent[filePath].split('\n');
                     var current = model.getLinesContent();
@@ -1150,16 +1150,33 @@
                         if (i >= original.length || i >= current.length || original[i] !== current[i]) {
                             var lineNum = i + 1;
                             if (lineNum <= current.length) {
-                                var color = i >= original.length ? '#2ea04370' : '#0078d470'; // added vs modified
+                                var isAdded = i >= original.length;
+                                var color = isAdded ? '#2ea04370' : '#0078d470';
+                                var gutterClass = isAdded ? 'ide-gutter-added' : 'ide-gutter-modified';
                                 decorations.push({
                                     range: new monaco.Range(lineNum, 1, lineNum, 1),
                                     options: {
                                         isWholeLine: true,
+                                        linesDecorationsClassName: gutterClass,
                                         overviewRuler: { color: color, position: monaco.editor.OverviewRulerLane.Left },
                                         minimap: { color: color, position: monaco.editor.MinimapPosition.Gutter }
                                     }
                                 });
                             }
+                        }
+                    }
+                    // Deleted lines indicator — red triangle on the line after the deletion
+                    if (original.length > current.length) {
+                        var deletePoint = Math.min(original.length, current.length);
+                        if (deletePoint > 0) {
+                            decorations.push({
+                                range: new monaco.Range(deletePoint, 1, deletePoint, 1),
+                                options: {
+                                    isWholeLine: false,
+                                    linesDecorationsClassName: 'ide-gutter-deleted',
+                                    overviewRuler: { color: '#f8514970', position: monaco.editor.OverviewRulerLane.Left }
+                                }
+                            });
                         }
                     }
                 }
@@ -1482,6 +1499,38 @@
          */
         updateOriginalContent: function (editorId, filePath, content) {
             _originalContent[filePath] = content;
+        },
+
+        /**
+         * Get all LSP diagnostics across all open models.
+         * @returns {Array} Array of diagnostic objects with filePath, line, column, message, severity.
+         */
+        getAllDiagnostics: function () {
+            var results = [];
+            var markers = monaco.editor.getModelMarkers({ owner: 'lsp' });
+            markers.forEach(function (m) {
+                var filePath = null;
+                for (var key in _models) {
+                    if (_models[key] && !_models[key].isDisposed() && _models[key].uri.toString() === m.resource.toString()) {
+                        filePath = key;
+                        break;
+                    }
+                }
+                if (filePath) {
+                    results.push({
+                        filePath: filePath,
+                        startLineNumber: m.startLineNumber,
+                        startColumn: m.startColumn,
+                        endLineNumber: m.endLineNumber,
+                        endColumn: m.endColumn,
+                        message: m.message,
+                        severity: m.severity,
+                        source: m.source || '',
+                        code: m.code ? String(m.code) : ''
+                    });
+                }
+            });
+            return results;
         }
     };
 
@@ -1861,6 +1910,58 @@
                     })(files[i]);
                 }
             });
+        }
+    };
+
+    // ============================================================
+    // Task runner
+    // ============================================================
+    window.ideTaskRunner = {
+        _ws: null,
+        _dotNetRef: null,
+
+        connect: function (wsUrl, dotNetRef) {
+            this._dotNetRef = dotNetRef;
+            var self = this;
+            return new Promise(function (resolve) {
+                var ws = new WebSocket(wsUrl);
+                self._ws = ws;
+                ws.onopen = function () { resolve(true); };
+                ws.onmessage = function (event) {
+                    try {
+                        var msg = JSON.parse(event.data);
+                        if (dotNetRef) {
+                            dotNetRef.invokeMethodAsync('OnTaskOutput', msg.type || '', msg.data || '', msg.code || 0);
+                        }
+                    } catch (e) { console.error('[TaskRunner] Parse error:', e); }
+                };
+                ws.onclose = function () {
+                    if (self._ws === ws) {
+                        if (dotNetRef) {
+                            try { dotNetRef.invokeMethodAsync('OnTaskOutput', 'exit', '', -1); } catch (e) { }
+                        }
+                        self._ws = null;
+                    }
+                };
+                ws.onerror = function () { resolve(false); };
+                setTimeout(function () { resolve(false); }, 10000);
+            });
+        },
+
+        run: function (command) {
+            if (this._ws && this._ws.readyState === WebSocket.OPEN) {
+                this._ws.send(JSON.stringify({ command: command }));
+            }
+        },
+
+        cancel: function () {
+            if (this._ws && this._ws.readyState === WebSocket.OPEN) {
+                this._ws.send(JSON.stringify({ type: 'cancel' }));
+            }
+        },
+
+        disconnect: function () {
+            if (this._ws) { try { this._ws.close(); } catch (e) { } this._ws = null; }
         }
     };
 
@@ -2257,6 +2358,11 @@
             });
 
             monaco.editor.setModelMarkers(model, 'lsp', markers);
+
+            // Notify Blazor that diagnostics changed
+            if (this._dotNetRef) {
+                try { this._dotNetRef.invokeMethodAsync('OnDiagnosticsChanged'); } catch (e) { }
+            }
         },
 
         /**
