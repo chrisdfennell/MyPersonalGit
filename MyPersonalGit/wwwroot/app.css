@@ -317,4 +317,29 @@ h1:focus {
 [data-bs-theme="light"] .ide-branch-body .form-control:focus,
 [data-bs-theme="light"] .ide-branch-body .form-select:focus { background: #ffffff; border-color: #0078d4; color: #333333; box-shadow: 0 0 0 2px rgba(0,120,212,0.25); }
 
+/* Force Monaco editor visibility in light mode — the scoped CSS defaults
+   (dark backgrounds, position, dimensions) have higher specificity than
+   global rules due to Blazor's [b-xxx] attribute selectors, so we need !important */
+[data-bs-theme="light"] .ide-editor-panes {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    display: flex !important;
+}
+
+[data-bs-theme="light"] .ide-editor-panes .ide-pane {
+    flex: 1 !important;
+    position: relative !important;
+    min-width: 0 !important;
+    height: 100% !important;
+}
+
+[data-bs-theme="light"] .ide-editor {
+    position: relative !important;
+    overflow: hidden !important;
+    min-height: 0 !important;
+}
+
 /* Blazor reconnect overlay dark mode is injected into shadow DOM via JS in App.razor */
