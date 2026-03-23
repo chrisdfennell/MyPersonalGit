@@ -1218,6 +1218,64 @@
             updateHighlights();
             editor.onDidChangeModelContent(debounce(updateHighlights, 500));
             editor.onDidChangeModel(updateHighlights);
+
+            // Click on diff gutter decorations to show inline original content
+            editor.onMouseDown(function (e) {
+                if (e.target.type !== monaco.editor.MouseTargetType.GUTTER_LINE_DECORATIONS) return;
+
+                var line = e.target.position ? e.target.position.lineNumber : 0;
+                if (line <= 0) return;
+
+                var model = editor.getModel();
+                if (!model) return;
+
+                var filePath = null;
+                var uri = model.uri.toString();
+                for (var key in _models) {
+                    if (_models[key] && !_models[key].isDisposed() && _models[key].uri.toString() === uri) {
+                        filePath = key;
+                        break;
+                    }
+                }
+                if (!filePath || !_originalContent[filePath]) return;
+
+                var original = _originalContent[filePath].split('\n');
+                var lineIdx = line - 1;
+                if (lineIdx >= original.length) return; // Added line, no original
+                var current = model.getLinesContent();
+                if (lineIdx < current.length && original[lineIdx] === current[lineIdx]) return; // Unchanged
+
+                // Remove any existing diff popup
+                if (editor._diffPopupWidget) {
+                    editor.removeContentWidget(editor._diffPopupWidget);
+                    editor._diffPopupWidget = null;
+                    return; // Toggle off
+                }
+
+                // Show inline diff popup with original content
+                var origLine = original[lineIdx] || '(line deleted)';
+                var widgetId = 'diff-popup-' + line;
+                var domNode = document.createElement('div');
+                domNode.className = 'ide-gutter-diff-popup';
+                domNode.innerHTML = '<div class="ide-gutter-diff-header"><span>Original (line ' + line + ')</span><button class="ide-gutter-diff-close">&times;</button></div>'
+                    + '<pre class="ide-gutter-diff-content">' + origLine.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>';
+
+                var widget = {
+                    getId: function () { return widgetId; },
+                    getDomNode: function () { return domNode; },
+                    getPosition: function () {
+                        return { position: { lineNumber: line, column: 1 }, preference: [monaco.editor.ContentWidgetPositionPreference.BELOW] };
+                    }
+                };
+
+                domNode.querySelector('.ide-gutter-diff-close').addEventListener('click', function () {
+                    editor.removeContentWidget(widget);
+                    editor._diffPopupWidget = null;
+                });
+
+                editor._diffPopupWidget = widget;
+                editor.addContentWidget(widget);
+            });
         },
 
         /**
@@ -2344,6 +2402,88 @@
                     try { this._dotNetRef.invokeMethodAsync('OnDebugOutput', body.output, body.category || 'console'); } catch (e) { }
                 }
             }
+        }
+    };
+
+    // ============================================================
+    // User-defined code snippets
+    // ============================================================
+    window.ideSnippets = {
+        _disposables: [],
+
+        /**
+         * Load snippets from localStorage and register as Monaco completion providers.
+         * Snippets format: [{ prefix, body, description, language }]
+         */
+        load: function () {
+            this.unload();
+            var raw = localStorage.getItem('ide-snippets');
+            if (!raw) return;
+
+            var snippets;
+            try { snippets = JSON.parse(raw); } catch (e) { return; }
+            if (!Array.isArray(snippets) || snippets.length === 0) return;
+
+            // Group by language
+            var byLang = {};
+            snippets.forEach(function (s) {
+                var lang = s.language || '*';
+                if (!byLang[lang]) byLang[lang] = [];
+                byLang[lang].push(s);
+            });
+
+            for (var lang in byLang) {
+                var langSnippets = byLang[lang];
+                var selector = lang === '*' ? { pattern: '**' } : lang;
+                this._disposables.push(monaco.languages.registerCompletionItemProvider(selector, {
+                    provideCompletionItems: (function (snips) {
+                        return function (model, position) {
+                            var word = model.getWordUntilPosition(position);
+                            var range = {
+                                startLineNumber: position.lineNumber,
+                                endLineNumber: position.lineNumber,
+                                startColumn: word.startColumn,
+                                endColumn: word.endColumn
+                            };
+                            return {
+                                suggestions: snips.map(function (s) {
+                                    var body = Array.isArray(s.body) ? s.body.join('\n') : (s.body || '');
+                                    return {
+                                        label: s.prefix || '',
+                                        kind: monaco.languages.CompletionItemKind.Snippet,
+                                        documentation: s.description || '',
+                                        insertText: body,
+                                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                        range: range,
+                                        detail: 'Snippet'
+                                    };
+                                })
+                            };
+                        };
+                    })(langSnippets)
+                }));
+            }
+        },
+
+        unload: function () {
+            this._disposables.forEach(function (d) { try { d.dispose(); } catch (e) { } });
+            this._disposables = [];
+        },
+
+        /**
+         * Save snippets to localStorage and reload.
+         */
+        save: function (snippetsJson) {
+            localStorage.setItem('ide-snippets', snippetsJson);
+            this.load();
+        },
+
+        /**
+         * Get saved snippets.
+         */
+        get: function () {
+            var raw = localStorage.getItem('ide-snippets');
+            return raw || '[]';
         }
     };
 

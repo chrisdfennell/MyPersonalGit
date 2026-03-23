@@ -32,7 +32,8 @@
                     {
                         <i class="bi bi-pin-fill me-1" style="font-size: 0.65rem; color: #0078d4;"></i>
                     }
-                    <i class="bi @GetFileIcon(tab.FileName) me-1" style="font-size: 0.75rem;"></i>
+                    @{ var tabIcon = GetFileIconAndColor(tab.FileName); }
+                    <i class="bi @tabIcon.icon me-1" style="font-size: 0.75rem; color: @tabIcon.color;"></i>
                     @if (!tab.IsPinned)
                     {
                         <span class="ide-tab-name">@tab.FileName</span>
@@ -199,6 +200,12 @@
 
     private async Task CloseTab(string filePath)
     {
+        var tab = Tabs?.FirstOrDefault(t => t.FilePath == filePath);
+        if (tab?.IsDirty == true)
+        {
+            var confirmed = await JS.InvokeAsync<bool>("confirm", $"'{tab.FileName}' has unsaved changes. Close anyway?");
+            if (!confirmed) return;
+        }
         await OnTabClosed.InvokeAsync(filePath);
     }
 
@@ -259,19 +266,40 @@
         }
     }
 
-    private string GetFileIcon(string name)
+    private (string icon, string color) GetFileIconAndColor(string name)
     {
         var ext = System.IO.Path.GetExtension(name).ToLowerInvariant();
+        var fileName = System.IO.Path.GetFileName(name).ToLowerInvariant();
+        if (fileName == "dockerfile") return ("bi-filetype-yml", "#2496ED");
+        if (fileName == ".gitignore") return ("bi-git", "#F05032");
         return ext switch
         {
-            ".cs" or ".js" or ".ts" or ".py" or ".rb" or ".go" or ".rs" or ".java" or
-            ".cpp" or ".c" or ".h" or ".jsx" or ".tsx" or ".razor" => "bi-file-earmark-code",
-            ".html" or ".htm" or ".xml" => "bi-filetype-html",
-            ".css" or ".scss" => "bi-filetype-css",
-            ".json" => "bi-filetype-json",
-            ".md" => "bi-filetype-md",
-            ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp" or ".svg" => "bi-file-earmark-image",
-            _ => "bi-file-earmark"
+            ".cs" => ("bi-filetype-cs", "#68217A"),
+            ".csproj" or ".sln" => ("bi-filetype-cs", "#512BD4"),
+            ".js" => ("bi-filetype-js", "#F7DF1E"),
+            ".jsx" => ("bi-filetype-jsx", "#61DAFB"),
+            ".ts" => ("bi-filetype-tsx", "#3178C6"),
+            ".tsx" => ("bi-filetype-tsx", "#3178C6"),
+            ".py" => ("bi-filetype-py", "#3572A5"),
+            ".go" => ("bi-file-earmark-code", "#00ADD8"),
+            ".rs" => ("bi-file-earmark-code", "#DEA584"),
+            ".java" => ("bi-filetype-java", "#B07219"),
+            ".rb" => ("bi-filetype-rb", "#CC342D"),
+            ".php" => ("bi-filetype-php", "#4F5D95"),
+            ".cpp" or ".cc" or ".c" or ".h" => ("bi-file-earmark-code", "#555"),
+            ".html" or ".htm" => ("bi-filetype-html", "#E34F26"),
+            ".css" => ("bi-filetype-css", "#1572B6"),
+            ".scss" => ("bi-filetype-scss", "#CC6699"),
+            ".json" => ("bi-filetype-json", "#292929"),
+            ".md" => ("bi-filetype-md", "#083fa1"),
+            ".yml" or ".yaml" => ("bi-filetype-yml", "#cb171e"),
+            ".xml" or ".svg" => ("bi-filetype-xml", "#e37933"),
+            ".sh" or ".bash" => ("bi-terminal", "#4EAA25"),
+            ".sql" => ("bi-filetype-sql", "#e38c00"),
+            ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp" => ("bi-file-earmark-image", "#a074c4"),
+            ".pdf" => ("bi-filetype-pdf", "#FA0F00"),
+            ".zip" or ".tar" or ".gz" => ("bi-file-earmark-zip", "#e8a917"),
+            _ => ("bi-file-earmark", "#888")
         };
     }
 
