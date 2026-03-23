@@ -16,9 +16,22 @@ WORKDIR /app
 
 # Git is required for git http-backend, docker.io for CI/CD workflow runner
 # gosu allows dropping from root to appuser after fixing permissions
-RUN apt-get update && apt-get install -y --no-install-recommends git git-lfs ca-certificates docker.io gosu \
+# nodejs/npm for typescript-language-server, python3 for python-lsp-server
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git git-lfs ca-certificates docker.io gosu \
+        nodejs npm python3 python3-pip curl \
     && git lfs install \
-    && rm -rf /var/lib/apt/lists/*
+    && npm install -g typescript typescript-language-server \
+    && pip3 install --break-system-packages python-lsp-server \
+    && rm -rf /var/lib/apt/lists/* /root/.npm /root/.cache
+
+# OmniSharp C# language server (self-contained)
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "amd64" ]; then OSARCH="linux-x64"; else OSARCH="linux-arm64"; fi && \
+    mkdir -p /usr/local/bin/omnisharp && \
+    curl -sSL "https://github.com/OmniSharp/omnisharp-roslyn/releases/latest/download/omnisharp-${OSARCH}-net6.0.tar.gz" \
+    | tar xz -C /usr/local/bin/omnisharp && \
+    chmod +x /usr/local/bin/omnisharp/OmniSharp
 
 # Create a non-root user and the repos/data directories
 # Add appuser to docker group for socket access
