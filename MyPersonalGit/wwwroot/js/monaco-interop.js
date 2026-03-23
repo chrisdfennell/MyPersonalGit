@@ -387,14 +387,6 @@
 
             editor.setModel(model);
             editor.updateOptions({ readOnly: !!isReadOnly });
-
-            // Force layout recalculation — the container may have just become visible
-            // (it starts as display:none when no tabs are open)
-            setTimeout(function () {
-                editor.layout();
-                // Second pass in case Blazor DOM update was delayed
-                setTimeout(function () { editor.layout(); }, 200);
-            }, 100);
         },
 
         /**
