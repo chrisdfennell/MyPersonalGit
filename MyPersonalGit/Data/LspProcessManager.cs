@@ -151,6 +151,10 @@ public sealed class LspProcessManager : IDisposable
             WriteTree(repo, targetBranch.Tip.Tree, tempDir);
 
             Console.WriteLine($"[LSP] Checked out {branch} ({targetBranch.Tip.Id.Sha[..7]}) to {tempDir}");
+
+            // Restore dependencies in the background so the language server can resolve types
+            _ = Task.Run(() => RestoreDependencies(tempDir));
+
             return tempDir;
         }
         catch (Exception ex)
@@ -177,6 +181,68 @@ public sealed class LspProcessManager : IDisposable
                 using var contentStream = blob.GetContentStream();
                 using var fileStream = File.Create(fullPath);
                 contentStream.CopyTo(fileStream);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Detect and restore dependencies (NuGet, npm, Go modules, pip) so language servers can resolve types.
+    /// Runs asynchronously — the language server starts immediately but diagnostics improve once restore completes.
+    /// </summary>
+    private static void RestoreDependencies(string workDir)
+    {
+        var commands = new List<(string condition, string cmd, string args)>();
+
+        // C# / .NET — dotnet restore
+        if (Directory.GetFiles(workDir, "*.csproj", SearchOption.AllDirectories).Length > 0
+            || Directory.GetFiles(workDir, "*.sln", SearchOption.AllDirectories).Length > 0)
+        {
+            commands.Add(("*.csproj", "dotnet", "restore"));
+        }
+
+        // Node.js — npm install
+        if (File.Exists(Path.Combine(workDir, "package.json")))
+        {
+            commands.Add(("package.json", "npm", "install --ignore-scripts"));
+        }
+
+        // Go — go mod download
+        if (File.Exists(Path.Combine(workDir, "go.mod")))
+        {
+            commands.Add(("go.mod", "go", "mod download"));
+        }
+
+        // Python — pip install if requirements.txt exists
+        if (File.Exists(Path.Combine(workDir, "requirements.txt")))
+        {
+            commands.Add(("requirements.txt", "pip3", "install --break-system-packages -q -r requirements.txt"));
+        }
+
+        foreach (var (condition, cmd, args) in commands)
+        {
+            try
+            {
+                Console.WriteLine($"[LSP] Restoring dependencies ({condition}): {cmd} {args}");
+                var psi = new ProcessStartInfo
+                {
+                    FileName = cmd,
+                    Arguments = args,
+                    WorkingDirectory = workDir,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+                using var proc = Process.Start(psi);
+                if (proc != null)
+                {
+                    proc.WaitForExit(TimeSpan.FromMinutes(5));
+                    Console.WriteLine($"[LSP] Restore ({condition}) exited with code {proc.ExitCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[LSP] Restore ({condition}) failed: {ex.Message}");
             }
         }
     }
