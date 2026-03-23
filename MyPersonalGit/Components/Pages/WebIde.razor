@@ -1238,6 +1238,10 @@
         else
             activeTabPath = path;
 
+        // Notify LSP about opened document
+        if (fileContents.TryGetValue(path, out var content))
+            await LspDidOpen(path, content);
+
         // Re-apply blame if active
         if (isBlameActive && editorId != null)
         {
