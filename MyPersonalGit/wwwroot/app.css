@@ -372,4 +372,10 @@ html[data-bs-theme="light"] .ide-taskrunner-run, html[data-bs-theme="light"] .id
 html[data-bs-theme="light"] .ide-taskrunner-line { color: #333; }
 html[data-bs-theme="light"] .ide-taskrunner-link { color: #0066cc; }
 
+/* ── IDE zen mode exit button ── */
+.ide-zen-exit { position: fixed; top: 12px; right: 12px; z-index: 10000; background: rgba(60,60,60,0.85); color: #ccc; border: 1px solid #555; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 1rem; opacity: 0.3; transition: opacity 0.2s; }
+.ide-zen-exit:hover { opacity: 1; background: rgba(80,80,80,0.95); color: #fff; }
+html[data-bs-theme="light"] .ide-zen-exit { background: rgba(220,220,220,0.85); color: #333; border-color: #ccc; }
+html[data-bs-theme="light"] .ide-zen-exit:hover { background: rgba(200,200,200,0.95); color: #000; }
+
 /* Blazor reconnect overlay dark mode is injected into shadow DOM via JS in App.razor */
