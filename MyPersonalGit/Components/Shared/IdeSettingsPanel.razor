@@ -138,6 +138,31 @@
                 </div>
             </div>
         }
+
+        <hr class="my-2 opacity-25" />
+        <div class="ide-settings-group">
+            <label class="ide-settings-label">Code Snippets</label>
+            <div class="small text-muted mb-1">Define custom snippets (prefix + Tab to expand). Uses VS Code snippet body syntax ($1, $2, $0 for cursors).</div>
+            @for (var i = 0; i < userSnippets.Count; i++)
+            {
+                var idx = i;
+                var snippet = userSnippets[idx];
+                <div class="d-flex gap-1 mb-1 align-items-start" style="font-size: 0.75rem;">
+                    <input class="form-control form-control-sm" style="width: 60px; font-size: 0.72rem;" placeholder="prefix"
+                           value="@snippet.Prefix" @onchange="(e) => UpdateSnippetPrefix(idx, e)" />
+                    <input class="form-control form-control-sm" style="width: 55px; font-size: 0.72rem;" placeholder="lang"
+                           value="@snippet.Language" @onchange="(e) => UpdateSnippetLanguage(idx, e)" />
+                    <input class="form-control form-control-sm" style="flex:1; font-size: 0.72rem;" placeholder="body"
+                           value="@snippet.Body" @onchange="(e) => UpdateSnippetBody(idx, e)" />
+                    <button class="btn btn-sm btn-outline-danger p-0 px-1" @onclick="() => RemoveSnippet(idx)">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+            <button class="btn btn-sm btn-outline-secondary w-100 mt-1" @onclick="AddSnippet">
+                <i class="bi bi-plus me-1"></i>Add Snippet
+            </button>
+        </div>
     </div>
 </div>
 
@@ -145,6 +170,9 @@
     [Parameter] public string? EditorId { get; set; }
     [Parameter] public string? SplitEditorId { get; set; }
     [Parameter] public EventCallback<EditorSettings> OnSettingsChanged { get; set; }
+
+    private record SnippetEntry(string Prefix, string Body, string Description, string Language);
+    private List<SnippetEntry> userSnippets = new();
 
     private string fontFamily = "'Cascadia Code', 'Fira Code', Consolas, monospace";
     private int fontSize = 14;
@@ -193,7 +221,55 @@
                 }
             }
             catch { }
+
+            // Load snippets
+            try
+            {
+                var snippetsJson = await JS.InvokeAsync<string>("ideSnippets.get");
+                if (!string.IsNullOrEmpty(snippetsJson) && snippetsJson != "[]")
+                {
+                    userSnippets = System.Text.Json.JsonSerializer.Deserialize<List<SnippetEntry>>(snippetsJson,
+                        new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+                    StateHasChanged();
+                }
+            }
+            catch { }
         }
+    }
+
+    private void AddSnippet()
+    {
+        userSnippets.Add(new SnippetEntry("", "", "", "*"));
+    }
+
+    private void UpdateSnippetPrefix(int idx, ChangeEventArgs e)
+    {
+        if (idx < userSnippets.Count) { userSnippets[idx] = userSnippets[idx] with { Prefix = e.Value?.ToString() ?? "" }; SaveSnippets(); }
+    }
+
+    private void UpdateSnippetLanguage(int idx, ChangeEventArgs e)
+    {
+        if (idx < userSnippets.Count) { userSnippets[idx] = userSnippets[idx] with { Language = e.Value?.ToString() ?? "*" }; SaveSnippets(); }
+    }
+
+    private void UpdateSnippetBody(int idx, ChangeEventArgs e)
+    {
+        if (idx < userSnippets.Count) { userSnippets[idx] = userSnippets[idx] with { Body = e.Value?.ToString() ?? "" }; SaveSnippets(); }
+    }
+
+    private void RemoveSnippet(int idx)
+    {
+        if (idx < userSnippets.Count) { userSnippets.RemoveAt(idx); SaveSnippets(); }
+    }
+
+    private async void SaveSnippets()
+    {
+        try
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(userSnippets.Where(s => !string.IsNullOrWhiteSpace(s.Prefix)));
+            await JS.InvokeVoidAsync("ideSnippets.save", json);
+        }
+        catch { }
     }
 
     private async void ApplySettings()

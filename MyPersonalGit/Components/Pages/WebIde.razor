@@ -1069,10 +1069,11 @@
                 await JS.InvokeVoidAsync("monacoInterop.enableMinimapHighlights", editorId);
                 await JS.InvokeVoidAsync("monacoInterop.registerDefinitionProvider", editorId, dotNetRef);
 
-                // Initialize keyboard shortcut interceptor, debugger gutter, LSP client, and AI completion
+                // Initialize keyboard shortcut interceptor, debugger gutter, LSP client, snippets, and AI completion
                 await JS.InvokeVoidAsync("ideKeys.init", dotNetRef);
                 await JS.InvokeVoidAsync("ideDebugger.enableBreakpointGutter", editorId, dotNetRef);
                 await JS.InvokeVoidAsync("ideLsp.init", dotNetRef);
+                await JS.InvokeVoidAsync("ideSnippets.load");
 
                 try
                 {
