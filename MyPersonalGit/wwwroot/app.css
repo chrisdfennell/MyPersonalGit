@@ -333,6 +333,11 @@ html[data-bs-theme="light"] .ide-toast-info { background: #d1ecf1; border-color:
 html[data-bs-theme="light"] .ide-toast-close { color: rgba(0,0,0,0.4); }
 html[data-bs-theme="light"] .ide-toast-close:hover { color: #333; }
 
+/* ── IDE debugger decorations ── */
+.debug-breakpoint { background: #e51400; border-radius: 50%; width: 10px !important; height: 10px !important; margin: 3px 0 0 3px !important; }
+.debug-current-line { background: rgba(255, 255, 0, 0.15) !important; }
+.debug-current-arrow { background: #ffcc00; width: 0 !important; height: 0 !important; border-left: 6px solid #ffcc00 !important; border-top: 4px solid transparent !important; border-bottom: 4px solid transparent !important; margin: 4px 0 0 2px !important; }
+
 /* ── IDE diff gutter indicators ── */
 .ide-gutter-added { border-left: 3px solid #2ea043 !important; margin-left: 5px; }
 .ide-gutter-modified { border-left: 3px solid #0078d4 !important; margin-left: 5px; }

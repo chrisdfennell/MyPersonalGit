@@ -175,6 +175,9 @@ builder.Services.AddSingleton<IEnvironmentService, EnvironmentService>();
 builder.Services.AddSingleton<IDependencyUpdateService, DependencyUpdateService>();
 builder.Services.AddSingleton<IWebIdeService, WebIdeService>();
 builder.Services.AddSingleton<LspProcessManager>();
+builder.Services.AddSingleton<IAiCompletionService, AiCompletionService>();
+builder.Services.AddSingleton<DapSessionManager>();
+builder.Services.AddHttpClient();
 builder.Services.AddHostedService<DependencyUpdateSchedulerService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddLocalization();
@@ -802,6 +805,9 @@ app.MapLspWebSocket();
 
 // Task runner WebSocket endpoint
 app.MapTaskRunnerWebSocket();
+
+// Debug Adapter Protocol WebSocket endpoint
+app.MapDapWebSocket();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
