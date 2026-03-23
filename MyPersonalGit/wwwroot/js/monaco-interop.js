@@ -112,6 +112,16 @@
                     if (_monacoReady && window.monaco) {
                         monaco.editor.setTheme(newTheme);
                     }
+                    // Update terminal themes
+                    var isDark = document.documentElement.getAttribute('data-bs-theme') !== 'light';
+                    var termTheme = isDark
+                        ? { background: '#1e1e1e', foreground: '#cccccc', cursor: '#ffffff', selectionBackground: '#264f78' }
+                        : { background: '#ffffff', foreground: '#333333', cursor: '#333333', selectionBackground: '#add6ff' };
+                    for (var cid in _terminals) {
+                        if (_terminals[cid] && _terminals[cid].terminal) {
+                            try { _terminals[cid].terminal.options.theme = termTheme; } catch (e) { }
+                        }
+                    }
                     break;
                 }
             }
@@ -1688,17 +1698,15 @@
                 throw new Error('Terminal container not found: ' + containerId);
             }
 
-            // Create terminal
+            // Create terminal with theme-aware colors
+            var isDark = document.documentElement.getAttribute('data-bs-theme') !== 'light';
+            var darkTheme = { background: '#1e1e1e', foreground: '#cccccc', cursor: '#ffffff', selectionBackground: '#264f78' };
+            var lightTheme = { background: '#ffffff', foreground: '#333333', cursor: '#333333', selectionBackground: '#add6ff' };
             var term = new Terminal({
                 cursorBlink: true,
                 fontSize: 13,
                 fontFamily: "'Cascadia Code', 'Fira Code', 'Consolas', monospace",
-                theme: {
-                    background: '#1e1e1e',
-                    foreground: '#cccccc',
-                    cursor: '#ffffff',
-                    selectionBackground: '#264f78'
-                },
+                theme: isDark ? darkTheme : lightTheme,
                 allowProposedApi: true
             });
 
@@ -2025,6 +2033,378 @@
 
         disconnect: function () {
             if (this._ws) { try { this._ws.close(); } catch (e) { } this._ws = null; }
+        }
+    };
+
+    // ============================================================
+    // Debugger (DAP client)
+    // ============================================================
+    window.ideDebugger = {
+        _ws: null,
+        _dotNetRef: null,
+        _seq: 0,
+        _pendingRequests: {},
+        _breakpoints: {},       // filePath -> Set of line numbers
+        _decorations: null,     // decoration collection for breakpoints + current line
+        _rootUri: null,
+        _editorId: null,
+        _currentThread: null,
+
+        /**
+         * Enable breakpoint gutter — click line numbers to toggle breakpoints.
+         */
+        enableBreakpointGutter: function (editorId, dotNetRef) {
+            this._editorId = editorId;
+            var editor = _editors[editorId];
+            if (!editor) return;
+
+            editor.updateOptions({ glyphMargin: true });
+            var self = this;
+
+            editor.onMouseDown(function (e) {
+                if (e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN
+                    || e.target.type === monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS) {
+                    var line = e.target.position.lineNumber;
+                    var model = editor.getModel();
+                    if (!model) return;
+
+                    var filePath = null;
+                    for (var key in _models) {
+                        if (_models[key] === model) { filePath = key; break; }
+                    }
+                    if (!filePath) return;
+
+                    if (!self._breakpoints[filePath]) self._breakpoints[filePath] = new Set();
+                    if (self._breakpoints[filePath].has(line)) {
+                        self._breakpoints[filePath].delete(line);
+                    } else {
+                        self._breakpoints[filePath].add(line);
+                    }
+
+                    self._updateDecorations(editor);
+
+                    if (dotNetRef) {
+                        var bps = Array.from(self._breakpoints[filePath] || []);
+                        try { dotNetRef.invokeMethodAsync('OnBreakpointsChanged', filePath, bps); } catch (ex) { }
+                    }
+                }
+            });
+        },
+
+        _updateDecorations: function (editor) {
+            var model = editor.getModel();
+            if (!model) return;
+
+            var filePath = null;
+            for (var key in _models) {
+                if (_models[key] === model) { filePath = key; break; }
+            }
+
+            var decorations = [];
+
+            // Breakpoint decorations for current file
+            if (filePath && this._breakpoints[filePath]) {
+                this._breakpoints[filePath].forEach(function (line) {
+                    decorations.push({
+                        range: new monaco.Range(line, 1, line, 1),
+                        options: {
+                            isWholeLine: true,
+                            glyphMarginClassName: 'debug-breakpoint'
+                        }
+                    });
+                });
+            }
+
+            if (this._decorations) {
+                try { this._decorations.clear(); } catch (e) { }
+            }
+            if (decorations.length > 0) {
+                this._decorations = editor.createDecorationsCollection(decorations);
+            }
+        },
+
+        /**
+         * Highlight the current execution line (yellow).
+         */
+        highlightLine: function (editorId, lineNumber) {
+            var editor = _editors[editorId];
+            if (!editor) return;
+
+            if (editor._debugLineDecoration) {
+                try { editor._debugLineDecoration.clear(); } catch (e) { }
+            }
+            if (lineNumber > 0) {
+                editor._debugLineDecoration = editor.createDecorationsCollection([{
+                    range: new monaco.Range(lineNumber, 1, lineNumber, 1),
+                    options: {
+                        isWholeLine: true,
+                        className: 'debug-current-line',
+                        glyphMarginClassName: 'debug-current-arrow'
+                    }
+                }]);
+                editor.revealLineInCenter(lineNumber);
+            }
+        },
+
+        clearHighlight: function (editorId) {
+            var editor = _editors[editorId];
+            if (editor && editor._debugLineDecoration) {
+                try { editor._debugLineDecoration.clear(); } catch (e) { }
+            }
+        },
+
+        /**
+         * Connect to the DAP WebSocket relay.
+         */
+        connect: function (wsUrl, dotNetRef) {
+            var self = this;
+            this._dotNetRef = dotNetRef;
+
+            return new Promise(function (resolve) {
+                var ws = new WebSocket(wsUrl);
+                var gotInit = false;
+
+                ws.onopen = function () { self._ws = ws; };
+
+                ws.onmessage = function (event) {
+                    try {
+                        var msg = JSON.parse(event.data);
+
+                        // First message: init with rootUri
+                        if (!gotInit && msg.type === 'init' && msg.rootUri) {
+                            gotInit = true;
+                            self._rootUri = msg.rootUri;
+                            resolve(true);
+                            return;
+                        }
+
+                        self._handleMessage(msg);
+                    } catch (e) {
+                        console.error('[DAP] Parse error:', e);
+                    }
+                };
+
+                ws.onclose = function () {
+                    self._ws = null;
+                    if (dotNetRef) {
+                        try { dotNetRef.invokeMethodAsync('OnDebugTerminated'); } catch (e) { }
+                    }
+                };
+
+                ws.onerror = function () { resolve(false); };
+                setTimeout(function () { if (!gotInit) resolve(false); }, 10000);
+            });
+        },
+
+        disconnect: function () {
+            if (this._ws) {
+                this._sendRequest('disconnect', { restart: false });
+                try { this._ws.close(); } catch (e) { }
+                this._ws = null;
+            }
+        },
+
+        /**
+         * Initialize and launch a debug session for a Python file.
+         */
+        launch: function (relativeFilePath) {
+            var self = this;
+            var rootUri = this._rootUri || '';
+            var worktreePath = rootUri.replace('file://', '');
+
+            return this._sendRequest('initialize', {
+                clientID: 'mypersonalgit-ide',
+                clientName: 'MyPersonalGit IDE',
+                adapterID: 'python',
+                pathFormat: 'path',
+                linesStartAt1: true,
+                columnsStartAt1: true,
+                supportsVariableType: true,
+                supportsRunInTerminalRequest: false
+            }).then(function () {
+                return self._sendRequest('launch', {
+                    type: 'python',
+                    request: 'launch',
+                    program: worktreePath + '/' + relativeFilePath,
+                    console: 'internalConsole',
+                    justMyCode: true,
+                    cwd: worktreePath
+                });
+            }).then(function () {
+                // Send breakpoints for all files
+                for (var filePath in self._breakpoints) {
+                    var lines = Array.from(self._breakpoints[filePath]);
+                    if (lines.length > 0) {
+                        self._sendRequest('setBreakpoints', {
+                            source: { path: worktreePath + '/' + filePath },
+                            breakpoints: lines.map(function (l) { return { line: l }; })
+                        });
+                    }
+                }
+                return self._sendRequest('configurationDone', {});
+            });
+        },
+
+        continue: function () { this._sendRequest('continue', { threadId: this._currentThread || 1 }); },
+        stepOver: function () { this._sendRequest('next', { threadId: this._currentThread || 1 }); },
+        stepIn: function () { this._sendRequest('stepIn', { threadId: this._currentThread || 1 }); },
+        stepOut: function () { this._sendRequest('stepOut', { threadId: this._currentThread || 1 }); },
+
+        _sendRequest: function (command, args) {
+            var self = this;
+            if (!this._ws || this._ws.readyState !== WebSocket.OPEN)
+                return Promise.reject('Not connected');
+
+            var seq = ++this._seq;
+            var msg = { seq: seq, type: 'request', command: command, arguments: args || {} };
+
+            return new Promise(function (resolve, reject) {
+                self._pendingRequests[seq] = { resolve: resolve, reject: reject };
+                self._ws.send(JSON.stringify(msg));
+                setTimeout(function () {
+                    if (self._pendingRequests[seq]) {
+                        delete self._pendingRequests[seq];
+                        reject('DAP request timeout: ' + command);
+                    }
+                }, 15000);
+            });
+        },
+
+        _handleMessage: function (msg) {
+            // Response
+            if (msg.type === 'response' && msg.request_seq && this._pendingRequests[msg.request_seq]) {
+                var pending = this._pendingRequests[msg.request_seq];
+                delete this._pendingRequests[msg.request_seq];
+                if (msg.success) { pending.resolve(msg.body || {}); }
+                else { pending.reject(msg.message || 'DAP error'); }
+                return;
+            }
+
+            // Event
+            if (msg.type === 'event') {
+                this._handleEvent(msg.event, msg.body || {});
+            }
+        },
+
+        _handleEvent: function (event, body) {
+            var self = this;
+            if (event === 'stopped') {
+                this._currentThread = body.threadId || 1;
+                // Get stack trace
+                this._sendRequest('stackTrace', { threadId: this._currentThread, startFrame: 0, levels: 20 })
+                    .then(function (result) {
+                        var frames = (result.stackFrames || []).map(function (f) {
+                            return { id: f.id, name: f.name, source: f.source ? f.source.path || '' : '', line: f.line };
+                        });
+                        if (self._dotNetRef) {
+                            try { self._dotNetRef.invokeMethodAsync('OnDebugStopped', body.reason || 'breakpoint', JSON.stringify(frames)); } catch (e) { }
+                        }
+                    });
+
+                // Get variables for top frame
+                this._sendRequest('stackTrace', { threadId: this._currentThread, startFrame: 0, levels: 1 })
+                    .then(function (result) {
+                        if (result.stackFrames && result.stackFrames.length > 0) {
+                            return self._sendRequest('scopes', { frameId: result.stackFrames[0].id });
+                        }
+                    })
+                    .then(function (result) {
+                        if (result && result.scopes) {
+                            var localScope = result.scopes.find(function (s) { return s.name === 'Locals'; }) || result.scopes[0];
+                            if (localScope) {
+                                return self._sendRequest('variables', { variablesReference: localScope.variablesReference });
+                            }
+                        }
+                    })
+                    .then(function (result) {
+                        if (result && result.variables && self._dotNetRef) {
+                            var vars = result.variables.map(function (v) {
+                                return { name: v.name, value: v.value, type: v.type || '' };
+                            });
+                            try { self._dotNetRef.invokeMethodAsync('OnDebugVariables', JSON.stringify(vars)); } catch (e) { }
+                        }
+                    })
+                    .catch(function () { });
+            }
+            else if (event === 'terminated' || event === 'exited') {
+                if (this._dotNetRef) {
+                    try { this._dotNetRef.invokeMethodAsync('OnDebugTerminated'); } catch (e) { }
+                }
+            }
+            else if (event === 'output') {
+                if (this._dotNetRef && body.output) {
+                    try { this._dotNetRef.invokeMethodAsync('OnDebugOutput', body.output, body.category || 'console'); } catch (e) { }
+                }
+            }
+        }
+    };
+
+    // ============================================================
+    // AI Code Completion (inline ghost text)
+    // ============================================================
+    window.ideAiComplete = {
+        _dotNetRef: null,
+        _disposable: null,
+        _debounceTimer: null,
+
+        init: function (dotNetRef) {
+            this._dotNetRef = dotNetRef;
+        },
+
+        enable: function () {
+            if (this._disposable) return;
+            var self = this;
+
+            this._disposable = monaco.languages.registerInlineCompletionItemProvider({ pattern: '**' }, {
+                provideInlineCompletionItems: function (model, position, context, token) {
+                    return new Promise(function (resolve) {
+                        if (self._debounceTimer) clearTimeout(self._debounceTimer);
+
+                        self._debounceTimer = setTimeout(function () {
+                            if (token.isCancellationRequested) { resolve({ items: [] }); return; }
+
+                            var textUntilPosition = model.getValueInRange({
+                                startLineNumber: 1, startColumn: 1,
+                                endLineNumber: position.lineNumber, endColumn: position.column
+                            });
+                            var textAfterPosition = model.getValueInRange({
+                                startLineNumber: position.lineNumber, startColumn: position.column,
+                                endLineNumber: model.getLineCount(), endColumn: model.getLineMaxColumn(model.getLineCount())
+                            });
+
+                            var prefix = textUntilPosition.slice(-2000);
+                            var suffix = textAfterPosition.slice(0, 500);
+                            var filePath = model.uri.path || '';
+                            var langId = model.getLanguageId();
+
+                            self._dotNetRef.invokeMethodAsync('GetAiCompletion', filePath, prefix, suffix, langId)
+                                .then(function (completionText) {
+                                    if (!completionText || token.isCancellationRequested) {
+                                        resolve({ items: [] });
+                                        return;
+                                    }
+                                    resolve({
+                                        items: [{
+                                            insertText: completionText,
+                                            range: {
+                                                startLineNumber: position.lineNumber,
+                                                startColumn: position.column,
+                                                endLineNumber: position.lineNumber,
+                                                endColumn: position.column
+                                            }
+                                        }]
+                                    });
+                                })
+                                .catch(function () { resolve({ items: [] }); });
+                        }, 750);
+                    });
+                },
+                freeInlineCompletionItems: function () { }
+            });
+        },
+
+        disable: function () {
+            if (this._disposable) { this._disposable.dispose(); this._disposable = null; }
         }
     };
 

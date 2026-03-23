@@ -34,7 +34,10 @@ public interface IWebIdeService
     Task StashPopAsync(string repoName);
     Task StashApplyAsync(string repoName, int index);
     Task StashDropAsync(string repoName, int index);
+    Task<List<BranchDiffFile>> GetBranchDiffAsync(string repoName, string baseBranch, string compareBranch);
 }
+
+public record BranchDiffFile(string Path, string Status);
 
 public record StashEntry(int Index, string Message, DateTimeOffset Date);
 
@@ -755,6 +758,31 @@ public class WebIdeService : IWebIdeService
             using var repo = new Repository(repoPath);
             if (index >= repo.Stashes.Count()) throw new InvalidOperationException("Stash index out of range.");
             repo.Stashes.Remove(index);
+        });
+    }
+
+    public async Task<List<BranchDiffFile>> GetBranchDiffAsync(string repoName, string baseBranch, string compareBranch)
+    {
+        var repoPath = await GetRepoPathAsync(repoName);
+        return await Task.Run(() =>
+        {
+            using var repo = new Repository(repoPath);
+            var baseCommit = ResolveBranch(repo, baseBranch)?.Tip;
+            var compareCommit = ResolveBranch(repo, compareBranch)?.Tip;
+            if (baseCommit == null || compareCommit == null) return new List<BranchDiffFile>();
+
+            var changes = repo.Diff.Compare<TreeChanges>(baseCommit.Tree, compareCommit.Tree);
+            return changes.Select(c => new BranchDiffFile(
+                c.Path,
+                c.Status switch
+                {
+                    ChangeKind.Added => "Added",
+                    ChangeKind.Deleted => "Deleted",
+                    ChangeKind.Modified => "Modified",
+                    ChangeKind.Renamed => "Renamed",
+                    _ => "Modified"
+                }
+            )).OrderBy(f => f.Path).ToList();
         });
     }
 }

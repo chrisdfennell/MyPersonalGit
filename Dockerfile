@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && npm install -g typescript typescript-language-server \
         vscode-langservers-extracted yaml-language-server \
         bash-language-server dockerfile-language-server-nodejs \
-    && pip3 install --break-system-packages python-lsp-server \
+    && pip3 install --break-system-packages python-lsp-server debugpy \
     && rm -rf /var/lib/apt/lists/* /root/.npm /root/.cache
 
 # .NET 8 SDK (needed by OmniSharp C# language server)

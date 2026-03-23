@@ -60,6 +60,12 @@ public class SystemSettings
     // AGit Flow (push to refs/for/*)
     public bool AGitFlowEnabled { get; set; } = true;
 
+    // AI Code Completion
+    public bool AiCompletionEnabled { get; set; }
+    public string AiCompletionEndpoint { get; set; } = string.Empty; // e.g., "https://api.openai.com/v1"
+    public string AiCompletionApiKey { get; set; } = string.Empty;
+    public string AiCompletionModel { get; set; } = "gpt-4o-mini";
+
     // TLS / HTTPS
     public bool EnableHttps { get; set; }
     public int HttpsPort { get; set; } = 8443;
