@@ -27,8 +27,11 @@
     flex-direction: column;
     width: 48px;
     min-width: 48px;
+    height: 100%;
     background: #333333;
     padding-top: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .ide-sidebar-tab {
