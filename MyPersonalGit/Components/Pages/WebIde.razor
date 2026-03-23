@@ -2626,10 +2626,9 @@
             var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
             var wsScheme = uri.Scheme == "https" ? "wss" : "ws";
             var sessionId = await JS.InvokeAsync<string>("eval", "document.cookie.split('; ').find(r => r.startsWith('session='))?.split('=')[1] || ''");
-            var wsUrl = $"{wsScheme}://{uri.Host}:{uri.Port}/ws/lsp/{RepoName}/{lspLanguage}?session={sessionId}";
-            var rootUri = $"file:///repos/{RepoName}";
+            var wsUrl = $"{wsScheme}://{uri.Host}:{uri.Port}/ws/lsp/{RepoName}/{lspLanguage}?session={sessionId}&branch={currentBranch}";
 
-            var connected = await JS.InvokeAsync<bool>("ideLsp.connect", lspLanguage, wsUrl, rootUri);
+            var connected = await JS.InvokeAsync<bool>("ideLsp.connect", lspLanguage, wsUrl);
             if (connected)
             {
                 lspStatus[lspLanguage] = "running";

@@ -15,6 +15,7 @@ public static class LspWebSocketHandler
     {
         app.Map("/ws/lsp/{repoName}/{language}", async (HttpContext context, string repoName, string language) =>
         {
+            var branch = context.Request.Query["branch"].FirstOrDefault() ?? "main";
             if (!context.WebSockets.IsWebSocketRequest)
             {
                 context.Response.StatusCode = 400;
@@ -73,7 +74,7 @@ public static class LspWebSocketHandler
             }
 
             var lspManager = context.RequestServices.GetRequiredService<LspProcessManager>();
-            var session = lspManager.GetOrStartSession(repoName, language, user.Username, repoPath);
+            var session = lspManager.GetOrStartSession(repoName, language, user.Username, repoPath, branch);
 
             if (session?.Process == null || session.Process.HasExited)
             {
@@ -83,6 +84,12 @@ public static class LspWebSocketHandler
             }
 
             using var ws = await context.WebSockets.AcceptWebSocketAsync();
+
+            // Send the worktree path as the first message so the client knows the rootUri
+            var initMsg = System.Text.Json.JsonSerializer.Serialize(new { type = "init", rootUri = "file://" + session.WorkTree!.Replace('\\', '/') });
+            var initBytes = Encoding.UTF8.GetBytes(initMsg);
+            await ws.SendAsync(new ArraySegment<byte>(initBytes), WebSocketMessageType.Text, true, context.RequestAborted);
+
             await HandleLspSession(ws, session, context.RequestAborted);
         });
     }
