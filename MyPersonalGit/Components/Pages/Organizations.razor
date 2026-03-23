@@ -139,7 +139,7 @@
                             <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
                                 <i class="bi bi-person text-muted"></i>
                             </div>
-                            <a href="/@member.Username" class="text-decoration-none fw-bold">@member.Username</a>
+                            <a href="/profile/@member.Username" class="text-decoration-none fw-bold">@member.Username</a>
                             <span class="badge @(member.Role == OrgRole.Owner ? "bg-warning text-dark" : "bg-secondary bg-opacity-25 text-body") ms-2">@member.Role</span>
                         </div>
                         @if (isOrgOwner && member.Username != currentOrg.Owner)
