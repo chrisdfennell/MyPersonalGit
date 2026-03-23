@@ -2623,10 +2623,22 @@
 
         try
         {
-            var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
-            var wsScheme = uri.Scheme == "https" ? "wss" : "ws";
-            var sessionId = await JS.InvokeAsync<string>("eval", "document.cookie.split('; ').find(r => r.startsWith('session='))?.split('=')[1] || ''");
-            var wsUrl = $"{wsScheme}://{uri.Host}:{uri.Port}/ws/lsp/{RepoName}/{lspLanguage}?session={sessionId}&branch={currentBranch}";
+            var baseUri = new Uri(Navigation.BaseUri);
+            var wsScheme = baseUri.Scheme == "https" ? "wss" : "ws";
+
+            var sessionId = UserService.SessionId;
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                try { sessionId = await JS.InvokeAsync<string?>("localStorage.getItem", "sessionId"); }
+                catch { }
+            }
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                Console.WriteLine("[LSP] No session ID available");
+                return;
+            }
+
+            var wsUrl = $"{wsScheme}://{baseUri.Host}:{baseUri.Port}/ws/lsp/{RepoName}/{lspLanguage}?session={Uri.EscapeDataString(sessionId)}&branch={currentBranch}";
 
             var connected = await JS.InvokeAsync<bool>("ideLsp.connect", lspLanguage, wsUrl);
             if (connected)
