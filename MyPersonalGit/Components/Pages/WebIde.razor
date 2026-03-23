@@ -19,6 +19,12 @@
 @implements IAsyncDisposable
 
 <div class="ide-container @(isZenMode ? "ide-zen-mode" : "")" @onkeydown="HandleGlobalKeyDown" tabindex="0" @ref="ideContainerRef">
+    @if (isZenMode)
+    {
+        <button class="ide-zen-exit" @onclick="ToggleZenMode" title="Exit Zen Mode (Esc)">
+            <i class="bi bi-fullscreen-exit"></i>
+        </button>
+    }
     <div class="ide-sidebar" style="@(sidebarWidth > 0 ? $"width:{sidebarWidth}px;" : "")">
         <div class="ide-sidebar-tabs">
             <button class="ide-sidebar-tab @(sidebarMode == "files" ? "active" : "")" @onclick='() => sidebarMode = "files"' title="@L["Ide_Explorer"]">
