@@ -117,14 +117,22 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 
 ### Web IDE
 - **Full-Featured Code Editor** — Monaco Editor-powered IDE with 30+ language syntax highlighting, multiple themes, Emmet abbreviation expansion for HTML/CSS, and format-on-paste
+- **Language Server Protocol (LSP)** — IntelliSense, autocomplete, hover info, go-to-definition, find references, signature help, code formatting, rename symbol, code actions, and real-time diagnostics for 12 languages: C# (OmniSharp), TypeScript/JavaScript, Python, Go, Rust, HTML, CSS, JSON, YAML, Bash, Dockerfile, and Markdown
+- **AI Code Completion** — Inline ghost-text suggestions as you type, powered by any OpenAI-compatible API (OpenAI, Ollama, LM Studio, etc.). Configurable endpoint, API key, and model in admin settings. Tab to accept
+- **Integrated Debugger** — Python debugging via debugpy/DAP with breakpoints (click gutter), step over/into/out, continue, variable inspection, call stack navigation, and debug console output
+- **Problems Panel** — Bottom panel tab aggregating all LSP diagnostics (errors/warnings) across open files, grouped by file with click-to-navigate. Error/warning counts in the status bar
+- **Task Runner** — Bottom panel tab to run build/test commands (dotnet build, npm test, go build, make, pytest, etc.) with real-time streamed output, clickable error locations, and cancel support
+- **Branch Diff** — Sidebar panel to compare two branches side-by-side. Shows list of changed files with add/modify/delete/rename status, click to view diff in Monaco's diff editor
+- **Inline Diff Gutters** — Green, blue, and red indicators in the editor gutter showing added, modified, and deleted lines vs the last commit
 - **File Management** — Hierarchical file tree with file nesting (groups `.razor` + `.razor.css` + `.razor.cs`), search/filter, drag-and-drop file upload, and context menus for new file/folder/rename/delete
 - **Tab Management** — Multi-tab interface with drag-to-reorder, pinned tabs, right-click context menu (Close, Close Others, Close to the Right, Close Saved), and scroll chevrons for overflow
 - **Split Editor & Diff View** — Side-by-side editing with independent scroll, and diff view for comparing changes before commit
-- **Integrated Terminal** — xterm.js-based terminal with multiple terminal tabs and WebSocket shell access
+- **Integrated Terminal** — xterm.js-based terminal with multiple terminal tabs, WebSocket shell access, and theme-aware light/dark mode
 - **Git Integration** — Branch creation, blame view, file history, commit panel, source control with file selection, and a visual commit graph with colored lane lines and branch labels
 - **Merge Conflict Resolution** — Inline Accept Current / Accept Incoming / Accept Both buttons with color-coded conflict regions (green/blue)
 - **Search & Replace** — Global search across all files with file extension filtering, line-by-line results, and replace all
 - **Code Navigation** — Quick Open (Ctrl+P), Command Palette (Ctrl+Shift+P), Go to Line (Ctrl+G), outline/symbols panel, and breadcrumb navigation
+- **Keyboard Shortcuts** — VS Code-style shortcuts (Ctrl+Shift+P, Ctrl+P, Ctrl+Shift+F, Ctrl+Shift+M, Ctrl+`, Escape) intercepted at document level to prevent browser defaults
 - **CSS Color Previews** — Inline color swatches next to hex/rgb/hsl values in CSS, SCSS, and Less files
 - **Minimap Highlights** — Modified lines, added lines, and conflict markers shown as colored markers in the minimap gutter
 - **Markdown & Image Preview** — Toggle between edit and rendered preview for Markdown files; inline image display for common formats
@@ -132,7 +140,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Persistent Workspace** — Remembers open tabs, pinned tabs, active file, sidebar state, and panel mode across browser sessions
 - **Resizable Panels** — Drag-to-resize sidebar and bottom panel with visual handles
 - **Customizable Settings** — Font family picker (8 fonts), font size, tab size, word wrap, minimap, line numbers, bracket guides, sticky scroll, code folding, font ligatures, format on paste, and render whitespace options
-- **Zen Mode** — Distraction-free full-screen editing (Escape to exit)
+- **Zen Mode** — Distraction-free full-screen editing with visible exit button
 
 ### CI/CD & DevOps
 - **CI/CD Runner** — Define workflows in `.github/workflows/*.yml` and run them in Docker containers. Auto-triggers on push and pull request events

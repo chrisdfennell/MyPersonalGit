@@ -38,7 +38,9 @@ Then visit **http://localhost:8080** — default login: `admin` / `admin`
 
 **Authentication** — OAuth2/SSO (8 providers), LDAP/Active Directory, TOTP 2FA, SSH keys, personal access tokens
 
-**Administration** — Database (SQLite/PostgreSQL), user management, audit logs, customizable footer pages, dark mode
+**Web IDE** — Monaco Editor with LSP support (12 languages), AI code completion (OpenAI-compatible), Python debugger, problems panel, task runner, branch diff, inline diff gutters, integrated terminal, Git integration, Zen mode
+
+**Administration** — Database (SQLite/PostgreSQL), user management, audit logs, AI completion settings, customizable footer pages, dark mode
 
 ## Environment Variables
 
