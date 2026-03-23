@@ -1863,4 +1863,768 @@
             });
         }
     };
+
+    // ============================================================
+    // LSP (Language Server Protocol) client
+    // ============================================================
+    window.ideLsp = {
+        _connections: {},   // keyed by language ID
+        _requestId: 0,
+        _pendingRequests: {},
+        _dotNetRef: null,
+        _serverCapabilities: {},
+        _disposables: [],   // Monaco provider disposables
+
+        // Monaco language ID -> LSP server language key
+        _languageMap: {
+            'csharp': 'csharp',
+            'javascript': 'typescript',
+            'typescript': 'typescript',
+            'python': 'python'
+        },
+
+        /**
+         * Initialize LSP with the Blazor DotNetObjectReference.
+         */
+        init: function (dotNetRef) {
+            this._dotNetRef = dotNetRef;
+        },
+
+        /**
+         * Connect to a language server for a given language.
+         * @param {string} language - LSP server key (csharp, typescript, python).
+         * @param {string} wsUrl - WebSocket URL for the LSP relay.
+         * @param {string} rootUri - The workspace root URI (file:///repos/repoName).
+         * @returns {Promise<boolean>} Whether connection and initialization succeeded.
+         */
+        connect: function (language, wsUrl, rootUri) {
+            var self = this;
+
+            if (this._connections[language]) {
+                return Promise.resolve(true); // Already connected
+            }
+
+            return new Promise(function (resolve) {
+                var ws = new WebSocket(wsUrl);
+                var conn = {
+                    ws: ws,
+                    ready: false,
+                    rootUri: rootUri,
+                    openDocuments: {} // uri -> version
+                };
+
+                ws.onopen = function () {
+                    self._connections[language] = conn;
+                    // Send LSP initialize request
+                    self._sendRequest(language, 'initialize', {
+                        processId: null,
+                        capabilities: {
+                            textDocument: {
+                                completion: {
+                                    completionItem: {
+                                        snippetSupport: true,
+                                        commitCharactersSupport: true,
+                                        documentationFormat: ['markdown', 'plaintext'],
+                                        resolveSupport: { properties: ['documentation', 'detail'] }
+                                    },
+                                    contextSupport: true
+                                },
+                                hover: { contentFormat: ['markdown', 'plaintext'] },
+                                signatureHelp: { signatureInformation: { documentationFormat: ['markdown', 'plaintext'], parameterInformation: { labelOffsetSupport: true } } },
+                                definition: { linkSupport: false },
+                                references: {},
+                                documentSymbol: { hierarchicalDocumentSymbolSupport: true },
+                                formatting: {},
+                                rangeFormatting: {},
+                                rename: { prepareSupport: true },
+                                codeAction: { codeActionLiteralSupport: { codeActionKind: { valueSet: ['quickfix', 'refactor', 'source'] } } },
+                                publishDiagnostics: { relatedInformation: true }
+                            },
+                            workspace: {
+                                workspaceFolders: true,
+                                didChangeConfiguration: {}
+                            }
+                        },
+                        rootUri: rootUri,
+                        workspaceFolders: [{ uri: rootUri, name: 'workspace' }]
+                    }).then(function (result) {
+                        self._serverCapabilities[language] = result.capabilities || {};
+                        conn.ready = true;
+
+                        // Send initialized notification
+                        self._sendNotification(language, 'initialized', {});
+
+                        // Register Monaco providers for this language
+                        self._registerProviders(language);
+
+                        // Notify Blazor
+                        if (self._dotNetRef) {
+                            try { self._dotNetRef.invokeMethodAsync('OnLspStatusChanged', language, 'running'); } catch (e) { }
+                        }
+
+                        resolve(true);
+                    }).catch(function () {
+                        resolve(false);
+                    });
+                };
+
+                ws.onmessage = function (event) {
+                    try {
+                        var msg = JSON.parse(event.data);
+                        self._handleMessage(language, msg);
+                    } catch (e) {
+                        console.error('[LSP] Failed to parse message:', e);
+                    }
+                };
+
+                ws.onerror = function () {
+                    if (self._dotNetRef) {
+                        try { self._dotNetRef.invokeMethodAsync('OnLspStatusChanged', language, 'error'); } catch (e) { }
+                    }
+                };
+
+                ws.onclose = function () {
+                    delete self._connections[language];
+                    if (self._dotNetRef) {
+                        try { self._dotNetRef.invokeMethodAsync('OnLspStatusChanged', language, 'disconnected'); } catch (e) { }
+                    }
+                };
+
+                // Timeout after 10 seconds
+                setTimeout(function () {
+                    if (!conn.ready) {
+                        resolve(false);
+                    }
+                }, 10000);
+            });
+        },
+
+        /**
+         * Disconnect from a language server.
+         */
+        disconnect: function (language) {
+            var conn = this._connections[language];
+            if (!conn) return;
+
+            try {
+                this._sendRequest(language, 'shutdown', null).then(function () {
+                    try { conn.ws.close(); } catch (e) { }
+                });
+                this._sendNotification(language, 'exit', null);
+            } catch (e) {
+                try { conn.ws.close(); } catch (e2) { }
+            }
+            delete this._connections[language];
+        },
+
+        /**
+         * Disconnect all language servers.
+         */
+        disconnectAll: function () {
+            var self = this;
+            // Dispose Monaco providers
+            this._disposables.forEach(function (d) { try { d.dispose(); } catch (e) { } });
+            this._disposables = [];
+
+            Object.keys(this._connections).forEach(function (lang) {
+                self.disconnect(lang);
+            });
+        },
+
+        /**
+         * Check if a language has an active LSP connection.
+         */
+        isConnected: function (language) {
+            var lspLang = this._languageMap[language] || language;
+            var conn = this._connections[lspLang];
+            return !!(conn && conn.ready);
+        },
+
+        /**
+         * Notify the language server that a document was opened.
+         */
+        didOpen: function (filePath, languageId, content) {
+            var lspLang = this._languageMap[languageId] || languageId;
+            var conn = this._connections[lspLang];
+            if (!conn || !conn.ready) return;
+
+            var uri = this._filePathToUri(filePath, conn.rootUri);
+            if (conn.openDocuments[uri]) return; // Already open
+
+            conn.openDocuments[uri] = 1;
+            this._sendNotification(lspLang, 'textDocument/didOpen', {
+                textDocument: {
+                    uri: uri,
+                    languageId: languageId === 'javascript' ? 'javascript' : languageId,
+                    version: 1,
+                    text: content
+                }
+            });
+        },
+
+        /**
+         * Notify the language server that a document changed (full sync).
+         */
+        didChange: function (filePath, languageId, content) {
+            var lspLang = this._languageMap[languageId] || languageId;
+            var conn = this._connections[lspLang];
+            if (!conn || !conn.ready) return;
+
+            var uri = this._filePathToUri(filePath, conn.rootUri);
+            var version = (conn.openDocuments[uri] || 1) + 1;
+            conn.openDocuments[uri] = version;
+
+            this._sendNotification(lspLang, 'textDocument/didChange', {
+                textDocument: { uri: uri, version: version },
+                contentChanges: [{ text: content }]
+            });
+        },
+
+        /**
+         * Notify the language server that a document was closed.
+         */
+        didClose: function (filePath, languageId) {
+            var lspLang = this._languageMap[languageId] || languageId;
+            var conn = this._connections[lspLang];
+            if (!conn || !conn.ready) return;
+
+            var uri = this._filePathToUri(filePath, conn.rootUri);
+            delete conn.openDocuments[uri];
+
+            this._sendNotification(lspLang, 'textDocument/didClose', {
+                textDocument: { uri: uri }
+            });
+        },
+
+        /**
+         * Notify the language server that a document was saved.
+         */
+        didSave: function (filePath, languageId, content) {
+            var lspLang = this._languageMap[languageId] || languageId;
+            var conn = this._connections[lspLang];
+            if (!conn || !conn.ready) return;
+
+            var uri = this._filePathToUri(filePath, conn.rootUri);
+            this._sendNotification(lspLang, 'textDocument/didSave', {
+                textDocument: { uri: uri },
+                text: content
+            });
+        },
+
+        // ---- Internal methods ----
+
+        _filePathToUri: function (filePath, rootUri) {
+            // filePath is relative to repo root; rootUri is file:///repos/repoName
+            var normalized = filePath.replace(/\\/g, '/');
+            if (normalized.startsWith('/')) normalized = normalized.substring(1);
+            return rootUri.replace(/\/$/, '') + '/' + normalized;
+        },
+
+        _sendRequest: function (language, method, params) {
+            var self = this;
+            var conn = this._connections[language];
+            if (!conn) return Promise.reject(new Error('Not connected: ' + language));
+
+            var id = ++this._requestId;
+            var msg = { jsonrpc: '2.0', id: id, method: method };
+            if (params !== undefined && params !== null) msg.params = params;
+
+            return new Promise(function (resolve, reject) {
+                self._pendingRequests[id] = { resolve: resolve, reject: reject, method: method };
+                try {
+                    conn.ws.send(JSON.stringify(msg));
+                } catch (e) {
+                    delete self._pendingRequests[id];
+                    reject(e);
+                }
+
+                // Timeout after 15 seconds
+                setTimeout(function () {
+                    if (self._pendingRequests[id]) {
+                        delete self._pendingRequests[id];
+                        reject(new Error('LSP request timeout: ' + method));
+                    }
+                }, 15000);
+            });
+        },
+
+        _sendNotification: function (language, method, params) {
+            var conn = this._connections[language];
+            if (!conn) return;
+
+            var msg = { jsonrpc: '2.0', method: method };
+            if (params !== undefined && params !== null) msg.params = params;
+
+            try {
+                conn.ws.send(JSON.stringify(msg));
+            } catch (e) {
+                console.error('[LSP] Failed to send notification:', method, e);
+            }
+        },
+
+        _handleMessage: function (language, msg) {
+            // Response to a request
+            if (msg.id !== undefined && msg.id !== null && this._pendingRequests[msg.id]) {
+                var pending = this._pendingRequests[msg.id];
+                delete this._pendingRequests[msg.id];
+                if (msg.error) {
+                    pending.reject(msg.error);
+                } else {
+                    pending.resolve(msg.result);
+                }
+                return;
+            }
+
+            // Server notification
+            if (msg.method) {
+                this._handleNotification(language, msg.method, msg.params || {});
+            }
+        },
+
+        _handleNotification: function (language, method, params) {
+            if (method === 'textDocument/publishDiagnostics') {
+                this._handleDiagnostics(params);
+            } else if (method === 'window/logMessage' || method === 'window/showMessage') {
+                console.log('[LSP ' + language + '] ' + (params.message || ''));
+            }
+        },
+
+        _handleDiagnostics: function (params) {
+            var uri = params.uri || '';
+            var diagnostics = params.diagnostics || [];
+
+            // Find the Monaco model for this URI
+            var model = null;
+            for (var filePath in _models) {
+                var m = _models[filePath];
+                if (m && !m.isDisposed() && m.uri.toString() === uri) {
+                    model = m;
+                    break;
+                }
+            }
+
+            // Also try matching by path suffix
+            if (!model) {
+                var uriPath = uri.replace(/^file:\/\//, '');
+                for (var filePath in _models) {
+                    if (uri.endsWith('/' + filePath.replace(/\\/g, '/'))) {
+                        model = _models[filePath];
+                        break;
+                    }
+                }
+            }
+
+            if (!model || model.isDisposed()) return;
+
+            // Map LSP diagnostics to Monaco markers
+            var severityMap = { 1: 8, 2: 4, 3: 2, 4: 1 }; // LSP Error=1->Monaco 8, Warning=2->4, Info=3->2, Hint=4->1
+            var markers = diagnostics.map(function (d) {
+                var range = d.range || { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } };
+                return {
+                    startLineNumber: (range.start.line || 0) + 1,
+                    startColumn: (range.start.character || 0) + 1,
+                    endLineNumber: (range.end.line || 0) + 1,
+                    endColumn: (range.end.character || 0) + 1,
+                    message: d.message || '',
+                    severity: severityMap[d.severity] || 8,
+                    source: d.source || 'lsp',
+                    code: d.code
+                };
+            });
+
+            monaco.editor.setModelMarkers(model, 'lsp', markers);
+        },
+
+        /**
+         * Register all Monaco language providers backed by LSP.
+         */
+        _registerProviders: function (language) {
+            var self = this;
+            var caps = this._serverCapabilities[language] || {};
+
+            // Determine which Monaco language IDs this server handles
+            var monacoLangs = [];
+            for (var mLang in this._languageMap) {
+                if (this._languageMap[mLang] === language) {
+                    monacoLangs.push(mLang);
+                }
+            }
+            if (monacoLangs.length === 0) monacoLangs.push(language);
+
+            monacoLangs.forEach(function (langId) {
+                // Completion provider
+                if (caps.completionProvider) {
+                    var triggerChars = (caps.completionProvider.triggerCharacters || ['.', '(', '"', "'"]);
+                    self._disposables.push(monaco.languages.registerCompletionItemProvider(langId, {
+                        triggerCharacters: triggerChars,
+                        provideCompletionItems: function (model, position, context) {
+                            var lspLang = self._languageMap[langId] || langId;
+                            var conn = self._connections[lspLang];
+                            if (!conn || !conn.ready) return { suggestions: [] };
+
+                            var uri = model.uri.toString();
+                            return self._sendRequest(lspLang, 'textDocument/completion', {
+                                textDocument: { uri: uri },
+                                position: { line: position.lineNumber - 1, character: position.column - 1 },
+                                context: { triggerKind: context.triggerKind === 1 ? 1 : 2 }
+                            }).then(function (result) {
+                                var items = Array.isArray(result) ? result : (result && result.items ? result.items : []);
+                                return {
+                                    suggestions: items.map(function (item) {
+                                        return self._mapCompletionItem(item, position);
+                                    })
+                                };
+                            }).catch(function () {
+                                return { suggestions: [] };
+                            });
+                        }
+                    }));
+                }
+
+                // Hover provider
+                if (caps.hoverProvider) {
+                    self._disposables.push(monaco.languages.registerHoverProvider(langId, {
+                        provideHover: function (model, position) {
+                            var lspLang = self._languageMap[langId] || langId;
+                            return self._sendRequest(lspLang, 'textDocument/hover', {
+                                textDocument: { uri: model.uri.toString() },
+                                position: { line: position.lineNumber - 1, character: position.column - 1 }
+                            }).then(function (result) {
+                                if (!result || !result.contents) return null;
+                                var contents = [];
+                                if (typeof result.contents === 'string') {
+                                    contents.push({ value: result.contents });
+                                } else if (result.contents.kind) {
+                                    contents.push({ value: result.contents.value || '' });
+                                } else if (Array.isArray(result.contents)) {
+                                    result.contents.forEach(function (c) {
+                                        contents.push({ value: typeof c === 'string' ? c : (c.value || '') });
+                                    });
+                                } else if (result.contents.value) {
+                                    contents.push({ value: result.contents.value });
+                                }
+                                return { contents: contents };
+                            }).catch(function () { return null; });
+                        }
+                    }));
+                }
+
+                // Definition provider
+                if (caps.definitionProvider) {
+                    self._disposables.push(monaco.languages.registerDefinitionProvider(langId, {
+                        provideDefinition: function (model, position) {
+                            var lspLang = self._languageMap[langId] || langId;
+                            return self._sendRequest(lspLang, 'textDocument/definition', {
+                                textDocument: { uri: model.uri.toString() },
+                                position: { line: position.lineNumber - 1, character: position.column - 1 }
+                            }).then(function (result) {
+                                return self._mapLocations(result);
+                            }).catch(function () { return null; });
+                        }
+                    }));
+                }
+
+                // References provider
+                if (caps.referencesProvider) {
+                    self._disposables.push(monaco.languages.registerReferenceProvider(langId, {
+                        provideReferences: function (model, position, context) {
+                            var lspLang = self._languageMap[langId] || langId;
+                            return self._sendRequest(lspLang, 'textDocument/references', {
+                                textDocument: { uri: model.uri.toString() },
+                                position: { line: position.lineNumber - 1, character: position.column - 1 },
+                                context: { includeDeclaration: true }
+                            }).then(function (result) {
+                                return self._mapLocations(result);
+                            }).catch(function () { return []; });
+                        }
+                    }));
+                }
+
+                // Signature help provider
+                if (caps.signatureHelpProvider) {
+                    var sigTriggers = (caps.signatureHelpProvider.triggerCharacters || ['(', ',']);
+                    self._disposables.push(monaco.languages.registerSignatureHelpProvider(langId, {
+                        signatureHelpTriggerCharacters: sigTriggers,
+                        provideSignatureHelp: function (model, position) {
+                            var lspLang = self._languageMap[langId] || langId;
+                            return self._sendRequest(lspLang, 'textDocument/signatureHelp', {
+                                textDocument: { uri: model.uri.toString() },
+                                position: { line: position.lineNumber - 1, character: position.column - 1 }
+                            }).then(function (result) {
+                                if (!result) return null;
+                                return {
+                                    value: {
+                                        signatures: (result.signatures || []).map(function (sig) {
+                                            return {
+                                                label: sig.label || '',
+                                                documentation: sig.documentation ? { value: typeof sig.documentation === 'string' ? sig.documentation : sig.documentation.value || '' } : undefined,
+                                                parameters: (sig.parameters || []).map(function (p) {
+                                                    return {
+                                                        label: p.label || '',
+                                                        documentation: p.documentation ? { value: typeof p.documentation === 'string' ? p.documentation : p.documentation.value || '' } : undefined
+                                                    };
+                                                })
+                                            };
+                                        }),
+                                        activeSignature: result.activeSignature || 0,
+                                        activeParameter: result.activeParameter || 0
+                                    },
+                                    dispose: function () { }
+                                };
+                            }).catch(function () { return null; });
+                        }
+                    }));
+                }
+
+                // Document formatting provider
+                if (caps.documentFormattingProvider) {
+                    self._disposables.push(monaco.languages.registerDocumentFormattingEditProvider(langId, {
+                        provideDocumentFormattingEdits: function (model, options) {
+                            var lspLang = self._languageMap[langId] || langId;
+                            return self._sendRequest(lspLang, 'textDocument/formatting', {
+                                textDocument: { uri: model.uri.toString() },
+                                options: { tabSize: options.tabSize, insertSpaces: options.insertSpaces }
+                            }).then(function (result) {
+                                return self._mapTextEdits(result);
+                            }).catch(function () { return []; });
+                        }
+                    }));
+                }
+
+                // Rename provider
+                if (caps.renameProvider) {
+                    self._disposables.push(monaco.languages.registerRenameProvider(langId, {
+                        provideRenameEdits: function (model, position, newName) {
+                            var lspLang = self._languageMap[langId] || langId;
+                            return self._sendRequest(lspLang, 'textDocument/rename', {
+                                textDocument: { uri: model.uri.toString() },
+                                position: { line: position.lineNumber - 1, character: position.column - 1 },
+                                newName: newName
+                            }).then(function (result) {
+                                return self._mapWorkspaceEdit(result);
+                            }).catch(function () { return { edits: [] }; });
+                        }
+                    }));
+                }
+
+                // Code action provider
+                if (caps.codeActionProvider) {
+                    self._disposables.push(monaco.languages.registerCodeActionProvider(langId, {
+                        provideCodeActions: function (model, range, context) {
+                            var lspLang = self._languageMap[langId] || langId;
+                            var diagnostics = (context.markers || []).map(function (m) {
+                                return {
+                                    range: {
+                                        start: { line: m.startLineNumber - 1, character: m.startColumn - 1 },
+                                        end: { line: m.endLineNumber - 1, character: m.endColumn - 1 }
+                                    },
+                                    message: m.message,
+                                    severity: m.severity === 8 ? 1 : m.severity === 4 ? 2 : m.severity === 2 ? 3 : 4
+                                };
+                            });
+
+                            return self._sendRequest(lspLang, 'textDocument/codeAction', {
+                                textDocument: { uri: model.uri.toString() },
+                                range: {
+                                    start: { line: range.startLineNumber - 1, character: range.startColumn - 1 },
+                                    end: { line: range.endLineNumber - 1, character: range.endColumn - 1 }
+                                },
+                                context: { diagnostics: diagnostics }
+                            }).then(function (result) {
+                                if (!result) return { actions: [], dispose: function () { } };
+                                var actions = result.map(function (action) {
+                                    var edits = [];
+                                    if (action.edit) {
+                                        var we = self._mapWorkspaceEdit(action.edit);
+                                        edits = we.edits || [];
+                                    }
+                                    return {
+                                        title: action.title || 'Code Action',
+                                        kind: action.kind || 'quickfix',
+                                        edit: edits.length > 0 ? { edits: edits } : undefined,
+                                        diagnostics: diagnostics
+                                    };
+                                });
+                                return { actions: actions, dispose: function () { } };
+                            }).catch(function () {
+                                return { actions: [], dispose: function () { } };
+                            });
+                        }
+                    }));
+                }
+
+                // Document symbol provider
+                if (caps.documentSymbolProvider) {
+                    self._disposables.push(monaco.languages.registerDocumentSymbolProvider(langId, {
+                        provideDocumentSymbols: function (model) {
+                            var lspLang = self._languageMap[langId] || langId;
+                            return self._sendRequest(lspLang, 'textDocument/documentSymbol', {
+                                textDocument: { uri: model.uri.toString() }
+                            }).then(function (result) {
+                                if (!result) return [];
+                                return self._mapDocumentSymbols(result);
+                            }).catch(function () { return []; });
+                        }
+                    }));
+                }
+            });
+        },
+
+        // ---- Mapping helpers ----
+
+        _mapCompletionItem: function (item, position) {
+            // LSP CompletionItemKind -> Monaco CompletionItemKind
+            var kindMap = {
+                1: 18,  // Text -> Value
+                2: 1,   // Method -> Method
+                3: 0,   // Function -> Function
+                4: 8,   // Constructor -> Constructor
+                5: 4,   // Field -> Field
+                6: 5,   // Variable -> Variable
+                7: 7,   // Class -> Class
+                8: 7,   // Interface -> Interface
+                9: 8,   // Module -> Module
+                10: 9,  // Property -> Property
+                11: 24, // Unit -> Unit
+                12: 12, // Value -> Value
+                13: 15, // Enum -> Enum
+                14: 13, // Keyword -> Keyword
+                15: 14, // Snippet -> Snippet
+                16: 15, // Color -> Color
+                17: 16, // File -> File
+                18: 17, // Reference -> Reference
+                19: 18, // Folder -> Folder
+                20: 15, // EnumMember -> Enum
+                21: 14, // Constant -> Constant
+                22: 7,  // Struct -> Struct
+                23: 22, // Event -> Event
+                24: 23, // Operator -> Operator
+                25: 24  // TypeParameter -> TypeParameter
+            };
+
+            var insertText = item.insertText || item.label || '';
+            var insertTextRules = 0;
+
+            if (item.insertTextFormat === 2) {
+                // Snippet format
+                insertTextRules = 4; // Monaco CompletionItemInsertTextRule.InsertAsSnippet
+            }
+
+            return {
+                label: item.label || '',
+                kind: kindMap[item.kind] || 18,
+                detail: item.detail || '',
+                documentation: item.documentation ? (typeof item.documentation === 'string' ? item.documentation : { value: item.documentation.value || '' }) : undefined,
+                insertText: insertText,
+                insertTextRules: insertTextRules,
+                sortText: item.sortText || item.label || '',
+                filterText: item.filterText || item.label || '',
+                range: undefined // Let Monaco calculate
+            };
+        },
+
+        _mapLocations: function (result) {
+            if (!result) return [];
+            var locations = Array.isArray(result) ? result : [result];
+            return locations.map(function (loc) {
+                var range = loc.range || { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } };
+                return {
+                    uri: monaco.Uri.parse(loc.uri || ''),
+                    range: new monaco.Range(
+                        (range.start.line || 0) + 1,
+                        (range.start.character || 0) + 1,
+                        (range.end.line || 0) + 1,
+                        (range.end.character || 0) + 1
+                    )
+                };
+            });
+        },
+
+        _mapTextEdits: function (edits) {
+            if (!edits) return [];
+            return edits.map(function (edit) {
+                var range = edit.range || { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } };
+                return {
+                    range: new monaco.Range(
+                        (range.start.line || 0) + 1,
+                        (range.start.character || 0) + 1,
+                        (range.end.line || 0) + 1,
+                        (range.end.character || 0) + 1
+                    ),
+                    text: edit.newText || ''
+                };
+            });
+        },
+
+        _mapWorkspaceEdit: function (workspaceEdit) {
+            var self = this;
+            if (!workspaceEdit) return { edits: [] };
+
+            var edits = [];
+
+            // Handle documentChanges
+            if (workspaceEdit.documentChanges) {
+                workspaceEdit.documentChanges.forEach(function (docChange) {
+                    if (docChange.edits) {
+                        edits.push({
+                            resource: monaco.Uri.parse(docChange.textDocument.uri),
+                            textEdit: self._mapTextEdits(docChange.edits) // mapped as versionId-less
+                        });
+                    }
+                });
+            }
+
+            // Handle changes (older format)
+            if (workspaceEdit.changes) {
+                for (var uri in workspaceEdit.changes) {
+                    edits.push({
+                        resource: monaco.Uri.parse(uri),
+                        textEdit: self._mapTextEdits(workspaceEdit.changes[uri])
+                    });
+                }
+            }
+
+            return { edits: edits };
+        },
+
+        _mapDocumentSymbols: function (symbols) {
+            var self = this;
+            // LSP SymbolKind -> Monaco SymbolKind
+            var kindMap = {
+                1: 0, 2: 11, 3: 4, 4: 22, 5: 7, 6: 5, 7: 10, 8: 9,
+                9: 8, 10: 3, 11: 17, 12: 0, 13: 14, 14: 13, 15: 18,
+                16: 19, 17: 1, 18: 20, 19: 21, 20: 2, 21: 12, 22: 11,
+                23: 6, 24: 23, 25: 24, 26: 25
+            };
+
+            return symbols.map(function (sym) {
+                var range = sym.range || sym.location?.range || { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } };
+                var selRange = sym.selectionRange || range;
+
+                var result = {
+                    name: sym.name || '',
+                    detail: sym.detail || '',
+                    kind: kindMap[sym.kind] || 0,
+                    range: new monaco.Range(
+                        (range.start.line || 0) + 1,
+                        (range.start.character || 0) + 1,
+                        (range.end.line || 0) + 1,
+                        (range.end.character || 0) + 1
+                    ),
+                    selectionRange: new monaco.Range(
+                        (selRange.start.line || 0) + 1,
+                        (selRange.start.character || 0) + 1,
+                        (selRange.end.line || 0) + 1,
+                        (selRange.end.character || 0) + 1
+                    )
+                };
+
+                if (sym.children && sym.children.length > 0) {
+                    result.children = self._mapDocumentSymbols(sym.children);
+                }
+
+                return result;
+            });
+        }
+    };
 })();

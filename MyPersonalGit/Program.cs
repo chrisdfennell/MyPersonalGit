@@ -174,6 +174,7 @@ builder.Services.AddHostedService<TrafficAggregationService>();
 builder.Services.AddSingleton<IEnvironmentService, EnvironmentService>();
 builder.Services.AddSingleton<IDependencyUpdateService, DependencyUpdateService>();
 builder.Services.AddSingleton<IWebIdeService, WebIdeService>();
+builder.Services.AddSingleton<LspProcessManager>();
 builder.Services.AddHostedService<DependencyUpdateSchedulerService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddLocalization();
@@ -795,6 +796,9 @@ app.MapControllers();
 
 // Integrated terminal WebSocket endpoint
 app.MapTerminalWebSocket();
+
+// Language Server Protocol WebSocket endpoint
+app.MapLspWebSocket();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

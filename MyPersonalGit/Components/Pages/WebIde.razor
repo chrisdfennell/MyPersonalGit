@@ -517,6 +517,15 @@
                     UTF-8
                 </span>
             }
+            @{ var lspLang = GetLspLanguage(activeTabPath); }
+            @if (lspLang != null)
+            {
+                var status = lspStatus.GetValueOrDefault(lspLang, "inactive");
+                var color = status == "running" ? "#3c3" : status == "error" ? "#c33" : "#888";
+                <span class="ide-status-item" title="LSP: @lspLang (@status)">
+                    <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem; color: @color;"></i>LSP
+                </span>
+            }
             <button class="ide-status-item ide-status-btn" @onclick="ToggleZenMode" title="@L["Ide_ZenMode"]">
                 <i class="bi bi-arrows-fullscreen"></i>
             </button>
@@ -620,6 +629,9 @@
     // Preview state
     private bool showMarkdownPreview;
     private string renderedMarkdown = "";
+
+    // LSP state
+    private Dictionary<string, string> lspStatus = new(); // language -> "running"|"error"|"disconnected"
 
     // Blame state
     private bool isBlameActive;
@@ -760,6 +772,9 @@
                 await JS.InvokeVoidAsync("monacoInterop.enableMinimapHighlights", editorId);
                 await JS.InvokeVoidAsync("monacoInterop.registerDefinitionProvider", editorId, dotNetRef);
 
+                // Initialize LSP client
+                await JS.InvokeVoidAsync("ideLsp.init", dotNetRef);
+
                 // Set up drag-and-drop file upload on the file tree
                 await JS.InvokeVoidAsync("ideUpload.setupDropZone", "ide-file-tree-root", dotNetRef, "OnFilesDropped");
 
@@ -828,6 +843,9 @@
 
             // Update original content in Monaco so dirty tracking is correct
             await JS.InvokeVoidAsync("monacoInterop.updateOriginalContent", editorId, filePath, content);
+
+            // Notify LSP about save
+            await LspDidSave(filePath, content);
 
             UpdatePendingChanges();
             ShowToast($"Auto-saved {System.IO.Path.GetFileName(filePath)}", "info");
@@ -1039,6 +1057,9 @@
 
                 // Detect merge conflicts
                 await DetectConflicts();
+
+                // Notify LSP about opened document
+                await LspDidOpen(path, fileContent.Content);
             }
 
             TrackRecentFile(path);
@@ -1110,6 +1131,8 @@
         {
             try
             {
+                // Notify LSP about closed document
+                await LspDidClose(path);
                 await JS.InvokeVoidAsync("monacoInterop.closeFile", editorId, path);
             }
             catch { }
@@ -1525,6 +1548,9 @@
                     modifiedFiles.Add(filePath);
                 else
                     modifiedFiles.Remove(filePath);
+
+                // Notify LSP about content change
+                await LspDidChange(filePath, content);
 
                 // Auto-save: reset timer on each change
                 if (autoSaveEnabled && isDirty)
@@ -2552,11 +2578,127 @@
         autoSaveDelay = settings.AutoSaveDelay;
     }
 
+    // ---- LSP helpers ----
+
+    private static readonly Dictionary<string, string> LspLanguageMap = new()
+    {
+        ["csharp"] = "csharp",
+        ["javascript"] = "typescript",
+        ["typescript"] = "typescript",
+        ["python"] = "python"
+    };
+
+    private string? GetLspLanguage(string? filePath)
+    {
+        if (string.IsNullOrEmpty(filePath)) return null;
+        var ext = System.IO.Path.GetExtension(filePath)?.ToLowerInvariant();
+        var monacoLang = ext switch
+        {
+            ".cs" => "csharp",
+            ".js" or ".jsx" => "javascript",
+            ".ts" or ".tsx" => "typescript",
+            ".py" => "python",
+            _ => null
+        };
+        if (monacoLang == null) return null;
+        return LspLanguageMap.GetValueOrDefault(monacoLang);
+    }
+
+    private string GetMonacoLanguageId(string filePath)
+    {
+        var ext = System.IO.Path.GetExtension(filePath)?.ToLowerInvariant();
+        return ext switch
+        {
+            ".cs" => "csharp",
+            ".js" or ".jsx" => "javascript",
+            ".ts" or ".tsx" => "typescript",
+            ".py" => "python",
+            _ => "plaintext"
+        };
+    }
+
+    private async Task LspEnsureConnected(string lspLanguage)
+    {
+        if (lspStatus.GetValueOrDefault(lspLanguage) == "running") return;
+
+        try
+        {
+            var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+            var wsScheme = uri.Scheme == "https" ? "wss" : "ws";
+            var sessionId = await JS.InvokeAsync<string>("eval", "document.cookie.split('; ').find(r => r.startsWith('session='))?.split('=')[1] || ''");
+            var wsUrl = $"{wsScheme}://{uri.Host}:{uri.Port}/ws/lsp/{RepoName}/{lspLanguage}?session={sessionId}";
+            var rootUri = $"file:///repos/{RepoName}";
+
+            var connected = await JS.InvokeAsync<bool>("ideLsp.connect", lspLanguage, wsUrl, rootUri);
+            if (connected)
+            {
+                lspStatus[lspLanguage] = "running";
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[LSP] Failed to connect {lspLanguage}: {ex.Message}");
+        }
+    }
+
+    private async Task LspDidOpen(string filePath, string content)
+    {
+        var lspLang = GetLspLanguage(filePath);
+        if (lspLang == null) return;
+
+        await LspEnsureConnected(lspLang);
+        var langId = GetMonacoLanguageId(filePath);
+        try { await JS.InvokeVoidAsync("ideLsp.didOpen", filePath, langId, content); }
+        catch { }
+    }
+
+    private async Task LspDidChange(string filePath, string content)
+    {
+        var lspLang = GetLspLanguage(filePath);
+        if (lspLang == null) return;
+
+        var langId = GetMonacoLanguageId(filePath);
+        try { await JS.InvokeVoidAsync("ideLsp.didChange", filePath, langId, content); }
+        catch { }
+    }
+
+    private async Task LspDidClose(string filePath)
+    {
+        var lspLang = GetLspLanguage(filePath);
+        if (lspLang == null) return;
+
+        var langId = GetMonacoLanguageId(filePath);
+        try { await JS.InvokeVoidAsync("ideLsp.didClose", filePath, langId); }
+        catch { }
+    }
+
+    private async Task LspDidSave(string filePath, string content)
+    {
+        var lspLang = GetLspLanguage(filePath);
+        if (lspLang == null) return;
+
+        var langId = GetMonacoLanguageId(filePath);
+        try { await JS.InvokeVoidAsync("ideLsp.didSave", filePath, langId, content); }
+        catch { }
+    }
+
+    [JSInvokable]
+    public void OnLspStatusChanged(string language, string status)
+    {
+        lspStatus[language] = status;
+        InvokeAsync(StateHasChanged);
+    }
+
     // ---- Dispose ----
 
     public async ValueTask DisposeAsync()
     {
         autoSaveTimer?.Dispose();
+
+        // Disconnect all LSP servers
+        try { await JS.InvokeVoidAsync("ideLsp.disconnectAll"); }
+        catch { }
 
         if (diffEditorId != null)
         {
