@@ -28,25 +28,25 @@
     }
     <div class="ide-sidebar" style="@(sidebarWidth > 0 ? $"width:{sidebarWidth}px;" : "")">
         <div class="ide-sidebar-tabs">
-            <button class="ide-sidebar-tab @(sidebarMode == "files" ? "active" : "")" @onclick='() => sidebarMode = "files"' title="@L["Ide_Explorer"]">
+            <button class="ide-sidebar-tab @(sidebarMode == "files" ? "active" : "")" @onclick='() => ToggleSidebarMode("files")' title="@L["Ide_Explorer"]">
                 <i class="bi bi-files"></i>
             </button>
-            <button class="ide-sidebar-tab @(sidebarMode == "search" ? "active" : "")" @onclick='() => sidebarMode = "search"' title="@L["Ide_Search"]">
+            <button class="ide-sidebar-tab @(sidebarMode == "search" ? "active" : "")" @onclick='() => ToggleSidebarMode("search")' title="@L["Ide_Search"]">
                 <i class="bi bi-search"></i>
             </button>
-            <button class="ide-sidebar-tab @(sidebarMode == "sourcecontrol" ? "active" : "")" @onclick='() => sidebarMode = "sourcecontrol"' title="@L["Ide_SourceControl"]">
+            <button class="ide-sidebar-tab @(sidebarMode == "sourcecontrol" ? "active" : "")" @onclick='() => ToggleSidebarMode("sourcecontrol")' title="@L["Ide_SourceControl"]">
                 <i class="bi bi-git"></i>
             </button>
             <button class="ide-sidebar-tab @(sidebarMode == "outline" ? "active" : "")" @onclick="OpenOutlinePanel" title="@L["Ide_Outline"]">
                 <i class="bi bi-list-nested"></i>
             </button>
-            <button class="ide-sidebar-tab @(sidebarMode == "debug" ? "active" : "")" @onclick='() => sidebarMode = "debug"' title="Debug">
+            <button class="ide-sidebar-tab @(sidebarMode == "debug" ? "active" : "")" @onclick='() => ToggleSidebarMode("debug")' title="Debug">
                 <i class="bi bi-bug"></i>
             </button>
-            <button class="ide-sidebar-tab @(sidebarMode == "branchdiff" ? "active" : "")" @onclick='() => sidebarMode = "branchdiff"' title="Branch Diff">
+            <button class="ide-sidebar-tab @(sidebarMode == "branchdiff" ? "active" : "")" @onclick='() => ToggleSidebarMode("branchdiff")' title="Branch Diff">
                 <i class="bi bi-arrow-left-right"></i>
             </button>
-            <button class="ide-sidebar-tab @(sidebarMode == "settings" ? "active" : "")" @onclick='() => sidebarMode = "settings"' title="@L["Ide_Settings"]" style="margin-top: auto;">
+            <button class="ide-sidebar-tab @(sidebarMode == "settings" ? "active" : "")" @onclick='() => ToggleSidebarMode("settings")' title="@L["Ide_Settings"]" style="margin-top: auto;">
                 <i class="bi bi-gear"></i>
             </button>
         </div>
@@ -836,6 +836,7 @@
     private bool isLoading = true;
     private bool isCommitting;
     private string sidebarMode = "files";
+    private string previousSidebarMode = "files";
     private string? editorId;
     private List<FileChange> pendingChanges = new();
     private DotNetObjectReference<WebIde>? dotNetRef;
@@ -3028,6 +3029,22 @@
     {
         if (editorId != null)
             await JS.InvokeVoidAsync("ideDebugger.highlightLine", editorId, frame.Line);
+    }
+
+    // ---- Sidebar toggle ----
+
+    private void ToggleSidebarMode(string mode)
+    {
+        if (sidebarMode == mode)
+        {
+            // Clicking the active tab — go back to previous mode
+            sidebarMode = previousSidebarMode != mode ? previousSidebarMode : "files";
+        }
+        else
+        {
+            previousSidebarMode = sidebarMode;
+            sidebarMode = mode;
+        }
     }
 
     // ---- Undo close tab ----

@@ -349,6 +349,26 @@ html[data-bs-theme="light"] .ide-shortcut-header { border-bottom-color: #eee; }
 html[data-bs-theme="light"] .ide-shortcut-row { color: #333; }
 html[data-bs-theme="light"] .ide-shortcut-row kbd { background: #f0f0f0; color: #333; border-color: #ccc; }
 
+/* ── IDE unsaved changes modal ── */
+.ide-unsaved-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 10001; display: flex; justify-content: center; align-items: center; }
+.ide-unsaved-dialog { background: #252526; border: 1px solid #454545; border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,0.5); width: 380px; max-width: 90vw; padding: 24px; text-align: center; }
+.ide-unsaved-icon { font-size: 2.5rem; color: #d29922; margin-bottom: 12px; }
+.ide-unsaved-title { font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 8px; }
+.ide-unsaved-message { font-size: 0.85rem; color: #aaa; margin-bottom: 20px; line-height: 1.5; }
+.ide-unsaved-message strong { color: #ccc; }
+.ide-unsaved-actions { display: flex; gap: 10px; justify-content: center; }
+.ide-unsaved-btn { padding: 8px 20px; border-radius: 6px; border: none; font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+.ide-unsaved-btn-cancel { background: #3c3c3c; color: #ccc; }
+.ide-unsaved-btn-cancel:hover { background: #4c4c4c; }
+.ide-unsaved-btn-close { background: #c53030; color: #fff; }
+.ide-unsaved-btn-close:hover { background: #e53e3e; }
+html[data-bs-theme="light"] .ide-unsaved-dialog { background: #fff; border-color: #ddd; }
+html[data-bs-theme="light"] .ide-unsaved-title { color: #222; }
+html[data-bs-theme="light"] .ide-unsaved-message { color: #666; }
+html[data-bs-theme="light"] .ide-unsaved-message strong { color: #333; }
+html[data-bs-theme="light"] .ide-unsaved-btn-cancel { background: #e8e8e8; color: #333; }
+html[data-bs-theme="light"] .ide-unsaved-btn-cancel:hover { background: #d8d8d8; }
+
 /* ── IDE gutter diff popup ── */
 .ide-gutter-diff-popup { background: #1e1e1e; border: 1px solid #454545; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); min-width: 300px; max-width: 600px; z-index: 100; font-size: 0.8rem; }
 .ide-gutter-diff-header { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: #2d2d2d; border-bottom: 1px solid #454545; color: #888; font-size: 0.72rem; }
