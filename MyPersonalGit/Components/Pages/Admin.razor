@@ -490,6 +490,43 @@ else
                     </div>
                 </div>
 
+                <!-- AI Code Completion -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-stars me-2"></i>AI Code Completion</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Enable AI-powered inline code completion in the web IDE. Uses an OpenAI-compatible API endpoint.</p>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.AiCompletionEnabled" />
+                                <label class="form-check-label">Enable AI Completion</label>
+                            </div>
+                        </div>
+
+                        @if (Settings.AiCompletionEnabled)
+                        {
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">API Endpoint</label>
+                                    <InputText class="form-control" @bind-Value="Settings.AiCompletionEndpoint" placeholder="https://api.openai.com/v1" />
+                                    <small class="form-text text-muted">OpenAI-compatible API base URL (e.g., OpenAI, Ollama, LM Studio)</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">API Key</label>
+                                    <InputText class="form-control" type="password" @bind-Value="Settings.AiCompletionApiKey" placeholder="sk-..." />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Model</label>
+                                    <InputText class="form-control" @bind-Value="Settings.AiCompletionModel" placeholder="gpt-4o-mini" />
+                                    <small class="form-text text-muted">Model name (e.g., gpt-4o-mini, codestral-latest, deepseek-coder)</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
                 <!-- TLS / HTTPS -->
                 <div class="card mb-4">
                     <div class="card-header">
