@@ -39,3 +39,6 @@ repos/
 
 ## Certs
 *.crt
+
+## Git ReWrite backup files
+.git-rewrite/
