@@ -1144,8 +1144,12 @@
                     if (sysSettings.AiChatEnabled && sysSettings.AiCompletionEnabled)
                     {
                         aiChatEnabled = true;
-                        await JS.InvokeVoidAsync("ideAiChat.init", dotNetRef);
-                        await JS.InvokeVoidAsync("ideAiChat.registerContextMenuActionsById", editorId);
+                        try
+                        {
+                            await JS.InvokeVoidAsync("ideAiChat.init", dotNetRef);
+                            await JS.InvokeVoidAsync("ideAiChat.registerContextMenuActionsById", editorId);
+                        }
+                        catch (Exception ex) { Console.WriteLine($"[AI Chat] Init error: {ex.Message}"); }
                     }
 
                     // Initialize real-time collaboration
@@ -1153,8 +1157,10 @@
                     {
                         collabEnabled = true;
                     }
+
+                    StateHasChanged();
                 }
-                catch { }
+                catch (Exception ex) { Console.WriteLine($"[IDE] Settings init error: {ex.Message}"); }
 
                 // Set up drag-and-drop file upload on the file tree
                 await JS.InvokeVoidAsync("ideUpload.setupDropZone", "ide-file-tree-root", dotNetRef, "OnFilesDropped");
