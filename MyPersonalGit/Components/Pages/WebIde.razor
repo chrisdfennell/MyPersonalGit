@@ -391,8 +391,8 @@
                 <i class="bi bi-chevron-right ide-breadcrumb-sep"></i>
                 <span class="ide-breadcrumb-wrapper">
                     <span class="ide-breadcrumb @(segment.IsLast ? "active" : "")"
-                          @onclick="() => { if (!segment.IsLast) ShowBreadcrumbSiblings(segment.Path); else ShowBreadcrumbSiblings(GetParentBreadcrumbPath(segment.Path)); }">@segment.Name</span>
-                    @if (breadcrumbDropdownPath != null && (breadcrumbDropdownPath == segment.Path || (segment.IsLast && breadcrumbDropdownPath == GetParentBreadcrumbPath(segment.Path))))
+                          @onclick="() => { if (!segment.IsLast) ShowBreadcrumbSiblings(segment.Path, false); else ShowBreadcrumbSiblings(GetParentBreadcrumbPath(segment.Path), true); }">@segment.Name</span>
+                    @if (breadcrumbDropdownPath != null && ((breadcrumbDropdownPath == segment.Path && !breadcrumbDropdownIsLast) || (segment.IsLast && breadcrumbDropdownIsLast && breadcrumbDropdownPath == GetParentBreadcrumbPath(segment.Path))))
                     {
                         <div class="ide-breadcrumb-dropdown">
                             @if (breadcrumbSiblings != null)
@@ -2190,10 +2190,11 @@
 
     private List<TreeNode>? breadcrumbSiblings;
     private string? breadcrumbDropdownPath;
+    private bool breadcrumbDropdownIsLast;
 
-    private void ShowBreadcrumbSiblings(string folderPath)
+    private void ShowBreadcrumbSiblings(string folderPath, bool isLast)
     {
-        if (breadcrumbDropdownPath == folderPath)
+        if (breadcrumbDropdownPath == folderPath && breadcrumbDropdownIsLast == isLast)
         {
             breadcrumbDropdownPath = null;
             breadcrumbSiblings = null;
@@ -2201,6 +2202,7 @@
         }
 
         breadcrumbDropdownPath = folderPath;
+        breadcrumbDropdownIsLast = isLast;
         breadcrumbSiblings = FindSiblingsAtPath(treeNodes, folderPath);
         StateHasChanged();
     }
@@ -3177,8 +3179,14 @@
         try
         {
             branchDiffFiles = await WebIdeService.GetBranchDiffAsync(RepoName, branchDiffBase, branchDiffCompare);
+            if (branchDiffFiles.Count == 0)
+                ShowToast("No differences found between branches", "info");
         }
-        catch { branchDiffFiles = new(); }
+        catch (Exception ex)
+        {
+            branchDiffFiles = new();
+            ShowToast($"Branch diff failed: {ex.Message}", "error");
+        }
         finally { isLoadingBranchDiff = false; StateHasChanged(); }
     }
 

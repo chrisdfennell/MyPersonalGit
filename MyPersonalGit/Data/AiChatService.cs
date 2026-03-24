@@ -27,7 +27,7 @@ public class AiChatService : IAiChatService
         _httpClientFactory = httpClientFactory;
     }
 
-    private async Task<(HttpClient client, string model)?> GetConfiguredClientAsync()
+    private async Task<(HttpClient client, string model, string endpoint)?> GetConfiguredClientAsync()
     {
         var settings = await _adminService.GetSystemSettingsAsync();
         if (!settings.AiCompletionEnabled
@@ -38,9 +38,9 @@ public class AiChatService : IAiChatService
         var client = _httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", settings.AiCompletionApiKey);
         client.Timeout = TimeSpan.FromSeconds(120);
-        client.BaseAddress = new Uri(settings.AiCompletionEndpoint.TrimEnd('/'));
 
-        return (client, settings.AiCompletionModel);
+        var endpoint = settings.AiCompletionEndpoint.TrimEnd('/');
+        return (client, settings.AiCompletionModel, endpoint);
     }
 
     public async Task<string?> ChatAsync(string userMessage, string? systemPrompt = null, string? codeContext = null)
@@ -48,7 +48,7 @@ public class AiChatService : IAiChatService
         var config = await GetConfiguredClientAsync();
         if (config == null) return null;
 
-        var (client, model) = config.Value;
+        var (client, model, endpoint) = config.Value;
 
         var messages = new List<object>();
         messages.Add(new { role = "system", content = systemPrompt ?? "You are an expert programming assistant integrated into a code editor. Be concise and helpful. Format code in markdown fenced blocks with the language specified." });
@@ -69,7 +69,7 @@ public class AiChatService : IAiChatService
             };
 
             var response = await client.PostAsync(
-                "/chat/completions",
+                $"{endpoint}/chat/completions",
                 new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
             );
 
@@ -94,7 +94,7 @@ public class AiChatService : IAiChatService
         var config = await GetConfiguredClientAsync();
         if (config == null) yield break;
 
-        var (client, model) = config.Value;
+        var (client, model, endpoint) = config.Value;
 
         var messages = new List<object>();
         messages.Add(new { role = "system", content = systemPrompt ?? "You are an expert programming assistant integrated into a code editor. Be concise and helpful. Format code in markdown fenced blocks with the language specified." });
@@ -116,7 +116,7 @@ public class AiChatService : IAiChatService
         HttpResponseMessage? response = null;
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, "/chat/completions")
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{endpoint}/chat/completions")
             {
                 Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
             };
