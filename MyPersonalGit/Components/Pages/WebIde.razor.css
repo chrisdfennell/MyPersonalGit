@@ -675,8 +675,10 @@
     background: #252526;
     border-bottom: 1px solid #1e1e1e;
     font-size: 0.75rem;
-    overflow: hidden;
+    overflow: visible;
     white-space: nowrap;
+    position: relative;
+    z-index: 10;
     min-height: 22px;
 }
 

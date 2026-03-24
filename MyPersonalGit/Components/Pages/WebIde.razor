@@ -1078,6 +1078,14 @@
 
             if (!branches.Contains(currentBranch) && branches.Count > 0)
                 currentBranch = branches[0];
+
+            // Set feature flags before first render so sidebar/status bar items appear immediately
+            if (systemSettings.AiCompletionEnabled && !string.IsNullOrEmpty(systemSettings.AiCompletionEndpoint))
+                aiCompletionEnabled = true;
+            if (systemSettings.AiChatEnabled && systemSettings.AiCompletionEnabled)
+                aiChatEnabled = true;
+            if (systemSettings.CollaborationEnabled)
+                collabEnabled = true;
         }
         catch
         {
