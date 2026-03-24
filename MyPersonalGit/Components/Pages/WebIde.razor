@@ -14,6 +14,7 @@
 @inject CurrentUserService UserService
 @inject IAdminService AdminService
 @inject IAiCompletionService AiCompletionService
+@inject IAiChatService AiChatService
 @using Microsoft.Extensions.Localization
 @using MyPersonalGit.Resources
 @inject IStringLocalizer<SharedResource> L
@@ -43,6 +44,12 @@
             <button class="ide-sidebar-tab @(sidebarMode == "debug" ? "active" : "")" @onclick='() => ToggleSidebarMode("debug")' title="Debug">
                 <i class="bi bi-bug"></i>
             </button>
+            @if (aiChatEnabled)
+            {
+                <button class="ide-sidebar-tab @(sidebarMode == "aichat" ? "active" : "")" @onclick='() => ToggleSidebarMode("aichat")' title="AI Assistant">
+                    <i class="bi bi-stars" style="@(sidebarMode == "aichat" ? "color:#c084fc;" : "")"></i>
+                </button>
+            }
             <button class="ide-sidebar-tab @(sidebarMode == "branchdiff" ? "active" : "")" @onclick='() => ToggleSidebarMode("branchdiff")' title="Branch Diff">
                 <i class="bi bi-arrow-left-right"></i>
             </button>
@@ -203,7 +210,19 @@
             else if (sidebarMode == "debug")
             {
                 <div class="p-2">
-                    <div class="small fw-semibold mb-2"><i class="bi bi-bug me-1"></i>Debug (Python)</div>
+                    <div class="small fw-semibold mb-2"><i class="bi bi-bug me-1"></i>Debug</div>
+                    <div class="mb-2">
+                        <select class="form-select form-select-sm" style="font-size:0.78rem;background:#3c3c3c;border-color:#555;color:#ccc;" @bind="selectedDebugLanguage">
+                            <option value="">Auto-detect</option>
+                            <option value="python">Python (debugpy)</option>
+                            <option value="csharp">C# (netcoredbg)</option>
+                            <option value="javascript">JavaScript (js-debug)</option>
+                            <option value="typescript">TypeScript (js-debug)</option>
+                            <option value="go">Go (Delve)</option>
+                            <option value="rust">Rust (lldb-dap)</option>
+                            <option value="java">Java (JDWP)</option>
+                        </select>
+                    </div>
                     <div class="d-flex gap-1 mb-2">
                         @if (!isDebugging)
                         {
@@ -311,6 +330,15 @@
                         </button>
                     }
                 </div>
+            }
+            else if (sidebarMode == "aichat" && aiChatEnabled)
+            {
+                <IdeAiChatPanel SelectedCode="@aiSelectedCode"
+                                Language="@GetLanguageDisplayName(activeTabPath)"
+                                FileName="@(activeTabPath != null ? System.IO.Path.GetFileName(activeTabPath) : null)"
+                                FileContent="@GetCurrentFileContent()"
+                                OnApplyCode="HandleAiApplyCode"
+                                OnInsertNewFile="HandleAiInsertNewFile" />
             }
             else if (sidebarMode == "settings")
             {
@@ -773,6 +801,20 @@
                     <i class="bi bi-stars me-1" style="color:#c084fc;"></i>AI
                 </span>
             }
+            @if (collabEnabled)
+            {
+                <button class="ide-status-item ide-status-btn" @onclick="ToggleCollaboration" title="@(collabActive ? "Leave collaboration" : "Start collaboration")">
+                    <i class="bi bi-people-fill me-1" style="color: @(collabActive ? "#2ea043" : "#888");"></i>
+                    @if (collabActive)
+                    {
+                        <span>@(collabParticipantCount + 1)</span>
+                    }
+                    else
+                    {
+                        <span>Collab</span>
+                    }
+                </button>
+            }
             <button class="ide-status-item ide-status-btn" @onclick="ToggleZenMode" title="@L["Ide_ZenMode"]">
                 <i class="bi bi-arrows-fullscreen"></i>
             </button>
@@ -931,6 +973,18 @@
     // AI completion state
     private bool aiCompletionEnabled;
 
+    // AI chat state
+    private bool aiChatEnabled;
+    private string? aiSelectedCode;
+
+    // Collaboration state
+    private bool collabEnabled;
+    private bool collabActive;
+    private int collabParticipantCount;
+
+    // Debug language selector
+    private string selectedDebugLanguage = "";
+
     // Blame state
     private bool isBlameActive;
 
@@ -1084,6 +1138,20 @@
                         aiCompletionEnabled = true;
                         await JS.InvokeVoidAsync("ideAiComplete.init", dotNetRef);
                         await JS.InvokeVoidAsync("ideAiComplete.enable");
+                    }
+
+                    // Initialize AI Chat & context menu actions
+                    if (sysSettings.AiChatEnabled && sysSettings.AiCompletionEnabled)
+                    {
+                        aiChatEnabled = true;
+                        await JS.InvokeVoidAsync("ideAiChat.init", dotNetRef);
+                        await JS.InvokeVoidAsync("ideAiChat.registerContextMenuActionsById", editorId);
+                    }
+
+                    // Initialize real-time collaboration
+                    if (sysSettings.CollaborationEnabled)
+                    {
+                        collabEnabled = true;
                     }
                 }
                 catch { }
@@ -2906,6 +2974,18 @@
         if (activeTabPath == null) return;
         try
         {
+            // Auto-detect language if not manually selected
+            var debugLang = selectedDebugLanguage;
+            if (string.IsNullOrEmpty(debugLang))
+            {
+                debugLang = DapSessionManager.GetDebugLanguageForFile(activeTabPath);
+                if (string.IsNullOrEmpty(debugLang))
+                {
+                    ShowToast("Cannot auto-detect debug language for this file type", "warning");
+                    return;
+                }
+            }
+
             var baseUri = new Uri(Navigation.BaseUri);
             var wsScheme = baseUri.Scheme == "https" ? "wss" : "ws";
             var sessionId = UserService.SessionId;
@@ -2916,9 +2996,9 @@
             }
             if (string.IsNullOrEmpty(sessionId)) return;
 
-            var wsUrl = $"{wsScheme}://{baseUri.Host}:{baseUri.Port}/ws/dap/{RepoName}?language=python&branch={currentBranch}&session={Uri.EscapeDataString(sessionId)}";
+            var wsUrl = $"{wsScheme}://{baseUri.Host}:{baseUri.Port}/ws/dap/{RepoName}?language={debugLang}&branch={currentBranch}&session={Uri.EscapeDataString(sessionId)}";
             var connected = await JS.InvokeAsync<bool>("ideDebugger.connect", wsUrl, dotNetRef);
-            if (!connected) { ShowToast("Failed to connect debug adapter", "error"); return; }
+            if (!connected) { ShowToast($"Failed to connect {debugLang} debug adapter", "error"); return; }
 
             await JS.InvokeVoidAsync("ideDebugger.launch", activeTabPath);
             isDebugging = true;
@@ -3397,11 +3477,189 @@
         InvokeAsync(StateHasChanged);
     }
 
+    // ---- AI Chat & Context Actions ----
+
+    private string? GetCurrentFileContent()
+    {
+        if (activeTabPath != null && fileContents.TryGetValue(activeTabPath, out var content))
+            return content;
+        return null;
+    }
+
+    [JSInvokable]
+    public async Task OnAiContextAction(string action, string selectedCode, string? diagnostics = null)
+    {
+        aiSelectedCode = selectedCode;
+        sidebarMode = "aichat";
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public async Task OnAiInlineExplain(string selectedCode, int line, int column)
+    {
+        try
+        {
+            var lang = GetLanguageDisplayName(activeTabPath) ?? "code";
+            var explanation = await AiChatService.ExplainCodeAsync(selectedCode, lang, activeTabPath != null ? System.IO.Path.GetFileName(activeTabPath) : null);
+            if (!string.IsNullOrEmpty(explanation) && editorId != null)
+            {
+                await JS.InvokeVoidAsync("ideAiChat.showInlineExplanation", editorId, line, column, explanation);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowToast($"Inline explain error: {ex.Message}", "error");
+        }
+    }
+
+    private async Task HandleAiApplyCode(string code)
+    {
+        if (editorId != null)
+        {
+            try { await JS.InvokeVoidAsync("ideAiChat.replaceSelection", editorId, code); }
+            catch { }
+        }
+    }
+
+    private async Task HandleAiInsertNewFile(string code)
+    {
+        // Create a new untitled file with the AI-generated code
+        var ext = GuessExtensionFromLanguage(GetLanguageDisplayName(activeTabPath));
+        var newPath = $"untitled{ext}";
+        var counter = 1;
+        while (openTabs.Any(t => t.FilePath == newPath))
+        {
+            newPath = $"untitled{counter}{ext}";
+            counter++;
+        }
+
+        fileContents[newPath] = code;
+        var newTab = new OpenTab { FilePath = newPath, FileName = System.IO.Path.GetFileName(newPath), IsDirty = true };
+        openTabs.Add(newTab);
+        activeTabPath = newPath;
+        modifiedFiles.Add(newPath);
+
+        if (editorId != null)
+            await JS.InvokeVoidAsync("monacoInterop.openFile", editorId, newPath, code, false);
+
+        StateHasChanged();
+    }
+
+    private static string GuessExtensionFromLanguage(string? lang)
+    {
+        return (lang?.ToLowerInvariant()) switch
+        {
+            "csharp" or "c#" => ".cs",
+            "javascript" => ".js",
+            "typescript" => ".ts",
+            "python" => ".py",
+            "go" => ".go",
+            "rust" => ".rs",
+            "java" => ".java",
+            "html" => ".html",
+            "css" => ".css",
+            "json" => ".json",
+            "yaml" => ".yml",
+            "ruby" => ".rb",
+            "php" => ".php",
+            _ => ".txt"
+        };
+    }
+
+    // ---- Collaboration ----
+
+    private async Task ToggleCollaboration()
+    {
+        if (collabActive)
+        {
+            // Leave collaboration
+            if (activeTabPath != null)
+                try { await JS.InvokeVoidAsync("ideCollaboration.leaveSession", RepoName, activeTabPath); } catch { }
+            try { await JS.InvokeVoidAsync("ideCollaboration.disconnect"); } catch { }
+            collabActive = false;
+            collabParticipantCount = 0;
+            ShowToast("Left collaboration session", "info");
+        }
+        else
+        {
+            // Join collaboration
+            try
+            {
+                await JS.InvokeVoidAsync("ideCollaboration.init", dotNetRef, null);
+                if (activeTabPath != null)
+                {
+                    var username = UserService.Username ?? "anonymous";
+                    var colors = new[] { "#ff6b6b", "#feca57", "#48dbfb", "#ff9ff3", "#54a0ff", "#5f27cd" };
+                    var color = colors[Math.Abs(username.GetHashCode()) % colors.Length];
+                    await JS.InvokeVoidAsync("ideCollaboration.joinSession", RepoName, activeTabPath, username, color);
+
+                    // Attach to the current editor by ID
+                    await JS.InvokeVoidAsync("ideCollaboration.attachEditorById", editorId);
+                }
+                collabActive = true;
+                ShowToast("Joined collaboration session — share this URL for others to join", "success");
+            }
+            catch (Exception ex)
+            {
+                ShowToast($"Collaboration error: {ex.Message}", "error");
+            }
+        }
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void OnCollabUserJoined(string username, string color)
+    {
+        collabParticipantCount++;
+        ShowToast($"{username} joined the session", "info");
+        InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public void OnCollabUserLeft(string connectionId)
+    {
+        collabParticipantCount = Math.Max(0, collabParticipantCount - 1);
+        InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public void OnCollabSessionJoined(int participantCount)
+    {
+        collabParticipantCount = participantCount;
+        InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public void OnCollabReconnected()
+    {
+        ShowToast("Reconnected to collaboration session", "info");
+        InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public void OnCollabDisconnected()
+    {
+        collabActive = false;
+        collabParticipantCount = 0;
+        InvokeAsync(StateHasChanged);
+    }
+
     // ---- Dispose ----
 
     public async ValueTask DisposeAsync()
     {
         autoSaveTimer?.Dispose();
+
+        // Disconnect collaboration
+        if (collabActive)
+        {
+            try { await JS.InvokeVoidAsync("ideCollaboration.disconnect"); }
+            catch { }
+        }
+
+        // Dispose AI chat
+        try { await JS.InvokeVoidAsync("ideAiChat.dispose"); }
+        catch { }
 
         // Disconnect all LSP servers
         try { await JS.InvokeVoidAsync("ideLsp.disconnectAll"); }

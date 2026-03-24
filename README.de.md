@@ -117,7 +117,10 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Vollwertiger Code-Editor** — Monaco Editor-basierte IDE mit Syntaxhervorhebung für über 30 Sprachen, mehreren Themes, Emmet-Abkürzungserweiterung für HTML/CSS und Format beim Einfügen
 - **Language Server Protocol (LSP)** — IntelliSense, Autovervollständigung, Hover-Info, Gehe zu Definition, Referenzen finden, Signaturhilfe, Code-Formatierung, Symbol umbenennen, Code-Aktionen und Echtzeit-Diagnosen für 12 Sprachen: C# (OmniSharp), TypeScript/JavaScript, Python, Go, Rust, HTML, CSS, JSON, YAML, Bash, Dockerfile und Markdown
 - **KI-Code-Vervollständigung** — Inline-Geistertext-Vorschläge beim Tippen, betrieben durch jede OpenAI-kompatible API (OpenAI, Ollama, LM Studio, etc.). Konfigurierbarer Endpunkt, API-Schlüssel und Modell in den Admin-Einstellungen. Tab zum Akzeptieren
-- **Integrierter Debugger** — Python-Debugging über debugpy/DAP mit Haltepunkten (Klick in den Rand), Schritt über/hinein/heraus, Fortfahren, Variableninspektion, Aufrufstapel-Navigation und Debug-Konsolenausgabe
+- **KI-Chat & Assistent** — Integriertes KI-Chat-Panel mit kontextbezogenen Gesprächen. Rechtsklick auf Code für KI-Aktionen: Code erklären, Code refaktorisieren, Tests generieren, Code korrigieren, Dokumentation hinzufügen und Inline-Erklärung (Ctrl+Shift+E zeigt Erklärungswidget am Cursor). Streaming-Antworten mit Code-Block-Aktionen zum Anwenden/Kopieren/Neue Datei
+- **KI-Testgenerierung** — Code auswählen und umfassende Unit-Tests mit automatischer Framework-Erkennung generieren (xUnit, Jest, pytest, Go testing, Rust #[cfg(test)], JUnit 5, RSpec, PHPUnit)
+- **KI-gestütztes Refactoring** — Code auswählen und KI-gestützte Refactoring-Vorschläge mit Ein-Klick-Anwendung zum Ersetzen der Auswahl erhalten
+- **Integrierter Debugger** — Mehrsprachiges Debugging über DAP (Debug Adapter Protocol) mit Haltepunkten (Klick in den Rand), Schritt über/hinein/heraus, Fortfahren, Variableninspektion, Aufrufstapel-Navigation und Debug-Konsolenausgabe. Unterstützt Python (debugpy), C# (netcoredbg), JavaScript/TypeScript (js-debug), Go (Delve), Rust (lldb-dap) und Java (JDWP). Erkennt automatisch die Sprache anhand der Dateierweiterung
 - **Probleme-Panel** — Tab im unteren Panel, das alle LSP-Diagnosen (Fehler/Warnungen) offener Dateien aggregiert, gruppiert nach Datei mit Klick-zum-Navigieren. Fehler-/Warnungszähler in der Statusleiste
 - **Aufgabenausführung** — Tab im unteren Panel zum Ausführen von Build-/Test-Befehlen (dotnet build, npm test, go build, make, pytest, etc.) mit Echtzeit-Streaming-Ausgabe, klickbaren Fehlerpositionen und Abbruch-Unterstützung
 - **Branch-Diff** — Seitenleisten-Panel zum Vergleichen zweier Branches nebeneinander. Zeigt Liste geänderter Dateien mit Hinzufügen/Ändern/Löschen/Umbenennen-Status, Klick zum Anzeigen des Diffs im Monaco-Diff-Editor
@@ -139,6 +142,7 @@ Ein selbst gehosteter Git-Server mit einer GitHub-ähnlichen Weboberfläche, geb
 - **Persistenter Arbeitsbereich** — Merkt sich geöffnete Tabs, angeheftete Tabs, aktive Datei, Seitenleistenstatus und Panel-Modus über Browser-Sitzungen hinweg
 - **Größenveränderbare Panels** — Seitenleiste und unteres Panel per Drag mit visuellen Griffen größenveränderbar
 - **Anpassbare Einstellungen** — Schriftfamilienauswahl (8 Schriften), Schriftgröße, Tab-Größe, Zeilenumbruch, Minimap, Zeilennummern, Klammer-Hilfslinien, Sticky Scroll, Code-Faltung, Schriftligaturen, Format beim Einfügen und Leerzeichenanzeige-Optionen
+- **Echtzeit-Zusammenarbeit** — Mehrere Benutzer können dieselbe Datei gleichzeitig bearbeiten mit Live-Cursor-Tracking, Auswahl-Hervorhebung und Präsenzanzeigen. SignalR-basiert mit operativer Transformation für konfliktfreie gleichzeitige Bearbeitung. Farbcodierte Cursor mit Benutzernamen-Labels und automatischer Wiederverbindung
 - **Zen-Modus** — Ablenkungsfreie Vollbildbearbeitung mit sichtbarer Beenden-Schaltfläche
 
 ### CI/CD & DevOps

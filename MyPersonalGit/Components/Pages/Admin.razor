@@ -527,6 +527,40 @@ else
                     </div>
                 </div>
 
+                <!-- AI Chat & Assistant -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>AI Chat & Assistant</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Enable AI chat, inline explain, refactoring, and test generation in the Web IDE. Requires AI Completion to be enabled above (uses the same API endpoint).</p>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.AiChatEnabled" />
+                                <label class="form-check-label">Enable AI Chat & Assistant</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-time Collaboration -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-people me-2"></i>Real-time Collaboration</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Enable real-time collaborative editing in the Web IDE. Multiple users can edit the same file simultaneously with live cursor tracking and presence indicators.</p>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.CollaborationEnabled" />
+                                <label class="form-check-label">Enable Real-time Collaboration</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- TLS / HTTPS -->
                 <div class="card mb-4">
                     <div class="card-header">

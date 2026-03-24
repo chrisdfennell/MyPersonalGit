@@ -366,6 +366,18 @@
         },
 
         /**
+         * Get the raw Monaco editor instance by ID (for JS interop).
+         */
+        getEditor: function (editorId) {
+            return _editors[editorId] || null;
+        },
+
+        /**
+         * Expose internal editors map for AI and collaboration interop.
+         */
+        _editors: _editors,
+
+        /**
          * Open a file in the editor.
          * @param {string} editorId - The editor instance ID.
          * @param {string} filePath - File path used as model key.

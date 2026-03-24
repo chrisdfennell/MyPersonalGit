@@ -60,11 +60,15 @@ public class SystemSettings
     // AGit Flow (push to refs/for/*)
     public bool AGitFlowEnabled { get; set; } = true;
 
-    // AI Code Completion
+    // AI Code Completion & Chat
     public bool AiCompletionEnabled { get; set; }
     public string AiCompletionEndpoint { get; set; } = string.Empty; // e.g., "https://api.openai.com/v1"
     public string AiCompletionApiKey { get; set; } = string.Empty;
     public string AiCompletionModel { get; set; } = "gpt-4o-mini";
+    public bool AiChatEnabled { get; set; }
+
+    // Real-time Collaboration
+    public bool CollaborationEnabled { get; set; }
 
     // TLS / HTTPS
     public bool EnableHttps { get; set; }
