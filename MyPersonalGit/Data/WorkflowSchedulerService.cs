@@ -58,6 +58,9 @@ public class WorkflowSchedulerService : BackgroundService
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
+
+        var settings = await db.SystemSettings.FirstOrDefaultAsync(ct);
+        if (settings is { EnableActions: false }) return;
         var workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
         var parser = scope.ServiceProvider.GetRequiredService<WorkflowYamlParser>();
         var adminService = scope.ServiceProvider.GetRequiredService<IAdminService>();
