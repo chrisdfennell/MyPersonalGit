@@ -22,7 +22,7 @@ jobs:
           dotnet --version
 
       - name: Build
-        run: dotnet build --configuration Release -maxcpucount:1
+        run: dotnet build --configuration Release -maxcpucount:1 -p:RunAnalyzers=false
         env:
           DOTNET_GCHeapHardLimit: 0x100000000
 
