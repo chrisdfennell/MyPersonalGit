@@ -47,6 +47,7 @@
 @inject IAutolinkService AutolinkService
 @using TagProtectionRule = MyPersonalGit.Models.TagProtectionRule
 @using RepositoryLabel = MyPersonalGit.Models.RepositoryLabel
+@using SystemSettings = MyPersonalGit.Models.SystemSettings
 @rendermode InteractiveServer
 
 <PageTitle>@GetPageTitle() · Personal Git</PageTitle>
@@ -216,11 +217,14 @@ else
                         <i class="bi bi-chat-square-text me-1"></i> @L["Repo_Discussions"]
                     </a>
                 </li>
+                @if (_systemSettings?.EnableActions != false)
+                {
                 <li class="nav-item">
                     <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/actions">
                         <i class="bi bi-play-circle me-1"></i> @L["Repo_Actions"]
                     </a>
                 </li>
+                }
                 <li class="nav-item">
                     <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/wiki">
                         <i class="bi bi-book me-1"></i> @L["Repo_Wiki"]
@@ -3697,6 +3701,7 @@ else
     private string? newLabelDescription;
 
     private string RootPath = "/repos";
+    private SystemSettings? _systemSettings;
     private string RepoFullPath => GetRepoFullPath();
     private string dirName => System.IO.Path.GetFileName(RepoFullPath);
 
@@ -3724,6 +3729,7 @@ else
     {
         // Priority: 1) Admin UI saved setting, 2) appsettings config, 3) auto-detection
         var systemSettings = await AdminService.GetSystemSettingsAsync();
+        _systemSettings = systemSettings;
         if (!string.IsNullOrEmpty(systemSettings.ProjectRoot))
         {
             try
