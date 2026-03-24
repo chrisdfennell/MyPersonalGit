@@ -1,0 +1,8 @@
+tree c68a2411ea779f01daf217162de755f448d9e748
+parent bb712b154ffec6f02e9ff19c49ba595d2efe734b
+author Christopher Fennell <infantrykiller@gmail.com> 1773704739 -0400
+committer Christopher Fennell <infantrykiller@gmail.com> 1773704739 -0400
+
+Fix re-run navigation: remove forceLoad that broke repo lookup
+
+Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>

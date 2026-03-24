@@ -1,0 +1,2 @@
+Fix re-run navigation: remove forceLoad that broke repo lookup
+
