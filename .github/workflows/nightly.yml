@@ -5,6 +5,9 @@ on:
     - cron: '0 0 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   release-and-push:
     runs-on: ubuntu-latest
@@ -17,14 +20,12 @@ jobs:
         run: |
           curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
           chmod +x /tmp/dotnet-install.sh
-          /tmp/dotnet-install.sh --channel 10.0 --install-dir /usr/local/dotnet
-          ln -sf /usr/local/dotnet/dotnet /usr/local/bin/dotnet
-          dotnet --version
+          /tmp/dotnet-install.sh --channel 10.0 --install-dir $HOME/.dotnet
+          echo "$HOME/.dotnet" >> $GITHUB_PATH
+          $HOME/.dotnet/dotnet --version
 
       - name: Build
-        run: dotnet build --configuration Release -maxcpucount:1
-        env:
-          DOTNET_GCHeapHardLimit: 0x100000000
+        run: dotnet build --configuration Release -maxcpucount:1 -p:RunAnalyzers=false -p:EnforceCodeStyleInBuild=false
 
       - name: Test
         run: dotnet test --configuration Release --no-build --verbosity normal

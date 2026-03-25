@@ -47,6 +47,7 @@
 @inject IAutolinkService AutolinkService
 @using TagProtectionRule = MyPersonalGit.Models.TagProtectionRule
 @using RepositoryLabel = MyPersonalGit.Models.RepositoryLabel
+@using SystemSettings = MyPersonalGit.Models.SystemSettings
 @rendermode InteractiveServer
 
 <PageTitle>@GetPageTitle() · Personal Git</PageTitle>
@@ -216,6 +217,8 @@ else
                         <i class="bi bi-chat-square-text me-1"></i> @L["Repo_Discussions"]
                     </a>
                 </li>
+                @if (_systemSettings?.EnableActions != false)
+                {
                 <li class="nav-item">
                     <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/discussions">
                         <i class="bi bi-chat-square-text me-1"></i> @L["Repo_Discussions"]

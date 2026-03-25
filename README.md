@@ -25,7 +25,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
   - [Create a Repository](#2-create-a-repository)
   - [Clone and Push](#3-clone-and-push)
   - [Clone from an IDE](#4-clone-from-an-ide)
-  - [Web IDE](#5-use-the-web-editor)
+  - [Web IDE](#web-ide)
   - [Container Registry](#6-container-registry)
   - [Package Registry](#7-package-registry)
   - [Pages (Static Sites)](#8-pages-static-site-hosting)
