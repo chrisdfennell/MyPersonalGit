@@ -4,7 +4,7 @@ WORKDIR /src
 COPY ["MyPersonalGit/MyPersonalGit.csproj", "MyPersonalGit/"]
 RUN dotnet restore "MyPersonalGit/MyPersonalGit.csproj"
 COPY MyPersonalGit/ MyPersonalGit/
-RUN dotnet publish "MyPersonalGit/MyPersonalGit.csproj" -c Release -o /app/publish -maxcpucount:1 -p:RunAnalyzers=false
+RUN dotnet publish "MyPersonalGit/MyPersonalGit.csproj" -c Release -o /app/publish -maxcpucount:1
 
 # Run Stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
@@ -27,10 +27,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && pip3 install --break-system-packages python-lsp-server debugpy \
     && rm -rf /var/lib/apt/lists/* /root/.npm /root/.cache
 
-# .NET 8 runtime (needed by OmniSharp C# language server)
+# .NET SDKs (8.0 for OmniSharp, 10.0 for building/debugging .NET 10 projects)
 RUN curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
     && chmod +x /tmp/dotnet-install.sh \
-    && /tmp/dotnet-install.sh --channel 8.0 --runtime dotnet --install-dir /usr/share/dotnet \
+    && /tmp/dotnet-install.sh --channel 8.0 --install-dir /usr/share/dotnet \
+    && /tmp/dotnet-install.sh --channel 10.0 --install-dir /usr/share/dotnet \
     && rm /tmp/dotnet-install.sh
 
 # Go + gopls language server
@@ -61,6 +62,14 @@ RUN ARCH=$(dpkg --print-architecture) && \
     curl -sSL "https://github.com/OmniSharp/omnisharp-roslyn/releases/latest/download/omnisharp-${OSARCH}-net6.0.tar.gz" \
     | tar xz -C /usr/local/bin/omnisharp && \
     chmod +x /usr/local/bin/omnisharp/OmniSharp
+
+# netcoredbg — C# debugger (DAP-compatible)
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "amd64" ]; then NCARCH="linux-amd64"; else NCARCH="linux-arm64"; fi && \
+    mkdir -p /usr/local/netcoredbg && \
+    curl -sSL "https://github.com/Samsung/netcoredbg/releases/latest/download/netcoredbg-${NCARCH}.tar.gz" \
+    | tar xz -C /usr/local && \
+    ln -s /usr/local/netcoredbg/netcoredbg /usr/local/bin/netcoredbg
 
 # Create a non-root user and the repos/data directories
 # Add appuser to docker group for socket access

@@ -40,14 +40,49 @@ public sealed class DapSession : IDisposable
 
 /// <summary>
 /// Manages debug adapter process lifecycles.
-/// Currently supports Python via debugpy adapter (stdin/stdout DAP).
+/// Supports Python, C#, Node.js/TypeScript, Go, Rust, and Java via DAP adapters.
 /// </summary>
 public sealed class DapSessionManager : IDisposable
 {
-    private static readonly Dictionary<string, (string Command, string Arguments)> Adapters = new()
+    private static readonly Dictionary<string, DapAdapterConfig> Adapters = new()
     {
-        ["python"] = ("python3", "-m debugpy.adapter"),
+        ["python"] = new("python3", "-m debugpy.adapter", null),
+        ["csharp"] = new("netcoredbg", "--interpreter=vscode --engineLogging=/tmp/netcoredbg.log", "dotnet build"),
+        ["javascript"] = new("node", GetJsDebugAdapterPath(), null),
+        ["typescript"] = new("node", GetJsDebugAdapterPath(), null),
+        ["go"] = new("dlv", "dap --listen=:0 --log", null),
+        ["rust"] = new("lldb-dap", "", null),
+        ["java"] = new("java", GetJavaDebugAdapterArgs(), null),
     };
+
+    public record DapAdapterConfig(string Command, string Arguments, string? SetupCommand);
+
+    private static string GetJsDebugAdapterPath()
+    {
+        // js-debug adapter (vscode-js-debug) — installed via npm
+        var globalPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".vscode", "extensions");
+        if (Directory.Exists(globalPath))
+        {
+            var jsDebugDirs = Directory.GetDirectories(globalPath, "ms-vscode.js-debug-*");
+            if (jsDebugDirs.Length > 0)
+            {
+                var latest = jsDebugDirs.OrderByDescending(d => d).First();
+                var adapterPath = Path.Combine(latest, "src", "dapDebugServer.js");
+                if (File.Exists(adapterPath))
+                    return adapterPath;
+            }
+        }
+        // Fallback: assume js-debug-adapter is on PATH or installed globally
+        return Path.Combine(AppContext.BaseDirectory, "tools", "js-debug", "src", "dapDebugServer.js");
+    }
+
+    private static string GetJavaDebugAdapterArgs()
+    {
+        var jarPath = Path.Combine(AppContext.BaseDirectory, "tools", "java-debug", "com.microsoft.java.debug.plugin.jar");
+        return $"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n -jar {jarPath}";
+    }
+
+    public static IReadOnlyDictionary<string, DapAdapterConfig> SupportedAdapters => Adapters;
 
     private readonly ConcurrentDictionary<string, DapSession> _sessions = new();
     private readonly Timer _reapTimer;
@@ -59,6 +94,22 @@ public sealed class DapSessionManager : IDisposable
     }
 
     public static bool IsSupported(string language) => Adapters.ContainsKey(language);
+
+    public static string GetDebugLanguageForFile(string filePath)
+    {
+        var ext = Path.GetExtension(filePath).ToLowerInvariant();
+        return ext switch
+        {
+            ".py" => "python",
+            ".cs" => "csharp",
+            ".js" or ".mjs" or ".cjs" => "javascript",
+            ".ts" or ".mts" or ".cts" or ".tsx" or ".jsx" => "typescript",
+            ".go" => "go",
+            ".rs" => "rust",
+            ".java" => "java",
+            _ => ""
+        };
+    }
 
     public DapSession? GetOrStartSession(string repoName, string language, string userId, string repoPath, string branch)
     {
@@ -74,6 +125,40 @@ public sealed class DapSessionManager : IDisposable
             {
                 Console.WriteLine($"[DAP] Failed to checkout {repoName}/{branch}");
                 return new DapSession { Key = key };
+            }
+
+            // Run setup command if needed (e.g., dotnet restore for C#)
+            if (!string.IsNullOrEmpty(adapter.SetupCommand))
+            {
+                try
+                {
+                    Console.WriteLine($"[DAP] Running setup '{adapter.SetupCommand}' in {workTree}");
+                    var setupPsi = new ProcessStartInfo
+                    {
+                        FileName = OperatingSystem.IsWindows() ? "cmd.exe" : "/bin/sh",
+                        Arguments = OperatingSystem.IsWindows() ? $"/c {adapter.SetupCommand}" : $"-c \"{adapter.SetupCommand}\"",
+                        WorkingDirectory = workTree,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    var setupProcess = Process.Start(setupPsi);
+                    if (setupProcess != null)
+                    {
+                        if (!setupProcess.WaitForExit(90000))
+                        {
+                            Console.WriteLine($"[DAP] Setup '{adapter.SetupCommand}' TIMED OUT after 90s for {language}");
+                            try { setupProcess.Kill(entireProcessTree: true); } catch { }
+                        }
+                        else if (setupProcess.ExitCode != 0)
+                            Console.WriteLine($"[DAP] Setup '{adapter.SetupCommand}' FAILED (exit {setupProcess.ExitCode}) for {language}");
+                        else
+                            Console.WriteLine($"[DAP] Setup '{adapter.SetupCommand}' completed for {language}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[DAP] Setup command failed: {ex.Message}");
+                }
             }
 
             var session = new DapSession { Key = key, WorkTree = workTree };

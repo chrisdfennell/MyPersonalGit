@@ -72,17 +72,33 @@ public static class DapWebSocketHandler
                 }
             }
 
+            // Accept WebSocket FIRST — the session startup (dotnet build etc.) can take
+            // several minutes on slower hardware and the client will time out if we block.
+            using var ws = await context.WebSockets.AcceptWebSocketAsync();
+
             var dapManager = context.RequestServices.GetRequiredService<DapSessionManager>();
-            var session = dapManager.GetOrStartSession(repoName, language, user.Username, repoPath, branch);
+            var sessionTask = Task.Run(() => dapManager.GetOrStartSession(repoName, language, user.Username, repoPath, branch));
+
+            // Send periodic status messages while building so the client doesn't time out
+            var elapsed = 0;
+            while (!sessionTask.IsCompleted)
+            {
+                if (ws.State != WebSocketState.Open) return;
+                var statusMsg = System.Text.Json.JsonSerializer.Serialize(new { type = "status", message = $"Building project... ({elapsed}s)" });
+                await ws.SendAsync(Encoding.UTF8.GetBytes(statusMsg), WebSocketMessageType.Text, true, context.RequestAborted);
+                await Task.WhenAny(sessionTask, Task.Delay(5000, context.RequestAborted));
+                elapsed += 5;
+            }
+
+            var session = sessionTask.Result;
 
             if (session?.Process == null || session.Process.HasExited)
             {
-                context.Response.StatusCode = 500;
-                await context.Response.WriteAsync("Failed to start debug adapter.");
+                var errMsg = System.Text.Json.JsonSerializer.Serialize(new { type = "error", message = "Failed to start debug adapter." });
+                await ws.SendAsync(Encoding.UTF8.GetBytes(errMsg), WebSocketMessageType.Text, true, context.RequestAborted);
+                await ws.CloseAsync(WebSocketCloseStatus.InternalServerError, "Adapter failed", CancellationToken.None);
                 return;
             }
-
-            using var ws = await context.WebSockets.AcceptWebSocketAsync();
 
             // Send worktree path as init message
             var initMsg = System.Text.Json.JsonSerializer.Serialize(new { type = "init", rootUri = "file://" + session.WorkTree!.Replace('\\', '/') });

@@ -61,9 +61,6 @@ public class WorkflowRunnerService : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
 
-        var settings = await db.SystemSettings.FirstOrDefaultAsync(ct);
-        if (settings is { EnableActions: false }) return;
-
         var queuedRuns = await db.WorkflowRuns
             .Include(r => r.Jobs)
                 .ThenInclude(j => j.Steps)

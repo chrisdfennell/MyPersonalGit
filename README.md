@@ -25,7 +25,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
   - [Create a Repository](#2-create-a-repository)
   - [Clone and Push](#3-clone-and-push)
   - [Clone from an IDE](#4-clone-from-an-ide)
-  - [Web IDE](#web-ide)
+  - [Web IDE](#5-use-the-web-editor)
   - [Container Registry](#6-container-registry)
   - [Package Registry](#7-package-registry)
   - [Pages (Static Sites)](#8-pages-static-site-hosting)
@@ -119,7 +119,10 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Full-Featured Code Editor** — Monaco Editor-powered IDE with 30+ language syntax highlighting, multiple themes, Emmet abbreviation expansion for HTML/CSS, and format-on-paste
 - **Language Server Protocol (LSP)** — IntelliSense, autocomplete, hover info, go-to-definition, find references, signature help, code formatting, rename symbol, code actions, and real-time diagnostics for 12 languages: C# (OmniSharp), TypeScript/JavaScript, Python, Go, Rust, HTML, CSS, JSON, YAML, Bash, Dockerfile, and Markdown
 - **AI Code Completion** — Inline ghost-text suggestions as you type, powered by any OpenAI-compatible API (OpenAI, Ollama, LM Studio, etc.). Configurable endpoint, API key, and model in admin settings. Tab to accept
-- **Integrated Debugger** — Python debugging via debugpy/DAP with breakpoints (click gutter), step over/into/out, continue, variable inspection, call stack navigation, and debug console output
+- **AI Chat & Assistant** — Integrated AI chat panel with context-aware conversations. Right-click code for AI actions: Explain Code, Refactor Code, Generate Tests, Fix Code, Add Documentation, and Inline Explain (Ctrl+Shift+E shows explanation widget at cursor). Streaming responses with code block apply/copy/new-file actions
+- **AI Test Generation** — Select code and generate comprehensive unit tests with framework auto-detection (xUnit, Jest, pytest, Go testing, Rust #[cfg(test)], JUnit 5, RSpec, PHPUnit)
+- **AI-Assisted Refactoring** — Select code and get AI-powered refactoring suggestions with one-click apply to replace the selection
+- **Integrated Debugger** — Multi-language debugging via DAP (Debug Adapter Protocol) with breakpoints (click gutter), step over/into/out, continue, variable inspection, call stack navigation, and debug console output. Supports Python (debugpy), C# (netcoredbg), JavaScript/TypeScript (js-debug), Go (Delve), Rust (lldb-dap), and Java (JDWP). Auto-detects language from file extension
 - **Problems Panel** — Bottom panel tab aggregating all LSP diagnostics (errors/warnings) across open files, grouped by file with click-to-navigate. Error/warning counts in the status bar
 - **Task Runner** — Bottom panel tab to run build/test commands (dotnet build, npm test, go build, make, pytest, etc.) with real-time streamed output, clickable error locations, and cancel support
 - **Branch Diff** — Sidebar panel to compare two branches side-by-side. Shows list of changed files with add/modify/delete/rename status, click to view diff in Monaco's diff editor
@@ -141,6 +144,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Persistent Workspace** — Remembers open tabs, pinned tabs, active file, sidebar state, and panel mode across browser sessions
 - **Resizable Panels** — Drag-to-resize sidebar and bottom panel with visual handles
 - **Customizable Settings** — Font family picker (8 fonts), font size, tab size, word wrap, minimap, line numbers, bracket guides, sticky scroll, code folding, font ligatures, format on paste, and render whitespace options
+- **Real-time Collaboration** — Multiple users can edit the same file simultaneously with live cursor tracking, selection highlighting, and presence indicators. SignalR-powered with operational transform for conflict-free concurrent edits. Color-coded cursors with username labels and automatic reconnection
 - **Zen Mode** — Distraction-free full-screen editing with visible exit button
 
 ### CI/CD & DevOps

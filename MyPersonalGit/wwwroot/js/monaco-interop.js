@@ -366,6 +366,18 @@
         },
 
         /**
+         * Get the raw Monaco editor instance by ID (for JS interop).
+         */
+        getEditor: function (editorId) {
+            return _editors[editorId] || null;
+        },
+
+        /**
+         * Expose internal editors map for AI and collaboration interop.
+         */
+        _editors: _editors,
+
+        /**
          * Open a file in the editor.
          * @param {string} editorId - The editor instance ID.
          * @param {string} filePath - File path used as model key.
@@ -1765,7 +1777,8 @@
                 fontSize: 13,
                 fontFamily: "'Cascadia Code', 'Fira Code', 'Consolas', monospace",
                 theme: isDark ? darkTheme : lightTheme,
-                allowProposedApi: true
+                allowProposedApi: true,
+                rightClickSelectsWord: true
             });
 
             var fitAddon = new FitAddon.FitAddon();
@@ -1798,11 +1811,20 @@
                     console.error('Terminal WebSocket error:', e);
                 };
 
-                // Send user input to WebSocket
+                // Send user input (including native paste) to WebSocket
                 term.onData(function (data) {
                     if (ws.readyState === WebSocket.OPEN) {
                         ws.send(data);
                     }
+                });
+
+                // Allow Ctrl+C to copy when there's a selection (otherwise send SIGINT)
+                term.attachCustomKeyEventHandler(function (e) {
+                    if (e.type === 'keydown' && e.ctrlKey && e.key === 'c' && term.hasSelection()) {
+                        navigator.clipboard.writeText(term.getSelection());
+                        return false;
+                    }
+                    return true;
                 });
             } catch (e) {
                 term.writeln('\x1b[31mFailed to connect: ' + e.message + '\x1b[0m');
@@ -2229,16 +2251,43 @@
             return new Promise(function (resolve) {
                 var ws = new WebSocket(wsUrl);
                 var gotInit = false;
+                var timeoutId = null;
 
-                ws.onopen = function () { self._ws = ws; };
+                // No fixed timeout — we rely on keepalive status messages from the server.
+                // If no message arrives for 30s, assume connection lost.
+                function resetTimeout() {
+                    if (timeoutId) clearTimeout(timeoutId);
+                    timeoutId = setTimeout(function () { if (!gotInit) resolve(false); }, 30000);
+                }
+
+                ws.onopen = function () { self._ws = ws; resetTimeout(); };
 
                 ws.onmessage = function (event) {
                     try {
                         var msg = JSON.parse(event.data);
 
-                        // First message: init with rootUri
+                        // Status updates while building — reset timeout on each one
+                        if (!gotInit && msg.type === 'status') {
+                            console.log('[DAP] Status:', msg.message);
+                            resetTimeout();
+                            if (dotNetRef) {
+                                try { dotNetRef.invokeMethodAsync('OnDebugOutput', msg.message + '\n', 'console'); } catch (e) { }
+                            }
+                            return;
+                        }
+
+                        // Error from server
+                        if (msg.type === 'error') {
+                            console.error('[DAP] Server error:', msg.message);
+                            if (timeoutId) clearTimeout(timeoutId);
+                            resolve(false);
+                            return;
+                        }
+
+                        // Init with rootUri — session is ready
                         if (!gotInit && msg.type === 'init' && msg.rootUri) {
                             gotInit = true;
+                            if (timeoutId) clearTimeout(timeoutId);
                             self._rootUri = msg.rootUri;
                             resolve(true);
                             return;
@@ -2252,13 +2301,14 @@
 
                 ws.onclose = function () {
                     self._ws = null;
+                    if (timeoutId) clearTimeout(timeoutId);
+                    if (!gotInit) resolve(false);
                     if (dotNetRef) {
                         try { dotNetRef.invokeMethodAsync('OnDebugTerminated'); } catch (e) { }
                     }
                 };
 
-                ws.onerror = function () { resolve(false); };
-                setTimeout(function () { if (!gotInit) resolve(false); }, 10000);
+                ws.onerror = function () { if (timeoutId) clearTimeout(timeoutId); resolve(false); };
             });
         },
 
@@ -2273,29 +2323,89 @@
         /**
          * Initialize and launch a debug session for a Python file.
          */
-        launch: function (relativeFilePath) {
+        launch: function (relativeFilePath, language) {
             var self = this;
             var rootUri = this._rootUri || '';
             var worktreePath = rootUri.replace('file://', '');
+            var lang = language || 'python';
+
+            // Build language-specific launch config
+            var launchConfig;
+            switch (lang) {
+                case 'csharp':
+                    // Derive project directory from the active file path
+                    // e.g., "MyPersonalGit/Program.cs" -> "MyPersonalGit"
+                    var csParts = relativeFilePath.split('/');
+                    var csProjectDir = csParts.length > 1 ? csParts[0] : '.';
+                    launchConfig = {
+                        type: 'coreclr',
+                        request: 'launch',
+                        program: worktreePath + '/' + csProjectDir + '/bin/Debug/net10.0/' + csProjectDir + '.dll',
+                        cwd: worktreePath + '/' + csProjectDir,
+                        stopAtEntry: false,
+                        console: 'internalConsole'
+                    };
+                    break;
+                case 'javascript':
+                case 'typescript':
+                    launchConfig = {
+                        type: 'pwa-node',
+                        request: 'launch',
+                        program: worktreePath + '/' + relativeFilePath,
+                        cwd: worktreePath,
+                        console: 'internalConsole'
+                    };
+                    break;
+                case 'go':
+                    launchConfig = {
+                        type: 'go',
+                        request: 'launch',
+                        mode: 'debug',
+                        program: worktreePath + '/' + relativeFilePath,
+                        cwd: worktreePath
+                    };
+                    break;
+                case 'rust':
+                    launchConfig = {
+                        type: 'lldb',
+                        request: 'launch',
+                        program: worktreePath + '/target/debug/' + relativeFilePath.replace(/\.rs$/, ''),
+                        cwd: worktreePath
+                    };
+                    break;
+                case 'java':
+                    launchConfig = {
+                        type: 'java',
+                        request: 'launch',
+                        mainClass: relativeFilePath.replace(/\.java$/, '').replace(/\//g, '.'),
+                        cwd: worktreePath
+                    };
+                    break;
+                default: // python
+                    launchConfig = {
+                        type: 'python',
+                        request: 'launch',
+                        program: worktreePath + '/' + relativeFilePath,
+                        console: 'internalConsole',
+                        justMyCode: true,
+                        cwd: worktreePath
+                    };
+                    break;
+            }
+
+            var adapterID = lang === 'csharp' ? 'coreclr' : lang;
 
             return this._sendRequest('initialize', {
                 clientID: 'mypersonalgit-ide',
                 clientName: 'MyPersonalGit IDE',
-                adapterID: 'python',
+                adapterID: adapterID,
                 pathFormat: 'path',
                 linesStartAt1: true,
                 columnsStartAt1: true,
                 supportsVariableType: true,
                 supportsRunInTerminalRequest: false
             }).then(function () {
-                return self._sendRequest('launch', {
-                    type: 'python',
-                    request: 'launch',
-                    program: worktreePath + '/' + relativeFilePath,
-                    console: 'internalConsole',
-                    justMyCode: true,
-                    cwd: worktreePath
-                });
+                return self._sendRequest('launch', launchConfig);
             }).then(function () {
                 // Send breakpoints for all files
                 for (var filePath in self._breakpoints) {

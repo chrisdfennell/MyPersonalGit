@@ -176,7 +176,9 @@ builder.Services.AddSingleton<IDependencyUpdateService, DependencyUpdateService>
 builder.Services.AddSingleton<IWebIdeService, WebIdeService>();
 builder.Services.AddSingleton<LspProcessManager>();
 builder.Services.AddSingleton<IAiCompletionService, AiCompletionService>();
+builder.Services.AddSingleton<IAiChatService, AiChatService>();
 builder.Services.AddSingleton<DapSessionManager>();
+builder.Services.AddSignalR();
 builder.Services.AddHttpClient();
 builder.Services.AddHostedService<DependencyUpdateSchedulerService>();
 builder.Services.AddHttpContextAccessor();
@@ -808,6 +810,9 @@ app.MapTaskRunnerWebSocket();
 
 // Debug Adapter Protocol WebSocket endpoint
 app.MapDapWebSocket();
+
+// Real-time collaboration SignalR hub
+app.MapHub<MyPersonalGit.Hubs.CollaborationHub>("/hubs/collaboration");
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

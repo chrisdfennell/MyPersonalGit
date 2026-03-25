@@ -1,0 +1,385 @@
+@using MyPersonalGit.Data
+@inject IAiChatService AiChatService
+@inject IJSRuntime JS
+
+<div class="ide-ai-chat-panel">
+    <div class="ide-ai-header">
+        <i class="bi bi-stars me-1" style="color:#c084fc;"></i>
+        <span class="small fw-semibold">AI Assistant</span>
+        <div class="ms-auto d-flex gap-1">
+            <button class="btn btn-sm btn-link text-muted p-0" @onclick="ClearChat" title="Clear chat">
+                <i class="bi bi-trash" style="font-size:0.7rem;"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="ide-ai-messages" @ref="messagesContainer">
+        @if (messages.Count == 0)
+        {
+            <div class="ide-ai-welcome">
+                <i class="bi bi-stars display-6 mb-2" style="color:#c084fc; opacity:0.3;"></i>
+                <div class="small text-muted mb-2">AI Assistant</div>
+                <div class="ide-ai-quick-actions">
+                    @if (!string.IsNullOrEmpty(SelectedCode))
+                    {
+                        <button class="ide-ai-action-btn" @onclick="ExplainSelection">
+                            <i class="bi bi-lightbulb me-1"></i>Explain selection
+                        </button>
+                        <button class="ide-ai-action-btn" @onclick="RefactorSelection">
+                            <i class="bi bi-wrench me-1"></i>Refactor selection
+                        </button>
+                        <button class="ide-ai-action-btn" @onclick="GenerateTestsForSelection">
+                            <i class="bi bi-check2-square me-1"></i>Generate tests
+                        </button>
+                        <button class="ide-ai-action-btn" @onclick="AddDocumentation">
+                            <i class="bi bi-file-text me-1"></i>Add docs
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="small text-muted px-2">Select code in the editor to get AI actions, or ask a question below.</div>
+                    }
+                </div>
+            </div>
+        }
+
+        @foreach (var msg in messages)
+        {
+            <div class="ide-ai-message ide-ai-@msg.Role">
+                <div class="ide-ai-msg-header">
+                    @if (msg.Role == "user")
+                    {
+                        <i class="bi bi-person-fill me-1"></i><span class="small fw-semibold">You</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-stars me-1" style="color:#c084fc;"></i><span class="small fw-semibold">AI</span>
+                    }
+                </div>
+                <div class="ide-ai-msg-body">
+                    @if (msg.IsStreaming)
+                    {
+                        <span>@((MarkupString)RenderMarkdown(msg.Content))</span>
+                        <span class="ide-ai-cursor"></span>
+                    }
+                    else
+                    {
+                        @((MarkupString)RenderMarkdown(msg.Content))
+                    }
+
+                    @if (msg.Role == "assistant" && !msg.IsStreaming && msg.HasCodeBlock)
+                    {
+                        <div class="ide-ai-code-actions mt-1">
+                            <button class="ide-ai-action-btn small" @onclick="() => ApplyCode(msg)" title="Apply to editor">
+                                <i class="bi bi-arrow-right-square me-1"></i>Apply
+                            </button>
+                            <button class="ide-ai-action-btn small" @onclick="() => CopyCode(msg)" title="Copy code">
+                                <i class="bi bi-clipboard me-1"></i>Copy
+                            </button>
+                            <button class="ide-ai-action-btn small" @onclick="() => InsertAsNewFile(msg)" title="Insert as new file">
+                                <i class="bi bi-file-plus me-1"></i>New file
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (isLoading)
+        {
+            <div class="ide-ai-message ide-ai-assistant">
+                <div class="ide-ai-msg-header">
+                    <i class="bi bi-stars me-1" style="color:#c084fc;"></i><span class="small fw-semibold">AI</span>
+                </div>
+                <div class="ide-ai-msg-body">
+                    <span class="spinner-border spinner-border-sm me-1" style="width:0.7rem;height:0.7rem;"></span>
+                    <span class="small text-muted">Thinking...</span>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="ide-ai-input-area">
+        @if (!string.IsNullOrEmpty(SelectedCode))
+        {
+            <div class="ide-ai-context-badge">
+                <i class="bi bi-code-square me-1"></i>
+                <span class="small">@SelectedCodeLines lines selected</span>
+                <button class="btn btn-link btn-sm text-muted p-0 ms-1" @onclick="ClearContext" title="Clear context">
+                    <i class="bi bi-x" style="font-size:0.7rem;"></i>
+                </button>
+            </div>
+        }
+        <div class="ide-ai-input-row">
+            <textarea class="ide-ai-input" @bind="inputText" @bind:event="oninput"
+                      @onkeydown="HandleInputKeyDown" placeholder="Ask about code..." rows="1"></textarea>
+            <button class="ide-ai-send" @onclick="SendMessage" disabled="@(isLoading || string.IsNullOrWhiteSpace(inputText))"
+                    title="Send (Enter)">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? SelectedCode { get; set; }
+    [Parameter] public string? Language { get; set; }
+    [Parameter] public string? FileName { get; set; }
+    [Parameter] public string? FileContent { get; set; }
+    [Parameter] public EventCallback<string> OnApplyCode { get; set; }
+    [Parameter] public EventCallback<string> OnInsertNewFile { get; set; }
+
+    private string inputText = "";
+    private bool isLoading;
+    private List<ChatMessage> messages = new();
+    private ElementReference messagesContainer;
+    private CancellationTokenSource? _streamCts;
+
+    private int SelectedCodeLines => SelectedCode?.Split('\n').Length ?? 0;
+
+    private record ChatMessage
+    {
+        public string Role { get; set; } = "";
+        public string Content { get; set; } = "";
+        public bool IsStreaming { get; set; }
+        public bool HasCodeBlock => Content.Contains("```");
+    }
+
+    private async Task HandleInputKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await SendMessage();
+        }
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(inputText) || isLoading) return;
+
+        var userMsg = inputText.Trim();
+        inputText = "";
+        messages.Add(new ChatMessage { Role = "user", Content = userMsg });
+        StateHasChanged();
+        await ScrollToBottom();
+
+        // Include selected code in the prompt if there is a selection
+        var prompt = userMsg;
+        if (!string.IsNullOrEmpty(SelectedCode))
+        {
+            var lang = Language ?? "code";
+            prompt = $"{userMsg}\n\nSelected code ({lang}):\n```{lang}\n{SelectedCode}\n```";
+        }
+
+        await StreamResponse(prompt, null);
+    }
+
+    private async Task ExplainSelection()
+    {
+        if (string.IsNullOrEmpty(SelectedCode)) return;
+        var lang = Language ?? "code";
+        messages.Add(new ChatMessage { Role = "user", Content = $"Explain the selected {lang} code" });
+        StateHasChanged();
+
+        var systemPrompt = "You are a code explanation expert. Explain the given code clearly and concisely. " +
+                           "Break down complex logic, explain the purpose of each section, and highlight any notable patterns or potential issues. " +
+                           "Use markdown formatting.";
+        var prompt = $"Explain this {lang} code from `{FileName}`:\n\n```{lang}\n{SelectedCode}\n```";
+        await StreamResponse(prompt, systemPrompt);
+    }
+
+    private async Task RefactorSelection()
+    {
+        if (string.IsNullOrEmpty(SelectedCode)) return;
+        var lang = Language ?? "code";
+        messages.Add(new ChatMessage { Role = "user", Content = $"Refactor the selected {lang} code" });
+        StateHasChanged();
+
+        var systemPrompt = "You are a code refactoring expert. Return the refactored code inside a markdown fenced code block. " +
+                           "Add a brief explanation after the code block.";
+        var prompt = $"Refactor this {lang} code for better readability, performance, and best practices:\n\n```{lang}\n{SelectedCode}\n```";
+        await StreamResponse(prompt, systemPrompt);
+    }
+
+    private async Task GenerateTestsForSelection()
+    {
+        if (string.IsNullOrEmpty(SelectedCode)) return;
+        var lang = Language ?? "code";
+        messages.Add(new ChatMessage { Role = "user", Content = $"Generate tests for the selected {lang} code" });
+        StateHasChanged();
+
+        var framework = GetDefaultTestFramework(lang);
+        var systemPrompt = $"You are a test generation expert. Generate comprehensive unit tests using {framework}. " +
+                           "Cover edge cases, error conditions, and common scenarios. " +
+                           "Return the test code inside a markdown fenced code block. Include necessary imports.";
+        var prompt = $"Generate unit tests for this {lang} code using {framework}:\n\n```{lang}\n{SelectedCode}\n```";
+        await StreamResponse(prompt, systemPrompt);
+    }
+
+    private async Task AddDocumentation()
+    {
+        if (string.IsNullOrEmpty(SelectedCode)) return;
+        var lang = Language ?? "code";
+        messages.Add(new ChatMessage { Role = "user", Content = $"Add documentation to the selected {lang} code" });
+        StateHasChanged();
+
+        var systemPrompt = "You are a documentation expert. Generate documentation comments/docstrings for the given code. " +
+                           "Return the documented code inside a markdown fenced code block.";
+        var prompt = $"Add documentation comments to this {lang} code:\n\n```{lang}\n{SelectedCode}\n```";
+        await StreamResponse(prompt, systemPrompt);
+    }
+
+    private async Task StreamResponse(string prompt, string? systemPrompt)
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        var assistantMsg = new ChatMessage { Role = "assistant", Content = "", IsStreaming = true };
+        messages.Add(assistantMsg);
+
+        try
+        {
+            _streamCts = new CancellationTokenSource();
+            await foreach (var chunk in AiChatService.ChatStreamAsync(prompt, systemPrompt, FileContent, _streamCts.Token))
+            {
+                assistantMsg.Content += chunk;
+                StateHasChanged();
+                await ScrollToBottom();
+            }
+
+            // If streaming returned nothing, try non-streaming fallback
+            if (string.IsNullOrEmpty(assistantMsg.Content))
+            {
+                var response = await AiChatService.ChatAsync(prompt, systemPrompt, FileContent);
+                assistantMsg.Content = response ?? "No response received. Check AI settings in Admin > Settings (API endpoint, key, model).";
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            if (string.IsNullOrEmpty(assistantMsg.Content))
+            {
+                // Fallback to non-streaming
+                try
+                {
+                    var response = await AiChatService.ChatAsync(prompt, systemPrompt, FileContent);
+                    assistantMsg.Content = response ?? "No response received. Check AI settings in Admin > Settings.";
+                }
+                catch (Exception ex2)
+                {
+                    assistantMsg.Content = $"**Error:** {ex2.Message}\n\nOriginal error: {ex.Message}";
+                }
+            }
+        }
+        finally
+        {
+            assistantMsg.IsStreaming = false;
+            isLoading = false;
+            _streamCts?.Dispose();
+            _streamCts = null;
+            StateHasChanged();
+        }
+    }
+
+    private void ClearChat()
+    {
+        messages.Clear();
+        StateHasChanged();
+    }
+
+    private void ClearContext()
+    {
+        // This just visually clears - parent handles the actual selected code
+    }
+
+    private async Task ApplyCode(ChatMessage msg)
+    {
+        var code = ExtractCodeBlock(msg.Content);
+        if (code != null)
+            await OnApplyCode.InvokeAsync(code);
+    }
+
+    private async Task CopyCode(ChatMessage msg)
+    {
+        var code = ExtractCodeBlock(msg.Content);
+        if (code != null)
+        {
+            try { await JS.InvokeVoidAsync("navigator.clipboard.writeText", code); }
+            catch { }
+        }
+    }
+
+    private async Task InsertAsNewFile(ChatMessage msg)
+    {
+        var code = ExtractCodeBlock(msg.Content);
+        if (code != null)
+            await OnInsertNewFile.InvokeAsync(code);
+    }
+
+    private static string? ExtractCodeBlock(string content)
+    {
+        var startIdx = content.IndexOf("```");
+        if (startIdx < 0) return null;
+
+        // Skip past the ``` and optional language identifier
+        var afterFence = content.IndexOf('\n', startIdx);
+        if (afterFence < 0) return null;
+
+        var endIdx = content.IndexOf("```", afterFence);
+        if (endIdx < 0) return content[(afterFence + 1)..].Trim();
+
+        return content[(afterFence + 1)..endIdx].Trim();
+    }
+
+    private static string RenderMarkdown(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return "";
+
+        // Simple markdown rendering for chat messages
+        var html = System.Web.HttpUtility.HtmlEncode(content);
+
+        // Code blocks
+        html = System.Text.RegularExpressions.Regex.Replace(html,
+            @"```(\w*)\n([\s\S]*?)```",
+            m =>
+            {
+                var lang = m.Groups[1].Value;
+                var code = m.Groups[2].Value.Trim();
+                return $"<pre class=\"ide-ai-codeblock\"><code class=\"language-{lang}\">{code}</code></pre>";
+            });
+
+        // Inline code
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"`([^`]+)`", "<code class=\"ide-ai-inline-code\">$1</code>");
+
+        // Bold
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
+
+        // Italic
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"\*(.+?)\*", "<em>$1</em>");
+
+        // Line breaks
+        html = html.Replace("\n", "<br/>");
+
+        return html;
+    }
+
+    private async Task ScrollToBottom()
+    {
+        try { await JS.InvokeVoidAsync("ideAiChat.scrollToBottom"); }
+        catch { }
+    }
+
+    private static string GetDefaultTestFramework(string language)
+    {
+        return language.ToLowerInvariant() switch
+        {
+            "csharp" or "c#" => "xUnit",
+            "javascript" or "typescript" or "jsx" or "tsx" => "Jest",
+            "python" => "pytest",
+            "go" => "testing (standard library)",
+            "rust" => "#[cfg(test)] module",
+            "java" => "JUnit 5",
+            _ => "appropriate testing framework"
+        };
+    }
+}

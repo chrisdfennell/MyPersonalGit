@@ -245,9 +245,6 @@ public class WorkflowService : IWorkflowService
     {
         try
         {
-            await using var settingsDb = _dbFactory.CreateDbContext();
-            var settings = await settingsDb.SystemSettings.FirstOrDefaultAsync();
-            if (settings is { EnableActions: false }) return;
             var parser = new WorkflowYamlParser();
             var workflows = parser.ParseFromRepo(repoPath);
 
@@ -395,10 +392,6 @@ public class WorkflowService : IWorkflowService
     {
         try
         {
-            await using var settingsDb = _dbFactory.CreateDbContext();
-            var settings = await settingsDb.SystemSettings.FirstOrDefaultAsync();
-            if (settings is { EnableActions: false }) return;
-
             var parser = new WorkflowYamlParser();
             var workflows = parser.ParseFromRepo(repoPath);
 
