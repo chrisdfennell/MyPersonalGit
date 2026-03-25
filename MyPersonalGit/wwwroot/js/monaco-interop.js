@@ -1811,32 +1811,15 @@
                     console.error('Terminal WebSocket error:', e);
                 };
 
-                // Track when we're handling paste ourselves to suppress xterm's duplicate
-                var _handlingPaste = false;
-
-                // Send user input to WebSocket (but skip if we're handling a paste)
+                // Send user input (including native paste) to WebSocket
                 term.onData(function (data) {
-                    if (_handlingPaste) return;
                     if (ws.readyState === WebSocket.OPEN) {
                         ws.send(data);
                     }
                 });
 
-                // Handle Ctrl+V paste
+                // Allow Ctrl+C to copy when there's a selection (otherwise send SIGINT)
                 term.attachCustomKeyEventHandler(function (e) {
-                    if (e.type === 'keydown' && e.ctrlKey && e.key === 'v') {
-                        _handlingPaste = true;
-                        navigator.clipboard.readText().then(function (text) {
-                            if (text && ws.readyState === WebSocket.OPEN) {
-                                ws.send(text.replace(/\r?\n$/, ''));
-                            }
-                        }).catch(function () {}).finally(function () {
-                            // Small delay to ensure we suppress the browser paste event too
-                            setTimeout(function () { _handlingPaste = false; }, 100);
-                        });
-                        return false;
-                    }
-                    // Allow Ctrl+C to copy (when there's a selection)
                     if (e.type === 'keydown' && e.ctrlKey && e.key === 'c' && term.hasSelection()) {
                         navigator.clipboard.writeText(term.getSelection());
                         return false;
