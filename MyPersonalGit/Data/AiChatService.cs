@@ -27,28 +27,28 @@ public class AiChatService : IAiChatService
         _httpClientFactory = httpClientFactory;
     }
 
-    private async Task<(HttpClient client, string model, string endpoint)?> GetConfiguredClientAsync()
+    private async Task<(HttpClient client, string model, string endpoint)> GetConfiguredClientAsync()
     {
         var settings = await _adminService.GetSystemSettingsAsync();
-        if (!settings.AiCompletionEnabled
-            || string.IsNullOrEmpty(settings.AiCompletionEndpoint)
-            || string.IsNullOrEmpty(settings.AiCompletionApiKey))
-            return null;
+        if (!settings.AiCompletionEnabled)
+            throw new InvalidOperationException("AI Completion is not enabled in Admin settings.");
+        if (string.IsNullOrEmpty(settings.AiCompletionEndpoint))
+            throw new InvalidOperationException("AI API endpoint is not configured in Admin settings.");
+        if (string.IsNullOrEmpty(settings.AiCompletionApiKey))
+            throw new InvalidOperationException("AI API key is not configured in Admin settings.");
 
         var client = _httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", settings.AiCompletionApiKey);
         client.Timeout = TimeSpan.FromSeconds(120);
 
         var endpoint = settings.AiCompletionEndpoint.TrimEnd('/');
+        Console.WriteLine($"[AI Chat] Using endpoint: {endpoint}/chat/completions, model: {settings.AiCompletionModel}");
         return (client, settings.AiCompletionModel, endpoint);
     }
 
     public async Task<string?> ChatAsync(string userMessage, string? systemPrompt = null, string? codeContext = null)
     {
-        var config = await GetConfiguredClientAsync();
-        if (config == null) return null;
-
-        var (client, model, endpoint) = config.Value;
+        var (client, model, endpoint) = await GetConfiguredClientAsync();
 
         var messages = new List<object>();
         messages.Add(new { role = "system", content = systemPrompt ?? "You are an expert programming assistant integrated into a code editor. Be concise and helpful. Format code in markdown fenced blocks with the language specified." });
@@ -96,10 +96,7 @@ public class AiChatService : IAiChatService
 
     public async IAsyncEnumerable<string> ChatStreamAsync(string userMessage, string? systemPrompt = null, string? codeContext = null, [EnumeratorCancellation] CancellationToken ct = default)
     {
-        var config = await GetConfiguredClientAsync();
-        if (config == null) yield break;
-
-        var (client, model, endpoint) = config.Value;
+        var (client, model, endpoint) = await GetConfiguredClientAsync();
 
         var messages = new List<object>();
         messages.Add(new { role = "system", content = systemPrompt ?? "You are an expert programming assistant integrated into a code editor. Be concise and helpful. Format code in markdown fenced blocks with the language specified." });
