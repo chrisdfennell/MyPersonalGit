@@ -2285,29 +2285,87 @@
         /**
          * Initialize and launch a debug session for a Python file.
          */
-        launch: function (relativeFilePath) {
+        launch: function (relativeFilePath, language) {
             var self = this;
             var rootUri = this._rootUri || '';
             var worktreePath = rootUri.replace('file://', '');
+            var lang = language || 'python';
+
+            // Build language-specific launch config
+            var launchConfig;
+            switch (lang) {
+                case 'csharp':
+                    // Find .csproj in the worktree for dotnet run
+                    launchConfig = {
+                        type: 'coreclr',
+                        request: 'launch',
+                        program: 'dotnet',
+                        args: ['run', '--project', worktreePath],
+                        cwd: worktreePath,
+                        stopAtEntry: false,
+                        console: 'internalConsole'
+                    };
+                    break;
+                case 'javascript':
+                case 'typescript':
+                    launchConfig = {
+                        type: 'pwa-node',
+                        request: 'launch',
+                        program: worktreePath + '/' + relativeFilePath,
+                        cwd: worktreePath,
+                        console: 'internalConsole'
+                    };
+                    break;
+                case 'go':
+                    launchConfig = {
+                        type: 'go',
+                        request: 'launch',
+                        mode: 'debug',
+                        program: worktreePath + '/' + relativeFilePath,
+                        cwd: worktreePath
+                    };
+                    break;
+                case 'rust':
+                    launchConfig = {
+                        type: 'lldb',
+                        request: 'launch',
+                        program: worktreePath + '/target/debug/' + relativeFilePath.replace(/\.rs$/, ''),
+                        cwd: worktreePath
+                    };
+                    break;
+                case 'java':
+                    launchConfig = {
+                        type: 'java',
+                        request: 'launch',
+                        mainClass: relativeFilePath.replace(/\.java$/, '').replace(/\//g, '.'),
+                        cwd: worktreePath
+                    };
+                    break;
+                default: // python
+                    launchConfig = {
+                        type: 'python',
+                        request: 'launch',
+                        program: worktreePath + '/' + relativeFilePath,
+                        console: 'internalConsole',
+                        justMyCode: true,
+                        cwd: worktreePath
+                    };
+                    break;
+            }
+
+            var adapterID = lang === 'csharp' ? 'coreclr' : lang;
 
             return this._sendRequest('initialize', {
                 clientID: 'mypersonalgit-ide',
                 clientName: 'MyPersonalGit IDE',
-                adapterID: 'python',
+                adapterID: adapterID,
                 pathFormat: 'path',
                 linesStartAt1: true,
                 columnsStartAt1: true,
                 supportsVariableType: true,
                 supportsRunInTerminalRequest: false
             }).then(function () {
-                return self._sendRequest('launch', {
-                    type: 'python',
-                    request: 'launch',
-                    program: worktreePath + '/' + relativeFilePath,
-                    console: 'internalConsole',
-                    justMyCode: true,
-                    cwd: worktreePath
-                });
+                return self._sendRequest('launch', launchConfig);
             }).then(function () {
                 // Send breakpoints for all files
                 for (var filePath in self._breakpoints) {

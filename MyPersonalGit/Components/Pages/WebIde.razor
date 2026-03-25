@@ -3048,7 +3048,7 @@
             Console.WriteLine($"[Debug] Connect result: {connected}");
             if (!connected) { ShowToast($"Failed to start {debugLang} debugger. The adapter may have crashed — check container logs.", "error"); return; }
 
-            await JS.InvokeVoidAsync("ideDebugger.launch", activeTabPath);
+            await JS.InvokeVoidAsync("ideDebugger.launch", activeTabPath, debugLang);
             isDebugging = true;
             isDebugPaused = false;
             debugOutput.Clear();
