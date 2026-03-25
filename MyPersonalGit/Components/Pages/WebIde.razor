@@ -1397,6 +1397,10 @@
         {
             await CloseDiffView();
         }
+        if (showBranchDiff)
+        {
+            await CloseBranchDiffEditor();
+        }
 
         // Reset markdown preview when switching files
         showMarkdownPreview = false;
@@ -1475,6 +1479,8 @@
 
     private async Task HandleTabSelected(string path)
     {
+        if (showBranchDiff) await CloseBranchDiffEditor();
+        if (showDiffView) await CloseDiffView();
         await SwitchToTab(path);
     }
 
