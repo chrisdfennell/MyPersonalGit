@@ -132,26 +132,25 @@ public sealed class DapSessionManager : IDisposable
             {
                 try
                 {
+                    Console.WriteLine($"[DAP] Running setup '{adapter.SetupCommand}' in {workTree}");
                     var setupPsi = new ProcessStartInfo
                     {
                         FileName = OperatingSystem.IsWindows() ? "cmd.exe" : "/bin/sh",
                         Arguments = OperatingSystem.IsWindows() ? $"/c {adapter.SetupCommand}" : $"-c \"{adapter.SetupCommand}\"",
                         WorkingDirectory = workTree,
                         UseShellExecute = false,
-                        CreateNoWindow = true,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true
+                        CreateNoWindow = true
                     };
                     var setupProcess = Process.Start(setupPsi);
                     if (setupProcess != null)
                     {
-                        // Read stderr async to avoid deadlock when both buffers fill
-                        var stderrTask = setupProcess.StandardError.ReadToEndAsync();
-                        var stdout = setupProcess.StandardOutput.ReadToEnd();
-                        setupProcess.WaitForExit(60000);
-                        var stderr = stderrTask.Result;
-                        if (setupProcess.ExitCode != 0)
-                            Console.WriteLine($"[DAP] Setup '{adapter.SetupCommand}' FAILED (exit {setupProcess.ExitCode}) for {language}:\n{stderr}");
+                        if (!setupProcess.WaitForExit(90000))
+                        {
+                            Console.WriteLine($"[DAP] Setup '{adapter.SetupCommand}' TIMED OUT after 90s for {language}");
+                            try { setupProcess.Kill(entireProcessTree: true); } catch { }
+                        }
+                        else if (setupProcess.ExitCode != 0)
+                            Console.WriteLine($"[DAP] Setup '{adapter.SetupCommand}' FAILED (exit {setupProcess.ExitCode}) for {language}");
                         else
                             Console.WriteLine($"[DAP] Setup '{adapter.SetupCommand}' completed for {language}");
                     }
