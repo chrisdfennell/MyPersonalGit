@@ -145,9 +145,11 @@ public sealed class DapSessionManager : IDisposable
                     var setupProcess = Process.Start(setupPsi);
                     if (setupProcess != null)
                     {
+                        // Read stderr async to avoid deadlock when both buffers fill
+                        var stderrTask = setupProcess.StandardError.ReadToEndAsync();
                         var stdout = setupProcess.StandardOutput.ReadToEnd();
-                        var stderr = setupProcess.StandardError.ReadToEnd();
                         setupProcess.WaitForExit(60000);
+                        var stderr = stderrTask.Result;
                         if (setupProcess.ExitCode != 0)
                             Console.WriteLine($"[DAP] Setup '{adapter.SetupCommand}' FAILED (exit {setupProcess.ExitCode}) for {language}:\n{stderr}");
                         else
