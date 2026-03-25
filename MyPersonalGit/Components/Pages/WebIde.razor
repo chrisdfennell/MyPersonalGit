@@ -333,7 +333,7 @@
             }
             else if (sidebarMode == "aichat" && aiChatEnabled)
             {
-                <IdeAiChatPanel SelectedCode="@aiSelectedCode"
+                <IdeAiChatPanel SelectedCode="@aiSelectedCode" @ref="aiChatPanelRef"
                                 Language="@GetLanguageDisplayName(activeTabPath)"
                                 FileName="@(activeTabPath != null ? System.IO.Path.GetFileName(activeTabPath) : null)"
                                 FileContent="@GetCurrentFileContent()"
@@ -976,6 +976,7 @@
     // AI chat state
     private bool aiChatEnabled;
     private string? aiSelectedCode;
+    private IdeAiChatPanel? aiChatPanelRef;
 
     // Collaboration state
     private bool collabEnabled;
@@ -3131,7 +3132,7 @@
 
     // ---- Sidebar toggle ----
 
-    private void ToggleSidebarMode(string mode)
+    private async void ToggleSidebarMode(string mode)
     {
         if (sidebarMode == mode)
         {
@@ -3142,6 +3143,19 @@
         {
             previousSidebarMode = sidebarMode;
             sidebarMode = mode;
+        }
+
+        // Sync editor selection when switching to AI chat
+        if (sidebarMode == "aichat" && editorId != null)
+        {
+            try
+            {
+                var selected = await JS.InvokeAsync<string?>("ideAiChat.getSelectedText", editorId);
+                if (!string.IsNullOrEmpty(selected))
+                    aiSelectedCode = selected;
+            }
+            catch { }
+            StateHasChanged();
         }
     }
 

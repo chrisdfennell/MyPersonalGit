@@ -163,7 +163,15 @@
         StateHasChanged();
         await ScrollToBottom();
 
-        await StreamResponse(userMsg, null);
+        // Include selected code in the prompt if there is a selection
+        var prompt = userMsg;
+        if (!string.IsNullOrEmpty(SelectedCode))
+        {
+            var lang = Language ?? "code";
+            prompt = $"{userMsg}\n\nSelected code ({lang}):\n```{lang}\n{SelectedCode}\n```";
+        }
+
+        await StreamResponse(prompt, null);
     }
 
     private async Task ExplainSelection()
