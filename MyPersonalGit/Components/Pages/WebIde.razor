@@ -1141,29 +1141,28 @@
                 try
                 {
                     var sysSettings = await AdminService.GetSystemSettingsAsync();
+
+                    // AI inline completion (existing feature)
                     if (sysSettings.AiCompletionEnabled && !string.IsNullOrEmpty(sysSettings.AiCompletionEndpoint))
                     {
                         aiCompletionEnabled = true;
-                        await JS.InvokeVoidAsync("ideAiComplete.init", dotNetRef);
-                        await JS.InvokeVoidAsync("ideAiComplete.enable");
+                        try
+                        {
+                            await JS.InvokeVoidAsync("ideAiComplete.init", dotNetRef);
+                            await JS.InvokeVoidAsync("ideAiComplete.enable");
+                        }
+                        catch (Exception ex) { Console.WriteLine($"[AI Complete] Init error: {ex.Message}"); }
                     }
 
-                    // Initialize AI Chat & context menu actions
+                    // AI Chat & context menu actions
                     if (sysSettings.AiChatEnabled && sysSettings.AiCompletionEnabled)
                     {
-                        aiChatEnabled = true;
                         try
                         {
                             await JS.InvokeVoidAsync("ideAiChat.init", dotNetRef);
                             await JS.InvokeVoidAsync("ideAiChat.registerContextMenuActionsById", editorId);
                         }
                         catch (Exception ex) { Console.WriteLine($"[AI Chat] Init error: {ex.Message}"); }
-                    }
-
-                    // Initialize real-time collaboration
-                    if (sysSettings.CollaborationEnabled)
-                    {
-                        collabEnabled = true;
                     }
 
                     StateHasChanged();

@@ -767,9 +767,21 @@ public class WebIdeService : IWebIdeService
         return await Task.Run(() =>
         {
             using var repo = new Repository(repoPath);
-            var baseCommit = ResolveBranch(repo, baseBranch)?.Tip;
-            var compareCommit = ResolveBranch(repo, compareBranch)?.Tip;
-            if (baseCommit == null || compareCommit == null) return new List<BranchDiffFile>();
+
+            // Resolve branches strictly — don't fall back for diff comparison
+            var baseBranchObj = repo.Branches[baseBranch];
+            var compareBranchObj = repo.Branches[compareBranch];
+
+            var available = string.Join(", ", repo.Branches.Where(b => !b.IsRemote).Select(b => b.FriendlyName));
+            if (baseBranchObj == null)
+                throw new InvalidOperationException($"Branch '{baseBranch}' not found. Available branches: {available}");
+            if (compareBranchObj == null)
+                throw new InvalidOperationException($"Branch '{compareBranch}' not found. Available branches: {available}");
+
+            var baseCommit = baseBranchObj.Tip;
+            var compareCommit = compareBranchObj.Tip;
+            if (baseCommit == null || compareCommit == null)
+                throw new InvalidOperationException("One or both branches have no commits.");
 
             var changes = repo.Diff.Compare<TreeChanges>(baseCommit.Tree, compareCommit.Tree);
             return changes.Select(c => new BranchDiffFile(

@@ -62,6 +62,14 @@ RUN ARCH=$(dpkg --print-architecture) && \
     | tar xz -C /usr/local/bin/omnisharp && \
     chmod +x /usr/local/bin/omnisharp/OmniSharp
 
+# netcoredbg — C# debugger (DAP-compatible)
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "amd64" ]; then NCARCH="linux-amd64"; else NCARCH="linux-arm64"; fi && \
+    mkdir -p /usr/local/netcoredbg && \
+    curl -sSL "https://github.com/Samsung/netcoredbg/releases/latest/download/netcoredbg-${NCARCH}.tar.gz" \
+    | tar xz -C /usr/local && \
+    ln -s /usr/local/netcoredbg/netcoredbg /usr/local/bin/netcoredbg
+
 # Create a non-root user and the repos/data directories
 # Add appuser to docker group for socket access
 RUN groupadd -r appuser && useradd -r -g appuser -m appuser \
