@@ -47,7 +47,7 @@ public sealed class DapSessionManager : IDisposable
     private static readonly Dictionary<string, DapAdapterConfig> Adapters = new()
     {
         ["python"] = new("python3", "-m debugpy.adapter", null),
-        ["csharp"] = new("netcoredbg", "--interpreter=vscode --engineLogging=/tmp/netcoredbg.log", "dotnet restore"),
+        ["csharp"] = new("netcoredbg", "--interpreter=vscode --engineLogging=/tmp/netcoredbg.log", "dotnet build"),
         ["javascript"] = new("node", GetJsDebugAdapterPath(), null),
         ["typescript"] = new("node", GetJsDebugAdapterPath(), null),
         ["go"] = new("dlv", "dap --listen=:0 --log", null),

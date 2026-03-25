@@ -1777,7 +1777,8 @@
                 fontSize: 13,
                 fontFamily: "'Cascadia Code', 'Fira Code', 'Consolas', monospace",
                 theme: isDark ? darkTheme : lightTheme,
-                allowProposedApi: true
+                allowProposedApi: true,
+                rightClickSelectsWord: true
             });
 
             var fitAddon = new FitAddon.FitAddon();
@@ -1815,6 +1816,25 @@
                     if (ws.readyState === WebSocket.OPEN) {
                         ws.send(data);
                     }
+                });
+
+                // Handle Ctrl+V paste — intercept and send as bracket paste
+                term.attachCustomKeyEventHandler(function (e) {
+                    if (e.type === 'keydown' && e.ctrlKey && e.key === 'v') {
+                        navigator.clipboard.readText().then(function (text) {
+                            if (text && ws.readyState === WebSocket.OPEN) {
+                                // Wrap in bracket paste mode escape sequences
+                                ws.send('\x1b[200~' + text + '\x1b[201~');
+                            }
+                        }).catch(function () {});
+                        return false; // prevent default xterm paste
+                    }
+                    // Allow Ctrl+C to copy (when there's a selection)
+                    if (e.type === 'keydown' && e.ctrlKey && e.key === 'c' && term.hasSelection()) {
+                        navigator.clipboard.writeText(term.getSelection());
+                        return false;
+                    }
+                    return true;
                 });
             } catch (e) {
                 term.writeln('\x1b[31mFailed to connect: ' + e.message + '\x1b[0m');
@@ -2295,13 +2315,15 @@
             var launchConfig;
             switch (lang) {
                 case 'csharp':
-                    // Find .csproj in the worktree for dotnet run
+                    // Derive project directory from the active file path
+                    // e.g., "MyPersonalGit/Program.cs" -> "MyPersonalGit"
+                    var csParts = relativeFilePath.split('/');
+                    var csProjectDir = csParts.length > 1 ? csParts[0] : '.';
                     launchConfig = {
                         type: 'coreclr',
                         request: 'launch',
-                        program: 'dotnet',
-                        args: ['run', '--project', worktreePath],
-                        cwd: worktreePath,
+                        program: worktreePath + '/' + csProjectDir + '/bin/Debug/net10.0/' + csProjectDir + '.dll',
+                        cwd: worktreePath + '/' + csProjectDir,
                         stopAtEntry: false,
                         console: 'internalConsole'
                     };

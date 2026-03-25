@@ -27,10 +27,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && pip3 install --break-system-packages python-lsp-server debugpy \
     && rm -rf /var/lib/apt/lists/* /root/.npm /root/.cache
 
-# .NET 8 SDK (needed by OmniSharp C# language server)
+# .NET SDKs (8.0 for OmniSharp, 10.0 for building/debugging .NET 10 projects)
 RUN curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
     && chmod +x /tmp/dotnet-install.sh \
     && /tmp/dotnet-install.sh --channel 8.0 --install-dir /usr/share/dotnet \
+    && /tmp/dotnet-install.sh --channel 10.0 --install-dir /usr/share/dotnet \
     && rm /tmp/dotnet-install.sh
 
 # Go + gopls language server
