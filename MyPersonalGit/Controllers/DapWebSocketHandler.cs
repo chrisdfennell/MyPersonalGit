@@ -73,15 +73,24 @@ public static class DapWebSocketHandler
             }
 
             // Accept WebSocket FIRST — the session startup (dotnet build etc.) can take
-            // 30-60 seconds and the client will time out if we block before accepting.
+            // several minutes on slower hardware and the client will time out if we block.
             using var ws = await context.WebSockets.AcceptWebSocketAsync();
 
-            // Send a status message so the client knows we're working
-            var statusMsg = System.Text.Json.JsonSerializer.Serialize(new { type = "status", message = "Building project..." });
-            await ws.SendAsync(Encoding.UTF8.GetBytes(statusMsg), WebSocketMessageType.Text, true, context.RequestAborted);
-
             var dapManager = context.RequestServices.GetRequiredService<DapSessionManager>();
-            var session = await Task.Run(() => dapManager.GetOrStartSession(repoName, language, user.Username, repoPath, branch));
+            var sessionTask = Task.Run(() => dapManager.GetOrStartSession(repoName, language, user.Username, repoPath, branch));
+
+            // Send periodic status messages while building so the client doesn't time out
+            var elapsed = 0;
+            while (!sessionTask.IsCompleted)
+            {
+                if (ws.State != WebSocketState.Open) return;
+                var statusMsg = System.Text.Json.JsonSerializer.Serialize(new { type = "status", message = $"Building project... ({elapsed}s)" });
+                await ws.SendAsync(Encoding.UTF8.GetBytes(statusMsg), WebSocketMessageType.Text, true, context.RequestAborted);
+                await Task.WhenAny(sessionTask, Task.Delay(5000, context.RequestAborted));
+                elapsed += 5;
+            }
+
+            var session = sessionTask.Result;
 
             if (session?.Process == null || session.Process.HasExited)
             {

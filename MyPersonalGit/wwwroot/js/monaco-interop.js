@@ -2251,16 +2251,25 @@
             return new Promise(function (resolve) {
                 var ws = new WebSocket(wsUrl);
                 var gotInit = false;
+                var timeoutId = null;
 
-                ws.onopen = function () { self._ws = ws; };
+                // No fixed timeout — we rely on keepalive status messages from the server.
+                // If no message arrives for 30s, assume connection lost.
+                function resetTimeout() {
+                    if (timeoutId) clearTimeout(timeoutId);
+                    timeoutId = setTimeout(function () { if (!gotInit) resolve(false); }, 30000);
+                }
+
+                ws.onopen = function () { self._ws = ws; resetTimeout(); };
 
                 ws.onmessage = function (event) {
                     try {
                         var msg = JSON.parse(event.data);
 
-                        // Status updates while building
+                        // Status updates while building — reset timeout on each one
                         if (!gotInit && msg.type === 'status') {
                             console.log('[DAP] Status:', msg.message);
+                            resetTimeout();
                             if (dotNetRef) {
                                 try { dotNetRef.invokeMethodAsync('OnDebugOutput', msg.message + '\n', 'console'); } catch (e) { }
                             }
@@ -2270,6 +2279,7 @@
                         // Error from server
                         if (msg.type === 'error') {
                             console.error('[DAP] Server error:', msg.message);
+                            if (timeoutId) clearTimeout(timeoutId);
                             resolve(false);
                             return;
                         }
@@ -2277,6 +2287,7 @@
                         // Init with rootUri — session is ready
                         if (!gotInit && msg.type === 'init' && msg.rootUri) {
                             gotInit = true;
+                            if (timeoutId) clearTimeout(timeoutId);
                             self._rootUri = msg.rootUri;
                             resolve(true);
                             return;
@@ -2290,14 +2301,14 @@
 
                 ws.onclose = function () {
                     self._ws = null;
+                    if (timeoutId) clearTimeout(timeoutId);
                     if (!gotInit) resolve(false);
                     if (dotNetRef) {
                         try { dotNetRef.invokeMethodAsync('OnDebugTerminated'); } catch (e) { }
                     }
                 };
 
-                ws.onerror = function () { resolve(false); };
-                setTimeout(function () { if (!gotInit) resolve(false); }, 90000);
+                ws.onerror = function () { if (timeoutId) clearTimeout(timeoutId); resolve(false); };
             });
         },
 
