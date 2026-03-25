@@ -2994,7 +2994,14 @@
 
     private async Task StartDebugSession()
     {
-        if (activeTabPath == null) return;
+        Console.WriteLine($"[Debug] StartDebugSession called. activeTabPath={activeTabPath}, selectedDebugLanguage={selectedDebugLanguage}");
+
+        if (activeTabPath == null)
+        {
+            ShowToast("Open a file first to start debugging", "warning");
+            return;
+        }
+
         try
         {
             // Auto-detect language if not manually selected
@@ -3002,9 +3009,10 @@
             if (string.IsNullOrEmpty(debugLang))
             {
                 debugLang = DapSessionManager.GetDebugLanguageForFile(activeTabPath);
+                Console.WriteLine($"[Debug] Auto-detected language: '{debugLang}' for file: {activeTabPath}");
                 if (string.IsNullOrEmpty(debugLang))
                 {
-                    ShowToast("Cannot auto-detect debug language for this file type", "warning");
+                    ShowToast($"Cannot auto-detect debug language for '{System.IO.Path.GetExtension(activeTabPath)}' files. Select a language from the dropdown.", "warning");
                     return;
                 }
             }
@@ -3012,10 +3020,12 @@
             var baseUri = new Uri(Navigation.BaseUri);
             var wsScheme = baseUri.Scheme == "https" ? "wss" : "ws";
             var sessionId = UserService.SessionId;
+            Console.WriteLine($"[Debug] SessionId from UserService: '{sessionId}'");
             if (string.IsNullOrEmpty(sessionId))
             {
                 try { sessionId = await JS.InvokeAsync<string?>("localStorage.getItem", "sessionId"); }
-                catch { }
+                catch (Exception ex) { Console.WriteLine($"[Debug] localStorage sessionId error: {ex.Message}"); }
+                Console.WriteLine($"[Debug] SessionId from localStorage: '{sessionId}'");
             }
             if (string.IsNullOrEmpty(sessionId))
             {
@@ -3027,8 +3037,10 @@
             StateHasChanged();
 
             var wsUrl = $"{wsScheme}://{baseUri.Host}:{baseUri.Port}/ws/dap/{RepoName}?language={debugLang}&branch={currentBranch}&session={Uri.EscapeDataString(sessionId)}";
+            Console.WriteLine($"[Debug] Connecting to: {wsUrl}");
             var connected = await JS.InvokeAsync<bool>("ideDebugger.connect", wsUrl, dotNetRef);
-            if (!connected) { ShowToast($"Failed to start {debugLang} debugger. Ensure the debug adapter is installed in the container (e.g., netcoredbg for C#, dlv for Go).", "error"); return; }
+            Console.WriteLine($"[Debug] Connect result: {connected}");
+            if (!connected) { ShowToast($"Failed to start {debugLang} debugger. The adapter may have crashed — check container logs.", "error"); return; }
 
             await JS.InvokeVoidAsync("ideDebugger.launch", activeTabPath);
             isDebugging = true;
