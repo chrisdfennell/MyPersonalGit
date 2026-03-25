@@ -437,6 +437,7 @@
             </div>
         }
 
+        @* Diff views — rendered on top, hidden when not active *@
         @if (showDiffView)
         {
             <div class="ide-diff-header px-3 py-1">
@@ -448,7 +449,7 @@
             </div>
             <div id="diff-editor-container" style="width: 100%; flex: 1;"></div>
         }
-        else if (showBranchDiff)
+        @if (showBranchDiff)
         {
             <div class="ide-diff-header px-3 py-1">
                 <i class="bi bi-arrow-left-right me-2"></i>
@@ -459,47 +460,50 @@
             </div>
             <div id="branch-diff-editor-container" style="width: 100%; flex: 1;"></div>
         }
-        else if (activeTabPath != null && IsImageFile(activeTabPath))
+
+        @* Image preview *@
+        @if (!showDiffView && !showBranchDiff && activeTabPath != null && IsImageFile(activeTabPath))
         {
             <div class="ide-preview ide-image-preview">
                 <img src="/api/v1/ide/@RepoName/raw/@activeTabPath?branch=@Uri.EscapeDataString(currentBranch)" alt="@System.IO.Path.GetFileName(activeTabPath)" />
             </div>
         }
-        else
+
+        @* Markdown preview *@
+        @if (!showDiffView && !showBranchDiff && activeTabPath != null && IsMarkdownFile(activeTabPath) && showMarkdownPreview)
         {
-            @if (activeTabPath != null && IsMarkdownFile(activeTabPath) && showMarkdownPreview)
-            {
-                <div class="ide-preview ide-markdown-preview">
-                    <div class="ide-markdown-toolbar">
-                        <button class="ide-action-btn active" title="@L["Ide_Preview"]">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        <button class="ide-action-btn" @onclick="ExitMarkdownPreview" title="@L["Ide_Edit"]">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                    </div>
-                    <div class="ide-markdown-body" id="markdown-preview-container">
-                        @((MarkupString)renderedMarkdown)
-                    </div>
-                </div>
-            }
-            @if (activeTabPath != null && IsMarkdownFile(activeTabPath) && !showMarkdownPreview)
-            {
-                <div class="ide-markdown-toolbar" style="position: absolute; top: 4px; right: 20px; z-index: 5;">
-                    <button class="ide-action-btn" @onclick="ToggleMarkdownPreview" title="@L["Ide_Preview"]">
+            <div class="ide-preview ide-markdown-preview">
+                <div class="ide-markdown-toolbar">
+                    <button class="ide-action-btn active" title="@L["Ide_Preview"]">
                         <i class="bi bi-eye"></i>
                     </button>
+                    <button class="ide-action-btn" @onclick="ExitMarkdownPreview" title="@L["Ide_Edit"]">
+                        <i class="bi bi-pencil"></i>
+                    </button>
                 </div>
-            }
-            <div class="ide-editor-panes @(isSplit ? "split" : "")" style="@(openTabs.Count == 0 || showMarkdownPreview ? "display: none;" : "")">
-                <div id="monaco-container" class="ide-pane" @onclick="() => SetActivePane(1)"></div>
-                @if (isSplit)
-                {
-                    <div class="ide-pane-divider"></div>
-                    <div id="monaco-container-split" class="ide-pane" @onclick="() => SetActivePane(2)"></div>
-                }
+                <div class="ide-markdown-body" id="markdown-preview-container">
+                    @((MarkupString)renderedMarkdown)
+                </div>
             </div>
         }
+        @if (!showDiffView && !showBranchDiff && activeTabPath != null && IsMarkdownFile(activeTabPath) && !showMarkdownPreview)
+        {
+            <div class="ide-markdown-toolbar" style="position: absolute; top: 4px; right: 20px; z-index: 5;">
+                <button class="ide-action-btn" @onclick="ToggleMarkdownPreview" title="@L["Ide_Preview"]">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+        }
+
+        @* Monaco editor — always in the DOM, hidden when diff/preview is active *@
+        <div class="ide-editor-panes @(isSplit ? "split" : "")" style="@(showDiffView || showBranchDiff || openTabs.Count == 0 || showMarkdownPreview || (activeTabPath != null && IsImageFile(activeTabPath)) ? "display: none;" : "")">
+            <div id="monaco-container" class="ide-pane" @onclick="() => SetActivePane(1)"></div>
+            @if (isSplit)
+            {
+                <div class="ide-pane-divider"></div>
+                <div id="monaco-container-split" class="ide-pane" @onclick="() => SetActivePane(2)"></div>
+            }
+        </div>
     </div>
 
     <div class="ide-bottom-panel @(showHistory ? "expanded" : "")" style="@(bottomPanelHeight > 0 ? $"max-height:{bottomPanelHeight}px;height:{bottomPanelHeight}px;" : "")">
@@ -2620,6 +2624,10 @@
         showDiffView = false;
         diffFilePath = null;
         StateHasChanged();
+        // Re-layout Monaco editor after it becomes visible again
+        await Task.Delay(50);
+        if (editorId != null)
+            try { await JS.InvokeVoidAsync("monacoInterop.layout", editorId); } catch { }
     }
 
     // ---- Terminal ----
@@ -3268,6 +3276,10 @@
         showBranchDiff = false;
         branchDiffSelectedFile = null;
         StateHasChanged();
+        // Re-layout Monaco editor after it becomes visible again
+        await Task.Delay(50);
+        if (editorId != null)
+            try { await JS.InvokeVoidAsync("monacoInterop.layout", editorId); } catch { }
     }
 
     // ---- Problems panel ----
