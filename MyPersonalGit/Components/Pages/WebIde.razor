@@ -1080,6 +1080,13 @@
             if (!branches.Contains(currentBranch) && branches.Count > 0)
                 currentBranch = branches[0];
 
+            // Initialize branch diff dropdowns so they're not null when the user clicks Compare
+            if (branches.Count > 0)
+            {
+                branchDiffBase = currentBranch;
+                branchDiffCompare = branches.FirstOrDefault(b => b != currentBranch) ?? currentBranch;
+            }
+
             // Set feature flags before first render so sidebar/status bar items appear immediately
             if (systemSettings.AiCompletionEnabled && !string.IsNullOrEmpty(systemSettings.AiCompletionEndpoint))
                 aiCompletionEnabled = true;
@@ -3010,7 +3017,11 @@
                 try { sessionId = await JS.InvokeAsync<string?>("localStorage.getItem", "sessionId"); }
                 catch { }
             }
-            if (string.IsNullOrEmpty(sessionId)) return;
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                ShowToast("No session ID found — please sign in again", "error");
+                return;
+            }
 
             ShowToast($"Connecting {debugLang} debug adapter...", "info");
             StateHasChanged();
