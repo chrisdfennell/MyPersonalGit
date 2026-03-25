@@ -73,7 +73,12 @@ public class AiChatService : IAiChatService
                 new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
             );
 
-            if (!response.IsSuccessStatusCode) return null;
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[AI Chat] API error {(int)response.StatusCode}: {errorBody}");
+                throw new HttpRequestException($"AI API returned {(int)response.StatusCode}: {response.ReasonPhrase}");
+            }
 
             var json = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(json);
@@ -122,7 +127,12 @@ public class AiChatService : IAiChatService
             };
             response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
 
-            if (!response.IsSuccessStatusCode) yield break;
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync(ct);
+                Console.WriteLine($"[AI Chat] API error {(int)response.StatusCode}: {errorBody}");
+                throw new HttpRequestException($"AI API returned {(int)response.StatusCode}: {response.ReasonPhrase}");
+            }
 
             using var stream = await response.Content.ReadAsStreamAsync(ct);
             using var reader = new StreamReader(stream);

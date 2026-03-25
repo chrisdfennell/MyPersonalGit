@@ -3012,9 +3012,12 @@
             }
             if (string.IsNullOrEmpty(sessionId)) return;
 
+            ShowToast($"Connecting {debugLang} debug adapter...", "info");
+            StateHasChanged();
+
             var wsUrl = $"{wsScheme}://{baseUri.Host}:{baseUri.Port}/ws/dap/{RepoName}?language={debugLang}&branch={currentBranch}&session={Uri.EscapeDataString(sessionId)}";
             var connected = await JS.InvokeAsync<bool>("ideDebugger.connect", wsUrl, dotNetRef);
-            if (!connected) { ShowToast($"Failed to connect {debugLang} debug adapter", "error"); return; }
+            if (!connected) { ShowToast($"Failed to start {debugLang} debugger. Ensure the debug adapter is installed in the container (e.g., netcoredbg for C#, dlv for Go).", "error"); return; }
 
             await JS.InvokeVoidAsync("ideDebugger.launch", activeTabPath);
             isDebugging = true;

@@ -238,6 +238,13 @@
                 StateHasChanged();
                 await ScrollToBottom();
             }
+
+            // If streaming returned nothing, try non-streaming fallback
+            if (string.IsNullOrEmpty(assistantMsg.Content))
+            {
+                var response = await AiChatService.ChatAsync(prompt, systemPrompt, FileContent);
+                assistantMsg.Content = response ?? "No response received. Check AI settings in Admin > Settings (API endpoint, key, model).";
+            }
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
@@ -248,11 +255,11 @@
                 try
                 {
                     var response = await AiChatService.ChatAsync(prompt, systemPrompt, FileContent);
-                    assistantMsg.Content = response ?? "Sorry, I couldn't generate a response. Please check your AI settings in Admin > Settings.";
+                    assistantMsg.Content = response ?? "No response received. Check AI settings in Admin > Settings.";
                 }
-                catch
+                catch (Exception ex2)
                 {
-                    assistantMsg.Content = $"Error: {ex.Message}";
+                    assistantMsg.Content = $"**Error:** {ex2.Message}\n\nOriginal error: {ex.Message}";
                 }
             }
         }
