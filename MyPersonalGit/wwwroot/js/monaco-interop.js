@@ -1818,13 +1818,13 @@
                     }
                 });
 
-                // Handle Ctrl+V paste — intercept and send as bracket paste
+                // Handle Ctrl+V paste — send raw text without bracket paste wrapping
                 term.attachCustomKeyEventHandler(function (e) {
                     if (e.type === 'keydown' && e.ctrlKey && e.key === 'v') {
                         navigator.clipboard.readText().then(function (text) {
                             if (text && ws.readyState === WebSocket.OPEN) {
-                                // Wrap in bracket paste mode escape sequences
-                                ws.send('\x1b[200~' + text + '\x1b[201~');
+                                // Strip trailing newlines to avoid accidental command execution
+                                ws.send(text.replace(/\r?\n$/, ''));
                             }
                         }).catch(function () {});
                         return false; // prevent default xterm paste
@@ -2268,7 +2268,23 @@
                     try {
                         var msg = JSON.parse(event.data);
 
-                        // First message: init with rootUri
+                        // Status updates while building
+                        if (!gotInit && msg.type === 'status') {
+                            console.log('[DAP] Status:', msg.message);
+                            if (dotNetRef) {
+                                try { dotNetRef.invokeMethodAsync('OnDebugOutput', msg.message + '\n', 'console'); } catch (e) { }
+                            }
+                            return;
+                        }
+
+                        // Error from server
+                        if (msg.type === 'error') {
+                            console.error('[DAP] Server error:', msg.message);
+                            resolve(false);
+                            return;
+                        }
+
+                        // Init with rootUri — session is ready
                         if (!gotInit && msg.type === 'init' && msg.rootUri) {
                             gotInit = true;
                             self._rootUri = msg.rootUri;
@@ -2284,13 +2300,14 @@
 
                 ws.onclose = function () {
                     self._ws = null;
+                    if (!gotInit) resolve(false);
                     if (dotNetRef) {
                         try { dotNetRef.invokeMethodAsync('OnDebugTerminated'); } catch (e) { }
                     }
                 };
 
                 ws.onerror = function () { resolve(false); };
-                setTimeout(function () { if (!gotInit) resolve(false); }, 10000);
+                setTimeout(function () { if (!gotInit) resolve(false); }, 90000);
             });
         },
 

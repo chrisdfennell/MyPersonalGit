@@ -72,17 +72,24 @@ public static class DapWebSocketHandler
                 }
             }
 
+            // Accept WebSocket FIRST — the session startup (dotnet build etc.) can take
+            // 30-60 seconds and the client will time out if we block before accepting.
+            using var ws = await context.WebSockets.AcceptWebSocketAsync();
+
+            // Send a status message so the client knows we're working
+            var statusMsg = System.Text.Json.JsonSerializer.Serialize(new { type = "status", message = "Building project..." });
+            await ws.SendAsync(Encoding.UTF8.GetBytes(statusMsg), WebSocketMessageType.Text, true, context.RequestAborted);
+
             var dapManager = context.RequestServices.GetRequiredService<DapSessionManager>();
-            var session = dapManager.GetOrStartSession(repoName, language, user.Username, repoPath, branch);
+            var session = await Task.Run(() => dapManager.GetOrStartSession(repoName, language, user.Username, repoPath, branch));
 
             if (session?.Process == null || session.Process.HasExited)
             {
-                context.Response.StatusCode = 500;
-                await context.Response.WriteAsync("Failed to start debug adapter.");
+                var errMsg = System.Text.Json.JsonSerializer.Serialize(new { type = "error", message = "Failed to start debug adapter." });
+                await ws.SendAsync(Encoding.UTF8.GetBytes(errMsg), WebSocketMessageType.Text, true, context.RequestAborted);
+                await ws.CloseAsync(WebSocketCloseStatus.InternalServerError, "Adapter failed", CancellationToken.None);
                 return;
             }
-
-            using var ws = await context.WebSockets.AcceptWebSocketAsync();
 
             // Send worktree path as init message
             var initMsg = System.Text.Json.JsonSerializer.Serialize(new { type = "init", rootUri = "file://" + session.WorkTree!.Replace('\\', '/') });

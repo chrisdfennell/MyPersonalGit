@@ -138,11 +138,21 @@ public sealed class DapSessionManager : IDisposable
                         Arguments = OperatingSystem.IsWindows() ? $"/c {adapter.SetupCommand}" : $"-c \"{adapter.SetupCommand}\"",
                         WorkingDirectory = workTree,
                         UseShellExecute = false,
-                        CreateNoWindow = true
+                        CreateNoWindow = true,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true
                     };
                     var setupProcess = Process.Start(setupPsi);
-                    setupProcess?.WaitForExit(60000); // 60s timeout for setup
-                    Console.WriteLine($"[DAP] Setup '{adapter.SetupCommand}' completed for {language}");
+                    if (setupProcess != null)
+                    {
+                        var stdout = setupProcess.StandardOutput.ReadToEnd();
+                        var stderr = setupProcess.StandardError.ReadToEnd();
+                        setupProcess.WaitForExit(60000);
+                        if (setupProcess.ExitCode != 0)
+                            Console.WriteLine($"[DAP] Setup '{adapter.SetupCommand}' FAILED (exit {setupProcess.ExitCode}) for {language}:\n{stderr}");
+                        else
+                            Console.WriteLine($"[DAP] Setup '{adapter.SetupCommand}' completed for {language}");
+                    }
                 }
                 catch (Exception ex)
                 {
