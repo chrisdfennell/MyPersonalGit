@@ -1,16 +1,8 @@
 @page "/repo/{RepoName}/security"
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
-@using MyPersonalGit.Services
-@using Microsoft.Extensions.Localization
-@using MyPersonalGit.Resources
-@inject ISecurityService SecurityService
-@inject ISecretScanService SecretScanService
-@inject IConfiguration Config
-@inject IAdminService AdminService
-@inject CurrentUserService UserService
+@inject SecurityService SecurityService
 @inject NavigationManager Navigation
-@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
 <PageTitle>Security - @RepoName</PageTitle>
@@ -20,38 +12,29 @@
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/">@L["Security_Repositories"]</a></li>
+                    <li class="breadcrumb-item"><a href="/">Repositories</a></li>
                     <li class="breadcrumb-item"><a href="/repo/@RepoName">@RepoName</a></li>
-                    <li class="breadcrumb-item active">@L["Security_Title"]</li>
+                    <li class="breadcrumb-item active">Security</li>
                 </ol>
             </nav>
-            <h2 class="mt-2">@L["Security_Title"]</h2>
+            <h2 class="mt-2">Security</h2>
         </div>
     </div>
 
     <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
             <button class="nav-link @(ActiveTab == "overview" ? "active" : "")" @onclick='() => ActiveTab = "overview"'>
-                <i class="bi bi-shield-check me-1"></i> @L["Security_Overview"]
+                <i class="bi bi-shield-check me-1"></i> Overview
             </button>
         </li>
         <li class="nav-item">
             <button class="nav-link @(ActiveTab == "advisories" ? "active" : "")" @onclick='() => ActiveTab = "advisories"'>
-                <i class="bi bi-exclamation-triangle me-1"></i> @L["Security_Advisories"]
+                <i class="bi bi-exclamation-triangle me-1"></i> Advisories
             </button>
         </li>
         <li class="nav-item">
             <button class="nav-link @(ActiveTab == "dependencies" ? "active" : "")" @onclick='() => ActiveTab = "dependencies"'>
-                <i class="bi bi-box-seam me-1"></i> @L["Security_Dependencies"]
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link @(ActiveTab == "secrets" ? "active" : "")" @onclick='() => { ActiveTab = "secrets"; LoadSecretScanResults(); }'>
-                <i class="bi bi-key me-1"></i> @L["SecretScan_Title"]
-                @if (secretAlerts.Count(a => a.State == SecretScanResultState.Open) > 0)
-                {
-                    <span class="badge bg-danger ms-1">@secretAlerts.Count(a => a.State == SecretScanResultState.Open)</span>
-                }
+                <i class="bi bi-box-seam me-1"></i> Dependencies
             </button>
         </li>
     </ul>
@@ -63,43 +46,41 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">
-                            <i class="bi bi-shield-check me-2"></i>@L["Security_SecurityOverview"]
+                            <i class="bi bi-shield-check me-2"></i>Security Overview
                         </h5>
                         @if (LatestScan != null)
                         {
                             <div class="mt-3">
                                 <p class="text-muted mb-2">Last scanned: @FormatDate(LatestScan.ScannedAt)</p>
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span>@L["Security_TotalVulnerabilities"]</span>
+                                    <span>Total Vulnerabilities</span>
                                     <span class="badge bg-secondary">@LatestScan.VulnerabilitiesFound</span>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span>@L["Security_Critical"]</span>
+                                    <span>Critical</span>
                                     <span class="badge bg-danger">@LatestScan.CriticalCount</span>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span>@L["Security_High"]</span>
+                                    <span>High</span>
                                     <span class="badge bg-warning">@LatestScan.HighCount</span>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span>@L["Security_Medium"]</span>
+                                    <span>Medium</span>
                                     <span class="badge bg-info">@LatestScan.MediumCount</span>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <span>@L["Security_Low"]</span>
+                                    <span>Low</span>
                                     <span class="badge bg-secondary">@LatestScan.LowCount</span>
                                 </div>
                             </div>
                         }
                         else
                         {
-                            <p class="text-muted mt-3">@L["Security_NoScansYet"]</p>
+                            <p class="text-muted mt-3">No security scans performed yet</p>
                         }
-                        <button class="btn btn-primary mt-3 w-100" @onclick="RunSecurityScan" disabled="@isScanning">
-                            @if (isScanning) { <span class="spinner-border spinner-border-sm me-2"></span> <text>Scanning...</text> }
-                            else { <i class="bi bi-shield-check me-2"></i> <text>@L["Security_RunSecurityScan"]</text> }
+                        <button class="btn btn-primary mt-3 w-100" @onclick="RunSecurityScan">
+                            <i class="bi bi-arrow-repeat me-2"></i>Run Security Scan
                         </button>
-                        @if (!string.IsNullOrEmpty(scanError)) { <div class="alert alert-danger mt-2 small">@scanError</div> }
                     </div>
                 </div>
             </div>
@@ -108,24 +89,24 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">
-                            <i class="bi bi-exclamation-triangle me-2"></i>@L["Security_SecurityAdvisories"]
+                            <i class="bi bi-exclamation-triangle me-2"></i>Security Advisories
                         </h5>
                         <div class="mt-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>@L["Security_Published"]</span>
+                                <span>Published</span>
                                 <span class="badge bg-danger">@Advisories.Count(a => a.State == SecurityAdvisoryState.Published)</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>@L["Security_Draft"]</span>
+                                <span>Draft</span>
                                 <span class="badge bg-secondary">@Advisories.Count(a => a.State == SecurityAdvisoryState.Draft)</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
-                                <span>@L["Security_Closed"]</span>
+                                <span>Closed</span>
                                 <span class="badge bg-success">@Advisories.Count(a => a.State == SecurityAdvisoryState.Closed)</span>
                             </div>
                         </div>
                         <button class="btn btn-primary mt-3 w-100" @onclick="ShowCreateAdvisoryModal">
-                            <i class="bi bi-plus-circle me-2"></i>@L["Security_CreateAdvisory"]
+                            <i class="bi bi-plus-circle me-2"></i>Create Advisory
                         </button>
                     </div>
                 </div>
@@ -136,7 +117,7 @@
     {
         <div class="d-flex justify-content-end mb-3">
             <button class="btn btn-primary" @onclick="ShowCreateAdvisoryModal">
-                <i class="bi bi-plus-circle me-2"></i>@L["Security_CreateAdvisory"]
+                <i class="bi bi-plus-circle me-2"></i>Create Advisory
             </button>
         </div>
 
@@ -145,8 +126,8 @@
             <div class="card">
                 <div class="card-body text-center py-5">
                     <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #6c757d;"></i>
-                    <h3 class="mt-3">@L["Security_NoAdvisories"]</h3>
-                    <p class="text-muted">@L["Security_NoAdvisoriesDescription"]</p>
+                    <h3 class="mt-3">No security advisories</h3>
+                    <p class="text-muted">Create security advisories to inform users about vulnerabilities</p>
                 </div>
             </div>
         }
@@ -181,81 +162,16 @@
                                 @if (advisory.State == SecurityAdvisoryState.Draft)
                                 {
                                     <button class="btn btn-sm btn-outline-primary" @onclick="() => PublishAdvisory(advisory.Id)">
-                                        <i class="bi bi-send"></i> @L["Security_Publish"]
+                                        <i class="bi bi-send"></i> Publish
                                     </button>
                                 }
                                 @if (advisory.State == SecurityAdvisoryState.Published)
                                 {
                                     <button class="btn btn-sm btn-outline-success" @onclick="() => CloseAdvisory(advisory.Id)">
-                                        <i class="bi bi-check-circle"></i> @L["Security_Close"]
+                                        <i class="bi bi-check-circle"></i> Close
                                     </button>
                                 }
                             </div>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
-    }
-    else if (ActiveTab == "secrets")
-    {
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="btn-group">
-                <button class="btn btn-sm @(secretFilter == null ? "btn-primary" : "btn-outline-secondary")" @onclick='() => { secretFilter = null; LoadSecretScanResults(); }'>@L["SecretScan_All"]</button>
-                <button class="btn btn-sm @(secretFilter == SecretScanResultState.Open ? "btn-primary" : "btn-outline-secondary")" @onclick='() => { secretFilter = SecretScanResultState.Open; LoadSecretScanResults(); }'>@L["SecretScan_Open"]</button>
-                <button class="btn btn-sm @(secretFilter == SecretScanResultState.Resolved ? "btn-primary" : "btn-outline-secondary")" @onclick='() => { secretFilter = SecretScanResultState.Resolved; LoadSecretScanResults(); }'>@L["SecretScan_Resolved"]</button>
-            </div>
-            <button class="btn btn-warning btn-sm" @onclick="RunSecretScan" disabled="@isSecretScanning">
-                @if (isSecretScanning) { <span class="spinner-border spinner-border-sm me-1"></span> <text>@L["SecretScan_Scanning"]</text> }
-                else { <i class="bi bi-search me-1"></i> <text>@L["SecretScan_FullScan"]</text> }
-            </button>
-        </div>
-
-        @if (!secretAlerts.Any())
-        {
-            <div class="card">
-                <div class="card-body text-center py-5">
-                    <i class="bi bi-shield-check" style="font-size: 4rem; color: #198754;"></i>
-                    <h3 class="mt-3">@L["SecretScan_NoSecrets"]</h3>
-                    <p class="text-muted">@L["SecretScan_NoSecretsDescription"]</p>
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="list-group">
-                @foreach (var alert in secretAlerts)
-                {
-                    <div class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="flex-grow-1">
-                                <div class="d-flex align-items-center mb-1">
-                                    <i class="bi bi-key-fill text-warning me-2"></i>
-                                    <h6 class="mb-0">@alert.SecretType</h6>
-                                    <span class="badge @(alert.State == SecretScanResultState.Open ? "bg-danger" : "bg-success") ms-2">@alert.State</span>
-                                </div>
-                                <p class="mb-1 small text-muted">
-                                    <code>@alert.FilePath</code> @L["SecretScan_Line"] @alert.LineNumber
-                                    <span class="mx-1">·</span>
-                                    @L["SecretScan_Commit"] <code>@alert.CommitSha[..7]</code>
-                                </p>
-                                <pre class="bg-light p-2 rounded small mb-0" style="max-width: 600px; overflow-x: auto;">@alert.MatchSnippet</pre>
-                                @if (alert.ResolvedBy != null)
-                                {
-                                    <small class="text-muted">@L["SecretScan_ResolvedBy"] @alert.ResolvedBy @L["SecretScan_On"] @alert.ResolvedAt?.ToString("g")</small>
-                                }
-                            </div>
-                            @if (alert.State == SecretScanResultState.Open)
-                            {
-                                <div class="btn-group">
-                                    <button class="btn btn-sm btn-outline-success" @onclick="() => ResolveSecret(alert.Id, SecretScanResultState.Resolved)" title="@L["SecretScan_MarkResolved"]">
-                                        <i class="bi bi-check-lg"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => ResolveSecret(alert.Id, SecretScanResultState.FalsePositive)" title="@L["SecretScan_MarkFalsePositive"]">
-                                        <i class="bi bi-x-lg"></i>
-                                    </button>
-                                </div>
-                            }
                         </div>
                     </div>
                 }
@@ -269,11 +185,10 @@
             <div class="card">
                 <div class="card-body text-center py-5">
                     <i class="bi bi-box-seam" style="font-size: 4rem; color: #6c757d;"></i>
-                    <h3 class="mt-3">@L["Security_NoDependenciesScanned"]</h3>
-                    <p class="text-muted">@L["Security_NoDependenciesDescription"]</p>
-                    <button class="btn btn-primary" @onclick="RunSecurityScan" disabled="@isScanning">
-                        @if (isScanning) { <span class="spinner-border spinner-border-sm me-2"></span> <text>Scanning...</text> }
-                        else { <i class="bi bi-shield-check me-2"></i> <text>@L["Security_RunSecurityScan"]</text> }
+                    <h3 class="mt-3">No dependencies scanned</h3>
+                    <p class="text-muted">Run a security scan to view dependency information</p>
+                    <button class="btn btn-primary" @onclick="RunSecurityScan">
+                        <i class="bi bi-arrow-repeat me-2"></i>Run Security Scan
                     </button>
                 </div>
             </div>
@@ -318,7 +233,7 @@
                                 else
                                 {
                                     <div class="mt-2">
-                                        <span class="badge bg-success">@L["Security_NoKnownVulnerabilities"]</span>
+                                        <span class="badge bg-success">No known vulnerabilities</span>
                                     </div>
                                 }
                             </div>
@@ -336,20 +251,20 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">@L["Security_CreateSecurityAdvisory"]</h5>
+                    <h5 class="modal-title">Create Security Advisory</h5>
                     <button type="button" class="btn-close" @onclick="() => ShowAdvisoryModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">@L["Security_AdvisoryTitle"]</label>
-                        <input type="text" class="form-control" @bind="NewAdvisoryTitle" placeholder="@L["Security_AdvisoryTitlePlaceholder"]" />
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" @bind="NewAdvisoryTitle" placeholder="Brief description of the vulnerability" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">@L["Security_AdvisoryDescription"]</label>
-                        <textarea class="form-control" rows="3" @bind="NewAdvisoryDescription" placeholder="@L["Security_AdvisoryDescriptionPlaceholder"]"></textarea>
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" rows="3" @bind="NewAdvisoryDescription" placeholder="Detailed description"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">@L["Security_Severity"]</label>
+                        <label class="form-label">Severity</label>
                         <select class="form-select" @bind="NewAdvisorySeverity">
                             <option value="@SecuritySeverity.Low">Low</option>
                             <option value="@SecuritySeverity.Medium">Medium</option>
@@ -358,13 +273,13 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">@L["Security_AffectedVersions"]</label>
+                        <label class="form-label">Affected Versions</label>
                         <input type="text" class="form-control" @bind="NewAdvisoryAffectedVersions" placeholder="e.g., < 1.2.3" />
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="() => ShowAdvisoryModal = false">@L["Security_Cancel"]</button>
-                    <button type="button" class="btn btn-primary" @onclick="CreateAdvisory">@L["Security_Create"]</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => ShowAdvisoryModal = false">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="CreateAdvisory">Create</button>
                 </div>
             </div>
         </div>
@@ -384,14 +299,9 @@
     private SecuritySeverity NewAdvisorySeverity { get; set; } = SecuritySeverity.Medium;
     private string NewAdvisoryAffectedVersions { get; set; } = "";
 
-    private List<SecretScanResult> secretAlerts = new();
-    private SecretScanResultState? secretFilter = null;
-    private bool isSecretScanning = false;
-
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
-        secretAlerts = await SecretScanService.GetResultsAsync(RepoName, secretFilter);
     }
 
     private async Task LoadData()
@@ -400,64 +310,28 @@
         LatestScan = await SecurityService.GetLatestScanAsync(RepoName);
     }
 
-    private async void LoadSecretScanResults()
-    {
-        secretAlerts = await SecretScanService.GetResultsAsync(RepoName, secretFilter);
-        StateHasChanged();
-    }
-
-    private async Task RunSecretScan()
-    {
-        isSecretScanning = true;
-        StateHasChanged();
-        try
-        {
-            var systemSettings = await AdminService.GetSystemSettingsAsync();
-            var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot) ? systemSettings.ProjectRoot : Config["Git:ProjectRoot"] ?? "/repos";
-            var repoPath = Path.Combine(projectRoot, RepoName);
-            if (!Directory.Exists(repoPath)) repoPath = Path.Combine(projectRoot, RepoName + ".git");
-            await SecretScanService.FullScanAsync(RepoName, repoPath);
-            secretAlerts = await SecretScanService.GetResultsAsync(RepoName, secretFilter);
-        }
-        catch (Exception ex) { scanError = $"Secret scan failed: {ex.Message}"; }
-        finally { isSecretScanning = false; StateHasChanged(); }
-    }
-
-    private async Task ResolveSecret(int alertId, SecretScanResultState state)
-    {
-        await SecretScanService.ResolveResultAsync(alertId, UserService.Username, state);
-        secretAlerts = await SecretScanService.GetResultsAsync(RepoName, secretFilter);
-        StateHasChanged();
-    }
-
-    private bool isScanning = false;
-    private string scanError = "";
-
     private async Task RunSecurityScan()
     {
-        isScanning = true;
-        scanError = "";
-        StateHasChanged();
+        var sampleDependencies = new List<Dependency>
+        {
+            new Dependency
+            {
+                Name = "Newtonsoft.Json",
+                Version = "12.0.3",
+                Type = "NuGet",
+                Vulnerabilities = new List<Vulnerability>()
+            },
+            new Dependency
+            {
+                Name = "System.Text.Json",
+                Version = "6.0.0",
+                Type = "NuGet",
+                Vulnerabilities = new List<Vulnerability>()
+            }
+        };
 
-        try
-        {
-            var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
-            var repoPath = Path.Combine(projectRoot, RepoName);
-            if (!Directory.Exists(repoPath))
-                repoPath = Path.Combine(projectRoot, RepoName + ".git");
-
-            await SecurityService.ScanRepositoryAsync(RepoName, repoPath);
-            await LoadData();
-        }
-        catch (Exception ex)
-        {
-            scanError = $"Scan failed: {ex.Message}";
-        }
-        finally
-        {
-            isScanning = false;
-            StateHasChanged();
-        }
+        await SecurityService.CreateScanAsync(RepoName, sampleDependencies);
+        await LoadData();
     }
 
     private void ShowCreateAdvisoryModal()
@@ -476,7 +350,7 @@
             NewAdvisoryDescription,
             NewAdvisorySeverity,
             NewAdvisoryAffectedVersions,
-            UserService.Username
+            "current-user"
         );
 
         ShowAdvisoryModal = false;

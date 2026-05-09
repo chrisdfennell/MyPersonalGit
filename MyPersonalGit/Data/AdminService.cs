@@ -1,97 +1,75 @@
-using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using MyPersonalGit.Models;
 
 namespace MyPersonalGit.Data;
 
-public interface IAdminService
+public class AdminService
 {
-    Task<SystemSettings> GetSystemSettingsAsync();
-    Task SaveSystemSettingsAsync(SystemSettings settings);
-    Task<SystemStatistics> GetSystemStatisticsAsync();
-    Task<List<AuditLog>> GetAuditLogsAsync(int limit = 100);
-    Task AddAuditLogAsync(string username, string action, string details, string ipAddress = "");
-    Task<List<UserManagement>> GetAllUsersAsync();
-    Task<bool> AddUserAsync(string username, string password, string email, bool isAdmin = false);
-    Task<bool> DeleteUserAsync(string username);
-    Task<bool> UpdateUserAsync(UserManagement user);
-    Task<bool> ResetPasswordAsync(string username, string newPassword);
-}
-
-public class AdminService : IAdminService
-{
-    private readonly IDbContextFactory<AppDbContext> _dbFactory;
+    private readonly string _dataPath;
     private readonly IConfiguration _configuration;
-    private readonly ILogger<AdminService> _logger;
 
-    public AdminService(IDbContextFactory<AppDbContext> dbFactory, IConfiguration configuration, ILogger<AdminService> logger)
+    public AdminService(IConfiguration configuration)
     {
-        _dbFactory = dbFactory;
         _configuration = configuration;
-        _logger = logger;
+        var projectRoot = configuration["ProjectRoot"] ?? throw new InvalidOperationException("ProjectRoot not configured");
+        _dataPath = Path.Combine(projectRoot, ".mypersonalgit");
+        Directory.CreateDirectory(_dataPath);
     }
+
+    private string GetSettingsFilePath() => Path.Combine(_dataPath, "system_settings.json");
+    private string GetAuditLogFilePath() => Path.Combine(_dataPath, "audit_log.json");
+    private string GetUsersFilePath() => Path.Combine(_dataPath, "users.json");
 
     public async Task<SystemSettings> GetSystemSettingsAsync()
     {
-        using var db = _dbFactory.CreateDbContext();
-
-        var settings = await db.SystemSettings.FirstOrDefaultAsync();
-        if (settings != null)
-            return settings;
-
-        var defaultSettings = new SystemSettings
+        var filePath = GetSettingsFilePath();
+        if (!File.Exists(filePath))
         {
-            ProjectRoot = _configuration["ProjectRoot"] ?? "",
-            RequireAuth = _configuration.GetValue<bool>("Git:RequireAuth", true)
-        };
+            var defaultSettings = new SystemSettings
+            {
+                ProjectRoot = _configuration["ProjectRoot"] ?? "",
+                RequireAuth = _configuration.GetValue<bool>("Git:RequireAuth", true)
+            };
+            await SaveSystemSettingsAsync(defaultSettings);
+            return defaultSettings;
+        }
 
-        db.SystemSettings.Add(defaultSettings);
-        await db.SaveChangesAsync();
-        return defaultSettings;
+        var json = await File.ReadAllTextAsync(filePath);
+        return JsonSerializer.Deserialize<SystemSettings>(json) ?? new SystemSettings();
     }
 
     public async Task SaveSystemSettingsAsync(SystemSettings settings)
     {
-        using var db = _dbFactory.CreateDbContext();
-
-        var existing = await db.SystemSettings.FirstOrDefaultAsync();
-        if (existing != null)
-        {
-            db.Entry(existing).CurrentValues.SetValues(settings);
-        }
-        else
-        {
-            db.SystemSettings.Add(settings);
-        }
-
-        await db.SaveChangesAsync();
-        _logger.LogInformation("System settings updated");
+        var filePath = GetSettingsFilePath();
+        var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
+        await File.WriteAllTextAsync(filePath, json);
     }
 
     public async Task<SystemStatistics> GetSystemStatisticsAsync()
     {
-        using var db = _dbFactory.CreateDbContext();
-
-        var stats = new SystemStatistics
-        {
-            TotalUsers = await db.Users.CountAsync(),
-            TotalRepositories = await db.Repositories.CountAsync(),
-            TotalIssues = await db.Issues.CountAsync(),
-            TotalPullRequests = await db.PullRequests.CountAsync()
-        };
+        var stats = new SystemStatistics();
+        
+        var users = await GetAllUsersAsync();
+        stats.TotalUsers = users.Count;
 
         var projectRoot = _configuration["ProjectRoot"] ?? "";
         if (Directory.Exists(projectRoot))
         {
+            var repoDirs = Directory.GetDirectories(projectRoot);
+            stats.TotalRepositories = repoDirs.Length;
+
             long totalSize = 0;
-            foreach (var dir in Directory.GetDirectories(projectRoot))
+            foreach (var dir in repoDirs)
+            {
                 totalSize += GetDirectorySize(dir);
+            }
             stats.TotalStorageUsed = totalSize;
         }
 
         return stats;
     }
 
-    private static long GetDirectorySize(string path)
+    private long GetDirectorySize(string path)
     {
         try
         {
@@ -106,110 +84,120 @@ public class AdminService : IAdminService
 
     public async Task<List<AuditLog>> GetAuditLogsAsync(int limit = 100)
     {
-        using var db = _dbFactory.CreateDbContext();
-        return await db.AuditLogs
-            .OrderByDescending(l => l.Timestamp)
-            .Take(limit)
-            .ToListAsync();
+        var filePath = GetAuditLogFilePath();
+        if (!File.Exists(filePath))
+            return new List<AuditLog>();
+
+        var json = await File.ReadAllTextAsync(filePath);
+        var logs = JsonSerializer.Deserialize<List<AuditLog>>(json) ?? new List<AuditLog>();
+        return logs.OrderByDescending(l => l.Timestamp).Take(limit).ToList();
     }
 
     public async Task AddAuditLogAsync(string username, string action, string details, string ipAddress = "")
     {
-        using var db = _dbFactory.CreateDbContext();
-
-        db.AuditLogs.Add(new AuditLog
+        var filePath = GetAuditLogFilePath();
+        var logs = new List<AuditLog>();
+        
+        if (File.Exists(filePath))
         {
+            var json = await File.ReadAllTextAsync(filePath);
+            logs = JsonSerializer.Deserialize<List<AuditLog>>(json) ?? new List<AuditLog>();
+        }
+
+        var log = new AuditLog
+        {
+            Id = logs.Count > 0 ? logs.Max(l => l.Id) + 1 : 1,
             Timestamp = DateTime.UtcNow,
             Username = username,
             Action = action,
             Details = details,
             IpAddress = ipAddress
-        });
+        };
 
-        await db.SaveChangesAsync();
-        _logger.LogInformation("Audit: {Username} performed {Action}: {Details}", username, action, details);
+        logs.Add(log);
+
+        var logsJson = JsonSerializer.Serialize(logs, new JsonSerializerOptions { WriteIndented = true });
+        await File.WriteAllTextAsync(filePath, logsJson);
     }
 
     public async Task<List<UserManagement>> GetAllUsersAsync()
     {
-        using var db = _dbFactory.CreateDbContext();
-
-        var users = await db.Users.ToListAsync();
-        return users.Select(u => new UserManagement
+        var filePath = GetUsersFilePath();
+        if (!File.Exists(filePath))
         {
-            Username = u.Username,
-            Email = u.Email,
-            IsAdmin = u.IsAdmin,
-            IsActive = u.IsActive,
-            CreatedAt = u.CreatedAt,
-            LastLogin = u.LastLoginAt ?? u.CreatedAt
-        }).ToList();
+            var gitUsers = _configuration.GetSection("Git:Users").GetChildren();
+            var users = gitUsers.Select(u => new UserManagement
+            {
+                Username = u.Key,
+                Email = $"{u.Key}@localhost",
+                IsAdmin = true, // First-run: all config users are admins
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                LastLogin = DateTime.UtcNow
+            }).ToList();
+
+            await SaveUsersAsync(users);
+            return users;
+        }
+
+        var json = await File.ReadAllTextAsync(filePath);
+        return JsonSerializer.Deserialize<List<UserManagement>>(json) ?? new List<UserManagement>();
+    }
+
+    private async Task SaveUsersAsync(List<UserManagement> users)
+    {
+        var filePath = GetUsersFilePath();
+        var json = JsonSerializer.Serialize(users, new JsonSerializerOptions { WriteIndented = true });
+        await File.WriteAllTextAsync(filePath, json);
     }
 
     public async Task<bool> AddUserAsync(string username, string password, string email, bool isAdmin = false)
     {
-        using var db = _dbFactory.CreateDbContext();
-
-        if (await db.Users.AnyAsync(u => u.Username == username))
+        var users = await GetAllUsersAsync();
+        if (users.Any(u => u.Username == username))
             return false;
 
-        db.Users.Add(new User
+        var newUser = new UserManagement
         {
             Username = username,
             Email = email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12),
             IsAdmin = isAdmin,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        });
+            CreatedAt = DateTime.UtcNow,
+            LastLogin = DateTime.UtcNow
+        };
 
-        await db.SaveChangesAsync();
-        _logger.LogInformation("User {Username} added by admin", username);
+        users.Add(newUser);
+        await SaveUsersAsync(users);
+
         return true;
     }
 
     public async Task<bool> DeleteUserAsync(string username)
     {
-        using var db = _dbFactory.CreateDbContext();
-
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Username == username);
+        var users = await GetAllUsersAsync();
+        var user = users.FirstOrDefault(u => u.Username == username);
         if (user == null)
             return false;
 
-        db.Users.Remove(user);
-        await db.SaveChangesAsync();
+        users.Remove(user);
+        await SaveUsersAsync(users);
 
-        _logger.LogInformation("User {Username} deleted by admin", username);
         return true;
     }
 
     public async Task<bool> UpdateUserAsync(UserManagement user)
     {
-        using var db = _dbFactory.CreateDbContext();
-
-        var existingUser = await db.Users.FirstOrDefaultAsync(u => u.Username == user.Username);
+        var users = await GetAllUsersAsync();
+        var existingUser = users.FirstOrDefault(u => u.Username == user.Username);
         if (existingUser == null)
             return false;
 
         existingUser.Email = user.Email;
         existingUser.IsAdmin = user.IsAdmin;
         existingUser.IsActive = user.IsActive;
-        await db.SaveChangesAsync();
 
-        _logger.LogInformation("User {Username} updated by admin", user.Username);
-        return true;
-    }
-
-    public async Task<bool> ResetPasswordAsync(string username, string newPassword)
-    {
-        using var db = _dbFactory.CreateDbContext();
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Username == username);
-        if (user == null) return false;
-
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
-        await db.SaveChangesAsync();
-
-        _logger.LogInformation("Password reset for {Username} by admin", username);
+        await SaveUsersAsync(users);
         return true;
     }
 }

@@ -1,42 +1,26 @@
 @page "/notifications"
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
-@using MyPersonalGit.Services
-@using Microsoft.Extensions.Localization
-@using MyPersonalGit.Resources
-@inject INotificationService NotificationService
-@inject CurrentUserService UserService
+@inject NotificationService NotificationService
 @inject NavigationManager Navigation
-@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>@L["Notif_Title"]</PageTitle>
+<PageTitle>Notifications</PageTitle>
 
-@if (!UserService.IsLoggedIn)
-{
-    <div class="container py-5 text-center">
-        <i class="bi bi-bell" style="font-size: 4rem; color: #6c757d;"></i>
-        <h3 class="mt-3">@L["Notif_AuthRequired"]</h3>
-        <p class="text-muted">@L["Notif_AuthRequiredMessage"]</p>
-        <a href="/login" class="btn btn-primary">@L["Notif_SignIn"]</a>
-    </div>
-}
-else
-{
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>@L["Notif_Title"]</h2>
+        <h2>Notifications</h2>
         <div class="btn-group">
-            <button class="btn btn-sm @(ShowUnreadOnly ? "btn-primary" : "btn-outline-primary")" @onclick="async () => { ShowUnreadOnly = true; await LoadNotifications(); }">
-                @L["Notif_Unread"] (@UnreadCount)
+            <button class="btn btn-sm @(ShowUnreadOnly ? "btn-primary" : "btn-outline-primary")" @onclick="() => { ShowUnreadOnly = true; LoadNotifications(); }">
+                Unread (@UnreadCount)
             </button>
-            <button class="btn btn-sm @(!ShowUnreadOnly ? "btn-primary" : "btn-outline-primary")" @onclick="async () => { ShowUnreadOnly = false; await LoadNotifications(); }">
-                @L["Notif_All"]
+            <button class="btn btn-sm @(!ShowUnreadOnly ? "btn-primary" : "btn-outline-primary")" @onclick="() => { ShowUnreadOnly = false; LoadNotifications(); }">
+                All
             </button>
             @if (NotificationsList.Any(n => !n.IsRead))
             {
                 <button class="btn btn-sm btn-outline-secondary" @onclick="MarkAllAsRead">
-                    <i class="bi bi-check-all"></i> @L["Notif_MarkAllRead"]
+                    <i class="bi bi-check-all"></i> Mark all as read
                 </button>
             }
         </div>
@@ -47,8 +31,8 @@ else
         <div class="card">
             <div class="card-body text-center py-5">
                 <i class="bi bi-bell-slash" style="font-size: 4rem; color: #6c757d;"></i>
-                <h3 class="mt-3">@L["Notif_NoNotifications"]</h3>
-                <p class="text-muted">@(ShowUnreadOnly ? L["Notifications_AllCaughtUp"] : L["Notifications_NoNotifications"])</p>
+                <h3 class="mt-3">No notifications</h3>
+                <p class="text-muted">@(ShowUnreadOnly ? "You're all caught up!" : "You don't have any notifications yet")</p>
             </div>
         </div>
     }
@@ -65,7 +49,7 @@ else
                                 <h6 class="mb-0">@notification.Title</h6>
                                 @if (!notification.IsRead)
                                 {
-                                    <span class="badge bg-primary ms-2">@L["Notif_New"]</span>
+                                    <span class="badge bg-primary ms-2">New</span>
                                 }
                             </div>
                             <p class="mb-1 text-muted">@notification.Message</p>
@@ -92,12 +76,12 @@ else
         </div>
     }
 </div>
-} @* end else (IsLoggedIn) *@
 
 @code {
     private List<Notification> NotificationsList { get; set; } = new();
     private int UnreadCount { get; set; }
     private bool ShowUnreadOnly { get; set; } = true;
+    private string CurrentUser { get; set; } = "current-user";
 
     protected override async Task OnInitializedAsync()
     {
@@ -106,26 +90,25 @@ else
 
     private async Task LoadNotifications()
     {
-        if (!UserService.IsLoggedIn) return;
-        NotificationsList = await NotificationService.GetNotificationsAsync(UserService.Username, ShowUnreadOnly);
-        UnreadCount = await NotificationService.GetUnreadCountAsync(UserService.Username);
+        NotificationsList = await NotificationService.GetNotificationsAsync(CurrentUser, ShowUnreadOnly);
+        UnreadCount = await NotificationService.GetUnreadCountAsync(CurrentUser);
     }
 
     private async Task MarkAsRead(int notificationId)
     {
-        await NotificationService.MarkAsReadAsync(UserService.Username, notificationId);
+        await NotificationService.MarkAsReadAsync(CurrentUser, notificationId);
         await LoadNotifications();
     }
 
     private async Task MarkAllAsRead()
     {
-        await NotificationService.MarkAllAsReadAsync(UserService.Username);
+        await NotificationService.MarkAllAsReadAsync(CurrentUser);
         await LoadNotifications();
     }
 
     private async Task DeleteNotification(int notificationId)
     {
-        await NotificationService.DeleteNotificationAsync(UserService.Username, notificationId);
+        await NotificationService.DeleteNotificationAsync(CurrentUser, notificationId);
         await LoadNotifications();
     }
 

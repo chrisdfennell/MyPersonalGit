@@ -33,8 +33,6 @@ public enum SecurityAdvisoryState
 
 public class Dependency
 {
-    public int Id { get; set; }
-    public int SecurityScanId { get; set; }
     public required string Name { get; set; }
     public required string Version { get; set; }
     public required string Type { get; set; }
@@ -43,9 +41,7 @@ public class Dependency
 
 public class Vulnerability
 {
-    public int Id { get; set; }
-    public int DependencyId { get; set; }
-    public required string VulnerabilityId { get; set; }
+    public required string Id { get; set; }
     public required string Title { get; set; }
     public required string Description { get; set; }
     public SecuritySeverity Severity { get; set; }
