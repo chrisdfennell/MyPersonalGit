@@ -32,7 +32,7 @@
                     <circle cx="10.5" cy="8.75" r="1.3" fill="currentColor"/>
                     <path style="fill: var(--gh-header, #24292f)" d="M7.5,11.8 L8,12.6 L8.5,11.8Z"/>
                 </svg>
-                <span class="ms-2 fw-semibold">Personal Git</span>
+                <span class="ms-2 fw-semibold">@siteName</span>
             </a>
 
             <div class="gh-search-container d-none d-md-flex flex-grow-1 mx-2" style="max-width: 300px;">
@@ -394,11 +394,24 @@
     private bool mobileNavOpen;
     private DotNetObjectReference<MainLayout>? _dotNetRef;
     private System.Threading.Timer? _notificationTimer;
+    private string siteName = "Personal Git";
 
     protected override void OnInitialized()
     {
         // Close the mobile nav drawer whenever the user navigates.
         Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Header brand text reflects the configured site name (Admin > Settings / setup wizard).
+        try
+        {
+            var settings = await AdminService.GetSystemSettingsAsync();
+            if (!string.IsNullOrWhiteSpace(settings.SiteName))
+                siteName = settings.SiteName;
+        }
+        catch { /* settings not ready yet — keep the default */ }
     }
 
     private void ToggleMobileNav() => mobileNavOpen = !mobileNavOpen;
