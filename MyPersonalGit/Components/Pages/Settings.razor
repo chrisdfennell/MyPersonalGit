@@ -204,7 +204,7 @@ else
                         {
                             <div class="alert @(TwoFactorMessageIsError ? "alert-danger" : "alert-success") alert-dismissible">
                                 @TwoFactorMessage
-                                <button type="button" class="btn-close" @onclick='() => TwoFactorMessage = ""'></button>
+                                <button type="button" class="btn-close" aria-label="Close" @onclick='() => TwoFactorMessage = ""'></button>
                             </div>
                         }
 
@@ -538,7 +538,7 @@ else
                         {
                             <div class="alert @(webAuthnMessageIsError ? "alert-danger" : "alert-success") alert-dismissible">
                                 @webAuthnMessage
-                                <button type="button" class="btn-close" @onclick='() => webAuthnMessage = ""'></button>
+                                <button type="button" class="btn-close" aria-label="Close" @onclick='() => webAuthnMessage = ""'></button>
                             </div>
                         }
                         @if (showPasskeyNameInput)
@@ -780,12 +780,12 @@ else
 
 @if (ShowAddSshKey)
 {
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Add SSH Key</h5>
-                    <button type="button" class="btn-close" @onclick='() => ShowAddSshKey = false'></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick='() => ShowAddSshKey = false'></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -809,12 +809,12 @@ else
 
 @if (ShowAddToken)
 {
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Generate Personal Access Token</h5>
-                    <button type="button" class="btn-close" @onclick='() => ShowAddToken = false'></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick='() => ShowAddToken = false'></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -860,12 +860,12 @@ else
 }
 @if (ShowAddGpgKey)
 {
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Add GPG Key</h5>
-                    <button type="button" class="btn-close" @onclick='() => ShowAddGpgKey = false'></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick='() => ShowAddGpgKey = false'></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">

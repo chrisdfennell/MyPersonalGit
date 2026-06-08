@@ -23,9 +23,10 @@
     <div class="mb-4">
         <h2 class="h4 mb-3">@L["Search_Heading"]</h2>
         <div class="input-group input-group-lg shadow-sm">
-            <input type="text" 
-                   class="form-control" 
-                   placeholder="@L["Search_InputPlaceholder"]" 
+            <input type="text"
+                   class="form-control"
+                   placeholder="@L["Search_InputPlaceholder"]"
+                   aria-label="@L["Search_InputPlaceholder"]"
                    @bind="searchQuery"
                    @bind:event="oninput"
                    @onkeyup="HandleKeyPress" />
