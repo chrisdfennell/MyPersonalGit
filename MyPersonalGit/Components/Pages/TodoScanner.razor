@@ -146,16 +146,17 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await Task.Run(() => ScanRepo());
+        // Resolve settings on the circuit thread (cheap), then run the CPU-bound git scan off-thread.
+        var systemSettings = await AdminService.GetSystemSettingsAsync();
+        var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot) ? systemSettings.ProjectRoot : Config["Git:ProjectRoot"] ?? "/repos";
+        await Task.Run(() => ScanRepo(projectRoot));
         isLoading = false;
     }
 
-    private void ScanRepo()
+    private void ScanRepo(string projectRoot)
     {
         try
         {
-            var systemSettings = AdminService.GetSystemSettingsAsync().GetAwaiter().GetResult();
-            var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot) ? systemSettings.ProjectRoot : Config["Git:ProjectRoot"] ?? "/repos";
             var repoPath = System.IO.Path.Combine(projectRoot, RepoName);
             if (!GitRepository.IsValid(repoPath)) repoPath += ".git";
             if (!GitRepository.IsValid(repoPath)) return;

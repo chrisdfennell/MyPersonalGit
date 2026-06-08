@@ -26,6 +26,11 @@ public class RawFileController : ControllerBase
         if (string.IsNullOrEmpty(path) || path.Contains(".."))
             return NotFound();
 
+        // Reject repo names that could escape the project root
+        if (string.IsNullOrEmpty(repoName) || repoName.Contains("..") ||
+            repoName.Contains('/') || repoName.Contains('\\'))
+            return NotFound();
+
         // Resolve project root
         var systemSettings = await _adminService.GetSystemSettingsAsync();
         var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot)

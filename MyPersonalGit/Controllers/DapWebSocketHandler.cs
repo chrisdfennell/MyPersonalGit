@@ -90,7 +90,7 @@ public static class DapWebSocketHandler
                 elapsed += 5;
             }
 
-            var session = sessionTask.Result;
+            var session = await sessionTask;
 
             if (session?.Process == null || session.Process.HasExited)
             {
