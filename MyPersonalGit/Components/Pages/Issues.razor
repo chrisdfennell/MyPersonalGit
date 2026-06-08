@@ -1,14 +1,34 @@
 @page "/repo/{RepoName}/issues"
 @page "/repo/{RepoName}/issues/{Number:int}"
+@page "/repo/{RepoName}/milestones"
+@using Markdig
 @using MyPersonalGit.Models
 @using MyPersonalGit.Data
-@inject IssueService IssueService
+@using LibGit2Sharp
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@inject IIssueService IssueService
+@inject IIssueDependencyService DependencyService
+@inject IMilestoneService MilestoneService
+@inject IIssueTemplateService TemplateService
+@inject IReactionService ReactionService
+@inject ITimeTrackingService TimeTrackingService
+@inject IConfiguration Config
+@inject IAdminService AdminService
+@inject IRepositoryService RepoService
+@inject ISavedReplyService SavedReplyService
 @inject NavigationManager Nav
 @using MyPersonalGit.Services
 @inject CurrentUserService UserService
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>Issues · @RepoName</PageTitle>
+<PageTitle>@(currentIssue != null ? $"{currentIssue.Title} · Issue #{currentIssue.Number}" : "Issues") · @RepoName</PageTitle>
+<HeadContent>
+    <meta property="og:title" content="@(currentIssue != null ? $"{currentIssue.Title} · Issue #{currentIssue.Number}" : "Issues") · @RepoName" />
+    <meta property="og:description" content="@(currentIssue?.Body?.Length > 200 ? currentIssue.Body[..200] + "..." : currentIssue?.Body ?? $"Issues for {RepoName}")" />
+    <meta property="og:url" content="@Nav.Uri" />
+</HeadContent>
 
 <div class="repo-header border-bottom bg-light-subtle mb-4 pt-3">
     <div class="container-xl px-3">
@@ -16,17 +36,168 @@
             <i class="bi bi-journal-bookmark text-muted me-2 h4 mb-0"></i>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 h4">
-                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Repositories</a></li>
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">@L["Nav_Repositories"]</a></li>
                     <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
-                    <li class="breadcrumb-item active fw-bold" aria-current="page">Issues</li>
+                    <li class="breadcrumb-item active fw-bold" aria-current="page">@(viewMode == "milestones" ? L["Issues_Milestones"] : L["Issues_Title"])</li>
                 </ol>
             </nav>
         </div>
+        <ul class="nav nav-tabs mt-2">
+            <li class="nav-item">
+                <button class="nav-link @(viewMode == "issues" ? "active" : "")" @onclick='() => { viewMode = "issues"; }'>
+                    <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> @L["Issues_Title"]
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(viewMode == "milestones" ? "active" : "")" @onclick="SwitchToMilestones">
+                    <i class="bi bi-signpost me-1"></i> @L["Issues_Milestones"]
+                    <span class="badge bg-secondary ms-1">@milestones.Count</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(viewMode == "templates" ? "active" : "")" @onclick='() => viewMode = "templates"'>
+                    <i class="bi bi-file-earmark-text me-1"></i> @L["Issues_Templates"]
+                    <span class="badge bg-secondary ms-1">@issueTemplates.Count</span>
+                </button>
+            </li>
+        </ul>
     </div>
 </div>
 
 <div class="container-xl px-3">
-    @if (Number.HasValue)
+    @if (viewMode == "templates")
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
+            <h5 class="mb-0">@L["Issues_IssueTemplates"]</h5>
+            @if (UserService.IsLoggedIn)
+            {
+                <button class="btn btn-success btn-sm" @onclick="() => showNewTemplateModal = true">
+                    <i class="bi bi-plus-lg me-1"></i> @L["Issues_NewTemplate"]
+                </button>
+            }
+        </div>
+
+        @if (issueTemplates.Any())
+        {
+            <div class="list-group">
+                @foreach (var tmpl in issueTemplates)
+                {
+                    <div class="list-group-item py-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1 fw-bold"><i class="bi bi-file-earmark-text me-1"></i>@tmpl.Name</h6>
+                                @if (!string.IsNullOrEmpty(tmpl.Description))
+                                {
+                                    <p class="text-muted small mb-1">@tmpl.Description</p>
+                                }
+                                @if (!string.IsNullOrEmpty(tmpl.Labels))
+                                {
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach (var label in tmpl.Labels.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(l => l.Trim()))
+                                        {
+                                            <span class="badge bg-primary" style="font-size: 10px;">@label</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-primary btn-sm" @onclick="() => UseTemplate(tmpl)">
+                                    <i class="bi bi-plus-circle me-1"></i>Use
+                                </button>
+                                @if (UserService.IsLoggedIn)
+                                {
+                                    <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteTemplate(tmpl.Id)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-file-earmark-text display-4 text-muted"></i>
+                <p class="text-muted mt-3">@L["Issues_NoTemplates"]</p>
+            </div>
+        }
+    }
+    else if (viewMode == "milestones")
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
+            <div class="btn-group">
+                <button class="btn @(milestoneFilter == "open" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => milestoneFilter = "open"'>
+                    <i class="bi bi-signpost me-1"></i> @milestones.Count(m => m.State == MilestoneState.Open) @L["Issues_Open"]
+                </button>
+                <button class="btn @(milestoneFilter == "closed" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => milestoneFilter = "closed"'>
+                    <i class="bi bi-check-circle me-1"></i> @milestones.Count(m => m.State == MilestoneState.Closed) @L["Issues_Closed"]
+                </button>
+            </div>
+            @if (UserService.IsLoggedIn)
+            {
+                <button class="btn btn-gh-primary btn-sm" @onclick="() => showNewMilestoneModal = true">
+                    <i class="bi bi-plus-lg me-1"></i> @L["Issues_NewMilestone"]
+                </button>
+            }
+        </div>
+
+        @if (GetFilteredMilestones().Any())
+        {
+            <div class="list-group">
+                @foreach (var ms in GetFilteredMilestones())
+                {
+                    var counts = milestoneCounts.ContainsKey(ms.Id) ? milestoneCounts[ms.Id] : (0, 0);
+                    var total = counts.Item1 + counts.Item2;
+                    var pct = total > 0 ? (int)(counts.Item2 * 100.0 / total) : 0;
+                    <div class="list-group-item py-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="mb-0 fw-bold">
+                                    <i class="bi bi-signpost text-muted me-1"></i> @ms.Title
+                                </h6>
+                                @if (ms.DueDate.HasValue)
+                                {
+                                    <small class="text-muted"><i class="bi bi-calendar me-1"></i>Due @ms.DueDate.Value.ToString("MMM d, yyyy")</small>
+                                }
+                                @if (!string.IsNullOrEmpty(ms.Description))
+                                {
+                                    <p class="text-muted small mb-0 mt-1">@ms.Description</p>
+                                }
+                            </div>
+                            <div class="d-flex gap-2">
+                                @if (UserService.IsLoggedIn)
+                                {
+                                    @if (ms.State == MilestoneState.Open)
+                                    {
+                                        <button class="btn btn-outline-secondary btn-sm" @onclick="() => CloseMilestone(ms.Number)">@L["Issues_Close"]</button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-outline-success btn-sm" @onclick="() => ReopenMilestone(ms.Number)">@L["Issues_Reopen"]</button>
+                                    }
+                                    <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteMilestone(ms.Number)"><i class="bi bi-trash"></i></button>
+                                }
+                            </div>
+                        </div>
+                        <div class="progress mb-1" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: @pct%"></div>
+                        </div>
+                        <small class="text-muted">@pct% complete · @counts.Item2 closed · @counts.Item1 open</small>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-signpost display-4 text-muted"></i>
+                <p class="text-muted mt-3">@L["Issues_NoMilestones", milestoneFilter]</p>
+            </div>
+        }
+    }
+    else if (Number.HasValue)
     {
         @if (currentIssue != null)
         {
@@ -38,16 +209,22 @@
                             <span class="text-muted fw-normal">#@currentIssue.Number</span>
                         </h1>
                         <div class="d-flex gap-2 align-items-center">
-                            @if (currentIssue.State == IssueState.Open)
+                            @if (currentIssue.IsDraft)
+                            {
+                                <span class="badge bg-secondary d-flex align-items-center gap-1">
+                                    <i class="bi bi-pencil"></i> @L["Issues_Draft"]
+                                </span>
+                            }
+                            else if (currentIssue.State == IssueState.Open)
                             {
                                 <span class="badge bg-success d-flex align-items-center gap-1">
-                                    <i class="bi bi-circle-fill" style="font-size: 8px;"></i> Open
+                                    <i class="bi bi-circle-fill" style="font-size: 8px;"></i> @L["Issues_Open"]
                                 </span>
                             }
                             else
                             {
                                 <span class="badge bg-danger d-flex align-items-center gap-1">
-                                    <i class="bi bi-check-circle-fill"></i> Closed
+                                    <i class="bi bi-check-circle-fill"></i> @L["Issues_Closed"]
                                 </span>
                             }
                             <span class="text-muted small">
@@ -59,20 +236,143 @@
                             </span>
                         </div>
                     </div>
-                    <div class="btn-group">
-                        @if (currentIssue.State == IssueState.Open)
+                    @if (UserService.IsLoggedIn)
+                    {
+                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                            <div class="btn-group">
+                                @if (currentIssue.IsDraft)
+                                {
+                                    <button class="btn btn-outline-success btn-sm" @onclick="ConvertDraftToIssue">
+                                        <i class="bi bi-check-circle me-1"></i> @L["Issues_ConvertToIssue"]
+                                    </button>
+                                }
+                                @if (currentIssue.State == IssueState.Open)
+                                {
+                                    <button class="btn btn-outline-danger btn-sm" @onclick="CloseIssue">
+                                        <i class="bi bi-check-circle me-1"></i> @L["Issues_CloseIssue"]
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-outline-success btn-sm" @onclick="ReopenIssue">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i> @L["Issues_ReopenIssue"]
+                                    </button>
+                                }
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="TogglePin" title="@(currentIssue.IsPinned ? "Unpin" : "Pin")">
+                                    <i class="bi @(currentIssue.IsPinned ? "bi-pin-angle-fill" : "bi-pin-angle")"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="ToggleLock" title="@(currentIssue.IsLocked ? "Unlock" : "Lock")">
+                                    <i class="bi @(currentIssue.IsLocked ? "bi-unlock" : "bi-lock")"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="() => showTransferModal = true" title="@L["Issues_TransferIssue"]">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                </button>
+                            </div>
+                            <div class="input-group input-group-sm" style="max-width: 250px;">
+                                <input type="text" class="form-control" @bind="newAssigneeInput" placeholder="@L["Issues_AddAssignee"]" />
+                                <button class="btn btn-outline-secondary" @onclick="AddAssignee"><i class="bi bi-person-plus"></i></button>
+                            </div>
+                            <div class="input-group input-group-sm" style="max-width: 200px;">
+                                <input type="date" class="form-control" @bind="dueDateInput" />
+                                <button class="btn btn-outline-secondary" @onclick="SetDueDate"><i class="bi bi-calendar-check"></i></button>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @* Pinned / Locked indicators *@
+                @if (currentIssue.IsPinned)
+                {
+                    <div class="mb-2">
+                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle"><i class="bi bi-pin-angle-fill me-1"></i>@L["Issues_Pinned"]</span>
+                    </div>
+                }
+                @if (currentIssue.IsLocked)
+                {
+                    <div class="mb-2">
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle"><i class="bi bi-lock-fill me-1"></i>Locked@(string.IsNullOrEmpty(currentIssue.LockReason) ? "" : $": {currentIssue.LockReason}")</span>
+                    </div>
+                }
+
+                @* Assignees *@
+                @if (currentIssue.Assignees.Any())
+                {
+                    <div class="mb-3">
+                        <span class="small fw-bold text-muted me-1">@L["Issues_Assignees"]:</span>
+                        @foreach (var assignee in currentIssue.Assignees)
                         {
-                            <button class="btn btn-outline-danger btn-sm" @onclick="CloseIssue">
-                                <i class="bi bi-check-circle me-1"></i> Close issue
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border me-1"><i class="bi bi-person me-1"></i>@assignee</span>
+                        }
+                    </div>
+                }
+
+                @* Due Date *@
+                @if (currentIssue.DueDate.HasValue)
+                {
+                    <div class="mb-3">
+                        @{
+                            var isOverdue = currentIssue.DueDate.Value < DateTime.UtcNow && currentIssue.State == IssueState.Open;
+                        }
+                        <span class="badge @(isOverdue ? "bg-danger" : "bg-info bg-opacity-10 text-info border border-info-subtle")">
+                            <i class="bi bi-calendar-event me-1"></i>Due @currentIssue.DueDate.Value.ToString("MMM d, yyyy")
+                        </span>
+                    </div>
+                }
+
+                @* Time Tracking *@
+                <div class="mb-3">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="small fw-bold text-muted"><i class="bi bi-clock me-1"></i>@L["Issues_TimeTracking"]</span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border">@FormatDuration(totalTime)</span>
+                    </div>
+                    @if (UserService.IsLoggedIn)
+                    {
+                        @if (runningTimer != null && runningTimer.RepoName == RepoName && runningTimer.IssueNumber == currentIssue.Number)
+                        {
+                            <button class="btn btn-outline-danger btn-sm w-100 mb-2" @onclick="StopTimer">
+                                <i class="bi bi-stop-circle me-1"></i> Stop Timer (@FormatDuration(DateTime.UtcNow - (runningTimer.StartedAt ?? DateTime.UtcNow)))
                             </button>
                         }
                         else
                         {
-                            <button class="btn btn-outline-success btn-sm" @onclick="ReopenIssue">
-                                <i class="bi bi-arrow-counterclockwise me-1"></i> Reopen issue
+                            <button class="btn btn-outline-success btn-sm w-100 mb-2" @onclick="StartTimer">
+                                <i class="bi bi-play-circle me-1"></i> @L["Issues_StartTimer"]
                             </button>
                         }
-                    </div>
+                        <div class="input-group input-group-sm mb-2">
+                            <input type="number" class="form-control" @bind="logHours" min="0" placeholder="h" style="max-width: 50px;" />
+                            <span class="input-group-text">h</span>
+                            <input type="number" class="form-control" @bind="logMinutes" min="0" max="59" placeholder="m" style="max-width: 50px;" />
+                            <span class="input-group-text">m</span>
+                            <button class="btn btn-outline-primary" @onclick="LogManualTime" disabled="@(logHours == 0 && logMinutes == 0)">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                    }
+                    @if (timeEntries.Any())
+                    {
+                        <div style="max-height: 150px; overflow-y: auto; font-size: 12px;">
+                            @foreach (var entry in timeEntries)
+                            {
+                                <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                    <div>
+                                        <strong>@entry.Username</strong>
+                                        <span class="text-muted ms-1">@FormatDuration(entry.IsRunning && entry.StartedAt.HasValue ? DateTime.UtcNow - entry.StartedAt.Value : entry.Duration)</span>
+                                        @if (!string.IsNullOrEmpty(entry.Note))
+                                        {
+                                            <span class="text-muted ms-1">— @entry.Note</span>
+                                        }
+                                    </div>
+                                    @if (UserService.IsLoggedIn && entry.Username == UserService.Username && !entry.IsRunning)
+                                    {
+                                        <button class="btn btn-link btn-sm text-danger p-0" @onclick="() => DeleteTimeEntry(entry.Id)">
+                                            <i class="bi bi-x-lg" style="font-size: 10px;"></i>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
                 </div>
 
                 @if (currentIssue.Labels.Any())
@@ -81,6 +381,88 @@
                         @foreach (var label in currentIssue.Labels)
                         {
                             <span class="badge bg-primary me-1">@label</span>
+                        }
+                    </div>
+                }
+                @if (currentIssueMilestone != null)
+                {
+                    <div class="mb-3">
+                        <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle">
+                            <i class="bi bi-signpost me-1"></i> @currentIssueMilestone.Title
+                        </span>
+                    </div>
+                }
+
+                @* Issue Dependencies *@
+                @if (blockedByIssues.Any() || blocksIssues.Any())
+                {
+                    <div class="card border shadow-sm mb-3">
+                        <div class="card-header bg-light-subtle py-2 small fw-bold">
+                            <i class="bi bi-diagram-3 me-1"></i> @L["Issues_Dependencies"]
+                        </div>
+                        <div class="card-body py-2">
+                            @if (blockedByIssues.Any())
+                            {
+                                <div class="mb-2">
+                                    <span class="small fw-bold text-danger"><i class="bi bi-lock me-1"></i>@L["Issues_BlockedBy"]:</span>
+                                    <div class="ms-3">
+                                        @foreach (var dep in blockedByIssues)
+                                        {
+                                            <a href="/repo/@RepoName/issues/@dep.Number" class="d-block small text-decoration-none">
+                                                <span class="badge @(dep.State == IssueState.Open ? "bg-success" : "bg-secondary") me-1">#@dep.Number</span>
+                                                @dep.Title
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            @if (blocksIssues.Any())
+                            {
+                                <div>
+                                    <span class="small fw-bold text-warning"><i class="bi bi-unlock me-1"></i>@L["Issues_Blocks"]:</span>
+                                    <div class="ms-3">
+                                        @foreach (var dep in blocksIssues)
+                                        {
+                                            <a href="/repo/@RepoName/issues/@dep.Number" class="d-block small text-decoration-none">
+                                                <span class="badge @(dep.State == IssueState.Open ? "bg-success" : "bg-secondary") me-1">#@dep.Number</span>
+                                                @dep.Title
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (UserService.IsLoggedIn && currentIssue.State == IssueState.Open)
+                {
+                    <div class="mb-3">
+                        @if (showAddDependency)
+                        {
+                            <div class="border rounded p-2 bg-light-subtle">
+                                <div class="d-flex align-items-end gap-2">
+                                    <div>
+                                        <label class="form-label small fw-bold mb-1">Issue #</label>
+                                        <input type="number" class="form-control form-control-sm" style="width:100px;" @bind="newDepIssueNumber" min="1" />
+                                    </div>
+                                    <div>
+                                        <label class="form-label small fw-bold mb-1">Relationship</label>
+                                        <select class="form-select form-select-sm" @bind="newDepType">
+                                            <option value="blocked_by">@L["Issues_IsBlockedBy"]</option>
+                                            <option value="blocks">@L["Issues_BlocksOther"]</option>
+                                        </select>
+                                    </div>
+                                    <button class="btn btn-gh-primary btn-sm" @onclick="AddDependency" disabled="@(newDepIssueNumber <= 0)">@L["Issues_Add"]</button>
+                                    <button class="btn btn-light btn-sm border" @onclick="() => showAddDependency = false">@L["Issues_Cancel"]</button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-secondary btn-sm" @onclick="() => showAddDependency = true">
+                                <i class="bi bi-diagram-3 me-1"></i>@L["Issues_AddDependency"]
+                            </button>
                         }
                     </div>
                 }
@@ -98,36 +480,108 @@
                         }
                         else
                         {
-                            <p class="text-muted fst-italic">No description provided.</p>
+                            <p class="text-muted fst-italic">@L["Issues_NoDescription"]</p>
                         }
                     </div>
                 </div>
 
                 @foreach (var comment in currentIssue.Comments)
                 {
-                    <div class="card mb-3">
-                        <div class="card-header bg-light d-flex align-items-center gap-2">
-                            <i class="bi bi-person-circle"></i>
-                            <strong>@comment.Author</strong>
-                            <span class="text-muted small">commented @FormatDate(comment.CreatedAt)</span>
+                    @if (IsAutoCloseComment(comment.Body))
+                    {
+                        <div class="d-flex align-items-center gap-2 mb-3 ms-3 py-2">
+                            <i class="bi bi-check-circle-fill text-danger"></i>
+                            <span class="text-muted small">
+                                <strong>@comment.Author</strong> @((MarkupString)RenderMarkdown(comment.Body)) @FormatDate(comment.CreatedAt)
+                            </span>
                         </div>
-                        <div class="card-body">
-                            <div class="markdown-body">@((MarkupString)RenderMarkdown(comment.Body))</div>
+                    }
+                    else if (IsReferenceComment(comment.Body))
+                    {
+                        <div class="d-flex align-items-center gap-2 mb-3 ms-3 py-2">
+                            <i class="bi bi-link-45deg text-primary"></i>
+                            <span class="text-muted small">
+                                <strong>@comment.Author</strong> @((MarkupString)RenderMarkdown(comment.Body)) @FormatDate(comment.CreatedAt)
+                            </span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="card mb-3">
+                            <div class="card-header bg-light d-flex align-items-center gap-2">
+                                <i class="bi bi-person-circle"></i>
+                                <strong>@comment.Author</strong>
+                                <span class="text-muted small">commented @FormatDate(comment.CreatedAt)</span>
+                                @if (comment.UpdatedAt.HasValue)
+                                {
+                                    <span class="text-muted small fst-italic">(edited)</span>
+                                }
+                                @if (UserService.IsLoggedIn && comment.Author.Equals(UserService.Username, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <div class="ms-auto d-flex gap-1">
+                                        <button class="btn btn-link btn-sm text-muted p-0" @onclick="() => StartEditComment(comment)" title="@L["Issues_Edit"]">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-link btn-sm text-danger p-0" @onclick="() => DeleteComment(comment.Id)" title="@L["Issues_Delete"]">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                            <div class="card-body">
+                                @if (editingCommentId == comment.Id)
+                                {
+                                    <textarea class="form-control mb-2" rows="4" @bind="editCommentBody"></textarea>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-success btn-sm" @onclick="SaveEditComment">@L["Issues_Save"]</button>
+                                        <button class="btn btn-light btn-sm border" @onclick="CancelEditComment">@L["Issues_Cancel"]</button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="markdown-body">@((MarkupString)RenderMarkdown(comment.Body))</div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (currentIssue.IsLocked)
+                {
+                    <div class="card border-warning">
+                        <div class="card-body text-center text-muted py-3">
+                            <i class="bi bi-lock-fill me-1"></i> @L["Issues_LockedMessage"]
                         </div>
                     </div>
                 }
-
-                <div class="card">
-                    <div class="card-header bg-light">
-                        <strong>Add a comment</strong>
+                else if (UserService.IsLoggedIn)
+                {
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <strong>@L["Issues_AddComment"]</strong>
+                        </div>
+                        <div class="card-body">
+                            @if (savedReplies.Any())
+                            {
+                                <div class="dropdown mb-2">
+                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-bookmark me-1"></i> @L["SavedReply_Insert"]
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        @foreach (var reply in savedReplies)
+                                        {
+                                            <li><button class="dropdown-item small" @onclick="() => newCommentBody = reply.Body">@reply.Title</button></li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                            <textarea class="form-control mb-2" rows="4" @bind="newCommentBody" placeholder="@L["Issues_LeaveComment"]"></textarea>
+                            <button class="btn btn-success" @onclick="AddComment" disabled="@string.IsNullOrWhiteSpace(newCommentBody)">
+                                <i class="bi bi-chat-left-text me-1"></i> @L["Issues_Comment"]
+                            </button>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <textarea class="form-control mb-2" rows="4" @bind="newCommentBody" placeholder="Leave a comment"></textarea>
-                        <button class="btn btn-success" @onclick="AddComment" disabled="@string.IsNullOrWhiteSpace(newCommentBody)">
-                            <i class="bi bi-chat-left-text me-1"></i> Comment
-                        </button>
-                    </div>
-                </div>
+                }
             </div>
         }
         else
@@ -140,26 +594,63 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="btn-group">
                 <button class="btn @(filterState == "open" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => filterState = "open"'>
-                    <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> @openCount Open
+                    <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> @openCount @L["Issues_Open"]
                 </button>
                 <button class="btn @(filterState == "closed" ? "btn-dark" : "btn-outline-secondary") btn-sm" @onclick='() => filterState = "closed"'>
-                    <i class="bi bi-check-circle me-1"></i> @closedCount Closed
+                    <i class="bi bi-check-circle me-1"></i> @closedCount @L["Issues_Closed"]
                 </button>
             </div>
-            <button class="btn btn-success btn-sm" @onclick="() => showNewIssueModal = true">
-                <i class="bi bi-plus-circle me-1"></i> New issue
-            </button>
+            @if (milestones.Any(m => m.State == MilestoneState.Open))
+            {
+                <select class="form-select form-select-sm" style="width: auto; min-width: 150px;" @bind="filterMilestoneId">
+                    <option value="0">@L["Issues_AllMilestones"]</option>
+                    @foreach (var ms in milestones.Where(m => m.State == MilestoneState.Open))
+                    {
+                        <option value="@ms.Id">@ms.Title</option>
+                    }
+                </select>
+            }
+            @if (UserService.IsLoggedIn)
+            {
+                <button class="btn btn-success btn-sm" @onclick="OpenNewIssueModal">
+                    <i class="bi bi-plus-circle me-1"></i> @L["Issues_NewIssue"]
+                </button>
+            }
         </div>
+
+        @if (UserService.IsLoggedIn && filteredIssues.Count > 1)
+        {
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" @bind="batchMode" id="batchMode" />
+                    <label class="form-check-label small text-muted" for="batchMode">@L["Issues_BatchSelect"]</label>
+                </div>
+                @if (batchMode && selectedIssueNumbers.Any())
+                {
+                    <span class="small text-muted">@selectedIssueNumbers.Count @L["Issues_Selected"]</span>
+                    <button class="btn btn-danger btn-sm" @onclick="BatchCloseIssues">
+                        <i class="bi bi-x-circle me-1"></i> @L["Issues_CloseSelected"]
+                    </button>
+                    <button class="btn btn-success btn-sm" @onclick="BatchReopenIssues">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> @L["Issues_ReopenSelected"]
+                    </button>
+                }
+            </div>
+        }
 
         @if (filteredIssues.Any())
         {
             <div class="list-group">
                 @foreach (var issue in filteredIssues)
                 {
-                    <a href="/repo/@RepoName/issues/@issue.Number" class="list-group-item list-group-item-action">
+                    <a href="@(batchMode ? "javascript:void(0)" : $"/repo/{RepoName}/issues/{issue.Number}")" class="list-group-item list-group-item-action" @onclick="() => { if (batchMode) ToggleIssueSelection(issue.Number); }" @onclick:preventDefault="@batchMode">
                         <div class="d-flex w-100 justify-content-between align-items-start">
                             <div class="flex-grow-1">
                                 <div class="d-flex align-items-center gap-2 mb-1">
+                                    @if (batchMode)
+                                    {
+                                        <input type="checkbox" class="form-check-input" checked="@selectedIssueNumbers.Contains(issue.Number)" @onclick:stopPropagation="true" />
+                                    }
                                     @if (issue.State == IssueState.Open)
                                     {
                                         <i class="bi bi-circle-fill text-success" style="font-size: 12px;"></i>
@@ -169,6 +660,18 @@
                                         <i class="bi bi-check-circle-fill text-danger"></i>
                                     }
                                     <h6 class="mb-0">@issue.Title</h6>
+                                    @if (issue.IsPinned)
+                                    {
+                                        <i class="bi bi-pin-angle-fill text-warning" style="font-size: 12px;" title="@L["Issues_Pinned"]"></i>
+                                    }
+                                    @if (issue.IsLocked)
+                                    {
+                                        <i class="bi bi-lock-fill text-muted" style="font-size: 12px;" title="@L["Issues_Locked"]"></i>
+                                    }
+                                    @if (issue.IsDraft)
+                                    {
+                                        <span class="badge bg-secondary" style="font-size: 10px;">@L["Issues_Draft"]</span>
+                                    }
                                     @foreach (var label in issue.Labels)
                                     {
                                         <span class="badge bg-primary" style="font-size: 10px;">@label</span>
@@ -176,6 +679,15 @@
                                 </div>
                                 <small class="text-muted">
                                     #@issue.Number opened @FormatDate(issue.CreatedAt) by @issue.Author
+                                    @if (issue.Assignees.Any())
+                                    {
+                                        <span> · <i class="bi bi-person"></i> @string.Join(", ", issue.Assignees)</span>
+                                    }
+                                    @if (issue.DueDate.HasValue)
+                                    {
+                                        var overdue = issue.DueDate.Value < DateTime.UtcNow && issue.State == IssueState.Open;
+                                        <span class="@(overdue ? "text-danger" : "")"> · <i class="bi bi-calendar-event"></i> @issue.DueDate.Value.ToString("MMM d")</span>
+                                    }
                                     @if (issue.Comments.Any())
                                     {
                                         <span> · <i class="bi bi-chat-left"></i> @issue.Comments.Count</span>
@@ -191,8 +703,8 @@
         {
             <div class="blankslate p-5 border rounded-3 bg-light text-center">
                 <i class="bi bi-check-circle display-4 text-muted mb-3"></i>
-                <h3 class="h5">No @filterState issues</h3>
-                <p class="text-muted">There are no @filterState issues for this repository.</p>
+                <h3 class="h5">@L["Issues_NoIssuesTitle", filterState]</h3>
+                <p class="text-muted">@L["Issues_NoIssuesMessage", filterState]</p>
             </div>
         }
     }
@@ -204,27 +716,100 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">New Issue</h5>
+                    <h5 class="modal-title">@L["Issues_NewIssue"]</h5>
                     <button type="button" class="btn-close" @onclick="() => showNewIssueModal = false"></button>
                 </div>
                 <div class="modal-body">
+                    @if (hasContributingFile)
+                    {
+                        <div class="alert alert-info small py-2 mb-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            @L["Issues_ContributingAlert"]
+                            <a href="/repo/@RepoName/CONTRIBUTING.md" target="_blank" class="alert-link">@L["Issues_ViewContributing"]</a>
+                        </div>
+                    }
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Title</label>
-                        <input type="text" class="form-control" @bind="newIssueTitle" placeholder="Issue title" />
+                        <label class="form-label fw-bold">@L["Issues_TitleLabel"]</label>
+                        <input type="text" class="form-control" @bind="newIssueTitle" placeholder="@L["Issues_IssueTitlePlaceholder"]" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Description</label>
-                        <textarea class="form-control" rows="6" @bind="newIssueBody" placeholder="Leave a comment"></textarea>
+                        <label class="form-label fw-bold">@L["Issues_Description"]</label>
+                        <textarea class="form-control" rows="6" @bind="newIssueBody" placeholder="@L["Issues_LeaveComment"]"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Labels (comma-separated)</label>
+                        <label class="form-label fw-bold">@L["Issues_LabelsLabel"]</label>
                         <input type="text" class="form-control" @bind="newIssueLabels" placeholder="bug, enhancement, documentation" />
+                    </div>
+                    @if (issueTemplates.Any())
+                    {
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">@L["Issues_Template"]</label>
+                            <select class="form-select" @bind="selectedTemplateId" @bind:after="ApplyTemplate">
+                                <option value="0">@L["Issues_NoTemplate"]</option>
+                                @foreach (var tmpl in issueTemplates)
+                                {
+                                    <option value="@tmpl.Id">@tmpl.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    @if (milestones.Any(m => m.State == MilestoneState.Open))
+                    {
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">@L["Issues_Milestone"]</label>
+                            <select class="form-select" @bind="newIssueMilestoneId">
+                                <option value="0">@L["Issues_NoMilestone"]</option>
+                                @foreach (var ms in milestones.Where(m => m.State == MilestoneState.Open))
+                                {
+                                    <option value="@ms.Id">@ms.Title</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" @bind="newIssueIsDraft" id="issueDraftCheck">
+                        <label class="form-check-label" for="issueDraftCheck">
+                            @L["Issues_CreateAsDraft"]
+                        </label>
+                        <div class="form-text">@L["Issues_DraftDescription"]</div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="() => showNewIssueModal = false">Cancel</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => showNewIssueModal = false">@L["Issues_Cancel"]</button>
                     <button type="button" class="btn btn-success" @onclick="CreateIssue" disabled="@string.IsNullOrWhiteSpace(newIssueTitle)">
-                        <i class="bi bi-plus-circle me-1"></i> Create issue
+                        <i class="bi bi-plus-circle me-1"></i> @(newIssueIsDraft ? L["Issues_CreateDraft"] : L["Issues_CreateIssue"])
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showTransferModal)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-arrow-left-right me-2"></i>@L["Issues_TransferIssue"]</h5>
+                    <button class="btn-close" @onclick="() => showTransferModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">@L["Issues_TransferDescription"]</p>
+                    <div class="mb-3">
+                        <label class="form-label">@L["Issues_TargetRepository"]</label>
+                        <input class="form-control" @bind="transferTargetRepo" placeholder="@L["Issues_TargetRepoPlaceholder"]" />
+                    </div>
+                    @if (!string.IsNullOrEmpty(transferError))
+                    {
+                        <div class="alert alert-danger small py-2">@transferError</div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => showTransferModal = false">@L["Common_Cancel"]</button>
+                    <button class="btn btn-primary" @onclick="TransferIssue" disabled="@(string.IsNullOrWhiteSpace(transferTargetRepo) || isTransferring)">
+                        @if (isTransferring) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        @L["Issues_TransferIssue"]
                     </button>
                 </div>
             </div>
@@ -237,49 +822,275 @@
     [Parameter] public int? Number { get; set; }
 
     private List<Issue> issues = new();
+    private bool hasContributingFile;
+    private List<SavedReply> savedReplies = new();
     private Issue? currentIssue;
+    private Milestone? currentIssueMilestone;
     private string filterState = "open";
     private bool showNewIssueModal = false;
+    private string viewMode = "issues";
+    private string milestoneFilter = "open";
 
     private string newIssueTitle = "";
     private string newIssueBody = "";
     private string newIssueLabels = "";
     private string newCommentBody = "";
+    private string? issueTemplate;
+    private int newIssueMilestoneId;
+    private int filterMilestoneId;
+    private bool newIssueIsDraft;
+    private int selectedTemplateId;
 
-    private List<Issue> filteredIssues => issues
-        .Where(i => filterState == "open" ? i.State == IssueState.Open : i.State == IssueState.Closed)
-        .OrderByDescending(i => i.CreatedAt)
-        .ToList();
+    // Issue Dependencies
+    private List<Issue> blockedByIssues = new();
+    private List<Issue> blocksIssues = new();
+    private bool showAddDependency;
+    private int newDepIssueNumber;
+    private string newDepType = "blocked_by";
+
+    // Comment editing
+    private int? editingCommentId;
+    private string editCommentBody = "";
+
+    // Assignees & Due Date
+    private string newAssigneeInput = "";
+    private DateTime? dueDateInput;
+
+    // Time Tracking
+    private List<TimeEntry> timeEntries = new();
+    private TimeSpan totalTime;
+    private TimeEntry? runningTimer;
+    private int logHours, logMinutes;
+
+    // Issue Templates
+    private List<IssueTemplate> issueTemplates = new();
+    private bool showNewTemplateModal;
+    private string newTemplateName = "";
+    private string newTemplateBody = "";
+    private string newTemplateDescription = "";
+    private string newTemplateLabels = "";
+
+    // Milestones
+    private List<Milestone> milestones = new();
+    private Dictionary<int, (int, int)> milestoneCounts = new();
+    private bool showNewMilestoneModal;
+    private string newMilestoneTitle = "";
+    private string newMilestoneDescription = "";
+    private string newMilestoneDueDate = "";
+
+    private List<Issue> filteredIssues
+    {
+        get
+        {
+            var q = issues.Where(i => filterState == "open" ? i.State == IssueState.Open : i.State == IssueState.Closed);
+            if (filterMilestoneId > 0)
+                q = q.Where(i => i.MilestoneId == filterMilestoneId);
+            return q.OrderByDescending(i => i.IsPinned).ThenByDescending(i => i.CreatedAt).ToList();
+        }
+    }
 
     private int openCount => issues.Count(i => i.State == IssueState.Open);
     private int closedCount => issues.Count(i => i.State == IssueState.Closed);
 
     protected override async Task OnParametersSetAsync()
     {
+        // Detect milestones route
+        var uri = Nav.ToBaseRelativePath(Nav.Uri);
+        if (uri.EndsWith("/milestones", StringComparison.OrdinalIgnoreCase))
+            viewMode = "milestones";
+
         await LoadIssues();
+        await LoadMilestones();
+        await LoadTemplates();
+        LoadTemplate();
     }
 
     private async Task LoadIssues()
     {
         issues = await IssueService.GetIssuesAsync(RepoName);
+
+        // Load saved replies for comment insertion
+        if (UserService.IsLoggedIn)
+        {
+            try { savedReplies = await SavedReplyService.GetRepliesAsync(UserService.Username); } catch { }
+        }
+
+        // Check for CONTRIBUTING.md
+        try
+        {
+            var systemSettings = await AdminService.GetSystemSettingsAsync();
+            var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot) ? systemSettings.ProjectRoot : Config["Git:ProjectRoot"] ?? "/repos";
+            var repoPath = System.IO.Path.Combine(projectRoot, RepoName);
+            if (!LibGit2Sharp.Repository.IsValid(repoPath)) repoPath += ".git";
+            if (LibGit2Sharp.Repository.IsValid(repoPath))
+            {
+                using var repo = new LibGit2Sharp.Repository(repoPath);
+                var head = repo.Head;
+                if (head?.Tip != null)
+                {
+                    hasContributingFile = head.Tip.Tree.Any(e =>
+                        e.Name.StartsWith("CONTRIBUTING", StringComparison.OrdinalIgnoreCase));
+                }
+            }
+        }
+        catch { }
+
         if (Number.HasValue)
         {
             currentIssue = await IssueService.GetIssueAsync(RepoName, Number.Value);
+            if (currentIssue?.MilestoneId != null)
+            {
+                currentIssueMilestone = milestones.FirstOrDefault(m => m.Id == currentIssue.MilestoneId);
+                if (currentIssueMilestone == null)
+                {
+                    // Milestones may not be loaded yet, load them
+                    await LoadMilestones();
+                    currentIssueMilestone = milestones.FirstOrDefault(m => m.Id == currentIssue.MilestoneId);
+                }
+            }
+            await LoadDependencies();
+            await LoadTimeEntries();
         }
+    }
+
+    private async Task LoadDependencies()
+    {
+        if (!Number.HasValue) return;
+        blockedByIssues = await DependencyService.GetBlockingIssuesAsync(RepoName, Number.Value);
+        blocksIssues = await DependencyService.GetBlockedByIssuesAsync(RepoName, Number.Value);
+    }
+
+    private async Task LoadTimeEntries()
+    {
+        if (currentIssue == null) return;
+        timeEntries = await TimeTrackingService.GetTimeEntriesAsync(RepoName, currentIssue.Number);
+        totalTime = await TimeTrackingService.GetTotalTimeAsync(RepoName, currentIssue.Number);
+        if (UserService.IsLoggedIn)
+            runningTimer = await TimeTrackingService.GetRunningTimerAsync(UserService.Username);
+    }
+
+    private async Task StartTimer()
+    {
+        if (currentIssue == null || !UserService.IsLoggedIn) return;
+        await TimeTrackingService.StartTimerAsync(RepoName, currentIssue.Number, UserService.Username);
+        await LoadTimeEntries();
+    }
+
+    private async Task StopTimer()
+    {
+        if (currentIssue == null || !UserService.IsLoggedIn) return;
+        await TimeTrackingService.StopTimerAsync(RepoName, currentIssue.Number, UserService.Username);
+        await LoadTimeEntries();
+    }
+
+    private async Task LogManualTime()
+    {
+        if (currentIssue == null || !UserService.IsLoggedIn) return;
+        var duration = new TimeSpan(logHours, logMinutes, 0);
+        if (duration <= TimeSpan.Zero) return;
+        await TimeTrackingService.LogTimeAsync(RepoName, currentIssue.Number, UserService.Username, duration, null);
+        logHours = 0; logMinutes = 0;
+        await LoadTimeEntries();
+    }
+
+    private async Task DeleteTimeEntry(int id)
+    {
+        if (!UserService.IsLoggedIn) return;
+        await TimeTrackingService.DeleteTimeEntryAsync(id, UserService.Username);
+        await LoadTimeEntries();
+    }
+
+    private string FormatDuration(TimeSpan ts)
+    {
+        if (ts.TotalHours >= 1) return $"{(int)ts.TotalHours}h {ts.Minutes}m";
+        if (ts.TotalMinutes >= 1) return $"{(int)ts.TotalMinutes}m";
+        return "0m";
+    }
+
+    private async Task AddDependency()
+    {
+        if (!Number.HasValue || newDepIssueNumber <= 0) return;
+
+        if (newDepType == "blocked_by")
+            await DependencyService.AddDependencyAsync(RepoName, newDepIssueNumber, Number.Value, UserService.Username ?? "");
+        else
+            await DependencyService.AddDependencyAsync(RepoName, Number.Value, newDepIssueNumber, UserService.Username ?? "");
+
+        newDepIssueNumber = 0;
+        showAddDependency = false;
+        await LoadDependencies();
+    }
+
+    private async Task LoadMilestones()
+    {
+        milestones = await MilestoneService.GetMilestonesAsync(RepoName);
+        milestoneCounts.Clear();
+        foreach (var ms in milestones)
+        {
+            var counts = await MilestoneService.GetIssueCountsAsync(ms.Id);
+            milestoneCounts[ms.Id] = (counts.Open, counts.Closed);
+        }
+    }
+
+    private void LoadTemplate()
+    {
+        try
+        {
+            var repoPath = GetRepoPathSync();
+            if (repoPath == null || !LibGit2Sharp.Repository.IsValid(repoPath)) return;
+            using var repo = new LibGit2Sharp.Repository(repoPath);
+            var head = repo.Head;
+            if (head?.Tip == null) return;
+            var tree = head.Tip.Tree;
+            var entry = tree[".github/ISSUE_TEMPLATE.md"];
+            if (entry?.Target is Blob blob)
+            {
+                issueTemplate = blob.GetContentText();
+            }
+        }
+        catch { }
+    }
+
+    private string? GetRepoPathSync()
+    {
+        var projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+        var path = System.IO.Path.Combine(projectRoot, RepoName);
+        if (LibGit2Sharp.Repository.IsValid(path)) return path;
+        if (LibGit2Sharp.Repository.IsValid(path + ".git")) return path + ".git";
+        return null;
+    }
+
+    private void OpenNewIssueModal()
+    {
+        newIssueBody = issueTemplate ?? "";
+        showNewIssueModal = true;
     }
 
     private async Task CreateIssue()
     {
+        if (!UserService.IsLoggedIn) return;
         var labels = newIssueLabels.Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(l => l.Trim())
             .Where(l => !string.IsNullOrWhiteSpace(l))
             .ToList();
 
         var issue = await IssueService.CreateIssueAsync(RepoName, newIssueTitle, newIssueBody, UserService.Username, labels);
-        
+
+        if (newIssueMilestoneId > 0)
+        {
+            await IssueService.UpdateIssueAsync(RepoName, issue.Number, i => i.MilestoneId = newIssueMilestoneId);
+        }
+        if (newIssueIsDraft)
+        {
+            await IssueService.UpdateIssueAsync(RepoName, issue.Number, i => i.IsDraft = true);
+        }
+
         newIssueTitle = "";
         newIssueBody = "";
         newIssueLabels = "";
+        newIssueMilestoneId = 0;
+        newIssueIsDraft = false;
+        selectedTemplateId = 0;
         showNewIssueModal = false;
 
         Nav.NavigateTo($"/repo/{RepoName}/issues/{issue.Number}");
@@ -287,6 +1098,7 @@
 
     private async Task AddComment()
     {
+        if (!UserService.IsLoggedIn) return;
         if (Number.HasValue && !string.IsNullOrWhiteSpace(newCommentBody))
         {
             await IssueService.AddCommentAsync(RepoName, Number.Value, UserService.Username, newCommentBody);
@@ -297,6 +1109,7 @@
 
     private async Task CloseIssue()
     {
+        if (!UserService.IsLoggedIn) return;
         if (Number.HasValue)
         {
             await IssueService.CloseIssueAsync(RepoName, Number.Value);
@@ -306,11 +1119,71 @@
 
     private async Task ReopenIssue()
     {
+        if (!UserService.IsLoggedIn) return;
         if (Number.HasValue)
         {
             await IssueService.ReopenIssueAsync(RepoName, Number.Value);
             await LoadIssues();
         }
+    }
+
+    private void StartEditComment(IssueComment comment)
+    {
+        editingCommentId = comment.Id;
+        editCommentBody = comment.Body;
+    }
+
+    private void CancelEditComment()
+    {
+        editingCommentId = null;
+        editCommentBody = "";
+    }
+
+    private async Task SaveEditComment()
+    {
+        if (editingCommentId == null || string.IsNullOrWhiteSpace(editCommentBody)) return;
+        await IssueService.EditCommentAsync(editingCommentId.Value, editCommentBody, UserService.Username);
+        editingCommentId = null;
+        editCommentBody = "";
+        await LoadIssues();
+    }
+
+    private async Task DeleteComment(int commentId)
+    {
+        await IssueService.DeleteCommentAsync(commentId, UserService.Username);
+        await LoadIssues();
+    }
+
+    private async Task TogglePin()
+    {
+        if (!UserService.IsLoggedIn || !Number.HasValue) return;
+        await IssueService.TogglePinAsync(RepoName, Number.Value);
+        await LoadIssues();
+    }
+
+    private async Task ToggleLock()
+    {
+        if (!UserService.IsLoggedIn || !Number.HasValue) return;
+        await IssueService.ToggleLockAsync(RepoName, Number.Value);
+        await LoadIssues();
+    }
+
+    private async Task AddAssignee()
+    {
+        if (!UserService.IsLoggedIn || !Number.HasValue || string.IsNullOrWhiteSpace(newAssigneeInput)) return;
+        var assignees = new List<string>(currentIssue?.Assignees ?? new());
+        if (!assignees.Contains(newAssigneeInput, StringComparer.OrdinalIgnoreCase))
+            assignees.Add(newAssigneeInput);
+        await IssueService.SetAssigneesAsync(RepoName, Number.Value, assignees);
+        newAssigneeInput = "";
+        await LoadIssues();
+    }
+
+    private async Task SetDueDate()
+    {
+        if (!UserService.IsLoggedIn || !Number.HasValue) return;
+        await IssueService.SetDueDateAsync(RepoName, Number.Value, dueDateInput);
+        await LoadIssues();
     }
 
     private string FormatDate(DateTime date)
@@ -323,8 +1196,270 @@
         return date.ToString("MMM d, yyyy");
     }
 
+    private static readonly MarkdownPipeline _mdPipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .UseEmojiAndSmiley()
+        .Build();
+
     private string RenderMarkdown(string markdown)
     {
-        return System.Web.HttpUtility.HtmlEncode(markdown).Replace("\n", "<br/>");
+        if (string.IsNullOrWhiteSpace(markdown)) return "";
+        return Markdown.ToHtml(markdown, _mdPipeline);
+    }
+
+    private static bool IsAutoCloseComment(string body) =>
+        body.StartsWith("Closed via commit") || body.StartsWith("Closed via pull request");
+
+    private static bool IsReferenceComment(string body) =>
+        body.StartsWith("Referenced in commit") || body.StartsWith("Referenced in pull request");
+
+    private List<Milestone> GetFilteredMilestones() =>
+        milestones.Where(m => milestoneFilter == "open" ? m.State == MilestoneState.Open : m.State == MilestoneState.Closed).ToList();
+
+    private void SwitchToMilestones()
+    {
+        viewMode = "milestones";
+    }
+
+    private async Task CreateMilestone()
+    {
+        if (string.IsNullOrWhiteSpace(newMilestoneTitle) || !UserService.IsLoggedIn) return;
+        DateTime? dueDate = DateTime.TryParse(newMilestoneDueDate, out var d) ? d : null;
+        await MilestoneService.CreateMilestoneAsync(RepoName, newMilestoneTitle, newMilestoneDescription, dueDate, UserService.Username);
+        showNewMilestoneModal = false;
+        newMilestoneTitle = "";
+        newMilestoneDescription = "";
+        newMilestoneDueDate = "";
+        await LoadMilestones();
+    }
+
+    private async Task CloseMilestone(int number)
+    {
+        await MilestoneService.CloseMilestoneAsync(RepoName, number);
+        await LoadMilestones();
+    }
+
+    private async Task ReopenMilestone(int number)
+    {
+        await MilestoneService.ReopenMilestoneAsync(RepoName, number);
+        await LoadMilestones();
+    }
+
+    private async Task DeleteMilestone(int number)
+    {
+        await MilestoneService.DeleteMilestoneAsync(RepoName, number);
+        await LoadMilestones();
+    }
+
+    // Issue Templates
+    private async Task LoadTemplates()
+    {
+        issueTemplates = await TemplateService.GetTemplatesAsync(RepoName);
+    }
+
+    private void ApplyTemplate()
+    {
+        if (selectedTemplateId <= 0) return;
+        var tmpl = issueTemplates.FirstOrDefault(t => t.Id == selectedTemplateId);
+        if (tmpl == null) return;
+        newIssueBody = tmpl.Body;
+        if (!string.IsNullOrEmpty(tmpl.Labels))
+            newIssueLabels = tmpl.Labels;
+    }
+
+    private void UseTemplate(IssueTemplate tmpl)
+    {
+        selectedTemplateId = tmpl.Id;
+        newIssueBody = tmpl.Body;
+        if (!string.IsNullOrEmpty(tmpl.Labels))
+            newIssueLabels = tmpl.Labels;
+        viewMode = "issues";
+        showNewIssueModal = true;
+    }
+
+    private async Task CreateTemplate()
+    {
+        if (!UserService.IsLoggedIn || string.IsNullOrWhiteSpace(newTemplateName)) return;
+        await TemplateService.CreateTemplateAsync(RepoName, newTemplateName, newTemplateBody, newTemplateDescription, newTemplateLabels);
+        newTemplateName = "";
+        newTemplateBody = "";
+        newTemplateDescription = "";
+        newTemplateLabels = "";
+        showNewTemplateModal = false;
+        await LoadTemplates();
+    }
+
+    private async Task DeleteTemplate(int id)
+    {
+        await TemplateService.DeleteTemplateAsync(id);
+        await LoadTemplates();
+    }
+
+    // Draft issue conversion
+    private async Task ConvertDraftToIssue()
+    {
+        if (!UserService.IsLoggedIn || currentIssue == null) return;
+        await IssueService.UpdateIssueAsync(RepoName, currentIssue.Number, i => i.IsDraft = false);
+        await LoadIssues();
+    }
+
+    // Batch operations
+    private bool batchMode;
+    private HashSet<int> selectedIssueNumbers = new();
+
+    private void ToggleIssueSelection(int number)
+    {
+        if (!selectedIssueNumbers.Remove(number))
+            selectedIssueNumbers.Add(number);
+    }
+
+    private async Task BatchCloseIssues()
+    {
+        foreach (var num in selectedIssueNumbers.ToList())
+            await IssueService.CloseIssueAsync(RepoName, num);
+        selectedIssueNumbers.Clear();
+        batchMode = false;
+        await LoadIssues();
+    }
+
+    private async Task BatchReopenIssues()
+    {
+        foreach (var num in selectedIssueNumbers.ToList())
+            await IssueService.ReopenIssueAsync(RepoName, num);
+        selectedIssueNumbers.Clear();
+        batchMode = false;
+        await LoadIssues();
+    }
+
+    // Transfer issue
+    private bool showTransferModal;
+    private string transferTargetRepo = "";
+    private string? transferError;
+    private bool isTransferring;
+
+    private async Task TransferIssue()
+    {
+        if (currentIssue == null || string.IsNullOrWhiteSpace(transferTargetRepo)) return;
+        isTransferring = true;
+        transferError = null;
+        StateHasChanged();
+
+        var (success, error, newNumber) = await IssueService.TransferIssueAsync(
+            RepoName, currentIssue.Number, transferTargetRepo.Trim(), UserService.Username);
+
+        if (success)
+        {
+            showTransferModal = false;
+            Nav.NavigateTo($"/repo/{transferTargetRepo.Trim()}/issues/{newNumber}");
+        }
+        else
+        {
+            transferError = error;
+        }
+
+        isTransferring = false;
+        StateHasChanged();
     }
 }
+
+@if (showNewMilestoneModal)
+{
+    <div class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">@L["Issues_NewMilestone"]</h5>
+                    <button type="button" class="btn-close" @onclick="() => showNewMilestoneModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">@L["Issues_TitleLabel"]</label>
+                        <input type="text" class="form-control" @bind="newMilestoneTitle" placeholder="v1.0" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">@L["Issues_DueDate"]</label>
+                        <input type="text" class="form-control" @bind="newMilestoneDueDate" placeholder="YYYY-MM-DD" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">@L["Issues_Description"]</label>
+                        <textarea class="form-control" rows="3" @bind="newMilestoneDescription" placeholder="@L["Issues_DescribeMilestone"]"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button class="btn btn-light border" @onclick="() => showNewMilestoneModal = false">@L["Issues_Cancel"]</button>
+                    <button class="btn btn-gh-primary" @onclick="CreateMilestone" disabled="@string.IsNullOrWhiteSpace(newMilestoneTitle)">@L["Issues_CreateMilestone"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showNewTemplateModal)
+{
+    <div class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">@L["Issues_NewIssueTemplate"]</h5>
+                    <button type="button" class="btn-close" @onclick="() => showNewTemplateModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">@L["Issues_TemplateName"]</label>
+                        <input type="text" class="form-control" @bind="newTemplateName" placeholder="Bug Report" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">@L["Issues_Description"]</label>
+                        <input type="text" class="form-control" @bind="newTemplateDescription" placeholder="@L["Issues_TemplateDescPlaceholder"]" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">@L["Issues_DefaultLabels"]</label>
+                        <input type="text" class="form-control" @bind="newTemplateLabels" placeholder="bug, triage" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">@L["Issues_TemplateBody"]</label>
+                        <textarea class="form-control font-monospace" rows="10" @bind="newTemplateBody" placeholder="## Description&#10;&#10;## Steps to Reproduce&#10;&#10;## Expected Behavior&#10;&#10;## Actual Behavior"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button class="btn btn-light border" @onclick="() => showNewTemplateModal = false">@L["Issues_Cancel"]</button>
+                    <button class="btn btn-success" @onclick="CreateTemplate" disabled="@(string.IsNullOrWhiteSpace(newTemplateName) || string.IsNullOrWhiteSpace(newTemplateBody))">@L["Issues_CreateTemplate"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .markdown-body h1, .markdown-body h2 { border-bottom: 1px solid #d0d7de; padding-bottom: 0.3em; margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; }
+    .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 { margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; }
+    .markdown-body p { margin-top: 0; margin-bottom: 16px; }
+    .markdown-body ul { padding-left: 2em; list-style-type: disc; margin-bottom: 16px; }
+    .markdown-body ol { padding-left: 2em; list-style-type: decimal; margin-bottom: 16px; }
+    .markdown-body li + li { margin-top: 0.25em; }
+    .markdown-body code { padding: 0.2em 0.4em; font-size: 85%; background-color: rgba(175,184,193,0.2); border-radius: 6px; font-family: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace; }
+    .markdown-body pre { padding: 16px; overflow: auto; font-size: 85%; line-height: 1.45; background-color: #f6f8fa; border-radius: 6px; margin-bottom: 16px; }
+    .markdown-body pre code { padding: 0; margin: 0; font-size: 100%; background-color: transparent; border-radius: 0; white-space: pre; }
+    .markdown-body blockquote { padding: 0 1em; color: #656d76; border-left: 0.25em solid #d0d7de; margin: 0 0 16px 0; }
+    .markdown-body table { display: block; width: max-content; max-width: 100%; overflow: auto; border-spacing: 0; border-collapse: collapse; margin-bottom: 16px; }
+    .markdown-body table tr { background-color: #ffffff; border-top: 1px solid #d8dee4; }
+    .markdown-body table tr:nth-child(2n) { background-color: #f6f8fa; }
+    .markdown-body table th, .markdown-body table td { padding: 6px 13px; border: 1px solid #d0d7de; }
+    .markdown-body img { max-width: 100%; height: auto; border-radius: 6px; cursor: pointer; transition: opacity 0.2s; }
+    .markdown-body img:hover { opacity: 0.85; }
+    .markdown-body a > img { display: block; }
+    .markdown-body hr { height: 0.25em; padding: 0; margin: 24px 0; background-color: #d0d7de; border: 0; }
+    .markdown-body a { color: #0969da; text-decoration: none; }
+    .markdown-body a:hover { text-decoration: underline; }
+    .markdown-body .task-list-item { list-style-type: none; margin-left: -1.5em; }
+    .markdown-body .task-list-item input[type="checkbox"] { margin-right: 0.5em; }
+    [data-bs-theme="dark"] .markdown-body pre { background-color: #161b22; }
+    [data-bs-theme="dark"] .markdown-body code { background-color: rgba(110,118,129,0.4); }
+    [data-bs-theme="dark"] .markdown-body blockquote { color: #8b949e; border-left-color: #30363d; }
+    [data-bs-theme="dark"] .markdown-body table tr { background-color: #0d1117; border-top-color: #30363d; }
+    [data-bs-theme="dark"] .markdown-body table tr:nth-child(2n) { background-color: #161b22; }
+    [data-bs-theme="dark"] .markdown-body table th, [data-bs-theme="dark"] .markdown-body table td { border-color: #30363d; }
+    [data-bs-theme="dark"] .markdown-body a { color: #58a6ff; }
+    [data-bs-theme="dark"] .markdown-body h1, [data-bs-theme="dark"] .markdown-body h2 { border-bottom-color: #30363d; }
+    [data-bs-theme="dark"] .markdown-body hr { background-color: #30363d; }
+</style>

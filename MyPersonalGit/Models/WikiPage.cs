@@ -16,6 +16,7 @@ public class WikiPage
 public class WikiPageRevision
 {
     public int Id { get; set; }
+    public int WikiPageId { get; set; }
     public required string Content { get; set; }
     public required string Author { get; set; }
     public required string Message { get; set; }

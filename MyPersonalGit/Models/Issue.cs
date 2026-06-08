@@ -8,12 +8,19 @@ public class Issue
     public string? Body { get; set; }
     public required string Author { get; set; }
     public string? Assignee { get; set; }
+    public List<string> Assignees { get; set; } = new();
     public IssueState State { get; set; } = IssueState.Open;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? ClosedAt { get; set; }
+    public DateTime? DueDate { get; set; }
     public List<string> Labels { get; set; } = new();
     public List<IssueComment> Comments { get; set; } = new();
     public int Number { get; set; }
+    public int? MilestoneId { get; set; }
+    public bool IsDraft { get; set; }
+    public bool IsPinned { get; set; }
+    public bool IsLocked { get; set; }
+    public string? LockReason { get; set; }
 }
 
 public enum IssueState
@@ -25,6 +32,8 @@ public enum IssueState
 public class IssueComment
 {
     public int Id { get; set; }
+    public int? IssueId { get; set; }
+    public int? PullRequestId { get; set; }
     public required string Author { get; set; }
     public required string Body { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

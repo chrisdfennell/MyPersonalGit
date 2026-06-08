@@ -1,15 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MyPersonalGit.Data;
 
 namespace MyPersonalGit.Controllers;
 
 [ApiController]
 [Route("api/v1/repos/{repoName}/pulls")]
+[EnableRateLimiting("api")]
 public class PullRequestsController : ControllerBase
 {
-    private readonly PullRequestService _prService;
+    private readonly IPullRequestService _prService;
 
-    public PullRequestsController(PullRequestService prService)
+    public PullRequestsController(IPullRequestService prService)
     {
         _prService = prService;
     }
@@ -100,8 +102,8 @@ public class PullRequestsController : ControllerBase
     public async Task<IActionResult> MergePullRequest(string repoName, int number)
     {
         var username = User.Identity?.Name ?? "api-user";
-        var result = await _prService.MergePullRequestAsync(repoName, number, username);
-        if (!result) return BadRequest(new { error = "Failed to merge pull request" });
+        var (success, error) = await _prService.MergePullRequestAsync(repoName, number, username);
+        if (!success) return BadRequest(new { error = error ?? "Failed to merge pull request" });
 
         return Ok(new { message = $"Pull request #{number} merged successfully" });
     }
@@ -126,6 +128,16 @@ public class PullRequestsController : ControllerBase
         });
     }
 
-    public record CreatePrRequest(string Title, string? Body, string SourceBranch, string TargetBranch);
+    public record CreatePrRequest(
+        [property: System.ComponentModel.DataAnnotations.Required]
+        [property: System.ComponentModel.DataAnnotations.MaxLength(256)]
+        string Title,
+        [property: System.ComponentModel.DataAnnotations.MaxLength(65536)]
+        string? Body,
+        [property: System.ComponentModel.DataAnnotations.Required]
+        string SourceBranch,
+        [property: System.ComponentModel.DataAnnotations.Required]
+        string TargetBranch);
+
     public record UpdatePrRequest(string? State);
 }

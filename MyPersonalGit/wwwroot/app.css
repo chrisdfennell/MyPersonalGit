@@ -58,3 +58,375 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* Dark mode diff colors */
+[data-bs-theme="dark"] {
+    --diff-added-bg: #1a2d1e;
+    --diff-added-fg: #56d364;
+    --diff-removed-bg: #2d1a1a;
+    --diff-removed-fg: #f85149;
+    --diff-context-bg: #0d1117;
+    --diff-context-fg: #e6edf3;
+    --diff-empty-bg: #161b22;
+}
+
+[data-bs-theme="dark"] pre[class*="language-"],
+[data-bs-theme="dark"] code[class*="language-"] {
+    background: #161b22 !important;
+    color: #e6edf3 !important;
+    text-shadow: none !important;
+}
+
+[data-bs-theme="dark"] .line-numbers-rows {
+    border-right-color: #30363d !important;
+}
+
+[data-bs-theme="dark"] .line-numbers-rows > span::before {
+    color: #484f58 !important;
+}
+
+[data-bs-theme="dark"] .token.comment,
+[data-bs-theme="dark"] .token.prolog,
+[data-bs-theme="dark"] .token.doctype,
+[data-bs-theme="dark"] .token.cdata {
+    color: #8b949e !important;
+}
+
+[data-bs-theme="dark"] .token.keyword,
+[data-bs-theme="dark"] .token.boolean,
+[data-bs-theme="dark"] .token.important {
+    color: #ff7b72 !important;
+}
+
+[data-bs-theme="dark"] .token.string,
+[data-bs-theme="dark"] .token.attr-value,
+[data-bs-theme="dark"] .token.regex,
+[data-bs-theme="dark"] .token.char {
+    color: #a5d6ff !important;
+}
+
+[data-bs-theme="dark"] .token.function {
+    color: #d2a8ff !important;
+}
+
+[data-bs-theme="dark"] .token.number,
+[data-bs-theme="dark"] .token.constant {
+    color: #79c0ff !important;
+}
+
+[data-bs-theme="dark"] .token.class-name,
+[data-bs-theme="dark"] .token.builtin,
+[data-bs-theme="dark"] .token.namespace,
+[data-bs-theme="dark"] .token.variable,
+[data-bs-theme="dark"] .token.parameter {
+    color: #ffa657 !important;
+}
+
+[data-bs-theme="dark"] .token.tag {
+    color: #7ee787 !important;
+}
+
+[data-bs-theme="dark"] .token.attr-name,
+[data-bs-theme="dark"] .token.property,
+[data-bs-theme="dark"] .token.selector {
+    color: #79c0ff !important;
+}
+
+[data-bs-theme="dark"] .token.operator,
+[data-bs-theme="dark"] .token.punctuation,
+[data-bs-theme="dark"] .token.entity,
+[data-bs-theme="dark"] .token.url {
+    color: #c9d1d9 !important;
+}
+
+[data-bs-theme="dark"] .token.atrule {
+    color: #d2a8ff !important;
+}
+
+[data-bs-theme="dark"] .token.symbol,
+[data-bs-theme="dark"] .token.deleted {
+    color: #f85149 !important;
+}
+
+[data-bs-theme="dark"] .token.inserted {
+    color: #56d364 !important;
+}
+
+[data-bs-theme="dark"] .line-numbers .line-numbers-rows {
+    border-right-color: #30363d !important;
+}
+
+[data-bs-theme="dark"] .line-numbers .line-numbers-rows > span::before {
+    color: #484f58 !important;
+}
+
+/* Code editor gutter (light mode) */
+.editor-gutter {
+    background: #f6f8fa;
+    border-right: 1px solid #d0d7de;
+    color: #8b949e;
+}
+
+/* Code editor textarea (light mode) */
+.editor-textarea {
+    background: #ffffff;
+    color: #24292f;
+}
+
+/* Code editor gutter (dark mode) */
+[data-bs-theme="dark"] .editor-gutter {
+    background: #161b22;
+    border-right: 1px solid #30363d;
+    color: #484f58;
+}
+
+/* Code editor textarea (dark mode) */
+[data-bs-theme="dark"] .editor-textarea {
+    background: #0d1117;
+    color: #e6edf3;
+    caret-color: #e6edf3;
+}
+
+/* ============ IDE Light Mode ============ */
+/* These must be in app.css (global) — not scoped .razor.css files.
+   Blazor scoped CSS generates [b-scope] [data-bs-theme] selectors that
+   cannot match because data-bs-theme is on <html> (an ancestor), not a
+   descendant of the scoped component.
+   Using html[...] prefix for specificity above scoped [class][b-scope]. */
+
+/* IdeLayout */
+html[data-bs-theme="light"] .ide-layout { background: #ffffff; color: #333333; }
+html[data-bs-theme="light"] .ide-topbar { background: #dddddd; color: #333333; border-bottom-color: #c8c8c8; }
+html[data-bs-theme="light"] .ide-topbar-back { color: #333333; }
+html[data-bs-theme="light"] .ide-topbar-back:hover { color: #1a1a1a; background: rgba(0,0,0,0.08); }
+html[data-bs-theme="light"] .ide-topbar-repo { color: #333333; }
+html[data-bs-theme="light"] .ide-topbar-branch .btn { color: #333333; border-color: #b0b0b0; background: rgba(0,0,0,0.05); }
+html[data-bs-theme="light"] .ide-topbar-branch .btn:hover { color: #1a1a1a; border-color: #888; background: rgba(0,0,0,0.08); }
+html[data-bs-theme="light"] .ide-topbar-branch .dropdown-menu { background: #f8f8f8; border-color: #c8c8c8; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+html[data-bs-theme="light"] .ide-topbar-branch .dropdown-item { color: #333333; }
+html[data-bs-theme="light"] .ide-topbar-branch .dropdown-item:hover,
+html[data-bs-theme="light"] .ide-topbar-branch .dropdown-item.active { background: #e0e8f0; color: #0078d4; }
+html[data-bs-theme="light"] .ide-branch-dialog { background: #fff; border-color: #d0d0d0; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+html[data-bs-theme="light"] .ide-branch-header { border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-branch-body .form-label { color: #333; }
+html[data-bs-theme="light"] .ide-branch-body .form-control,
+html[data-bs-theme="light"] .ide-branch-body .form-select { background: #fff; border-color: #ccc; color: #333; }
+html[data-bs-theme="light"] .ide-branch-body .form-control:focus,
+html[data-bs-theme="light"] .ide-branch-body .form-select:focus { background: #fff; border-color: #0078d4; color: #333; box-shadow: 0 0 0 2px rgba(0,120,212,0.25); }
+
+/* WebIde — core layout */
+html[data-bs-theme="light"] .ide-container { background: #fff; color: #333; }
+html[data-bs-theme="light"] .ide-sidebar { background: #f3f3f3; border-right-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-sidebar-tabs { background: #e8e8e8; }
+html[data-bs-theme="light"] .ide-sidebar-tab { color: #888; }
+html[data-bs-theme="light"] .ide-sidebar-tab:hover { color: #333; }
+html[data-bs-theme="light"] .ide-sidebar-tab.active { color: #333; background: #f3f3f3; }
+html[data-bs-theme="light"] .ide-tabs { background: #ececec; border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-editor { background: #fff; }
+html[data-bs-theme="light"] .ide-breadcrumbs { background: #f3f3f3; border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-breadcrumb { color: #666; }
+html[data-bs-theme="light"] .ide-breadcrumb:hover { color: #333; background: #e0e0e0; }
+html[data-bs-theme="light"] .ide-breadcrumb.active { color: #333; }
+html[data-bs-theme="light"] .ide-breadcrumb-sep { color: #999; }
+html[data-bs-theme="light"] .ide-breadcrumb-dropdown { background: #fff; border-color: #d0d0d0; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+html[data-bs-theme="light"] .ide-breadcrumb-item { color: #333; }
+html[data-bs-theme="light"] .ide-breadcrumb-item:hover { background: #e0e8f0; }
+html[data-bs-theme="light"] .ide-breadcrumb-item.active { background: #cce0f0; color: #0078d4; }
+
+/* WebIde — bottom panel */
+html[data-bs-theme="light"] .ide-bottom-panel { background: #f3f3f3; border-top-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-bottom-tabs { background: #e8e8e8; border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-bottom-tab { color: #666; }
+html[data-bs-theme="light"] .ide-bottom-tab.active { color: #333; }
+
+/* WebIde — editor & split */
+html[data-bs-theme="light"] .ide-split-btn { color: #666; }
+html[data-bs-theme="light"] .ide-split-btn:hover { color: #333; background: #e0e0e0; }
+html[data-bs-theme="light"] .ide-pane-divider { background: #e0e0e0; }
+html[data-bs-theme="light"] .ide-action-btn { color: #666; }
+html[data-bs-theme="light"] .ide-action-btn:hover { color: #333; background: #e0e0e0; }
+html[data-bs-theme="light"] .ide-action-btn.active { color: #0078d4; background: #e8e8e8; }
+
+/* WebIde — source control & history */
+html[data-bs-theme="light"] .ide-sc-file:hover { background: #e8e8e8; }
+html[data-bs-theme="light"] .ide-sc-header { border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-sc-filepath { color: #888; }
+html[data-bs-theme="light"] .ide-diff-header { background: #e8e8e8; border-bottom-color: #d0d0d0; }
+html[data-bs-theme="light"] .ide-history-entry:hover { background: #e8e8e8; }
+html[data-bs-theme="light"] .ide-history-header { border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-history-entry { border-bottom-color: #e8e8e8; }
+
+/* WebIde — preview & markdown */
+html[data-bs-theme="light"] .ide-preview { background: #fff; }
+html[data-bs-theme="light"] .ide-image-preview img { background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 20px 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+html[data-bs-theme="light"] .ide-markdown-toolbar { background: #f0f0f0; border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-markdown-body { color: #333; }
+html[data-bs-theme="light"] .ide-markdown-body h1,
+html[data-bs-theme="light"] .ide-markdown-body h2,
+html[data-bs-theme="light"] .ide-markdown-body h3 { color: #1a1a1a; border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-markdown-body code { background: #f0f0f0; }
+html[data-bs-theme="light"] .ide-markdown-body pre { background: #f6f6f6; border-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-markdown-body a { color: #0078d4; }
+html[data-bs-theme="light"] .ide-markdown-body th,
+html[data-bs-theme="light"] .ide-markdown-body td { border-color: #d0d7de; }
+html[data-bs-theme="light"] .ide-markdown-body th { background: #f6f8fa; }
+html[data-bs-theme="light"] .ide-markdown-body blockquote { border-left-color: #d0d7de; color: #656d76; }
+
+/* WebIde — dialogs */
+html[data-bs-theme="light"] .ide-quick-open-dialog { background: #fff; border-color: #d0d0d0; }
+html[data-bs-theme="light"] .ide-quick-open-input { color: #333; }
+html[data-bs-theme="light"] .ide-quick-open-input-wrapper { border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-quick-open-input::placeholder { color: #999; }
+html[data-bs-theme="light"] .ide-quick-open-item:hover,
+html[data-bs-theme="light"] .ide-quick-open-item.selected { background: #e0e8f0; }
+html[data-bs-theme="light"] .ide-quick-open-filepath { color: #888; }
+html[data-bs-theme="light"] .ide-quick-open-section { color: #888; }
+html[data-bs-theme="light"] .ide-quick-open-divider { background: #e0e0e0; }
+html[data-bs-theme="light"] .ide-quick-open-empty { color: #888; }
+html[data-bs-theme="light"] .ide-command-palette-dialog { background: #fff; border-color: #d0d0d0; }
+html[data-bs-theme="light"] .ide-command-palette-input { color: #333; }
+html[data-bs-theme="light"] .ide-command-palette-input-wrapper { border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-command-palette-input::placeholder { color: #999; }
+html[data-bs-theme="light"] .ide-command-palette-item:hover,
+html[data-bs-theme="light"] .ide-command-palette-item.selected { background: #e0e8f0; }
+html[data-bs-theme="light"] .ide-command-palette-shortcut { color: #888; }
+html[data-bs-theme="light"] .ide-command-palette-empty { color: #888; }
+html[data-bs-theme="light"] .ide-shortcut-dialog { background: #fff; border-color: #d0d0d0; }
+html[data-bs-theme="light"] .ide-shortcut-header { border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-shortcut-row kbd { background: #e8e8e8; border-color: #ccc; color: #333; }
+html[data-bs-theme="light"] .ide-shortcut-row span { color: #333; }
+html[data-bs-theme="light"] .ide-shortcut-section-title { color: #888; border-bottom-color: #e0e0e0; }
+
+/* WebIde — settings */
+html[data-bs-theme="light"] .ide-settings-body .form-select { background-color: #fff; border-color: #ccc; color: #333; }
+html[data-bs-theme="light"] .ide-settings-body .form-check-input { background-color: #fff; border-color: #ccc; }
+html[data-bs-theme="light"] .ide-settings-body .btn-outline-secondary { color: #333; border-color: #ccc; }
+html[data-bs-theme="light"] .ide-settings-label { color: #333; }
+html[data-bs-theme="light"] .ide-settings-value { color: #888; }
+html[data-bs-theme="light"] .ide-settings-body .form-check-label { color: #333; }
+
+/* WebIde — git graph */
+html[data-bs-theme="light"] .ide-graph-row { border-bottom-color: #e8e8e8; }
+html[data-bs-theme="light"] .ide-graph-row:hover { background: #f0f4f8; }
+html[data-bs-theme="light"] .ide-graph-sha { color: #0078d4; }
+html[data-bs-theme="light"] .ide-graph-msg { color: #333; }
+html[data-bs-theme="light"] .ide-graph-author,
+html[data-bs-theme="light"] .ide-graph-date { color: #888; }
+
+/* WebIde — terminal tabs */
+html[data-bs-theme="light"] .ide-term-close:hover { background: rgba(0,0,0,0.1); }
+html[data-bs-theme="light"] .ide-term-add { color: #888 !important; }
+html[data-bs-theme="light"] .ide-term-add:hover { color: #333 !important; }
+
+/* WebIde — zen mode & misc */
+html[data-bs-theme="light"] .ide-container.ide-zen-mode .ide-status-bar { background: #fff; }
+html[data-bs-theme="light"] .ide-blame-annotation { color: #999 !important; }
+html[data-bs-theme="light"] .ide-blame-line-even { background: rgba(0,0,0,0.02) !important; }
+html[data-bs-theme="light"] .ide-blame-line-odd { background: rgba(0,0,0,0.04) !important; }
+
+/* WebIde — toasts */
+html[data-bs-theme="light"] .ide-toast { background: #f0f0f0; border-color: #d0d0d0; color: #333; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+html[data-bs-theme="light"] .ide-toast-success { background: #d4edda; border-color: #b1dfbb; color: #155724; }
+html[data-bs-theme="light"] .ide-toast-error { background: #f8d7da; border-color: #f1aeb5; color: #721c24; }
+html[data-bs-theme="light"] .ide-toast-warning { background: #fff3cd; border-color: #ffeaa7; color: #856404; }
+html[data-bs-theme="light"] .ide-toast-info { background: #d1ecf1; border-color: #b6e0fe; color: #0c5460; }
+html[data-bs-theme="light"] .ide-toast-close { color: rgba(0,0,0,0.4); }
+html[data-bs-theme="light"] .ide-toast-close:hover { color: #333; }
+
+/* ── IDE shortcut help overlay ── */
+.ide-shortcut-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 9999; display: flex; justify-content: center; align-items: center; }
+.ide-shortcut-dialog { width: 480px; max-width: 90vw; max-height: 80vh; background: #252526; border: 1px solid #3c3c3c; border-radius: 8px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column; overflow: hidden; }
+.ide-shortcut-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #3c3c3c; }
+.ide-shortcut-body { overflow-y: auto; padding: 12px 16px; }
+.ide-shortcut-section { margin-bottom: 16px; }
+.ide-shortcut-section:last-child { margin-bottom: 0; }
+.ide-shortcut-section-title { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #888; margin-bottom: 8px; letter-spacing: 0.5px; }
+.ide-shortcut-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; font-size: 0.85rem; color: #ccc; }
+.ide-shortcut-row kbd { background: #3c3c3c; color: #ccc; padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; font-family: inherit; border: 1px solid #555; min-width: 60px; text-align: center; }
+.ide-shortcut-row span { flex: 1; margin-left: 16px; }
+html[data-bs-theme="light"] .ide-shortcut-dialog { background: #fff; border-color: #ddd; }
+html[data-bs-theme="light"] .ide-shortcut-header { border-bottom-color: #eee; }
+html[data-bs-theme="light"] .ide-shortcut-row { color: #333; }
+html[data-bs-theme="light"] .ide-shortcut-row kbd { background: #f0f0f0; color: #333; border-color: #ccc; }
+
+/* ── IDE unsaved changes modal ── */
+.ide-unsaved-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 10001; display: flex; justify-content: center; align-items: center; }
+.ide-unsaved-dialog { background: #252526; border: 1px solid #454545; border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,0.5); width: 380px; max-width: 90vw; padding: 24px; text-align: center; }
+.ide-unsaved-icon { font-size: 2.5rem; color: #d29922; margin-bottom: 12px; }
+.ide-unsaved-title { font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 8px; }
+.ide-unsaved-message { font-size: 0.85rem; color: #aaa; margin-bottom: 20px; line-height: 1.5; }
+.ide-unsaved-message strong { color: #ccc; }
+.ide-unsaved-actions { display: flex; gap: 10px; justify-content: center; }
+.ide-unsaved-btn { padding: 8px 20px; border-radius: 6px; border: none; font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+.ide-unsaved-btn-cancel { background: #3c3c3c; color: #ccc; }
+.ide-unsaved-btn-cancel:hover { background: #4c4c4c; }
+.ide-unsaved-btn-close { background: #c53030; color: #fff; }
+.ide-unsaved-btn-close:hover { background: #e53e3e; }
+html[data-bs-theme="light"] .ide-unsaved-dialog { background: #fff; border-color: #ddd; }
+html[data-bs-theme="light"] .ide-unsaved-title { color: #222; }
+html[data-bs-theme="light"] .ide-unsaved-message { color: #666; }
+html[data-bs-theme="light"] .ide-unsaved-message strong { color: #333; }
+html[data-bs-theme="light"] .ide-unsaved-btn-cancel { background: #e8e8e8; color: #333; }
+html[data-bs-theme="light"] .ide-unsaved-btn-cancel:hover { background: #d8d8d8; }
+
+/* ── IDE gutter diff popup ── */
+.ide-gutter-diff-popup { background: #1e1e1e; border: 1px solid #454545; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); min-width: 300px; max-width: 600px; z-index: 100; font-size: 0.8rem; }
+.ide-gutter-diff-header { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: #2d2d2d; border-bottom: 1px solid #454545; color: #888; font-size: 0.72rem; }
+.ide-gutter-diff-close { background: none; border: none; color: #888; cursor: pointer; font-size: 1rem; padding: 0 4px; }
+.ide-gutter-diff-close:hover { color: #fff; }
+.ide-gutter-diff-content { margin: 0; padding: 6px 8px; color: #f85149; background: rgba(248,81,73,0.1); font-family: 'Cascadia Code', Consolas, monospace; font-size: 0.78rem; white-space: pre-wrap; overflow-x: auto; }
+html[data-bs-theme="light"] .ide-gutter-diff-popup { background: #fff; border-color: #ddd; }
+html[data-bs-theme="light"] .ide-gutter-diff-header { background: #f5f5f5; border-bottom-color: #eee; }
+html[data-bs-theme="light"] .ide-gutter-diff-content { color: #d32f2f; background: rgba(211,47,47,0.05); }
+
+/* ── IDE debugger decorations ── */
+.debug-breakpoint { background: #e51400; border-radius: 50%; width: 10px !important; height: 10px !important; margin: 3px 0 0 3px !important; }
+.debug-current-line { background: rgba(255, 255, 0, 0.15) !important; }
+.debug-current-arrow { background: #ffcc00; width: 0 !important; height: 0 !important; border-left: 6px solid #ffcc00 !important; border-top: 4px solid transparent !important; border-bottom: 4px solid transparent !important; margin: 4px 0 0 2px !important; }
+
+/* ── IDE diff gutter indicators ── */
+.ide-gutter-added { border-left: 3px solid #2ea043 !important; margin-left: 5px; }
+.ide-gutter-modified { border-left: 3px solid #0078d4 !important; margin-left: 5px; }
+.ide-gutter-deleted { border-left: 0 !important; margin-left: 5px; width: 3px !important; border-bottom: 4px solid #f85149 !important; }
+
+/* ── IDE problems panel ── */
+.ide-problems-panel { flex: 1; overflow: auto; }
+.ide-problems-file-header { display: flex; align-items: center; padding: 4px 12px; font-size: 0.8rem; font-weight: 600; color: #ccc; background: #2a2d2e; }
+.ide-problems-item { display: flex; align-items: center; padding: 3px 12px 3px 24px; font-size: 0.78rem; cursor: pointer; color: #ccc; gap: 4px; }
+.ide-problems-item:hover { background: #2a2d2e; }
+.ide-problems-msg { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+.ide-problems-count { font-size: 0.7rem; background: #444; color: #ccc; padding: 0 6px; border-radius: 8px; }
+.ide-problems-badge { font-size: 0.65rem; padding: 0 5px; border-radius: 8px; margin-left: 4px; }
+.ide-badge-error { background: #f85149; color: #fff; }
+.ide-badge-warning { background: #d29922; color: #fff; }
+html[data-bs-theme="light"] .ide-problems-file-header { color: #333; background: #e8e8e8; }
+html[data-bs-theme="light"] .ide-problems-item { color: #333; }
+html[data-bs-theme="light"] .ide-problems-item:hover { background: #e0e0e0; }
+html[data-bs-theme="light"] .ide-problems-count { background: #ccc; color: #333; }
+
+/* ── IDE task runner ── */
+.ide-taskrunner { display: flex; flex-direction: column; height: 100%; }
+.ide-taskrunner-toolbar { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: #252526; border-bottom: 1px solid #3c3c3c; }
+.ide-taskrunner-select { background: #3c3c3c; color: #ccc; border: 1px solid #555; border-radius: 3px; padding: 2px 6px; font-size: 0.78rem; }
+.ide-taskrunner-run, .ide-taskrunner-stop, .ide-taskrunner-clear { background: none; border: none; color: #ccc; cursor: pointer; font-size: 0.8rem; padding: 2px 6px; border-radius: 3px; }
+.ide-taskrunner-run:hover, .ide-taskrunner-clear:hover { background: #3c3c3c; }
+.ide-taskrunner-stop { color: #f85149; }
+.ide-taskrunner-stop:hover { background: #3c3c3c; }
+.ide-taskrunner-output { flex: 1; overflow: auto; padding: 4px 8px; font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; font-size: 0.78rem; line-height: 1.5; }
+.ide-taskrunner-line { white-space: pre-wrap; word-break: break-all; color: #ccc; }
+.ide-taskrunner-stderr { color: #f85149; }
+.ide-taskrunner-link { color: #4fc1ff; cursor: pointer; text-decoration: underline; }
+.ide-taskrunner-link:hover { color: #6dd3ff; }
+html[data-bs-theme="light"] .ide-taskrunner-toolbar { background: #f3f3f3; border-bottom-color: #e0e0e0; }
+html[data-bs-theme="light"] .ide-taskrunner-select { background: #fff; color: #333; border-color: #ccc; }
+html[data-bs-theme="light"] .ide-taskrunner-run, html[data-bs-theme="light"] .ide-taskrunner-clear { color: #333; }
+html[data-bs-theme="light"] .ide-taskrunner-line { color: #333; }
+html[data-bs-theme="light"] .ide-taskrunner-link { color: #0066cc; }
+
+/* ── IDE zen mode exit button ── */
+.ide-zen-exit { position: fixed; top: 12px; right: 12px; z-index: 10000; background: rgba(60,60,60,0.85); color: #ccc; border: 1px solid #555; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 1rem; opacity: 0.3; transition: opacity 0.2s; }
+.ide-zen-exit:hover { opacity: 1; background: rgba(80,80,80,0.95); color: #fff; }
+html[data-bs-theme="light"] .ide-zen-exit { background: rgba(220,220,220,0.85); color: #333; border-color: #ccc; }
+html[data-bs-theme="light"] .ide-zen-exit:hover { background: rgba(200,200,200,0.95); color: #000; }
+
+/* Blazor reconnect overlay dark mode is injected into shadow DOM via JS in App.razor */

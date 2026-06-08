@@ -1,38 +1,84 @@
 @page "/admin"
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
-@inject AdminService AdminService
+@using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@inject IAdminService AdminService
+@inject IEmailService EmailService
+@inject ISecretsService SecretsService
+@inject IOAuthService OAuthService
+@inject ILdapAuthService LdapAuthService
+@inject IDatabaseConfigService DatabaseConfigService
+@inject CurrentUserService UserService
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>Admin Dashboard - MyPersonalGit</PageTitle>
+<PageTitle>@L["Admin_Title"] - MyPersonalGit</PageTitle>
 
+@if (!UserService.IsLoggedIn)
+{
+    <div class="container py-5 text-center">
+        <i class="bi bi-shield-lock" style="font-size: 4rem; color: #6c757d;"></i>
+        <h3 class="mt-3">@L["Admin_AuthRequired"]</h3>
+        <p class="text-muted">@L["Admin_AuthRequiredMessage"]</p>
+        <a href="/login" class="btn btn-primary">@L["Admin_SignIn"]</a>
+    </div>
+}
+else if (!UserService.IsAdmin)
+{
+    <div class="container py-5 text-center">
+        <i class="bi bi-shield-exclamation" style="font-size: 4rem; color: #dc3545;"></i>
+        <h3 class="mt-3">@L["Admin_AccessDenied"]</h3>
+        <p class="text-muted">@L["Admin_AccessDeniedMessage"]</p>
+        <a href="/" class="btn btn-primary">@L["Admin_BackToHome"]</a>
+    </div>
+}
+else
+{
 <div class="container-fluid mt-4">
     <div class="row mb-4">
         <div class="col-12">
-            <h2><i class="bi bi-shield-lock"></i> Admin Dashboard</h2>
+            <h2><i class="bi bi-shield-lock"></i> @L["Admin_Title"]</h2>
         </div>
     </div>
 
     <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
             <a class="nav-link @(ActiveTab == "overview" ? "active" : "")" @onclick='() => ActiveTab = "overview"' style="cursor: pointer;">
-                <i class="bi bi-speedometer2"></i> Overview
+                <i class="bi bi-speedometer2"></i> @L["Admin_Overview"]
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link @(ActiveTab == "settings" ? "active" : "")" @onclick='() => ActiveTab = "settings"' style="cursor: pointer;">
-                <i class="bi bi-gear"></i> System Settings
+                <i class="bi bi-gear"></i> @L["Admin_SystemSettings"]
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link @(ActiveTab == "users" ? "active" : "")" @onclick='() => ActiveTab = "users"' style="cursor: pointer;">
-                <i class="bi bi-people"></i> User Management
+                <i class="bi bi-people"></i> @L["Admin_UserManagement"]
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link @(ActiveTab == "audit" ? "active" : "")" @onclick='() => ActiveTab = "audit"' style="cursor: pointer;">
-                <i class="bi bi-journal-text"></i> Audit Logs
+                <i class="bi bi-journal-text"></i> @L["Admin_AuditLogs"]
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ActiveTab == "secrets" ? "active" : "")" @onclick='() => ActiveTab = "secrets"' style="cursor: pointer;">
+                <i class="bi bi-key"></i> @L["Admin_GlobalSecrets"]
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ActiveTab == "backups" ? "active" : "")" @onclick='() => ActiveTab = "backups"' style="cursor: pointer;">
+                <i class="bi bi-cloud-download"></i> @L["Admin_Backups"]
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(ActiveTab == "oauth" ? "active" : "")" @onclick='() => ActiveTab = "oauth"' style="cursor: pointer;">
+                <i class="bi bi-shield-check"></i> @L["Admin_OAuthSSO"]
             </a>
         </li>
     </ul>
@@ -43,7 +89,7 @@
             <div class="col-md-3 mb-4">
                 <div class="card text-white bg-primary">
                     <div class="card-body">
-                        <h5 class="card-title"><i class="bi bi-people"></i> Total Users</h5>
+                        <h5 class="card-title"><i class="bi bi-people"></i> @L["Admin_TotalUsers"]</h5>
                         <h2 class="mb-0">@Statistics.TotalUsers</h2>
                     </div>
                 </div>
@@ -51,7 +97,7 @@
             <div class="col-md-3 mb-4">
                 <div class="card text-white bg-success">
                     <div class="card-body">
-                        <h5 class="card-title"><i class="bi bi-folder"></i> Repositories</h5>
+                        <h5 class="card-title"><i class="bi bi-folder"></i> @L["Admin_Repositories"]</h5>
                         <h2 class="mb-0">@Statistics.TotalRepositories</h2>
                     </div>
                 </div>
@@ -59,7 +105,7 @@
             <div class="col-md-3 mb-4">
                 <div class="card text-white bg-info">
                     <div class="card-body">
-                        <h5 class="card-title"><i class="bi bi-hdd"></i> Storage Used</h5>
+                        <h5 class="card-title"><i class="bi bi-hdd"></i> @L["Admin_StorageUsed"]</h5>
                         <h2 class="mb-0">@FormatBytes(Statistics.TotalStorageUsed)</h2>
                     </div>
                 </div>
@@ -67,7 +113,7 @@
             <div class="col-md-3 mb-4">
                 <div class="card text-white bg-warning">
                     <div class="card-body">
-                        <h5 class="card-title"><i class="bi bi-activity"></i> Active (24h)</h5>
+                        <h5 class="card-title"><i class="bi bi-activity"></i> @L["Admin_Active24h"]</h5>
                         <h2 class="mb-0">@Statistics.ActiveUsers24h</h2>
                     </div>
                 </div>
@@ -78,7 +124,7 @@
             <div class="col-md-6 mb-4">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">System Information</h5>
+                        <h5 class="mb-0">@L["Admin_SystemInformation"]</h5>
                     </div>
                     <div class="card-body">
                         <table class="table table-sm">
@@ -89,15 +135,19 @@
                                 </tr>
                                 <tr>
                                     <td><strong>Authentication:</strong></td>
-                                    <td>@(Settings.RequireAuth ? "Enabled" : "Disabled")</td>
+                                    <td>@(Settings.RequireAuth ? L["Admin_Enabled"] : L["Admin_Disabled"])</td>
                                 </tr>
                                 <tr>
                                     <td><strong>User Registration:</strong></td>
-                                    <td>@(Settings.AllowUserRegistration ? "Enabled" : "Disabled")</td>
+                                    <td>@(Settings.AllowUserRegistration ? L["Admin_Enabled"] : L["Admin_Disabled"])</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Actions/CI-CD:</strong></td>
-                                    <td>@(Settings.EnableActions ? "Enabled" : "Disabled")</td>
+                                    <td>@(Settings.EnableActions ? L["Admin_Enabled"] : L["Admin_Disabled"])</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Prometheus Metrics:</strong></td>
+                                    <td><a href="/metrics" target="_blank" class="text-decoration-none"><i class="bi bi-graph-up me-1"></i>/metrics</a></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -107,12 +157,12 @@
             <div class="col-md-6 mb-4">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Recent Activity</h5>
+                        <h5 class="mb-0">@L["Admin_RecentActivity"]</h5>
                     </div>
                     <div class="card-body">
                         @if (AuditLogs.Count == 0)
                         {
-                            <p class="text-muted">No recent activity</p>
+                            <p class="text-muted">@L["Admin_NoRecentActivity"]</p>
                         }
                         else
                         {
@@ -138,136 +188,661 @@
     {
         <div class="row">
             <div class="col-md-8">
-                <div class="card">
+
+                <!-- Database -->
+                <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0">System Settings</h5>
+                        <h5 class="mb-0"><i class="bi bi-database me-2"></i>@L["Admin_Database"]</h5>
                     </div>
                     <div class="card-body">
-                        <EditForm Model="Settings" OnValidSubmit="SaveSettings">
-                            <div class="mb-3">
-                                <label class="form-label">Project Root Directory</label>
-                                <InputText class="form-control" @bind-Value="Settings.ProjectRoot" />
-                                <small class="form-text text-muted">The root directory where repositories are stored</small>
-                            </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <strong>Active Provider:</strong>
+                            <span class="badge @(DbConfig.Provider != "sqlite" ? "bg-primary" : "bg-secondary") ms-2">@DbConfig.Provider.ToUpperInvariant()</span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Database Provider</label>
+                            <select class="form-select" @bind="DbConfig.Provider">
+                                <option value="sqlite">SQLite (default — zero config)</option>
+                                <option value="postgresql">PostgreSQL (for larger deployments)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Connection String</label>
+                            <input type="text" class="form-control font-monospace" @bind="DbConfig.ConnectionString" />
+                            <small class="form-text text-muted">
+                                @if (DbConfig.Provider == "postgresql")
+                                {
+                                    <span>Example: <code>Host=localhost;Database=mypersonalgit;Username=mypg;Password=secret</code></span>
+                                }
+                                else
+                                {
+                                    <span>Example: <code>Data Source=/data/mypersonalgit.db</code></span>
+                                }
+                            </small>
+                        </div>
+                        @if (!string.IsNullOrEmpty(DbConfigMessage))
+                        {
+                            <div class="alert @(DbConfigSuccess ? "alert-success" : "alert-danger") py-2">@DbConfigMessage</div>
+                        }
+                        <button type="button" class="btn btn-outline-primary" @onclick="SaveDatabaseConfig">
+                            <i class="bi bi-save me-1"></i> Save Database Settings
+                        </button>
+                        <small class="text-muted ms-2">
+                            <i class="bi bi-exclamation-triangle text-warning"></i> Requires application restart to take effect
+                        </small>
+                    </div>
+                </div>
 
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.RequireAuth" id="requireAuth" />
-                                    <label class="form-check-label" for="requireAuth">
-                                        Require Authentication
-                                    </label>
-                                </div>
-                            </div>
+                <EditForm Model="Settings" OnValidSubmit="SaveSettings">
 
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.AllowUserRegistration" id="allowReg" />
-                                    <label class="form-check-label" for="allowReg">
-                                        Allow User Registration
-                                    </label>
-                                </div>
-                            </div>
+                <!-- General Settings -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-gear me-2"></i>General</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Project Root Directory</label>
+                            <InputText class="form-control" @bind-Value="Settings.ProjectRoot" />
+                            <small class="form-text text-muted">The root directory where repositories are stored</small>
+                        </div>
 
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.RequireEmailVerification" id="requireEmail" />
-                                    <label class="form-check-label" for="requireEmail">
-                                        Require Email Verification
-                                    </label>
-                                </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.RequireAuth" id="requireAuth" />
+                                <label class="form-check-label" for="requireAuth">
+                                    Require Authentication
+                                </label>
                             </div>
+                        </div>
 
-                            <div class="mb-3">
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.AllowUserRegistration" id="allowReg" />
+                                <label class="form-check-label" for="allowReg">
+                                    Allow User Registration
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.RequireEmailVerification" id="requireEmail" />
+                                <label class="form-check-label" for="requireEmail">
+                                    Require Email Verification
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">Max Repositories Per User</label>
                                 <InputNumber class="form-control" @bind-Value="Settings.MaxRepositoriesPerUser" />
                             </div>
-
-                            <div class="mb-3">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">Max Repository Size (bytes)</label>
                                 <InputNumber class="form-control" @bind-Value="Settings.MaxRepositorySize" />
                                 <small class="form-text text-muted">Current: @FormatBytes(Settings.MaxRepositorySize)</small>
                             </div>
+                        </div>
+                    </div>
+                </div>
 
-                            <h6 class="mt-4 mb-3">Feature Toggles</h6>
-
-                            <div class="mb-3">
-                                <div class="form-check">
+                <!-- Feature Toggles -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-toggles me-2"></i>@L["Admin_FeatureToggles"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check form-switch">
                                     <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableActions" id="enableActions" />
                                     <label class="form-check-label" for="enableActions">
-                                        Enable Actions/CI-CD
+                                        Actions / CI-CD
                                     </label>
                                 </div>
                             </div>
-
-                            <div class="mb-3">
-                                <div class="form-check">
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check form-switch">
                                     <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableWiki" id="enableWiki" />
                                     <label class="form-check-label" for="enableWiki">
-                                        Enable Wiki
+                                        Wiki
                                     </label>
                                 </div>
                             </div>
-
-                            <div class="mb-3">
-                                <div class="form-check">
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check form-switch">
                                     <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableIssues" id="enableIssues" />
                                     <label class="form-check-label" for="enableIssues">
-                                        Enable Issues
+                                        Issues
                                     </label>
                                 </div>
                             </div>
-
-                            <div class="mb-3">
-                                <div class="form-check">
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check form-switch">
                                     <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableProjects" id="enableProjects" />
                                     <label class="form-check-label" for="enableProjects">
-                                        Enable Projects
+                                        Projects
                                     </label>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
 
-                            <h6 class="mt-4 mb-3">Email Settings (SMTP)</h6>
+                <!-- Email Notifications -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>@L["Admin_EmailNotifications"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.EmailNotificationsEnabled" id="emailEnabled" />
+                                <label class="form-check-label" for="emailEnabled">
+                                    Enable Email Notifications
+                                </label>
+                            </div>
+                        </div>
 
-                            <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
                                 <label class="form-label">SMTP Server</label>
                                 <InputText class="form-control" @bind-Value="Settings.SmtpServer" />
                             </div>
-
-                            <div class="mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label class="form-label">SMTP Port</label>
                                 <InputNumber class="form-control" @bind-Value="Settings.SmtpPort" />
                             </div>
+                        </div>
 
-                            <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">SMTP Username</label>
                                 <InputText class="form-control" @bind-Value="Settings.SmtpUsername" />
                             </div>
-
-                            <div class="mb-3">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">SMTP Password</label>
                                 <InputText type="password" class="form-control" @bind-Value="Settings.SmtpPassword" />
                             </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.SmtpEnableSsl" id="smtpSsl" />
+                                <label class="form-check-label" for="smtpSsl">
+                                    Enable SSL/TLS
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">From Address</label>
+                                <InputText class="form-control" @bind-Value="Settings.SmtpFromAddress" placeholder="noreply@example.com" />
+                                <small class="form-text text-muted">@L["Admin_SmtpFromDefault"]</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">From Name</label>
+                                <InputText class="form-control" @bind-Value="Settings.SmtpFromName" placeholder="MyPersonalGit" />
+                            </div>
+                        </div>
+
+                        <div class="mb-0">
+                            <div class="input-group">
+                                <input type="email" class="form-control" @bind="TestEmailAddress" placeholder="test@example.com" />
+                                <button type="button" class="btn btn-outline-secondary" @onclick="SendTestEmail" disabled="@SendingTestEmail">
+                                    @if (SendingTestEmail)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                    }
+                                    <i class="bi bi-envelope"></i> Send Test Email
+                                </button>
+                            </div>
+                            @if (!string.IsNullOrEmpty(TestEmailMessage))
+                            {
+                                <div class="alert @(TestEmailSuccess ? "alert-success" : "alert-danger") mt-2 py-2">@TestEmailMessage</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Push Notifications -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-bell me-2"></i>@L["Admin_PushNotifications"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.EnablePushNotifications" id="enablePush" />
+                                <label class="form-check-label" for="enablePush">
+                                    Enable Push Notifications
+                                </label>
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted mb-2"><small>ntfy</small></h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Server URL</label>
+                                <InputText class="form-control" @bind-Value="Settings.NtfyUrl" placeholder="https://ntfy.sh" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Topic</label>
+                                <InputText class="form-control" @bind-Value="Settings.NtfyTopic" placeholder="mypersonalgit" />
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Access Token <span class="text-muted small">(optional)</span></label>
+                            <InputText type="password" class="form-control" @bind-Value="Settings.NtfyAccessToken" />
+                        </div>
+
+                        <hr />
+
+                        <h6 class="text-muted mb-2"><small>Gotify</small></h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Server URL</label>
+                                <InputText class="form-control" @bind-Value="Settings.GotifyUrl" placeholder="https://gotify.example.com" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">App Token</label>
+                                <InputText type="password" class="form-control" @bind-Value="Settings.GotifyAppToken" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Site Branding -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-palette me-2"></i>@L["Admin_SiteBranding"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">@L["Admin_BrandingHelp"]</p>
+
+                        <div class="mb-3">
+                            <label class="form-label">Site Name</label>
+                            <InputText class="form-control" @bind-Value="Settings.SiteName" placeholder="PersonalGit" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">@L["Admin_TermsOfService"] <a href="/terms" target="_blank" class="small">(preview)</a></label>
+                            <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterTerms" rows="4" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">@L["Admin_PrivacyPolicy"] <a href="/privacy" target="_blank" class="small">(preview)</a></label>
+                            <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterPrivacy" rows="4" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Documentation <a href="/docs" target="_blank" class="small">(preview)</a></label>
+                            <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterDocs" rows="4" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Contact <a href="/contact" target="_blank" class="small">(preview)</a></label>
+                            <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterContact" rows="4" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Code Completion -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-stars me-2"></i>AI Code Completion</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Enable AI-powered inline code completion in the web IDE. Uses an OpenAI-compatible API endpoint.</p>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.AiCompletionEnabled" />
+                                <label class="form-check-label">Enable AI Completion</label>
+                            </div>
+                        </div>
+
+                        @if (Settings.AiCompletionEnabled)
+                        {
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">API Endpoint</label>
+                                    <InputText class="form-control" @bind-Value="Settings.AiCompletionEndpoint" placeholder="https://api.openai.com/v1" />
+                                    <small class="form-text text-muted">OpenAI-compatible API base URL (e.g., OpenAI, Ollama, LM Studio)</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">API Key</label>
+                                    <InputText class="form-control" type="password" @bind-Value="Settings.AiCompletionApiKey" placeholder="sk-..." />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Model</label>
+                                    <InputText class="form-control" @bind-Value="Settings.AiCompletionModel" placeholder="gpt-4o-mini" />
+                                    <small class="form-text text-muted">Model name (e.g., gpt-4o-mini, codestral-latest, deepseek-coder)</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- AI Chat & Assistant -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>AI Chat & Assistant</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Enable AI chat, inline explain, refactoring, and test generation in the Web IDE. Requires AI Completion to be enabled above (uses the same API endpoint).</p>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.AiChatEnabled" />
+                                <label class="form-check-label">Enable AI Chat & Assistant</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-time Collaboration -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-people me-2"></i>Real-time Collaboration</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Enable real-time collaborative editing in the Web IDE. Multiple users can edit the same file simultaneously with live cursor tracking and presence indicators.</p>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.CollaborationEnabled" />
+                                <label class="form-check-label">Enable Real-time Collaboration</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TLS / HTTPS -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-lock me-2"></i>@L["Admin_TlsHttps"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">@L["Admin_TlsDescription"] <strong>@L["Admin_RequiresRestart"]</strong></p>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableHttps" id="enableHttps" />
+                                <label class="form-check-label" for="enableHttps">
+                                    @L["Admin_EnableHttps"]
+                                </label>
+                            </div>
+                        </div>
+
+                        @if (Settings.EnableHttps)
+                        {
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">@L["Admin_InternalHttpsPort"]</label>
+                                    <InputNumber class="form-control" @bind-Value="Settings.HttpsPort" />
+                                    <small class="form-text text-muted">@L["Admin_InternalPortHelp"]</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">@L["Admin_ExternalHttpsPort"]</label>
+                                    <InputNumber class="form-control" @bind-Value="Settings.HttpsExternalPort" />
+                                    <small class="form-text text-muted">@L["Admin_ExternalPortHelp"]</small>
+                                </div>
+                            </div>
 
                             <div class="mb-3">
-                                <div class="form-check">
-                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.SmtpEnableSsl" id="smtpSsl" />
-                                    <label class="form-check-label" for="smtpSsl">
-                                        Enable SSL/TLS
+                                <div class="form-check form-switch">
+                                    <InputCheckbox class="form-check-input" @bind-Value="Settings.HttpsRedirect" id="httpsRedirect" />
+                                    <label class="form-check-label" for="httpsRedirect">
+                                        @L["Admin_RedirectHttps"]
                                     </label>
                                 </div>
                             </div>
 
-                            @if (!string.IsNullOrEmpty(SettingsMessage))
-                            {
-                                <div class="alert alert-success">@SettingsMessage</div>
-                            }
+                            <div class="mb-3">
+                                <label class="form-label">@L["Admin_CertSource"]</label>
+                                <select class="form-select" @bind="Settings.TlsCertSource">
+                                    <option value="selfSigned">@L["Admin_CertSelfSigned"]</option>
+                                    <option value="file">@L["Admin_CertFile"]</option>
+                                </select>
+                            </div>
 
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Save Settings
-                            </button>
-                        </EditForm>
+                            @if (Settings.TlsCertSource == "selfSigned")
+                            {
+                                <div class="alert alert-info py-2 small">
+                                    <i class="bi bi-info-circle me-1"></i>@L["Admin_SelfSignedInfo"]
+                                </div>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="RegenerateSelfSignedCert" disabled="@regeneratingCert">
+                                    @if (regeneratingCert)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                    }
+                                    <i class="bi bi-arrow-clockwise me-1"></i>@L["Admin_RegenerateCert"]
+                                </button>
+                                @if (!string.IsNullOrEmpty(certMessage))
+                                {
+                                    <div class="alert @(certMessageSuccess ? "alert-success" : "alert-danger") mt-2 py-2 small">@certMessage</div>
+                                }
+                            }
+                            else if (Settings.TlsCertSource == "file")
+                            {
+                                <div class="alert alert-info py-2 small mb-3">
+                                    <i class="bi bi-info-circle me-1"></i>@L["Admin_CertFileInfo"]
+                                </div>
+
+                                <h6 class="text-muted mb-2"><small>@L["Admin_OptionPfx"]</small></h6>
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label class="form-label">@L["Admin_PfxFilePath"]</label>
+                                        <InputText class="form-control" @bind-Value="Settings.TlsPfxPath" placeholder="/data/tls/cert.pfx" />
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">@L["Admin_PfxPassword"]</label>
+                                        <InputText type="password" class="form-control" @bind-Value="Settings.TlsPfxPassword" />
+                                    </div>
+                                </div>
+
+                                <hr />
+
+                                <h6 class="text-muted mb-2"><small>@L["Admin_OptionPem"]</small></h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">@L["Admin_CertPath"]</label>
+                                        <InputText class="form-control" @bind-Value="Settings.TlsCertPath" placeholder="/data/tls/fullchain.pem" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">@L["Admin_PrivateKeyPath"]</label>
+                                        <InputText class="form-control" @bind-Value="Settings.TlsKeyPath" placeholder="/data/tls/privkey.pem" />
+                                    </div>
+                                </div>
+                            }
+                        }
                     </div>
                 </div>
+
+                <!-- SSH Server -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-terminal me-2"></i>@L["Admin_SSHServer"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Run a native SSH server for Git operations without requiring system OpenSSH. Users can clone/push via <code>git clone ssh://user@host:port/repo.git</code></p>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableBuiltInSshServer" id="enableSsh" />
+                                <label class="form-check-label" for="enableSsh">
+                                    Enable Built-in SSH Server
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-0">
+                            <label class="form-label">SSH Port</label>
+                            <InputNumber class="form-control" @bind-Value="Settings.SshServerPort" style="max-width: 200px;" />
+                            <small class="form-text text-muted">Default: 2222. Use 22 if not running system SSH. Requires restart.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Merge Commit Signing -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-shield-lock me-2"></i>@L["Admin_MergeCommitSigning"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">GPG-sign merge, squash, and rebase commits created through the web UI. The GPG key must be imported into the server's keyring (<code>gpg --import</code>).</p>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.SignMergeCommits" id="signMergeCommits" />
+                                <label class="form-check-label" for="signMergeCommits">
+                                    Sign merge commits with GPG
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-0">
+                            <label class="form-label">Server GPG Key ID</label>
+                            <InputText class="form-control" @bind-Value="Settings.ServerGpgKeyId" placeholder="e.g. ABCD1234..." />
+                            <small class="form-text text-muted">The long or short key ID of the GPG key to use for signing</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LDAP Authentication -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>@L["Admin_LDAPAuth"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Enable LDAP/AD authentication to let users sign in with their domain credentials. Users are auto-provisioned on first login.</p>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapEnabled" id="ldapEnabled" />
+                                <label class="form-check-label" for="ldapEnabled">
+                                    Enable LDAP Authentication
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">LDAP Server</label>
+                                <InputText class="form-control" @bind-Value="Settings.LdapServer" placeholder="ldap.example.com or dc01.corp.local" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Port</label>
+                                <InputNumber class="form-control" @bind-Value="Settings.LdapPort" />
+                                <small class="form-text text-muted">389 (LDAP) or 636 (LDAPS)</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-check-inline">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapUseSsl" id="ldapSsl" />
+                                <label class="form-check-label" for="ldapSsl">
+                                    Use SSL (LDAPS)
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapStartTls" id="ldapStartTls" />
+                                <label class="form-check-label" for="ldapStartTls">
+                                    Use StartTLS
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapSkipCertificateValidation" id="ldapSkipCert" />
+                                <label class="form-check-label" for="ldapSkipCert">
+                                    Skip Certificate Validation
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Bind DN <span class="text-muted small">(service account)</span></label>
+                                <InputText class="form-control" @bind-Value="Settings.LdapBindDn" placeholder="CN=svc-git,OU=Service Accounts,DC=corp,DC=local" />
+                                <small class="form-text text-muted">Leave empty for anonymous bind</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Bind Password</label>
+                                <InputText type="password" class="form-control" @bind-Value="Settings.LdapBindPassword" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Search Base DN</label>
+                            <InputText class="form-control" @bind-Value="Settings.LdapSearchBase" placeholder="OU=Users,DC=corp,DC=local" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">User Search Filter</label>
+                            <InputText class="form-control" @bind-Value="Settings.LdapUserFilter" placeholder="(sAMAccountName={0})" />
+                            <small class="form-text text-muted">
+                                <code>{0}</code> is replaced with the username. Examples:
+                                AD: <code>(sAMAccountName={0})</code> &middot;
+                                OpenLDAP: <code>(uid={0})</code> &middot;
+                                Email: <code>(mail={0})</code>
+                            </small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Username Attribute</label>
+                                <InputText class="form-control" @bind-Value="Settings.LdapUsernameAttribute" placeholder="sAMAccountName" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Email Attribute</label>
+                                <InputText class="form-control" @bind-Value="Settings.LdapEmailAttribute" placeholder="mail" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Display Name Attribute</label>
+                                <InputText class="form-control" @bind-Value="Settings.LdapDisplayNameAttribute" placeholder="displayName" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Admin Group DN <span class="text-muted small">(optional)</span></label>
+                            <InputText class="form-control" @bind-Value="Settings.LdapAdminGroupDn" placeholder="CN=GitAdmins,OU=Groups,DC=corp,DC=local" />
+                            <small class="form-text text-muted">Members of this group are auto-promoted to admin. Leave empty to skip.</small>
+                        </div>
+
+                        <div class="mb-0">
+                            <button type="button" class="btn btn-outline-secondary" @onclick="TestLdapConnection" disabled="@TestingLdap">
+                                @if (TestingLdap)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1"></span>
+                                }
+                                <i class="bi bi-plug"></i> Test LDAP Connection
+                            </button>
+                            @if (!string.IsNullOrEmpty(LdapTestMessage))
+                            {
+                                <div class="alert @(LdapTestSuccess ? "alert-success" : "alert-danger") mt-2 py-2">@LdapTestMessage</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <div class="card mb-4">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        @if (!string.IsNullOrEmpty(SettingsMessage))
+                        {
+                            <div class="alert alert-success mb-0 py-2 flex-grow-1">@SettingsMessage</div>
+                        }
+                        <button type="submit" class="btn btn-primary btn-lg ms-auto">
+                            <i class="bi bi-save me-1"></i> Save All Settings
+                        </button>
+                    </div>
+                </div>
+
+                </EditForm>
+
             </div>
         </div>
     }
@@ -277,22 +852,22 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">User Management</h5>
+                        <h5 class="mb-0">@L["Admin_UserManagement"]</h5>
                         <button class="btn btn-primary btn-sm" @onclick="ShowAddUserModal">
-                            <i class="bi bi-plus"></i> Add User
+                            <i class="bi bi-plus"></i> @L["Admin_AddUser"]
                         </button>
                     </div>
                     <div class="card-body">
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th>Created</th>
-                                    <th>Repositories</th>
-                                    <th>Actions</th>
+                                    <th>@L["Admin_Username"]</th>
+                                    <th>@L["Admin_Email"]</th>
+                                    <th>@L["Admin_Role"]</th>
+                                    <th>@L["Admin_Status"]</th>
+                                    <th>@L["Admin_Created"]</th>
+                                    <th>@L["Admin_Repositories"]</th>
+                                    <th>@L["Admin_Actions"]</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -346,17 +921,17 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Audit Logs</h5>
+                        <h5 class="mb-0">@L["Admin_AuditLogs"]</h5>
                     </div>
                     <div class="card-body">
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Timestamp</th>
-                                    <th>User</th>
-                                    <th>Action</th>
-                                    <th>Details</th>
-                                    <th>IP Address</th>
+                                    <th>@L["Admin_Timestamp"]</th>
+                                    <th>@L["Admin_User"]</th>
+                                    <th>@L["Admin_Action"]</th>
+                                    <th>@L["Admin_Details"]</th>
+                                    <th>@L["Admin_IPAddress"]</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -377,6 +952,201 @@
             </div>
         </div>
     }
+    else if (ActiveTab == "secrets")
+    {
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-key"></i> @L["Admin_GlobalSecrets"]</h5>
+                        <button class="btn btn-sm btn-primary" @onclick="() => showAddGlobalSecret = true">
+                            <i class="bi bi-plus-circle me-1"></i> @L["Admin_AddSecret"]
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Global secrets are available to all workflow runs. Repository-level secrets with the same name will override global secrets.</p>
+                        @if (!string.IsNullOrEmpty(globalSecretMessage))
+                        {
+                            <div class="alert alert-info py-2">@globalSecretMessage</div>
+                        }
+                        @if (globalSecrets.Any())
+                        {
+                            <div class="list-group">
+                                @foreach (var secret in globalSecrets)
+                                {
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <code class="fw-bold">@secret.Name</code>
+                                            <small class="text-muted ms-2">Updated @secret.UpdatedAt.ToString("MMM d, yyyy")</small>
+                                        </div>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" @onclick="() => StartEditGlobalSecret(secret.Name)">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" @onclick="() => DeleteGlobalSecret(secret.Name)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No global secrets configured.</p>
+                        }
+                        @if (showAddGlobalSecret)
+                        {
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <label class="form-label fw-bold small">Name</label>
+                                        <input type="text" class="form-control form-control-sm" @bind="newGlobalSecretName" placeholder="SECRET_NAME"
+                                               disabled="@(!string.IsNullOrEmpty(editingGlobalSecretName))" />
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label fw-bold small">Value</label>
+                                        <input type="password" class="form-control form-control-sm" @bind="newGlobalSecretValue" placeholder="Secret value" />
+                                    </div>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-success" @onclick="SaveGlobalSecret"
+                                                disabled="@(string.IsNullOrWhiteSpace(newGlobalSecretName) || string.IsNullOrWhiteSpace(newGlobalSecretValue))">
+                                            <i class="bi bi-check me-1"></i> @L["Admin_Save"]
+                                        </button>
+                                        <button class="btn btn-secondary" @onclick="CancelAddGlobalSecret">@L["Admin_Cancel"]</button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (ActiveTab == "backups")
+    {
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-cloud-download"></i> @L["Admin_DownloadBackup"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Download a complete backup of all repositories and the database as a <code>.tar.gz</code> archive.</p>
+                        @if (!string.IsNullOrEmpty(BackupMessage))
+                        {
+                            <div class="alert alert-info">@BackupMessage</div>
+                        }
+                        <button class="btn btn-primary" @onclick="DownloadBackup" disabled="@BackupInProgress">
+                            @if (BackupInProgress)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1"></span>
+                            }
+                            <i class="bi bi-download"></i> @L["Admin_DownloadBackup"]
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-cloud-upload"></i> @L["Admin_RestoreBackup"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> <strong>Warning:</strong> Restoring a backup will overwrite all current data. The application should be restarted after a restore.
+                        </div>
+                        @if (!string.IsNullOrEmpty(RestoreMessage))
+                        {
+                            <div class="alert @(RestoreSuccess ? "alert-success" : "alert-danger")">@RestoreMessage</div>
+                        }
+                        <p class="text-muted small">Use the API directly for restore: <code>POST /api/v1/admin/restore</code> with a tar.gz file.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (ActiveTab == "oauth")
+    {
+        <div class="row">
+            <div class="col-md-10">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-shield-check"></i> @L["Admin_OAuthSSOProviders"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Configure external authentication providers. Only providers with both Client ID and Client Secret filled in will appear on the login page.</p>
+
+                        @if (!string.IsNullOrEmpty(OAuthMessage))
+                        {
+                            <div class="alert alert-success alert-dismissible fade show">
+                                @OAuthMessage
+                                <button type="button" class="btn-close" @onclick="() => OAuthMessage = null"></button>
+                            </div>
+                        }
+
+                        <div class="row">
+                            @foreach (var provider in oauthProviders)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <div class="card @(IsOAuthConfigured(provider) ? "border-success" : "")">
+                                        <div class="card-header d-flex align-items-center justify-content-between py-2">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi @MyPersonalGit.Data.OAuthService.GetProviderIcon(provider.ProviderName) me-2"
+                                                   style="color: @MyPersonalGit.Data.OAuthService.GetProviderColor(provider.ProviderName); font-size: 1.2rem;"></i>
+                                                <strong>@(provider.DisplayName ?? provider.ProviderName)</strong>
+                                            </div>
+                                            @if (IsOAuthConfigured(provider))
+                                            {
+                                                <span class="badge bg-success">Enabled</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Not configured</span>
+                                            }
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="mb-2">
+                                                <label class="form-label small fw-bold mb-1">Client ID</label>
+                                                <input type="text" class="form-control form-control-sm"
+                                                       value="@provider.ClientId"
+                                                       @onchange="e => provider.ClientId = e.Value?.ToString() ?? string.Empty"
+                                                       placeholder="@L["Admin_EnterClientId"]" />
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label small fw-bold mb-1">Client Secret</label>
+                                                <input type="password" class="form-control form-control-sm"
+                                                       value="@provider.ClientSecret"
+                                                       @onchange="e => provider.ClientSecret = e.Value?.ToString() ?? string.Empty"
+                                                       placeholder="@L["Admin_EnterClientSecret"]" />
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" checked="@provider.IsEnabled"
+                                                       @onchange="e => provider.IsEnabled = (bool)(e.Value ?? false)"
+                                                       id="oauth-@provider.ProviderName" />
+                                                <label class="form-check-label small" for="oauth-@provider.ProviderName">
+                                                    Enable this provider
+                                                </label>
+                                            </div>
+                                            <button class="btn btn-sm btn-primary" @onclick="() => SaveOAuthProvider(provider)">
+                                                <i class="bi bi-check-lg me-1"></i>Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="alert alert-info mt-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <strong>Callback URL:</strong> Each provider should be configured with the callback URL:
+                            <code>@(Navigation.BaseUri)oauth/callback/{provider-name}</code>
+                            <br/><small class="text-muted">Replace <code>{provider-name}</code> with: github, google, microsoft, gitlab, bitbucket, facebook, discord, or twitter</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @if (ShowAddUser)
@@ -385,7 +1155,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add New User</h5>
+                    <h5 class="modal-title">@L["Admin_AddNewUser"]</h5>
                     <button type="button" class="btn-close" @onclick="() => ShowAddUser = false"></button>
                 </div>
                 <div class="modal-body">
@@ -415,8 +1185,8 @@
                             <div class="alert alert-info">@UserMessage</div>
                         }
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @onclick="() => ShowAddUser = false">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Add User</button>
+                            <button type="button" class="btn btn-secondary" @onclick="() => ShowAddUser = false">@L["Admin_Cancel"]</button>
+                            <button type="submit" class="btn btn-primary">@L["Admin_AddUser"]</button>
                         </div>
                     </EditForm>
                 </div>
@@ -424,6 +1194,61 @@
         </div>
     </div>
 }
+@if (ShowEditUser)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit User: @EditingUser.Username</h5>
+                    <button type="button" class="btn-close" @onclick="() => ShowEditUser = false"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="EditingUser" OnValidSubmit="SaveEditUser">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input class="form-control" value="@EditingUser.Username" disabled />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <InputText type="email" class="form-control" @bind-Value="EditingUser.Email" />
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" @bind-Value="EditingUser.IsAdmin" id="editUserAdmin" />
+                                <label class="form-check-label" for="editUserAdmin">
+                                    Administrator
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <InputCheckbox class="form-check-input" @bind-Value="EditingUser.IsActive" id="editUserActive" />
+                                <label class="form-check-label" for="editUserActive">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="mb-3">
+                            <label class="form-label">New Password <span class="text-muted small">(leave blank to keep current)</span></label>
+                            <InputText type="password" class="form-control" @bind-Value="EditUserPassword" />
+                        </div>
+                        @if (!string.IsNullOrEmpty(EditUserMessage))
+                        {
+                            <div class="alert alert-danger">@EditUserMessage</div>
+                        }
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="() => ShowEditUser = false">@L["Admin_Cancel"]</button>
+                            <button type="submit" class="btn btn-primary">@L["Admin_SaveChanges"]</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+} @* end else (IsAdmin) *@
 
 @code {
     private string ActiveTab = "overview";
@@ -432,10 +1257,51 @@
     private List<AuditLog> AuditLogs = new();
     private List<UserManagement> Users = new();
     private bool ShowAddUser = false;
+    private bool ShowEditUser = false;
     private UserManagement NewUser = new();
+    private UserManagement EditingUser = new();
     private string NewUserPassword = "";
     private string SettingsMessage = "";
     private string UserMessage = "";
+    private string EditUserMessage = "";
+    private string EditUserPassword = "";
+    private bool BackupInProgress = false;
+    private string? BackupMessage;
+    private string? RestoreMessage;
+    private bool RestoreSuccess;
+
+    // Test email
+    private string TestEmailAddress = "";
+    private string? TestEmailMessage;
+    private bool TestEmailSuccess;
+    private bool SendingTestEmail;
+
+    // LDAP test
+    private bool TestingLdap;
+    private string? LdapTestMessage;
+    private bool LdapTestSuccess;
+
+    // TLS certificate
+    private bool regeneratingCert;
+    private string? certMessage;
+    private bool certMessageSuccess;
+
+    // Database config
+    private DatabaseConfig DbConfig = new();
+    private string? DbConfigMessage;
+    private bool DbConfigSuccess;
+
+    // Global secrets
+    private List<GlobalSecret> globalSecrets = new();
+    private bool showAddGlobalSecret;
+    private string newGlobalSecretName = "";
+    private string newGlobalSecretValue = "";
+    private string? editingGlobalSecretName;
+    private string globalSecretMessage = "";
+
+    // OAuth providers
+    private List<OAuthProviderConfig> oauthProviders = new();
+    private string? OAuthMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -444,19 +1310,115 @@
 
     private async Task LoadData()
     {
+        if (!UserService.IsAdmin) return;
+        DbConfig = DatabaseConfigService.GetCurrentConfig();
         Settings = await AdminService.GetSystemSettingsAsync();
         Statistics = await AdminService.GetSystemStatisticsAsync();
         AuditLogs = await AdminService.GetAuditLogsAsync();
         Users = await AdminService.GetAllUsersAsync();
+        globalSecrets = await SecretsService.GetGlobalSecretsAsync();
+        oauthProviders = await OAuthService.GetAllProvidersAsync();
     }
 
     private async Task SaveSettings()
     {
         await AdminService.SaveSystemSettingsAsync(Settings);
-        await AdminService.AddAuditLogAsync("admin", "UPDATE_SETTINGS", "System settings updated");
-        SettingsMessage = "Settings saved successfully!";
+        await AdminService.AddAuditLogAsync(UserService.Username, "UPDATE_SETTINGS", "System settings updated");
+        SettingsMessage = L["Admin_SettingsSaved"];
         await Task.Delay(3000);
         SettingsMessage = "";
+    }
+
+    private async Task SendTestEmail()
+    {
+        if (string.IsNullOrWhiteSpace(TestEmailAddress)) return;
+        SendingTestEmail = true;
+        TestEmailMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            // Save current settings first so the email service picks them up
+            await AdminService.SaveSystemSettingsAsync(Settings);
+            var (success, message) = await EmailService.SendTestEmailAsync(TestEmailAddress);
+            TestEmailSuccess = success;
+            TestEmailMessage = message;
+        }
+        catch (Exception ex)
+        {
+            TestEmailSuccess = false;
+            TestEmailMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            SendingTestEmail = false;
+        }
+    }
+
+    private async Task SaveDatabaseConfig()
+    {
+        try
+        {
+            DatabaseConfigService.SaveConfig(DbConfig);
+            await AdminService.AddAuditLogAsync(UserService.Username, "UPDATE_DATABASE_CONFIG",
+                $"Database provider set to: {DbConfig.Provider}");
+            DbConfigSuccess = true;
+            DbConfigMessage = "Database settings saved. Restart the application for changes to take effect.";
+        }
+        catch (Exception ex)
+        {
+            DbConfigSuccess = false;
+            DbConfigMessage = $"Failed to save: {ex.Message}";
+        }
+    }
+
+    private async Task RegenerateSelfSignedCert()
+    {
+        regeneratingCert = true;
+        certMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            await Task.Run(() => TlsBootstrap.GenerateSelfSignedCert());
+            certMessage = "Self-signed certificate generated successfully. Restart the application to use it.";
+            certMessageSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            certMessage = $"Failed to generate certificate: {ex.Message}";
+            certMessageSuccess = false;
+        }
+        finally
+        {
+            regeneratingCert = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task TestLdapConnection()
+    {
+        TestingLdap = true;
+        LdapTestMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            // Save current settings first so the LDAP service picks them up
+            await AdminService.SaveSystemSettingsAsync(Settings);
+            var (success, message) = await LdapAuthService.TestConnectionAsync();
+            LdapTestSuccess = success;
+            LdapTestMessage = message;
+        }
+        catch (Exception ex)
+        {
+            LdapTestSuccess = false;
+            LdapTestMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            TestingLdap = false;
+        }
     }
 
     private void ShowAddUserModal()
@@ -472,7 +1434,7 @@
         var success = await AdminService.AddUserAsync(NewUser.Username, NewUserPassword, NewUser.Email, NewUser.IsAdmin);
         if (success)
         {
-            await AdminService.AddAuditLogAsync("admin", "ADD_USER", $"Added user: {NewUser.Username}");
+            await AdminService.AddAuditLogAsync(UserService.Username, "ADD_USER", $"Added user: {NewUser.Username}");
             await LoadData();
             ShowAddUser = false;
         }
@@ -484,6 +1446,42 @@
 
     private void EditUser(UserManagement user)
     {
+        EditingUser = new UserManagement
+        {
+            Username = user.Username,
+            Email = user.Email,
+            IsAdmin = user.IsAdmin,
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt,
+            LastLogin = user.LastLogin,
+            RepositoryCount = user.RepositoryCount
+        };
+        EditUserMessage = "";
+        EditUserPassword = "";
+        ShowEditUser = true;
+    }
+
+    private async Task SaveEditUser()
+    {
+        var success = await AdminService.UpdateUserAsync(EditingUser);
+        if (!success)
+        {
+            EditUserMessage = "Failed to update user.";
+            return;
+        }
+        if (!string.IsNullOrWhiteSpace(EditUserPassword))
+        {
+            var pwSuccess = await AdminService.ResetPasswordAsync(EditingUser.Username, EditUserPassword);
+            if (!pwSuccess)
+            {
+                EditUserMessage = "User updated but password reset failed.";
+                return;
+            }
+            await AdminService.AddAuditLogAsync(UserService.Username, "RESET_PASSWORD", $"Reset password for: {EditingUser.Username}");
+        }
+        await AdminService.AddAuditLogAsync(UserService.Username, "UPDATE_USER", $"Updated user: {EditingUser.Username}");
+        await LoadData();
+        ShowEditUser = false;
     }
 
     private async Task DeleteUser(string username)
@@ -491,7 +1489,7 @@
         var success = await AdminService.DeleteUserAsync(username);
         if (success)
         {
-            await AdminService.AddAuditLogAsync("admin", "DELETE_USER", $"Deleted user: {username}");
+            await AdminService.AddAuditLogAsync(UserService.Username, "DELETE_USER", $"Deleted user: {username}");
             await LoadData();
         }
     }
@@ -507,5 +1505,75 @@
             len = len / 1024;
         }
         return $"{len:0.##} {sizes[order]}";
+    }
+
+    private void StartEditGlobalSecret(string name)
+    {
+        editingGlobalSecretName = name;
+        newGlobalSecretName = name;
+        newGlobalSecretValue = "";
+        showAddGlobalSecret = true;
+    }
+
+    private void CancelAddGlobalSecret()
+    {
+        showAddGlobalSecret = false;
+        newGlobalSecretName = "";
+        newGlobalSecretValue = "";
+        editingGlobalSecretName = null;
+    }
+
+    private async Task SaveGlobalSecret()
+    {
+        if (string.IsNullOrWhiteSpace(newGlobalSecretName) || string.IsNullOrWhiteSpace(newGlobalSecretValue)) return;
+        await SecretsService.SetGlobalSecretAsync(newGlobalSecretName.Trim().ToUpperInvariant(), newGlobalSecretValue);
+        await AdminService.AddAuditLogAsync(UserService.Username, "SET_GLOBAL_SECRET", $"Set global secret: {newGlobalSecretName}");
+        CancelAddGlobalSecret();
+        await LoadData();
+    }
+
+    private async Task DeleteGlobalSecret(string name)
+    {
+        await SecretsService.DeleteGlobalSecretAsync(name);
+        await AdminService.AddAuditLogAsync(UserService.Username, "DELETE_GLOBAL_SECRET", $"Deleted global secret: {name}");
+        await LoadData();
+    }
+
+    private bool IsOAuthConfigured(OAuthProviderConfig provider) =>
+        !string.IsNullOrWhiteSpace(provider.ClientId) && !string.IsNullOrWhiteSpace(provider.ClientSecret) && provider.IsEnabled;
+
+    private async Task SaveOAuthProvider(OAuthProviderConfig provider)
+    {
+        await OAuthService.SaveProviderConfigAsync(provider);
+        await AdminService.AddAuditLogAsync(UserService.Username, "UPDATE_OAUTH", $"Updated OAuth provider: {provider.ProviderName}");
+        OAuthMessage = $"{provider.DisplayName ?? provider.ProviderName} settings saved!";
+        oauthProviders = await OAuthService.GetAllProvidersAsync();
+        StateHasChanged();
+        await Task.Delay(3000);
+        OAuthMessage = null;
+        StateHasChanged();
+    }
+
+    private async Task DownloadBackup()
+    {
+        BackupInProgress = true;
+        BackupMessage = "Preparing backup...";
+        StateHasChanged();
+
+        try
+        {
+            // Pass session ID as query param so the controller can authenticate
+            var sessionId = UserService.SessionId;
+            await JS.InvokeVoidAsync("open", $"/admin/api/backup?session={sessionId}", "_blank");
+            BackupMessage = "Backup download started.";
+        }
+        catch (Exception ex)
+        {
+            BackupMessage = $"Backup failed: {ex.Message}";
+        }
+        finally
+        {
+            BackupInProgress = false;
+        }
     }
 }

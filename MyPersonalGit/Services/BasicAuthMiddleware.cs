@@ -1,20 +1,22 @@
 using System.Security.Claims;
 using System.Text;
+using MyPersonalGit.Data;
+using MyPersonalGit.Models;
 
 namespace MyPersonalGit.Services;
 
 /// <summary>
 /// Very small Basic Auth middleware intended for LAN/self-hosted use.
-/// Reads users from configuration:
+/// Reads users from configuration (Git:Users section).
 ///
-/// "Git": {
-///   "RequireAuth": true,
-///   "Users": {
-///     "fennell": "REDACTED-ROTATE-ME"
-///   }
-/// }
+/// Set credentials via environment variables (recommended):
+///   Git__Users__yourname=yourpassword
+///
+/// Or via docker run:
+///   docker run -e Git__Users__fennell=secret ...
 ///
 /// IMPORTANT:
+/// - Never put real passwords in appsettings.json — use env vars or user-secrets.
 /// - For anything internet-exposed, put this app behind a reverse proxy (Nginx Proxy Manager, Traefik)
 ///   and use HTTPS + stronger auth (SSO, OAuth, etc.).
 /// - This middleware is scoped to /git/* so you can keep the UI open if you want.
@@ -25,7 +27,7 @@ public sealed class BasicAuthMiddleware
 
     public BasicAuthMiddleware(RequestDelegate next) => _next = next;
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, ICollaboratorService collaboratorService, IAuthService authService, ILdapAuthService ldapAuthService)
     {
         if (!context.Request.Path.StartsWithSegments("/git"))
         {
@@ -40,8 +42,23 @@ public sealed class BasicAuthMiddleware
             return;
         }
 
-        // Allow unauthenticated "info/refs?service=git-upload-pack" if you want public read-only.
-        // For now, require auth for everything under /git.
+        // Extract repo name from path: /git/{repoName}.git/...
+        var repoName = ExtractRepoName(context.Request.Path);
+        var isReadOperation = IsReadOperation(context.Request);
+
+        // For public repos, allow unauthenticated read (clone/fetch)
+        if (isReadOperation && !string.IsNullOrEmpty(repoName))
+        {
+            var repoMeta = await repoService.GetRepositoryAsync(repoName);
+            if (repoMeta == null || !repoMeta.IsPrivate)
+            {
+                // Public repo — allow anonymous read
+                await _next(context);
+                return;
+            }
+        }
+
+        // Private repos and push operations always require auth
         var header = context.Request.Headers.Authorization.ToString();
         if (string.IsNullOrWhiteSpace(header) || !header.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
         {
@@ -72,14 +89,71 @@ public sealed class BasicAuthMiddleware
         var user = decoded.Substring(0, idx);
         var pass = decoded.Substring(idx + 1);
 
-        // Load config users
+        // Try config-based users first (legacy), then database users
+        var authenticated = false;
         var usersSection = config.GetSection("Git:Users");
         var expected = usersSection[user];
 
-        if (string.IsNullOrEmpty(expected) || !FixedTimeEquals(expected, pass))
+        if (!string.IsNullOrEmpty(expected) && FixedTimeEquals(expected, pass))
+        {
+            authenticated = true;
+        }
+        else
+        {
+            // Try database user authentication
+            var dbUser = await authService.GetUserByUsernameAsync(user);
+            if (dbUser != null && dbUser.IsActive && BCrypt.Net.BCrypt.Verify(pass, dbUser.PasswordHash))
+            {
+                authenticated = true;
+            }
+            else
+            {
+                // Fall back to LDAP/AD authentication
+                var ldapUser = await ldapAuthService.AuthenticateAsync(user, pass);
+                if (ldapUser != null)
+                {
+                    authenticated = true;
+                }
+            }
+        }
+
+        if (!authenticated)
         {
             Challenge(context);
             return;
+        }
+
+        // Check repository-level permissions
+        if (!string.IsNullOrEmpty(repoName))
+        {
+            var requiredPermission = isReadOperation
+                ? CollaboratorPermission.Read
+                : CollaboratorPermission.Write;
+
+            // Admin users bypass permission checks
+            var dbUser = await authService.GetUserByUsernameAsync(user);
+            var isAdmin = dbUser?.IsAdmin == true;
+
+            if (!isAdmin)
+            {
+                var hasPermission = await collaboratorService.HasPermissionAsync(repoName, user, requiredPermission);
+
+                // For private repos, enforce read permission; for push, always enforce write permission
+                var repoMeta = await repoService.GetRepositoryAsync(repoName);
+                if (repoMeta?.IsPrivate == true && !hasPermission)
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await context.Response.WriteAsync("You do not have permission to access this repository.");
+                    return;
+                }
+
+                if (!isReadOperation && !hasPermission)
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await context.Response.WriteAsync("You do not have write access to this repository.");
+                    return;
+                }
+            }
         }
 
         var identity = new ClaimsIdentity(new[]
@@ -91,6 +165,28 @@ public sealed class BasicAuthMiddleware
         context.User = new ClaimsPrincipal(identity);
 
         await _next(context);
+    }
+
+    private static string? ExtractRepoName(PathString path)
+    {
+        // Path format: /git/{repoName}.git/info/refs etc.
+        var segments = path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments == null || segments.Length < 2) return null;
+        var repoSegment = segments[1]; // e.g., "myrepo.git"
+        return repoSegment; // Keep the .git suffix for DB lookup
+    }
+
+    private static bool IsReadOperation(HttpRequest request)
+    {
+        // git-upload-pack = fetch/clone (read), git-receive-pack = push (write)
+        var path = request.Path.Value ?? "";
+        var query = request.Query["service"].ToString();
+
+        if (path.Contains("git-receive-pack") || query == "git-receive-pack")
+            return false;
+
+        // Everything else (info/refs with upload-pack, git-upload-pack) is a read
+        return true;
     }
 
     private static void Challenge(HttpContext context)
