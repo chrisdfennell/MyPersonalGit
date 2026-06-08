@@ -208,12 +208,12 @@
 
 @if (ShowCreateProject)
 {
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">@L["Projects_CreateNewProject"]</h5>
-                    <button type="button" class="btn-close" @onclick="() => ShowCreateProject = false"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => ShowCreateProject = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -236,12 +236,12 @@
 
 @if (ShowAddCard)
 {
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">@L["Projects_AddCard"]</h5>
-                    <button type="button" class="btn-close" @onclick="() => ShowAddCard = false"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => ShowAddCard = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -287,12 +287,12 @@
 
 @if (ShowAddColumn)
 {
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">@L["Projects_AddColumn"]</h5>
-                    <button type="button" class="btn-close" @onclick="() => ShowAddColumn = false"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => ShowAddColumn = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">

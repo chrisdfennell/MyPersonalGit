@@ -941,12 +941,12 @@
 
 @if (showNewPRModal)
 {
-    <div class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+    <div class="modal show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">@L["PR_NewPullRequest"]</h5>
-                    <button type="button" class="btn-close" @onclick="() => showNewPRModal = false"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => showNewPRModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
