@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -70,10 +71,11 @@ public class CargoController : ControllerBase
 
         // Store the .crate file
         var normalizedName = name.ToLowerInvariant();
-        var pkgDir = Path.Combine(StorePath, normalizedName, version);
-        Directory.CreateDirectory(pkgDir);
         var filename = $"{name}-{version}.crate";
-        var destPath = Path.Combine(pkgDir, filename);
+        var destPath = SafePath.CombineUnder(StorePath, normalizedName, version, filename);
+        if (destPath == null)
+            return BadRequest(new { error = "Invalid crate name or version." });
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
         await System.IO.File.WriteAllBytesAsync(destPath, crateBytes);
 
@@ -162,7 +164,8 @@ public class CargoController : ControllerBase
     public async Task<IActionResult> Download(string name, string version)
     {
         var normalizedName = name.ToLowerInvariant();
-        var pkgDir = Path.Combine(StorePath, normalizedName, version);
+        var pkgDir = SafePath.CombineUnder(StorePath, normalizedName, version);
+        if (pkgDir == null) return NotFound();
         var filename = $"{name}-{version}.crate";
         var filePath = Path.Combine(pkgDir, filename);
 
