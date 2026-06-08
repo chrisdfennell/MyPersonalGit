@@ -39,12 +39,18 @@ public class LdapAuthService : ILdapAuthService
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly IAdminService _adminService;
+    private readonly IOrganizationService _orgService;
     private readonly ILogger<LdapAuthService> _logger;
 
-    public LdapAuthService(IDbContextFactory<AppDbContext> dbFactory, IAdminService adminService, ILogger<LdapAuthService> logger)
+    public LdapAuthService(
+        IDbContextFactory<AppDbContext> dbFactory,
+        IAdminService adminService,
+        IOrganizationService orgService,
+        ILogger<LdapAuthService> logger)
     {
         _dbFactory = dbFactory;
         _adminService = adminService;
+        _orgService = orgService;
         _logger = logger;
     }
 
@@ -110,17 +116,22 @@ public class LdapAuthService : ILdapAuthService
             var email = GetAttribute(entry, settings.LdapEmailAttribute) ?? $"{ldapUsername}@ldap.local";
             var displayName = GetAttribute(entry, settings.LdapDisplayNameAttribute);
 
-            // Step 5: Check admin group membership
+            // Step 5: Check admin group membership and get groups
             var isAdmin = false;
+            var memberOf = GetAttributes(entry, "memberOf");
             if (!string.IsNullOrWhiteSpace(settings.LdapAdminGroupDn))
             {
-                var memberOf = GetAttributes(entry, "memberOf");
                 isAdmin = memberOf.Any(g =>
                     g.Equals(settings.LdapAdminGroupDn, StringComparison.OrdinalIgnoreCase));
             }
 
             // Step 6: Sync to local database
-            return await SyncLocalUser(ldapUsername, email, displayName, isAdmin);
+            var user = await SyncLocalUser(ldapUsername, email, displayName, isAdmin);
+
+            // Step 7: Sync LDAP groups to teams
+            await SyncLdapGroupsToTeams(ldapUsername, memberOf, settings);
+
+            return user;
         }
         catch (LdapException ex)
         {
@@ -131,6 +142,96 @@ public class LdapAuthService : ILdapAuthService
         {
             _logger.LogError(ex, "Unexpected error during LDAP authentication for {Username}", username);
             return null;
+        }
+    }
+
+    internal async Task SyncLdapGroupsToTeams(string username, List<string> memberOf, SystemSettings settings)
+    {
+        if (string.IsNullOrEmpty(settings.LdapGroupMappingsJson))
+            return;
+
+        try
+        {
+            var mappings = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(settings.LdapGroupMappingsJson);
+            if (mappings == null || !mappings.Any())
+                return;
+
+            // Identify all local targets mapping to LDAP groups
+            var allMappedTargets = mappings.Values.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            
+            // Map memberOf groups to their local mapped targets
+            var userTargetTeams = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var groupDn in memberOf)
+            {
+                if (mappings.TryGetValue(groupDn, out var targetTeam))
+                {
+                    userTargetTeams.Add(targetTeam);
+                }
+            }
+
+            foreach (var target in allMappedTargets)
+            {
+                var parts = target.Split('/');
+                if (parts.Length != 2)
+                {
+                    _logger.LogWarning("Invalid LDAP group mapping target format: '{Target}'. Expected 'OrganizationName/TeamName'.", target);
+                    continue;
+                }
+
+                var orgName = parts[0].Trim();
+                var teamName = parts[1].Trim();
+
+                var userShouldBeInTeam = userTargetTeams.Contains(target);
+
+                if (userShouldBeInTeam)
+                {
+                    // Ensure Organization exists
+                    var org = await _orgService.GetOrganizationAsync(orgName);
+                    if (org == null)
+                    {
+                        org = await _orgService.CreateOrganizationAsync(orgName, owner: "admin", displayName: orgName, description: "Auto-created via LDAP sync");
+                    }
+
+                    // Ensure User is in Organization
+                    if (!await _orgService.IsMemberAsync(orgName, username))
+                    {
+                        await _orgService.AddMemberAsync(orgName, username, OrgRole.Member);
+                    }
+
+                    // Ensure Team exists
+                    var team = await _orgService.GetTeamAsync(orgName, teamName);
+                    if (team == null)
+                    {
+                        team = await _orgService.CreateTeamAsync(orgName, teamName, description: "Auto-created via LDAP sync");
+                    }
+
+                    // Ensure User is in Team
+                    var isTeamMember = team.Members.Any(m => m.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+                    if (!isTeamMember)
+                    {
+                        await _orgService.AddTeamMemberAsync(team.Id, username);
+                        _logger.LogInformation("LDAP Sync: Added user '{Username}' to team '{Org}/{Team}'", username, orgName, teamName);
+                    }
+                }
+                else
+                {
+                    // User should NOT be in the team. If they are in it, remove them!
+                    var team = await _orgService.GetTeamAsync(orgName, teamName);
+                    if (team != null)
+                    {
+                        var isTeamMember = team.Members.Any(m => m.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+                        if (isTeamMember)
+                        {
+                            await _orgService.RemoveTeamMemberAsync(team.Id, username);
+                            _logger.LogInformation("LDAP Sync: Removed user '{Username}' from team '{Org}/{Team}'", username, orgName, teamName);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to synchronize LDAP groups to local teams for user '{Username}'", username);
         }
     }
 

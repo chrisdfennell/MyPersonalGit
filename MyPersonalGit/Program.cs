@@ -132,6 +132,7 @@ builder.Services.AddSingleton<ISecretsService, SecretsService>();
 builder.Services.AddSingleton<ISshAuthService, SshAuthService>();
 builder.Services.AddHostedService<AuthorizedKeysSyncService>();
 builder.Services.AddHostedService<BuiltInSshServer>();
+builder.Services.AddHostedService<RegistryCleanupService>();
 builder.Services.AddSingleton<ILdapAuthService, LdapAuthService>();
 builder.Services.AddSingleton<IArtifactService, ArtifactService>();
 builder.Services.AddSingleton<IMarkdownService, MarkdownService>();
@@ -161,6 +162,8 @@ builder.Services.AddSingleton<IRepositoryLabelService, RepositoryLabelService>()
 builder.Services.AddSingleton<ITagProtectionService, TagProtectionService>();
 builder.Services.AddSingleton<IAutoMergeService, AutoMergeService>();
 builder.Services.AddSingleton<ICodeSearchService, CodeSearchService>();
+builder.Services.AddSingleton<ICodeSearchIndexerService, CodeSearchIndexerService>();
+builder.Services.AddHostedService(sp => (CodeSearchIndexerService)sp.GetRequiredService<ICodeSearchIndexerService>());
 builder.Services.AddSingleton<ITimeTrackingService, TimeTrackingService>();
 builder.Services.AddSingleton<IAGitFlowService, AGitFlowService>();
 builder.Services.AddSingleton<IWebAuthnService, WebAuthnService>();
@@ -542,8 +545,27 @@ using (var scope = app.Services.CreateScope())
         );");
     db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_SavedReplies_Username"" ON ""SavedReplies"" (""Username"");");
 
+    // CodeSearchIndices table
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""CodeSearchIndices"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""RepoName"" TEXT NOT NULL,
+            ""FilePath"" TEXT NOT NULL,
+            ""ContentHash"" TEXT NOT NULL,
+            ""Content"" TEXT NOT NULL,
+            ""IndexedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_CodeSearchIndices_RepoName"" ON ""CodeSearchIndices"" (""RepoName"");");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_CodeSearchIndices_RepoName_FilePath"" ON ""CodeSearchIndices"" (""RepoName"", ""FilePath"");");
+
     // WorkflowJobs.Environment column
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""WorkflowJobs"" ADD COLUMN ""Environment"" TEXT NULL;"); } catch { }
+
+    // SystemSettings.LdapGroupMappingsJson column
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""LdapGroupMappingsJson"" TEXT NULL;"); } catch { }
+
+    // SystemSettings.GenericPackageRetentionCount column
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""GenericPackageRetentionCount"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
 
     // One-time fixup: workflow runs stored with stripped ".git" suffix need to match the DB repo name
     try

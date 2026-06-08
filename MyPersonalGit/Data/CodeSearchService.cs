@@ -1,6 +1,8 @@
+using System.IO;
 using System.Text;
 using LibGit2Sharp;
 using Microsoft.EntityFrameworkCore;
+using MyPersonalGit.Models;
 
 namespace MyPersonalGit.Data;
 
@@ -45,99 +47,76 @@ public class CodeSearchService : ICodeSearchService
 
         var results = new List<CodeSearchResult>();
 
-        var systemSettings = await _adminService.GetSystemSettingsAsync();
-        var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot)
-            ? systemSettings.ProjectRoot
-            : _config["Git:ProjectRoot"] ?? "/repos";
-
-        using var db = _dbFactory.CreateDbContext();
-        var repos = repoName != null
-            ? await db.Repositories.Where(r => r.Name == repoName).ToListAsync()
-            : await db.Repositories.Where(r => !r.IsPrivate).ToListAsync();
-
-        foreach (var repo in repos)
+        try
         {
-            if (results.Count >= maxResults) break;
+            using var db = _dbFactory.CreateDbContext();
 
-            var repoPath = Path.Combine(projectRoot, repo.Name);
-            if (!Repository.IsValid(repoPath))
+            var repos = repoName != null
+                ? await db.Repositories.Where(r => r.Name == repoName).Select(r => new { r.Name, r.DefaultBranch }).ToListAsync()
+                : await db.Repositories.Where(r => !r.IsPrivate).Select(r => new { r.Name, r.DefaultBranch }).ToListAsync();
+
+            var repoBranchMap = repos.ToDictionary(r => r.Name, r => r.DefaultBranch ?? "main", StringComparer.OrdinalIgnoreCase);
+            var allowedRepoNames = repoBranchMap.Keys.ToList();
+
+            if (!allowedRepoNames.Any())
+                return results;
+
+            var lowerQuery = query.ToLower();
+            IQueryable<CodeSearchIndex> dbQuery = db.CodeSearchIndices
+                .Where(i => allowedRepoNames.Contains(i.RepoName));
+
+            if (!string.IsNullOrEmpty(fileExtension))
             {
-                repoPath = Path.Combine(projectRoot, repo.Name + ".git");
-                if (!Repository.IsValid(repoPath))
-                    continue;
+                var ext = fileExtension.StartsWith(".") ? fileExtension : "." + fileExtension;
+                var lowerExt = ext.ToLower();
+                dbQuery = dbQuery.Where(i => i.FilePath.ToLower().EndsWith(lowerExt));
             }
 
-            try
+            dbQuery = dbQuery.Where(i => i.Content.ToLower().Contains(lowerQuery));
+
+            var matchedFiles = await dbQuery
+                .OrderBy(i => i.RepoName)
+                .ThenBy(i => i.FilePath)
+                .Take(maxResults)
+                .ToListAsync();
+
+            foreach (var file in matchedFiles)
             {
-                using var gitRepo = new Repository(repoPath);
-                var branch = gitRepo.Head;
-                if (branch?.Tip == null) continue;
+                using var reader = new StringReader(file.Content);
+                var matches = new List<CodeSearchMatch>();
+                int lineNumber = 0;
 
-                SearchTree(gitRepo, branch.Tip.Tree, "", query, fileExtension, repo.Name, branch.FriendlyName, results, maxResults);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to search repository {RepoName}", repo.Name);
-            }
-        }
-
-        return results;
-    }
-
-    private static void SearchTree(Repository repo, Tree tree, string prefix, string query, string? fileExtension, string repoName, string branchName, List<CodeSearchResult> results, int maxResults)
-    {
-        foreach (var entry in tree)
-        {
-            if (results.Count >= maxResults) return;
-
-            var entryPath = string.IsNullOrEmpty(prefix) ? entry.Name : $"{prefix}/{entry.Name}";
-
-            if (entry.TargetType == TreeEntryTargetType.Tree)
-            {
-                SearchTree(repo, (Tree)entry.Target, entryPath, query, fileExtension, repoName, branchName, results, maxResults);
-            }
-            else if (entry.TargetType == TreeEntryTargetType.Blob)
-            {
-                if (fileExtension != null && !entry.Name.EndsWith(fileExtension, StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                var blob = (Blob)entry.Target;
-                if (blob.Size > 512 * 1024) continue; // Skip files > 512KB
-                if (blob.IsBinary) continue;
-
-                try
+                string? line;
+                while ((line = reader.ReadLine()) != null && matches.Count < 5)
                 {
-                    using var reader = new StreamReader(blob.GetContentStream(), Encoding.UTF8);
-                    var matches = new List<CodeSearchMatch>();
-                    int lineNumber = 0;
-
-                    while (!reader.EndOfStream && matches.Count < 5)
+                    lineNumber++;
+                    if (line.Contains(query, StringComparison.OrdinalIgnoreCase))
                     {
-                        lineNumber++;
-                        var line = reader.ReadLine();
-                        if (line != null && line.Contains(query, StringComparison.OrdinalIgnoreCase))
+                        matches.Add(new CodeSearchMatch
                         {
-                            matches.Add(new CodeSearchMatch
-                            {
-                                LineNumber = lineNumber,
-                                Line = line.Length > 200 ? line[..200] + "..." : line
-                            });
-                        }
-                    }
-
-                    if (matches.Any())
-                    {
-                        results.Add(new CodeSearchResult
-                        {
-                            RepoName = repoName,
-                            FilePath = entryPath,
-                            Branch = branchName,
-                            Matches = matches
+                            LineNumber = lineNumber,
+                            Line = line.Length > 200 ? line[..200] + "..." : line
                         });
                     }
                 }
-                catch { }
+
+                if (matches.Any())
+                {
+                    results.Add(new CodeSearchResult
+                    {
+                        RepoName = file.RepoName,
+                        FilePath = file.FilePath,
+                        Branch = repoBranchMap.TryGetValue(file.RepoName, out var b) ? b : "main",
+                        Matches = matches
+                    });
+                }
             }
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error executing indexed code search for query '{Query}'", query);
+        }
+
+        return results;
     }
 }

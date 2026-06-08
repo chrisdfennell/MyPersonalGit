@@ -200,6 +200,9 @@ public class AppDbContext : DbContext
     // Saved Replies
     public DbSet<SavedReply> SavedReplies => Set<SavedReply>();
 
+    // Code Search Index
+    public DbSet<CodeSearchIndex> CodeSearchIndices => Set<CodeSearchIndex>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Shared JSON value converters + comparers for List<string> and string[]
@@ -736,6 +739,13 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<SavedReply>(e =>
         {
             e.HasIndex(r => r.Username);
+        });
+
+        // --- CodeSearchIndex ---
+        modelBuilder.Entity<CodeSearchIndex>(e =>
+        {
+            e.HasIndex(i => i.RepoName);
+            e.HasIndex(i => new { i.RepoName, i.FilePath }).IsUnique();
         });
     }
 }

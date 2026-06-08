@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using MyPersonalGit.Data;
@@ -1176,5 +1177,294 @@ public class AppDbContextNewFeatureTests
         });
         await _db.SaveChangesAsync();
         Assert.Single(_db.DependencyUpdateLogs);
+    }
+}
+
+// ============================================================================
+// Workflow Secrets Masking Tests
+// ============================================================================
+public class WorkflowSecretsMaskingTests
+{
+    [Fact]
+    public void MaskSecrets_MasksConfiguredSecrets()
+    {
+        var secrets = new Dictionary<string, string>
+        {
+            ["MY_API_KEY"] = "super-secret-token-12345",
+            ["PASSWORD"] = "my-secure-password"
+        };
+
+        var rawLog = "Executing job...\nAPI Key is super-secret-token-12345\nPassword used: my-secure-password\nFinished.";
+        var maskedLog = WorkflowRunnerService.MaskSecrets(rawLog, secrets);
+
+        Assert.Contains("***", maskedLog);
+        Assert.DoesNotContain("super-secret-token-12345", maskedLog);
+        Assert.DoesNotContain("my-secure-password", maskedLog);
+        Assert.Contains("API Key is ***", maskedLog);
+        Assert.Contains("Password used: ***", maskedLog);
+    }
+
+    [Fact]
+    public void MaskSecrets_DoesNotMaskShortSecrets()
+    {
+        var secrets = new Dictionary<string, string>
+        {
+            ["SHORT"] = "12",
+            ["OK"] = "abc"
+        };
+
+        var rawLog = "Code: 12, Status: abc";
+        var maskedLog = WorkflowRunnerService.MaskSecrets(rawLog, secrets);
+
+        Assert.Contains("Code: 12", maskedLog); // too short (< 3)
+        Assert.Contains("Status: ***", maskedLog); // length >= 3
+    }
+}
+
+// ============================================================================
+// Workflow Runner Cache Volume Bind Tests
+// ============================================================================
+public class WorkflowRunnerCacheTests
+{
+    [Fact]
+    public void CacheDirectories_AreCreatedSuccessfully()
+    {
+        var cacheBaseDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".mypersonalgit", "cache");
+        var nugetCacheDir = Path.Combine(cacheBaseDir, "nuget");
+        var npmCacheDir = Path.Combine(cacheBaseDir, "npm");
+        var pipCacheDir = Path.Combine(cacheBaseDir, "pip");
+
+        // Ensure directories are created
+        Directory.CreateDirectory(nugetCacheDir);
+        Directory.CreateDirectory(npmCacheDir);
+        Directory.CreateDirectory(pipCacheDir);
+
+        Assert.True(Directory.Exists(nugetCacheDir));
+        Assert.True(Directory.Exists(npmCacheDir));
+        Assert.True(Directory.Exists(pipCacheDir));
+    }
+}
+
+// ============================================================================
+// LDAP Group-to-Local-Team Mapping & Synchronization Tests
+// ============================================================================
+public class LdapTeamSyncTests
+{
+    private readonly IDbContextFactory<AppDbContext> _dbFactory;
+    private readonly IOrganizationService _orgService;
+    private readonly LdapAuthService _ldapAuthService;
+
+    public LdapTeamSyncTests()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        _dbFactory = new TestDbContextFactory(options);
+        
+        var logger = NullLogger<OrganizationService>.Instance;
+        var activityService = Substitute.For<IActivityService>();
+        _orgService = new OrganizationService(_dbFactory, logger, activityService);
+
+        var adminService = Substitute.For<IAdminService>();
+        var ldapLogger = Substitute.For<ILogger<LdapAuthService>>();
+        ldapLogger.When(x => x.Log(
+            Arg.Is<LogLevel>(l => l == LogLevel.Error),
+            Arg.Any<EventId>(),
+            Arg.Any<object>(),
+            Arg.Any<Exception>(),
+            Arg.Any<Func<object, Exception?, string>>()
+        )).Do(x =>
+        {
+            var exception = x.ArgAt<Exception>(3);
+            if (exception != null)
+            {
+                throw new Exception("Captured LDAP sync error: " + exception.ToString(), exception);
+            }
+        });
+
+        _ldapAuthService = new LdapAuthService(_dbFactory, adminService, _orgService, ldapLogger);
+    }
+
+    [Fact]
+    public async Task SyncLdapGroupsToTeams_AddsUserToMappedTeams_AndRemovesFromUnmatchedMappedTeams()
+    {
+        // Setup mappings:
+        // "CN=Developers,DC=local" -> "MyOrg/Devs"
+        // "CN=Managers,DC=local" -> "MyOrg/Managers"
+        var mappings = new Dictionary<string, string>
+        {
+            ["CN=Developers,DC=local"] = "MyOrg/Devs",
+            ["CN=Managers,DC=local"] = "MyOrg/Managers"
+        };
+        var settings = new SystemSettings
+        {
+            LdapGroupMappingsJson = System.Text.Json.JsonSerializer.Serialize(mappings)
+        };
+
+        var username = "alice";
+
+        // Pre-create user in DB
+        using (var db = _dbFactory.CreateDbContext())
+        {
+            db.Users.Add(new User
+            {
+                Username = username,
+                Email = "alice@example.com",
+                PasswordHash = "hash",
+                IsActive = true
+            });
+            await db.SaveChangesAsync();
+        }
+
+        // Test 1: User is member of CN=Developers,DC=local
+        var memberOf = new List<string> { "CN=Developers,DC=local" };
+        await _ldapAuthService.SyncLdapGroupsToTeams(username, memberOf, settings);
+
+        // Verify organization, team, and member were created and user added
+        var org = await _orgService.GetOrganizationAsync("MyOrg");
+        Assert.NotNull(org);
+        var team = await _orgService.GetTeamAsync("MyOrg", "Devs");
+        Assert.NotNull(team);
+        Assert.Contains(team.Members, m => m.Username == username);
+
+        // Verify they were not added to Managers (team is null or empty)
+        var managersTeam = await _orgService.GetTeamAsync("MyOrg", "Managers");
+        if (managersTeam != null)
+        {
+            Assert.Empty(managersTeam.Members);
+        }
+
+        // Test 2: User shifts to CN=Managers,DC=local (removed from Developers)
+        var newMemberOf = new List<string> { "CN=Managers,DC=local" };
+        await _ldapAuthService.SyncLdapGroupsToTeams(username, newMemberOf, settings);
+
+        // Verify added to Managers
+        var updatedManagersTeam = await _orgService.GetTeamAsync("MyOrg", "Managers");
+        Assert.Contains(updatedManagersTeam!.Members, m => m.Username == username);
+
+        // Verify removed from Devs
+        var updatedDevsTeam = await _orgService.GetTeamAsync("MyOrg", "Devs");
+        Assert.Empty(updatedDevsTeam!.Members);
+    }
+}
+
+// ============================================================================
+// Registry Cleanup Retention Policy Tests
+// ============================================================================
+public class RegistryCleanupTests
+{
+    private readonly IDbContextFactory<AppDbContext> _dbFactory;
+    private readonly IPackageService _packageService;
+    private readonly IAdminService _adminService;
+    private readonly RegistryCleanupService _cleanupService;
+    private readonly IConfiguration _config;
+
+    public RegistryCleanupTests()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        _dbFactory = new TestDbContextFactory(options);
+        
+        var logger = NullLogger<PackageService>.Instance;
+        _packageService = new PackageService(_dbFactory, logger);
+
+        _adminService = Substitute.For<IAdminService>();
+
+        _config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Git:ProjectRoot"] = Path.Combine(Path.GetTempPath(), "mpg-cleanup-tests")
+            })
+            .Build();
+
+        var cleanupLogger = NullLogger<RegistryCleanupService>.Instance;
+        
+        var services = new ServiceCollection();
+        services.AddSingleton(_dbFactory);
+        services.AddSingleton(_adminService);
+        var serviceProvider = services.BuildServiceProvider();
+        var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
+
+        _cleanupService = new RegistryCleanupService(scopeFactory, cleanupLogger, _config);
+    }
+
+    [Fact]
+    public async Task CleanupRegistryAsync_PrunesOldGenericPackages_AndRemovesFilesFromDisk()
+    {
+        var tempBase = Path.Combine(Path.GetTempPath(), "mpg-cleanup-tests");
+        var storePath = Path.Combine(tempBase, ".packages", "generic");
+        
+        try
+        {
+            // Set retention limit to 2
+            _adminService.GetSystemSettingsAsync().Returns(new SystemSettings
+            {
+                GenericPackageRetentionCount = 2,
+                ProjectRoot = tempBase
+            });
+
+            // Create 3 versions of generic package "mypkg"
+            var pkgName = "mypkg";
+            var pkgType = "generic";
+            var owner = "alice";
+
+            var pkg = await _packageService.CreateOrUpdatePackageAsync(pkgName, pkgType, owner, "1.0.0");
+            var v1 = pkg.Versions.First(v => v.Version == "1.0.0");
+            v1.CreatedAt = DateTime.UtcNow.AddHours(-3);
+            await _packageService.AddPackageFileAsync(v1.Id, "file1.zip", 100, "sha1");
+
+            pkg = await _packageService.CreateOrUpdatePackageAsync(pkgName, pkgType, owner, "1.1.0");
+            var v2 = pkg.Versions.First(v => v.Version == "1.1.0");
+            v2.CreatedAt = DateTime.UtcNow.AddHours(-2);
+            await _packageService.AddPackageFileAsync(v2.Id, "file2.zip", 200, "sha2");
+
+            pkg = await _packageService.CreateOrUpdatePackageAsync(pkgName, pkgType, owner, "1.2.0");
+            var v3 = pkg.Versions.First(v => v.Version == "1.2.0");
+            v3.CreatedAt = DateTime.UtcNow.AddHours(-1);
+            await _packageService.AddPackageFileAsync(v3.Id, "file3.zip", 300, "sha3");
+
+            // Write mock package files to disk
+            var v1Dir = Path.Combine(storePath, pkgName, "1.0.0");
+            var v2Dir = Path.Combine(storePath, pkgName, "1.1.0");
+            var v3Dir = Path.Combine(storePath, pkgName, "1.2.0");
+
+            Directory.CreateDirectory(v1Dir);
+            Directory.CreateDirectory(v2Dir);
+            Directory.CreateDirectory(v3Dir);
+
+            File.WriteAllText(Path.Combine(v1Dir, "file1.zip"), "v1");
+            File.WriteAllText(Path.Combine(v2Dir, "file2.zip"), "v2");
+            File.WriteAllText(Path.Combine(v3Dir, "file3.zip"), "v3");
+
+            // Run cleanup
+            await _cleanupService.CleanupRegistryAsync(CancellationToken.None);
+
+            // Verify db has only latest 2 versions (1.1.0 and 1.2.0)
+            using (var db = _dbFactory.CreateDbContext())
+            {
+                var remainingVersions = await db.PackageVersions
+                    .Where(v => db.Packages.Any(p => p.Id == v.PackageId && p.Name == pkgName))
+                    .Select(v => v.Version)
+                    .ToListAsync();
+
+                Assert.Equal(2, remainingVersions.Count);
+                Assert.Contains("1.1.0", remainingVersions);
+                Assert.Contains("1.2.0", remainingVersions);
+                Assert.DoesNotContain("1.0.0", remainingVersions);
+            }
+
+            // Verify disk files for 1.0.0 were deleted, but 1.1.0 and 1.2.0 exist
+            Assert.False(Directory.Exists(v1Dir));
+            Assert.True(Directory.Exists(v2Dir));
+            Assert.True(Directory.Exists(v3Dir));
+        }
+        finally
+        {
+            if (Directory.Exists(tempBase))
+            {
+                Directory.Delete(tempBase, true);
+            }
+        }
     }
 }

@@ -1298,7 +1298,7 @@ public class WorkflowServiceTests
             .Options;
 
         var factory = new TestDbContextFactory(options);
-        _service = new WorkflowService(factory, NullLogger<WorkflowService>.Instance);
+        _service = new WorkflowService(factory, Substitute.For<ICodeSearchIndexerService>(), NullLogger<WorkflowService>.Instance);
     }
 
     [Fact]
@@ -3994,7 +3994,7 @@ public class LdapAuthServiceTests
 
         _factory = new TestDbContextFactory(options);
         _adminService = Substitute.For<IAdminService>();
-        _service = new LdapAuthService(_factory, _adminService, NullLogger<LdapAuthService>.Instance);
+        _service = new LdapAuthService(_factory, _adminService, Substitute.For<IOrganizationService>(), NullLogger<LdapAuthService>.Instance);
     }
 
     [Fact]

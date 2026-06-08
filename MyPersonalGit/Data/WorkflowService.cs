@@ -26,11 +26,13 @@ public interface IWorkflowService
 public class WorkflowService : IWorkflowService
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
+    private readonly ICodeSearchIndexerService _indexer;
     private readonly ILogger<WorkflowService> _logger;
 
-    public WorkflowService(IDbContextFactory<AppDbContext> dbFactory, ILogger<WorkflowService> logger)
+    public WorkflowService(IDbContextFactory<AppDbContext> dbFactory, ICodeSearchIndexerService indexer, ILogger<WorkflowService> logger)
     {
         _dbFactory = dbFactory;
+        _indexer = indexer;
         _logger = logger;
     }
 
@@ -243,6 +245,9 @@ public class WorkflowService : IWorkflowService
 
     public async Task TriggerPushWorkflowsAsync(string repoName, string repoPath, string branch, string sha, string commitMessage, string pushedBy)
     {
+        // Queue repository indexing for code search
+        try { _indexer.QueueRepositoryIndex(repoName); } catch { }
+
         try
         {
             await using var settingsDb = _dbFactory.CreateDbContext();

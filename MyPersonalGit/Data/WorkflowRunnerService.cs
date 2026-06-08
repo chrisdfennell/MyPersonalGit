@@ -1,6 +1,7 @@
 using Docker.DotNet;
 using Docker.DotNet.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using MyPersonalGit.Models;
 
 namespace MyPersonalGit.Data;
@@ -11,12 +12,14 @@ public class WorkflowRunnerService : BackgroundService
     private readonly ILogger<WorkflowRunnerService> _logger;
     private readonly IAutoMergeService _autoMergeService;
     private readonly DockerClient? _docker;
+    private readonly IConfiguration _config;
 
-    public WorkflowRunnerService(IServiceScopeFactory scopeFactory, ILogger<WorkflowRunnerService> logger, IAutoMergeService autoMergeService)
+    public WorkflowRunnerService(IServiceScopeFactory scopeFactory, ILogger<WorkflowRunnerService> logger, IAutoMergeService autoMergeService, IConfiguration config)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
         _autoMergeService = autoMergeService;
+        _config = config;
 
         try
         {
@@ -98,7 +101,8 @@ public class WorkflowRunnerService : BackgroundService
         });
         try { await db.SaveChangesAsync(ct); } catch { }
 
-        var runSuccess = await ExecuteJobsAsync(run, ct);
+        var projectRoot = await GetProjectRootAsync(db);
+        var runSuccess = await ExecuteJobsAsync(run, projectRoot, ct);
 
         // Re-fetch run so we have fresh job/step data for tag creation
         db.ChangeTracker.Clear();
@@ -139,7 +143,10 @@ public class WorkflowRunnerService : BackgroundService
     {
         try
         {
-            var repoPath = GetRepoPath(completedRun.RepoName);
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
+            var projectRoot = await GetProjectRootAsync(db);
+            var repoPath = GetRepoPath(completedRun.RepoName, projectRoot);
             if (repoPath == null) return;
 
             var parser = new WorkflowYamlParser();
@@ -177,7 +184,6 @@ public class WorkflowRunnerService : BackgroundService
                 _logger.LogInformation("Triggering workflow '{Name}' via workflow_run from '{Source}'",
                     wf.Name, completedRun.WorkflowName);
 
-                using var scope = _scopeFactory.CreateScope();
                 var workflowService = scope.ServiceProvider.GetRequiredService<IWorkflowService>();
                 await workflowService.CreateWorkflowRunWithJobsAsync(
                     completedRun.RepoName, wf, completedRun.Branch, completedRun.CommitSha,
@@ -194,7 +200,7 @@ public class WorkflowRunnerService : BackgroundService
     /// Executes all jobs in the run, respecting needs: dependencies, job-level if:,
     /// and running independent jobs in parallel. Collects job outputs for downstream consumption.
     /// </summary>
-    private async Task<bool> ExecuteJobsAsync(WorkflowRun run, CancellationToken ct)
+    private async Task<bool> ExecuteJobsAsync(WorkflowRun run, string projectRoot, CancellationToken ct)
     {
         var jobs = run.Jobs.ToList();
 
@@ -203,7 +209,7 @@ public class WorkflowRunnerService : BackgroundService
         try
         {
             var mpParser = new WorkflowYamlParser();
-            var mpDefs = mpParser.ParseFromRepo(GetRepoPath(run.RepoName) ?? "");
+            var mpDefs = mpParser.ParseFromRepo(GetRepoPath(run.RepoName, projectRoot) ?? "");
             var mpWf = mpDefs.FirstOrDefault(d => d.Name == run.WorkflowName);
             if (mpWf != null)
                 maxParallel = mpWf.Jobs.Values.Max(j => j.MaxParallel);
@@ -264,7 +270,7 @@ public class WorkflowRunnerService : BackgroundService
                 if (parallelSemaphore != null) await parallelSemaphore.WaitAsync(ct);
                 try
                 {
-                    var result = await ExecuteJobById(jobId, run, upstreamOutputs, ct);
+                    var result = await ExecuteJobById(jobId, run, projectRoot, upstreamOutputs, ct);
                     completions[jobName].SetResult(result);
 
                     // Collect this job's outputs for downstream jobs
@@ -309,7 +315,7 @@ public class WorkflowRunnerService : BackgroundService
         await db.SaveChangesAsync(ct);
     }
 
-    private async Task<bool> ExecuteJobById(int jobId, WorkflowRun run, Dictionary<string, string>? upstreamOutputs, CancellationToken ct)
+    private async Task<bool> ExecuteJobById(int jobId, WorkflowRun run, string projectRoot, Dictionary<string, string>? upstreamOutputs, CancellationToken ct)
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
@@ -322,7 +328,7 @@ public class WorkflowRunnerService : BackgroundService
 
         try
         {
-            return await ExecuteJob(db, run, job, upstreamOutputs, timeoutCts.Token);
+            return await ExecuteJob(db, run, job, projectRoot, upstreamOutputs, timeoutCts.Token);
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
@@ -340,7 +346,7 @@ public class WorkflowRunnerService : BackgroundService
         }
     }
 
-    private async Task<bool> ExecuteJob(AppDbContext db, WorkflowRun run, WorkflowJob job, Dictionary<string, string>? upstreamOutputs, CancellationToken ct)
+    private async Task<bool> ExecuteJob(AppDbContext db, WorkflowRun run, WorkflowJob job, string projectRoot, Dictionary<string, string>? upstreamOutputs, CancellationToken ct)
     {
         job.Status = WorkflowStatus.InProgress;
         job.StartedAt = DateTime.UtcNow;
@@ -403,7 +409,7 @@ public class WorkflowRunnerService : BackgroundService
                 new Progress<JSONMessage>(),
                 ct);
 
-            var repoMount = GetRepoPath(run.RepoName);
+            var repoMount = GetRepoPath(run.RepoName, projectRoot);
 
             var envVars = new List<string>();
             try
@@ -423,11 +429,12 @@ public class WorkflowRunnerService : BackgroundService
             }
             catch { }
 
+            Dictionary<string, string>? secrets = null;
             try
             {
                 using var secretsScope = _scopeFactory.CreateScope();
                 var secretsService = secretsScope.ServiceProvider.GetRequiredService<ISecretsService>();
-                var secrets = await secretsService.GetAllSecretsForRunAsync(run.RepoName);
+                secrets = await secretsService.GetAllSecretsForRunAsync(run.RepoName);
                 foreach (var (name, value) in secrets)
                     envVars.Add($"{name}={value}");
                 _logger.LogInformation("Loaded {Count} secret(s) for repo '{RepoName}'", secrets.Count, run.RepoName);
@@ -486,6 +493,26 @@ public class WorkflowRunnerService : BackgroundService
                 binds.Add("/var/run/docker.sock:/var/run/docker.sock");
             if (artifactHostDir != null)
                 binds.Add($"{artifactHostDir}:/artifacts");
+
+            try
+            {
+                var cacheBaseDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".mypersonalgit", "cache");
+                var nugetCacheDir = Path.Combine(cacheBaseDir, "nuget");
+                var npmCacheDir = Path.Combine(cacheBaseDir, "npm");
+                var pipCacheDir = Path.Combine(cacheBaseDir, "pip");
+
+                Directory.CreateDirectory(nugetCacheDir);
+                Directory.CreateDirectory(npmCacheDir);
+                Directory.CreateDirectory(pipCacheDir);
+
+                binds.Add($"{nugetCacheDir}:/root/.nuget/packages");
+                binds.Add($"{npmCacheDir}:/root/.npm");
+                binds.Add($"{pipCacheDir}:/root/.cache/pip");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to initialize and mount local package cache directories");
+            }
 
             var createParams = new CreateContainerParameters
             {
@@ -624,7 +651,7 @@ public class WorkflowRunnerService : BackgroundService
                 try
                 {
                     var shellParser = new WorkflowYamlParser();
-                    var shellDefs = shellParser.ParseFromRepo(GetRepoPath(run.RepoName) ?? "");
+                    var shellDefs = shellParser.ParseFromRepo(GetRepoPath(run.RepoName, projectRoot) ?? "");
                     var shellWf = shellDefs.FirstOrDefault(d => d.Name == run.WorkflowName);
                     if (shellWf != null)
                     {
@@ -650,7 +677,7 @@ public class WorkflowRunnerService : BackgroundService
                 var (exitCode, output) = await ExecInContainer(containerId,
                     new string[] { shell ?? "sh", "-c", wrappedCommand }, execEnv, ct);
 
-                step.Output = output;
+                step.Output = MaskSecrets(output, secrets);
                 step.CompletedAt = DateTime.UtcNow;
 
                 // Read and process $GITHUB_OUTPUT entries written by the step
@@ -659,9 +686,12 @@ public class WorkflowRunnerService : BackgroundService
                     new[] { "sh", "-c", "cat /tmp/github_output 2>/dev/null; : > /tmp/github_output" }, null, ct);
 
                 if (!string.IsNullOrWhiteSpace(outputFileContent))
+                {
+                    var maskedOutput = MaskSecrets(outputFileContent, secrets);
                     _logger.LogInformation("Step '{StepName}' GITHUB_OUTPUT ({Len} chars): {Preview}",
-                        step.Name, outputFileContent.Length,
-                        outputFileContent.Length > 200 ? outputFileContent[..200] + "..." : outputFileContent);
+                        step.Name, maskedOutput.Length,
+                        maskedOutput.Length > 200 ? maskedOutput[..200] + "..." : maskedOutput);
+                }
 
                 ParseGitHubOutput(outputFileContent, stepOutputs);
 
@@ -712,7 +742,7 @@ public class WorkflowRunnerService : BackgroundService
             try
             {
                 var parser = new WorkflowYamlParser();
-                var defs = parser.ParseFromRepo(GetRepoPath(run.RepoName) ?? "");
+                var defs = parser.ParseFromRepo(GetRepoPath(run.RepoName, projectRoot) ?? "");
                 var wfDef = defs.FirstOrDefault(d => d.Name == run.WorkflowName);
                 // Find the base job name (strip matrix suffix)
                 var baseJobName = job.Name.Contains(" (") ? job.Name[..job.Name.IndexOf(" (")] : job.Name;
@@ -868,7 +898,10 @@ public class WorkflowRunnerService : BackgroundService
 
             if (string.IsNullOrEmpty(newTag)) return false;
 
-            var repoPath = GetRepoPath(run.RepoName);
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext();
+            var projectRoot = await GetProjectRootAsync(db);
+            var repoPath = GetRepoPath(run.RepoName, projectRoot);
             if (repoPath == null) return false;
 
             using var repo = new LibGit2Sharp.Repository(repoPath);
@@ -1048,10 +1081,35 @@ public class WorkflowRunnerService : BackgroundService
         await outputStream.WriteAsync(new byte[1024]);
     }
 
-    private static string? GetRepoPath(string repoName)
+    private async Task<string> GetProjectRootAsync(AppDbContext db)
     {
-        var basePath = "/repos";
-        var path = Path.Combine(basePath, repoName);
+        var settings = await db.SystemSettings.FirstOrDefaultAsync();
+        if (settings != null && !string.IsNullOrEmpty(settings.ProjectRoot))
+            return settings.ProjectRoot;
+
+        return _config["Git:ProjectRoot"] ?? _config["Git:ReposPath"] ?? "/repos";
+    }
+
+    internal static string MaskSecrets(string? output, Dictionary<string, string>? secrets)
+    {
+        if (string.IsNullOrEmpty(output) || secrets == null || secrets.Count == 0)
+            return output ?? "";
+
+        var sb = new System.Text.StringBuilder(output);
+        foreach (var kvp in secrets)
+        {
+            var val = kvp.Value;
+            if (string.IsNullOrEmpty(val) || val.Length < 3)
+                continue;
+
+            sb.Replace(val, "***");
+        }
+        return sb.ToString();
+    }
+
+    private static string? GetRepoPath(string repoName, string projectRoot)
+    {
+        var path = Path.Combine(projectRoot, repoName);
         if (Directory.Exists(path)) return path;
         if (Directory.Exists(path + ".git")) return path + ".git";
         return null;

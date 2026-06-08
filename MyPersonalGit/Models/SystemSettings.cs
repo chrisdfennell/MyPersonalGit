@@ -49,6 +49,8 @@ public class SystemSettings
     public string LdapDisplayNameAttribute { get; set; } = "displayName";
     public string LdapAdminGroupDn { get; set; } = string.Empty;
     public bool LdapSkipCertificateValidation { get; set; } = true;
+    public string LdapGroupMappingsJson { get; set; } = string.Empty;
+    public int GenericPackageRetentionCount { get; set; } = 0;
 
     // Merge Commit Signing
     public bool SignMergeCommits { get; set; }

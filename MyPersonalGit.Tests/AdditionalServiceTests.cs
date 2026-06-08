@@ -1316,6 +1316,90 @@ public class CodeSearchServiceTests
         var results = await _service.SearchAsync("searchterm");
         Assert.Empty(results);
     }
+
+    private async Task SeedDataAsync()
+    {
+        using var db = _dbFactory.CreateDbContext();
+        
+        db.Repositories.Add(new Repository { Name = "repo-public-1", IsPrivate = false, DefaultBranch = "main", Owner = "admin" });
+        db.Repositories.Add(new Repository { Name = "repo-public-2", IsPrivate = false, DefaultBranch = "develop", Owner = "admin" });
+        db.Repositories.Add(new Repository { Name = "repo-private", IsPrivate = true, DefaultBranch = "master", Owner = "admin" });
+
+        db.CodeSearchIndices.Add(new CodeSearchIndex
+        {
+            RepoName = "repo-public-1",
+            FilePath = "src/main.cs",
+            ContentHash = "sha-1",
+            Content = "public class MainClass {\n  public static void Main() {\n    Console.WriteLine(\"Hello World\");\n  }\n}",
+            IndexedAt = DateTime.UtcNow
+        });
+        db.CodeSearchIndices.Add(new CodeSearchIndex
+        {
+            RepoName = "repo-public-2",
+            FilePath = "src/Helper.cs",
+            ContentHash = "sha-2",
+            Content = "public class HelperClass {\n  public void DoSomething() {\n    // helper logic here\n  }\n}",
+            IndexedAt = DateTime.UtcNow
+        });
+        db.CodeSearchIndices.Add(new CodeSearchIndex
+        {
+            RepoName = "repo-private",
+            FilePath = "src/PrivateConfig.cs",
+            ContentHash = "sha-3",
+            Content = "public class PrivateConfig {\n  public string SecretKey = \"super-secret-value\";\n}",
+            IndexedAt = DateTime.UtcNow
+        });
+
+        await db.SaveChangesAsync();
+    }
+
+    [Fact]
+    public async Task SearchAsync_ReturnsMatches_WhenQueryExists()
+    {
+        await SeedDataAsync();
+
+        var results = await _service.SearchAsync("MainClass");
+        Assert.Single(results);
+        Assert.Equal("repo-public-1", results[0].RepoName);
+        Assert.Equal("src/main.cs", results[0].FilePath);
+        Assert.Equal("main", results[0].Branch);
+        Assert.Single(results[0].Matches);
+        Assert.Equal(1, results[0].Matches[0].LineNumber);
+        Assert.Contains("public class MainClass", results[0].Matches[0].Line);
+    }
+
+    [Fact]
+    public async Task SearchAsync_FiltersByRepoName()
+    {
+        await SeedDataAsync();
+
+        var results = await _service.SearchAsync("super-secret-value", repoName: "repo-private");
+        Assert.Single(results);
+        Assert.Equal("repo-private", results[0].RepoName);
+        Assert.Equal("master", results[0].Branch);
+    }
+
+    [Fact]
+    public async Task SearchAsync_DoesNotReturnPrivateRepoMatches_WhenRepoNotSpecified()
+    {
+        await SeedDataAsync();
+
+        var results = await _service.SearchAsync("super-secret-value");
+        Assert.Empty(results);
+    }
+
+    [Fact]
+    public async Task SearchAsync_FiltersByFileExtension()
+    {
+        await SeedDataAsync();
+
+        var results = await _service.SearchAsync("public", fileExtension: "cs");
+        Assert.Equal(2, results.Count);
+        Assert.All(results, r => Assert.EndsWith(".cs", r.FilePath));
+
+        var noResults = await _service.SearchAsync("public", fileExtension: "js");
+        Assert.Empty(noResults);
+    }
 }
 
 // ============================================================================

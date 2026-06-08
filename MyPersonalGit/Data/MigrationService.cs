@@ -33,6 +33,7 @@ public class MigrationService : IMigrationService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _config;
     private readonly MigrationChannel _channel;
+    private readonly ICodeSearchIndexerService _indexer;
     private readonly ILogger<MigrationService> _logger;
 
     public MigrationService(
@@ -43,6 +44,7 @@ public class MigrationService : IMigrationService
         IHttpClientFactory httpClientFactory,
         IConfiguration config,
         MigrationChannel channel,
+        ICodeSearchIndexerService indexer,
         ILogger<MigrationService> logger)
     {
         _dbFactory = dbFactory;
@@ -52,6 +54,7 @@ public class MigrationService : IMigrationService
         _httpClientFactory = httpClientFactory;
         _config = config;
         _channel = channel;
+        _indexer = indexer;
         _logger = logger;
     }
 
@@ -205,6 +208,9 @@ public class MigrationService : IMigrationService
             task.CompletedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
 
+            // Queue repository indexing for code search
+            try { _indexer.QueueRepositoryIndex(task.TargetRepoName); } catch { }
+ 
             _logger.LogInformation("Migration task {Id} completed: {SourceUrl} -> {TargetRepo}", taskId, task.SourceUrl, task.TargetRepoName);
         }
         catch (Exception ex)
