@@ -862,6 +862,33 @@ public class CommitCommentServiceTests
 // SecretsService Tests
 // ============================================================================
 // ============================================================================
+// WebhookDeliveryService SSRF guard (IP allow/deny)
+// ============================================================================
+public class WebhookSsrfGuardTests
+{
+    [Theory]
+    [InlineData("8.8.8.8", false)]            // public
+    [InlineData("1.1.1.1", false)]            // public
+    [InlineData("127.0.0.1", true)]           // loopback
+    [InlineData("10.0.0.5", true)]            // private 10/8
+    [InlineData("192.168.1.10", true)]        // private 192.168/16
+    [InlineData("172.16.0.1", true)]          // private 172.16/12
+    [InlineData("172.32.0.1", false)]         // just outside 172.16/12 -> public
+    [InlineData("169.254.169.254", true)]     // link-local cloud metadata
+    [InlineData("100.64.0.1", true)]          // CGNAT
+    [InlineData("0.0.0.0", true)]             // this-network
+    [InlineData("224.0.0.1", true)]           // multicast
+    [InlineData("::1", true)]                 // IPv6 loopback
+    [InlineData("fc00::1", true)]             // IPv6 unique-local
+    [InlineData("fe80::1", true)]             // IPv6 link-local
+    [InlineData("2606:4700:4700::1111", false)] // public IPv6 (Cloudflare)
+    public void IsPrivateOrReserved_ClassifiesCorrectly(string ip, bool expected)
+    {
+        Assert.Equal(expected, MyPersonalGit.Data.WebhookDeliveryService.IsPrivateOrReserved(System.Net.IPAddress.Parse(ip)));
+    }
+}
+
+// ============================================================================
 // RegistryController sha256 digest validation (path-traversal / crash guard)
 // ============================================================================
 public class RegistryDigestValidationTests

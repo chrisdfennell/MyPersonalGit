@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -14,13 +16,22 @@ public interface IWebhookDeliveryService
 public class WebhookDeliveryService : IWebhookDeliveryService
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
-    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<WebhookDeliveryService> _logger;
 
-    public WebhookDeliveryService(IDbContextFactory<AppDbContext> dbFactory, IHttpClientFactory httpClientFactory, ILogger<WebhookDeliveryService> logger)
+    // No auto-redirect: stops an attacker-controlled endpoint from 30x-redirecting the
+    // request to an internal address after the initial SSRF check passes.
+    private static readonly HttpClient _httpClient = new(new SocketsHttpHandler
+    {
+        AllowAutoRedirect = false,
+        ConnectTimeout = TimeSpan.FromSeconds(5)
+    })
+    {
+        Timeout = TimeSpan.FromSeconds(10)
+    };
+
+    public WebhookDeliveryService(IDbContextFactory<AppDbContext> dbFactory, ILogger<WebhookDeliveryService> logger)
     {
         _dbFactory = dbFactory;
-        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
@@ -53,8 +64,16 @@ public class WebhookDeliveryService : IWebhookDeliveryService
 
     private async Task DeliverWebhookAsync(Webhook webhook, string eventType, string payloadJson)
     {
-        var client = _httpClientFactory.CreateClient();
-        client.Timeout = TimeSpan.FromSeconds(10);
+        // SSRF guard: refuse to deliver to non-public destinations (loopback/private/
+        // link-local/reserved), which would let a webhook reach internal services or
+        // cloud metadata and exfiltrate the response via the stored delivery record.
+        if (!await IsDeliverableUrlAsync(webhook.Url))
+        {
+            await RecordDeliveryAsync(webhook, eventType, payloadJson, 0,
+                "Blocked: webhook URL is not a public address (loopback/private/link-local/reserved).", false);
+            _logger.LogWarning("Blocked webhook {WebhookId} to non-public URL {Url}", webhook.Id, webhook.Url);
+            return;
+        }
 
         // Compute HMAC-SHA256 signature
         var signature = ComputeSignature(payloadJson, webhook.Secret);
@@ -71,7 +90,7 @@ public class WebhookDeliveryService : IWebhookDeliveryService
 
         try
         {
-            var response = await client.SendAsync(request);
+            var response = await _httpClient.SendAsync(request);
             statusCode = (int)response.StatusCode;
             responseBody = await response.Content.ReadAsStringAsync();
             success = response.IsSuccessStatusCode;
@@ -82,7 +101,12 @@ public class WebhookDeliveryService : IWebhookDeliveryService
             statusCode = 0;
         }
 
-        // Record delivery
+        await RecordDeliveryAsync(webhook, eventType, payloadJson, statusCode, responseBody, success);
+        _logger.LogInformation("Webhook delivered: {EventType} to {Url} - Status: {StatusCode}", eventType, webhook.Url, statusCode);
+    }
+
+    private async Task RecordDeliveryAsync(Webhook webhook, string eventType, string payloadJson, int statusCode, string? responseBody, bool success)
+    {
         using var db = _dbFactory.CreateDbContext();
         db.WebhookDeliveries.Add(new WebhookDelivery
         {
@@ -95,13 +119,67 @@ public class WebhookDeliveryService : IWebhookDeliveryService
             Success = success
         });
 
-        // Update last triggered
         var wh = await db.Webhooks.FindAsync(webhook.Id);
         if (wh != null)
             wh.LastTriggeredAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
-        _logger.LogInformation("Webhook delivered: {EventType} to {Url} - Status: {StatusCode}", eventType, webhook.Url, statusCode);
+    }
+
+    // ── SSRF protection ──────────────────────────────────────────────
+    // Only allow http/https to a host that resolves entirely to public IP addresses.
+    private static async Task<bool> IsDeliverableUrlAsync(string url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            return false;
+        if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+            return false;
+
+        IPAddress[] addresses;
+        try
+        {
+            addresses = await Dns.GetHostAddressesAsync(uri.DnsSafeHost);
+        }
+        catch
+        {
+            return false;
+        }
+
+        // Refuse if there are no addresses or ANY resolved address is non-public
+        // (defends against split-horizon DNS returning a mix).
+        return addresses.Length > 0 && addresses.All(ip => !IsPrivateOrReserved(ip));
+    }
+
+    internal static bool IsPrivateOrReserved(IPAddress ip)
+    {
+        if (IPAddress.IsLoopback(ip))
+            return true;
+
+        if (ip.IsIPv4MappedToIPv6)
+            ip = ip.MapToIPv4();
+
+        if (ip.AddressFamily == AddressFamily.InterNetwork)
+        {
+            var b = ip.GetAddressBytes();
+            return b[0] == 0                                   // 0.0.0.0/8
+                || b[0] == 10                                  // 10/8 private
+                || (b[0] == 100 && b[1] >= 64 && b[1] <= 127)  // 100.64/10 CGNAT
+                || b[0] == 127                                 // loopback
+                || (b[0] == 169 && b[1] == 254)                // 169.254/16 link-local (incl. cloud metadata 169.254.169.254)
+                || (b[0] == 172 && b[1] >= 16 && b[1] <= 31)   // 172.16/12 private
+                || (b[0] == 192 && b[1] == 168)                // 192.168/16 private
+                || b[0] >= 224;                                // 224/4 multicast + 240/4 reserved
+        }
+
+        if (ip.AddressFamily == AddressFamily.InterNetworkV6)
+        {
+            if (ip.IsIPv6LinkLocal || ip.IsIPv6SiteLocal || ip.IsIPv6Multicast)
+                return true;
+            var b = ip.GetAddressBytes();
+            return (b[0] & 0xFE) == 0xFC;                      // fc00::/7 unique local
+        }
+
+        return true; // unknown address family — deny
     }
 
     private static string ComputeSignature(string payload, string secret)
