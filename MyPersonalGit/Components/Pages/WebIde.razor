@@ -2826,9 +2826,9 @@
 
     // ---- Language Display ----
 
-    private static string GetLanguageDisplayName(string path)
+    private static string GetLanguageDisplayName(string? path)
     {
-        var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+        var ext = System.IO.Path.GetExtension(path ?? "").ToLowerInvariant();
         return ext switch
         {
             ".cs" => "C#",

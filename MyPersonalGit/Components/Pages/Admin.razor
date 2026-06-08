@@ -1055,10 +1055,6 @@ else
                         <div class="alert alert-warning">
                             <i class="bi bi-exclamation-triangle"></i> <strong>Warning:</strong> Restoring a backup will overwrite all current data. The application should be restarted after a restore.
                         </div>
-                        @if (!string.IsNullOrEmpty(RestoreMessage))
-                        {
-                            <div class="alert @(RestoreSuccess ? "alert-success" : "alert-danger")">@RestoreMessage</div>
-                        }
                         <p class="text-muted small">Use the API directly for restore: <code>POST /api/v1/admin/restore</code> with a tar.gz file.</p>
                     </div>
                 </div>
@@ -1267,8 +1263,6 @@ else
     private string EditUserPassword = "";
     private bool BackupInProgress = false;
     private string? BackupMessage;
-    private string? RestoreMessage;
-    private bool RestoreSuccess;
 
     // Test email
     private string TestEmailAddress = "";

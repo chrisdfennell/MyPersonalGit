@@ -648,7 +648,7 @@ public class WorkflowRunnerService : BackgroundService
                 };
 
                 var (exitCode, output) = await ExecInContainer(containerId,
-                    new[] { shell, "-c", wrappedCommand }, execEnv, ct);
+                    new string[] { shell ?? "sh", "-c", wrappedCommand }, execEnv, ct);
 
                 step.Output = output;
                 step.CompletedAt = DateTime.UtcNow;
