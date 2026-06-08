@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MyPersonalGit.Data;
+using MyPersonalGit.Models;
 
 namespace MyPersonalGit.Controllers;
 
@@ -28,6 +29,7 @@ public class WebIdeController : ControllerBase
     private readonly IWebIdeService _ideService;
     private readonly IRepositoryService _repoService;
     private readonly IAuthService _authService;
+    private readonly ICollaboratorService _collaboratorService;
     private readonly IConfiguration _config;
     private readonly ILogger<WebIdeController> _logger;
 
@@ -35,12 +37,14 @@ public class WebIdeController : ControllerBase
         IWebIdeService ideService,
         IRepositoryService repoService,
         IAuthService authService,
+        ICollaboratorService collaboratorService,
         IConfiguration config,
         ILogger<WebIdeController> logger)
     {
         _ideService = ideService;
         _repoService = repoService;
         _authService = authService;
+        _collaboratorService = collaboratorService;
         _config = config;
         _logger = logger;
     }
@@ -64,6 +68,30 @@ public class WebIdeController : ControllerBase
         }
 
         return null; // authorized
+    }
+
+    // Write operations require ownership or Write+ collaborator permission, regardless of repo visibility.
+    private async Task<IActionResult?> EnsureCanWrite(string repoName)
+    {
+        if (User.Identity?.IsAuthenticated != true)
+            return Unauthorized(new { error = "Authentication required" });
+
+        var repo = await _repoService.GetRepositoryAsync(repoName);
+        if (repo == null)
+            return NotFound(new { error = $"Repository '{repoName}' not found" });
+
+        var currentUser = User.Identity?.Name;
+        if (currentUser == null)
+            return Unauthorized(new { error = "Authentication required" });
+
+        var isOwner = repo.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase);
+        if (isOwner || await _collaboratorService.HasPermissionAsync(repoName, currentUser, CollaboratorPermission.Write))
+            return null; // authorized
+
+        // Don't disclose the existence of private repos to users without access.
+        return repo.IsPrivate
+            ? NotFound(new { error = $"Repository '{repoName}' not found" })
+            : StatusCode(StatusCodes.Status403Forbidden, new { error = "You do not have write access to this repository" });
     }
 
     private async Task<(string username, string email)> GetCurrentUserInfoAsync()
@@ -151,7 +179,7 @@ public class WebIdeController : ControllerBase
     [HttpPost("{repoName}/commit")]
     public async Task<IActionResult> Commit(string repoName, [FromBody] IdeCommitRequest request)
     {
-        var authResult = await EnsureAuthenticatedAndAuthorized(repoName);
+        var authResult = await EnsureCanWrite(repoName);
         if (authResult != null) return authResult;
 
         if (string.IsNullOrWhiteSpace(request.Message))
@@ -184,7 +212,7 @@ public class WebIdeController : ControllerBase
     [HttpPost("{repoName}/create-file")]
     public async Task<IActionResult> CreateFile(string repoName, [FromBody] IdeCreateFileRequest request)
     {
-        var authResult = await EnsureAuthenticatedAndAuthorized(repoName);
+        var authResult = await EnsureCanWrite(repoName);
         if (authResult != null) return authResult;
 
         if (string.IsNullOrWhiteSpace(request.Path))
@@ -212,7 +240,7 @@ public class WebIdeController : ControllerBase
     [HttpPost("{repoName}/delete-path")]
     public async Task<IActionResult> DeletePath(string repoName, [FromBody] IdeDeletePathRequest request)
     {
-        var authResult = await EnsureAuthenticatedAndAuthorized(repoName);
+        var authResult = await EnsureCanWrite(repoName);
         if (authResult != null) return authResult;
 
         if (string.IsNullOrWhiteSpace(request.Path))
@@ -239,7 +267,7 @@ public class WebIdeController : ControllerBase
     [HttpPost("{repoName}/rename")]
     public async Task<IActionResult> Rename(string repoName, [FromBody] IdeRenameRequest request)
     {
-        var authResult = await EnsureAuthenticatedAndAuthorized(repoName);
+        var authResult = await EnsureCanWrite(repoName);
         if (authResult != null) return authResult;
 
         if (string.IsNullOrWhiteSpace(request.OldPath) || string.IsNullOrWhiteSpace(request.NewPath))

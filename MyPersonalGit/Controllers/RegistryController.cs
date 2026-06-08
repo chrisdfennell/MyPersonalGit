@@ -16,12 +16,21 @@ namespace MyPersonalGit.Controllers;
 public class RegistryController : ControllerBase
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
+    private readonly IRepositoryService _repoService;
+    private readonly ICollaboratorService _collaboratorService;
     private readonly IConfiguration _config;
     private readonly ILogger<RegistryController> _logger;
 
-    public RegistryController(IDbContextFactory<AppDbContext> dbFactory, IConfiguration config, ILogger<RegistryController> logger)
+    public RegistryController(
+        IDbContextFactory<AppDbContext> dbFactory,
+        IRepositoryService repoService,
+        ICollaboratorService collaboratorService,
+        IConfiguration config,
+        ILogger<RegistryController> logger)
     {
         _dbFactory = dbFactory;
+        _repoService = repoService;
+        _collaboratorService = collaboratorService;
         _config = config;
         _logger = logger;
     }
@@ -30,13 +39,50 @@ public class RegistryController : ControllerBase
     private string BlobStorePath => Path.Combine(ProjectRoot, ".registry", "blobs", "sha256");
     private string UploadStorePath => Path.Combine(ProjectRoot, ".registry", "uploads");
 
-    private string GetBlobPath(string digest)
+    // Only accept well-formed sha256 digests; rejects path-traversal and avoids slicing crashes.
+    private static bool IsValidSha256Digest(string? digest)
     {
+        if (string.IsNullOrEmpty(digest)) return false;
+        var hash = digest.StartsWith("sha256:") ? digest[7..] : digest;
+        return hash.Length == 64 && hash.All(c => (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'));
+    }
+
+    private string? GetBlobPath(string digest)
+    {
+        if (!IsValidSha256Digest(digest)) return null;
         var hash = digest.StartsWith("sha256:") ? digest[7..] : digest;
         return Path.Combine(BlobStorePath, hash[..2], hash);
     }
 
     private string GetUploadPath(string uuid) => Path.Combine(UploadStorePath, uuid);
+
+    // Enforces repo visibility/ownership for registry ops that map to a known repository.
+    // The registry auth middleware already requires a valid token for writes; this only *tightens*
+    // access where a matching repository exists (prevents pushing/pulling another user's images).
+    private async Task<IActionResult?> AuthorizeAsync(string name, bool requireWrite)
+    {
+        var repo = await _repoService.GetRepositoryAsync(name);
+        if (repo == null) return null; // no matching repo — nothing extra to enforce
+
+        var currentUser = User.Identity?.Name;
+        var isOwner = currentUser != null && repo.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase);
+
+        if (requireWrite)
+        {
+            if (isOwner) return null;
+            if (currentUser != null &&
+                await _collaboratorService.HasPermissionAsync(name, currentUser, CollaboratorPermission.Write))
+                return null;
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { errors = new[] { new { code = "DENIED", message = "Write access to this repository is required" } } });
+        }
+
+        // Read: public repos are world-readable; private repos require read access.
+        if (!repo.IsPrivate || isOwner) return null;
+        if (currentUser != null && await _collaboratorService.IsCollaboratorAsync(name, currentUser))
+            return null;
+        return NotFound();
+    }
 
     // GET /v2/ — Version check
     [HttpGet("/v2/")]
@@ -67,6 +113,9 @@ public class RegistryController : ControllerBase
         var (name, action, reference) = ParseRoute(rest);
         if (name == null) return NotFound();
 
+        var authz = await AuthorizeAsync(name, requireWrite: false);
+        if (authz != null) return authz;
+
         if (action == "tags" && reference == "list")
             return await ListTags(name);
         if (action == "manifests")
@@ -83,6 +132,9 @@ public class RegistryController : ControllerBase
         var (name, action, reference) = ParseRoute(rest);
         if (name == null) return NotFound();
 
+        var authz = await AuthorizeAsync(name, requireWrite: false);
+        if (authz != null) return authz;
+
         if (action == "manifests")
             return await HeadManifest(name, reference);
         if (action == "blobs" && reference != null)
@@ -97,6 +149,9 @@ public class RegistryController : ControllerBase
     {
         var (name, action, reference) = ParseRoute(rest);
         if (name == null) return NotFound();
+
+        var authz = await AuthorizeAsync(name, requireWrite: true);
+        if (authz != null) return authz;
 
         if (action == "manifests")
             return await PutManifest(name, reference);
@@ -113,6 +168,9 @@ public class RegistryController : ControllerBase
         var (name, action, reference) = ParseRoute(rest);
         if (name == null) return NotFound();
 
+        var authz = await AuthorizeAsync(name, requireWrite: true);
+        if (authz != null) return authz;
+
         if (action == "blobs" && reference == "uploads/")
             return await InitiateBlobUpload(name);
 
@@ -126,6 +184,9 @@ public class RegistryController : ControllerBase
         var (name, action, reference) = ParseRoute(rest);
         if (name == null) return NotFound();
 
+        var authz = await AuthorizeAsync(name, requireWrite: true);
+        if (authz != null) return authz;
+
         if (action == "blobs" && reference != null && reference.StartsWith("uploads/"))
             return await UploadBlobChunk(name, reference);
 
@@ -137,6 +198,9 @@ public class RegistryController : ControllerBase
     {
         var (name, action, reference) = ParseRoute(rest);
         if (name == null) return NotFound();
+
+        var authz = await AuthorizeAsync(name, requireWrite: true);
+        if (authz != null) return authz;
 
         if (action == "manifests")
             return await DeleteManifest(name, reference);
@@ -254,7 +318,7 @@ public class RegistryController : ControllerBase
     private async Task<IActionResult> HeadBlob(string name, string digest)
     {
         var blobPath = GetBlobPath(digest);
-        if (!System.IO.File.Exists(blobPath)) return NotFound();
+        if (blobPath == null || !System.IO.File.Exists(blobPath)) return NotFound();
 
         var fi = new FileInfo(blobPath);
         Response.Headers["Docker-Content-Digest"] = digest;
@@ -266,7 +330,7 @@ public class RegistryController : ControllerBase
     private async Task<IActionResult> GetBlob(string name, string digest)
     {
         var blobPath = GetBlobPath(digest);
-        if (!System.IO.File.Exists(blobPath)) return NotFound();
+        if (blobPath == null || !System.IO.File.Exists(blobPath)) return NotFound();
 
         Response.Headers["Docker-Content-Digest"] = digest;
         return PhysicalFile(blobPath, "application/octet-stream");
@@ -338,6 +402,11 @@ public class RegistryController : ControllerBase
 
         // Move to blob store
         var blobPath = GetBlobPath(expectedDigest);
+        if (blobPath == null)
+        {
+            System.IO.File.Delete(uploadPath);
+            return BadRequest(new { errors = new[] { new { code = "DIGEST_INVALID", message = "Invalid digest format" } } });
+        }
         Directory.CreateDirectory(Path.GetDirectoryName(blobPath)!);
         System.IO.File.Move(uploadPath, blobPath, overwrite: true);
 

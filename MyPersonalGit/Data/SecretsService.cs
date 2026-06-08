@@ -34,9 +34,22 @@ public class SecretsService : ISecretsService
         _dbFactory = dbFactory;
         _logger = logger;
 
-        // Derive encryption key from a configured secret or a default based on the DB connection string
-        var keySource = config["Secrets:EncryptionKey"] ?? config.GetConnectionString("Default") ?? "MyPersonalGit-Default-Key";
-        _encryptionKey = DeriveKey(keySource);
+        // Encryption key resolution — no hardcoded/predictable fallback:
+        //   1. Secrets:EncryptionKey from configuration (env var / user-secrets) — recommended.
+        //   2. Otherwise, a per-install random key generated once and persisted under the data dir.
+        var configuredKey = config["Secrets:EncryptionKey"];
+        if (!string.IsNullOrWhiteSpace(configuredKey))
+        {
+            _encryptionKey = DeriveKey(configuredKey, GetOrCreateSalt(config));
+        }
+        else
+        {
+            _encryptionKey = GetOrCreatePersistedKey(config);
+            _logger.LogWarning(
+                "Secrets:EncryptionKey is not configured; using an auto-generated per-install key " +
+                "persisted under the data directory. Set Secrets:EncryptionKey (environment variable or " +
+                "user-secrets) for a stable, backed-up key that survives data-directory loss.");
+        }
     }
 
     public async Task<List<RepositorySecret>> GetSecretsAsync(string repoName)
@@ -165,16 +178,73 @@ public class SecretsService : ISecretsService
         return Encoding.UTF8.GetString(plaintextBytes);
     }
 
-    private static byte[] DeriveKey(string source)
+    private static byte[] DeriveKey(string source, byte[] salt)
     {
-        // Use PBKDF2 to derive a 256-bit key
-        var salt = Encoding.UTF8.GetBytes("MyPersonalGit.Secrets.v1");
+        // Use PBKDF2 to derive a 256-bit key from a (possibly low-entropy) passphrase.
         return Rfc2898DeriveBytes.Pbkdf2(
             Encoding.UTF8.GetBytes(source),
             salt,
             iterations: 100_000,
             HashAlgorithmName.SHA256,
             outputLength: 32);
+    }
+
+    private static string SecretsDirectory(IConfiguration config)
+    {
+        var root = config["Git:ProjectRoot"] ?? "/repos";
+        var dir = Path.Combine(root, ".secrets");
+        Directory.CreateDirectory(dir);
+        return dir;
+    }
+
+    // A 256-bit key generated once per install and persisted, replacing the old shared constant.
+    private static byte[] GetOrCreatePersistedKey(IConfiguration config)
+    {
+        var keyPath = Path.Combine(SecretsDirectory(config), "encryption.key");
+        if (File.Exists(keyPath))
+        {
+            try
+            {
+                var existing = Convert.FromBase64String(File.ReadAllText(keyPath).Trim());
+                if (existing.Length == 32) return existing;
+            }
+            catch { /* corrupt key file — regenerate below */ }
+        }
+
+        var key = RandomNumberGenerator.GetBytes(32);
+        File.WriteAllText(keyPath, Convert.ToBase64String(key));
+        RestrictToOwner(keyPath);
+        return key;
+    }
+
+    // A per-install random salt (replaces the old static salt) so derived keys can't be precomputed across installs.
+    private static byte[] GetOrCreateSalt(IConfiguration config)
+    {
+        var saltPath = Path.Combine(SecretsDirectory(config), "secrets.salt");
+        if (File.Exists(saltPath))
+        {
+            try
+            {
+                var existing = Convert.FromBase64String(File.ReadAllText(saltPath).Trim());
+                if (existing.Length == 16) return existing;
+            }
+            catch { /* corrupt salt file — regenerate below */ }
+        }
+
+        var salt = RandomNumberGenerator.GetBytes(16);
+        File.WriteAllText(saltPath, Convert.ToBase64String(salt));
+        RestrictToOwner(saltPath);
+        return salt;
+    }
+
+    private static void RestrictToOwner(string path)
+    {
+        try
+        {
+            if (!OperatingSystem.IsWindows())
+                File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        }
+        catch { /* best-effort hardening */ }
     }
 
     // --- Global secrets ---
