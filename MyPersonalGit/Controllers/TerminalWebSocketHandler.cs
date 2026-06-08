@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Text;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -41,6 +42,10 @@ public static class TerminalWebSocketHandler
                 await context.Response.WriteAsync("Unauthorized.");
                 return;
             }
+
+            // A terminal is arbitrary command execution — require write access to the repo.
+            if (!await WebSocketRepoAuthz.AuthorizeAsync(context, user, repoName, requireWrite: true))
+                return;
 
             // Resolve the repo working directory
             var adminService = context.RequestServices.GetRequiredService<IAdminService>();

@@ -1,6 +1,7 @@
 using System.Net.WebSockets;
 using System.Text;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -43,6 +44,10 @@ public static class DapWebSocketHandler
                 await context.Response.WriteAsync("Unauthorized.");
                 return;
             }
+
+            // The debugger checks out and runs the repo's code — require read access.
+            if (!await WebSocketRepoAuthz.AuthorizeAsync(context, user, repoName, requireWrite: false))
+                return;
 
             if (!DapSessionManager.IsSupported(language))
             {

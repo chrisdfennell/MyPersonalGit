@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -41,6 +42,10 @@ public static class TaskRunnerWebSocketHandler
                 await context.Response.WriteAsync("Unauthorized.");
                 return;
             }
+
+            // The task runner executes arbitrary shell commands — require write access.
+            if (!await WebSocketRepoAuthz.AuthorizeAsync(context, user, repoName, requireWrite: true))
+                return;
 
             var adminService = context.RequestServices.GetRequiredService<IAdminService>();
             var config = context.RequestServices.GetRequiredService<IConfiguration>();

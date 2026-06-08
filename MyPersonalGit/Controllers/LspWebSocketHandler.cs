@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Net.WebSockets;
 using System.Text;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -42,6 +43,10 @@ public static class LspWebSocketHandler
                 await context.Response.WriteAsync("Unauthorized.");
                 return;
             }
+
+            // Serving language intelligence exposes repo source — require read access.
+            if (!await WebSocketRepoAuthz.AuthorizeAsync(context, user, repoName, requireWrite: false))
+                return;
 
             if (!LspProcessManager.IsSupported(language))
             {
