@@ -4,12 +4,14 @@
 @using System.IO.Compression
 @using Microsoft.AspNetCore.Components.Forms
 @using MyPersonalGit.Data
+@using Microsoft.EntityFrameworkCore
 @using Microsoft.Extensions.Localization
 @using MyPersonalGit.Resources
 @inject IConfiguration Config
 @inject NavigationManager Nav
 @inject IJSRuntime JS
 @inject IRepositoryService RepoService
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject IAdminService AdminService
 @inject IActivityService ActivityService
 @inject ITemplateService TemplateService
@@ -485,6 +487,26 @@
             catch { }
         }
 
+        // Batch-load all repo metadata and the user's stars up front to avoid an N+1
+        // (previously 2 DB round-trips per repository inside the loop below).
+        var metaByName = new Dictionary<string, MyPersonalGit.Models.Repository>(StringComparer.OrdinalIgnoreCase);
+        foreach (var m in await RepoService.GetRepositoriesAsync())
+            metaByName[m.Name] = m;
+
+        var starredNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (UserService.IsLoggedIn)
+        {
+            try
+            {
+                using var starDb = DbFactory.CreateDbContext();
+                starredNames = (await starDb.RepositoryStars
+                    .Where(s => s.Username == UserService.Username)
+                    .Select(s => s.RepoName)
+                    .ToListAsync()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            }
+            catch { }
+        }
+
         foreach (var scanPath in pathsToScan)
         {
             var directories = Directory.GetDirectories(scanPath);
@@ -498,8 +520,8 @@
                         var latestCommit = gitRepo.Commits.FirstOrDefault();
                         var repoName = Path.GetFileName(dir);
 
-                        var repoMeta = await RepoService.GetRepositoryAsync(repoName);
-                        var isStarred = await RepoService.IsStarredAsync(repoName, UserService.Username);
+                        metaByName.TryGetValue(repoName, out var repoMeta);
+                        var isStarred = starredNames.Contains(repoName);
 
                         repositories.Add(new RepoSummary
                         {
