@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -31,9 +32,10 @@ public class GenericPackageController : ControllerBase
         if (string.IsNullOrEmpty(username))
             return Unauthorized();
 
-        var dir = Path.Combine(StorePath, name, version);
-        Directory.CreateDirectory(dir);
-        var filePath = Path.Combine(dir, filename);
+        var filePath = SafePath.CombineUnder(StorePath, name, version, filename);
+        if (filePath == null)
+            return BadRequest(new { error = "Invalid package name, version, or filename." });
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
 
         await using (var fs = new FileStream(filePath, FileMode.Create))
             await Request.Body.CopyToAsync(fs);
@@ -54,8 +56,8 @@ public class GenericPackageController : ControllerBase
     [HttpGet("{name}/{version}/{filename}")]
     public async Task<IActionResult> Download(string name, string version, string filename)
     {
-        var filePath = Path.Combine(StorePath, name, version, filename);
-        if (!System.IO.File.Exists(filePath))
+        var filePath = SafePath.CombineUnder(StorePath, name, version, filename);
+        if (filePath == null || !System.IO.File.Exists(filePath))
             return NotFound();
 
         await _packageService.IncrementDownloadAsync(name, "generic", version);
@@ -93,8 +95,8 @@ public class GenericPackageController : ControllerBase
         if (string.IsNullOrEmpty(username))
             return Unauthorized();
 
-        var filePath = Path.Combine(StorePath, name, version, filename);
-        if (System.IO.File.Exists(filePath))
+        var filePath = SafePath.CombineUnder(StorePath, name, version, filename);
+        if (filePath != null && System.IO.File.Exists(filePath))
             System.IO.File.Delete(filePath);
 
         await _packageService.DeletePackageVersionAsync(name, "generic", version);

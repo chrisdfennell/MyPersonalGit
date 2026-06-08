@@ -862,6 +862,46 @@ public class CommitCommentServiceTests
 // SecretsService Tests
 // ============================================================================
 // ============================================================================
+// SafePath — path-traversal guard for user-supplied path segments
+// ============================================================================
+public class SafePathTests
+{
+    private static readonly string Base = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "mpg-safepath-base");
+
+    [Theory]
+    [InlineData("mypkg", "1.0.0", "mypkg-1.0.0.tgz")]
+    [InlineData("a", "b", "c")]
+    [InlineData("lodash", "4.17.21", "lodash-4.17.21.tgz")]
+    public void CombineUnder_AllowsSafeSegments(string a, string b, string c)
+    {
+        var result = MyPersonalGit.Services.SafePath.CombineUnder(Base, a, b, c);
+        Assert.NotNull(result);
+        Assert.StartsWith(System.IO.Path.GetFullPath(Base), result!);
+    }
+
+    [Theory]
+    [InlineData("..", "x", "y")]
+    [InlineData("x", "..", "y")]
+    [InlineData("x", "y", "..")]
+    [InlineData("x", "y", "../../etc/passwd")]
+    [InlineData("x", "y", "a/b")]
+    [InlineData("x", "y", "a\\b")]
+    [InlineData("x", "y", "")]
+    [InlineData("..\\..\\windows", "y", "z")]
+    [InlineData("x", "y", "foo..bar")]
+    public void CombineUnder_RejectsTraversalOrSubpaths(string a, string b, string c)
+    {
+        Assert.Null(MyPersonalGit.Services.SafePath.CombineUnder(Base, a, b, c));
+    }
+
+    [Fact]
+    public void CombineUnder_RejectsRootedSegment()
+    {
+        Assert.Null(MyPersonalGit.Services.SafePath.CombineUnder(Base, "x", "y", System.IO.Path.GetFullPath(System.IO.Path.GetTempPath())));
+    }
+}
+
+// ============================================================================
 // WebhookDeliveryService SSRF guard (IP allow/deny)
 // ============================================================================
 public class WebhookSsrfGuardTests
