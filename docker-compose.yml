@@ -8,6 +8,7 @@ services:
     volumes:
       - mypersonalgit-repos:/repos
       - mypersonalgit-data:/data
+      - mypersonalgit-uploads:/app/wwwroot/uploads
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - ConnectionStrings__Default=Data Source=/data/mypersonalgit.db
@@ -15,3 +16,4 @@ services:
 volumes:
   mypersonalgit-repos:
   mypersonalgit-data:
+  mypersonalgit-uploads:
