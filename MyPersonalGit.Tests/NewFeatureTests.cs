@@ -863,34 +863,8 @@ public class WorkflowYamlParserReusableTests
     [Fact]
     public void ParseYaml_DetectsWorkflowCallTrigger()
     {
-        var yaml = @"
-name: Reusable Build
-on:
-  workflow_call:
-    inputs:
-      environment:
-        description: 'Target environment'
-        required: true
-        type: string
-    outputs:
-      artifact-url:
-        description: 'URL of built artifact'
-        value: ${{ jobs.build.outputs.url }}
-    secrets:
-      deploy-key:
-        description: 'Deploy key'
-        required: true
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo hello
-";
-        // We need to use reflection or the internal parse method
-        // Since ParseFromRepo needs a real git repo, we test the definition properties
-        // by parsing via the public interface indirectly
-
-        // For now, test the parser class is defined with WorkflowCallDefinition
+        // ParseFromRepo needs a real git repo, so validate the reusable-workflow
+        // definition model directly rather than parsing a YAML string here.
         var def = new WorkflowDefinition();
         def.IsReusable = true;
         def.WorkflowCall = new WorkflowCallDefinition();
