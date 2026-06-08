@@ -256,8 +256,8 @@
                     <div class="mb-3">
                         <label class="form-label">@L["Projects_CardType"]</label>
                         <select class="form-select" @bind="NewCardType">
-                            <option value="@CardType.Note">Note</option>
-                            <option value="@CardType.Issue">Issue</option>
+                            <option value="@CardType.Note">@L["Projects_CardTypeNote"]</option>
+                            <option value="@CardType.Issue">@L["Projects_CardTypeIssue"]</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -272,7 +272,7 @@
                     {
                         <div class="mb-3">
                             <label class="form-label">@L["Projects_IssueNumber"]</label>
-                            <input type="number" class="form-control" @bind="NewCardIssueNumber" placeholder="Issue #" />
+                            <input type="number" class="form-control" @bind="NewCardIssueNumber" placeholder="@L["Projects_IssueNumberPlaceholder"]" />
                         </div>
                     }
                 </div>

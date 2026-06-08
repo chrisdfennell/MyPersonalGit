@@ -137,7 +137,7 @@
                 <div class="card mb-4">
                     <div class="card-header">
                         <h5 class="mb-0">
-                            @Statistics.ContributionsThisYear contributions in the last year
+                            @Statistics.ContributionsThisYear @L["Profile_ContributionsInLastYear"]
                         </h5>
                     </div>
                     <div class="card-body" style="overflow-x: auto;">
@@ -152,11 +152,11 @@
                             <div class="d-flex align-items-start" style="gap: 2px;">
                                 <div class="d-flex flex-column me-1" style="gap: 2px; padding-top: 18px;">
                                     <div style="height: 11px; font-size: 9px; line-height: 11px;" class="text-muted"></div>
-                                    <div style="height: 11px; font-size: 9px; line-height: 11px;" class="text-muted">Mon</div>
+                                    <div style="height: 11px; font-size: 9px; line-height: 11px;" class="text-muted">@L["Profile_DayMon"]</div>
                                     <div style="height: 11px; font-size: 9px; line-height: 11px;" class="text-muted"></div>
-                                    <div style="height: 11px; font-size: 9px; line-height: 11px;" class="text-muted">Wed</div>
+                                    <div style="height: 11px; font-size: 9px; line-height: 11px;" class="text-muted">@L["Profile_DayWed"]</div>
                                     <div style="height: 11px; font-size: 9px; line-height: 11px;" class="text-muted"></div>
-                                    <div style="height: 11px; font-size: 9px; line-height: 11px;" class="text-muted">Fri</div>
+                                    <div style="height: 11px; font-size: 9px; line-height: 11px;" class="text-muted">@L["Profile_DayFri"]</div>
                                     <div style="height: 11px; font-size: 9px; line-height: 11px;" class="text-muted"></div>
                                 </div>
                                 @for (int w = 0; w < 53; w++)
@@ -178,7 +178,7 @@
                                                 var count = hasData ? dayData!.Count : 0;
                                                 var level = hasData ? dayData!.Level : 0;
                                                 <div class="contribution-day level-@level"
-                                                     title="@count contributions on @date.ToString("MMM d, yyyy")"
+                                                     title="@count @L["Profile_ContributionsOn"] @date.ToString("MMM d, yyyy")"
                                                      style="width: 11px; height: 11px; border-radius: 2px;">
                                                 </div>
                                             }
@@ -273,7 +273,7 @@
                 @if (pinnedRepos.Any())
                 {
                     <div class="mb-4">
-                        <h5 class="mb-3"><i class="bi bi-pin-angle-fill"></i> Pinned Repositories</h5>
+                        <h5 class="mb-3"><i class="bi bi-pin-angle-fill"></i> @L["Profile_PinnedRepositories"]</h5>
                         <div class="row row-cols-1 row-cols-md-2 g-3">
                             @foreach (var pin in pinnedRepos)
                             {
@@ -313,7 +313,7 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">@L["Profile_Repositories"]</h5>
-                        <small class="text-muted">@VisibleRepos.Count() repositories</small>
+                        <small class="text-muted">@VisibleRepos.Count() @L["Profile_RepositoriesCountLabel"]</small>
                     </div>
                     @if (UserRepos.Count == 0)
                     {
@@ -333,7 +333,7 @@
                                             <div class="d-flex align-items-center mb-1">
                                                 <h6 class="mb-0 text-primary fw-bold me-2">@repo.DisplayName</h6>
                                                 <span class="badge rounded-pill border @(repo.IsPrivate ? "bg-warning bg-opacity-10 text-warning border-warning-subtle" : "text-muted") fw-normal px-2" style="font-size: 11px;">
-                                                    @(repo.IsPrivate ? "Private" : "Public")
+                                                    @(repo.IsPrivate ? L["Profile_Private"] : L["Profile_Public"])
                                                 </span>
                                             </div>
                                             @if (!string.IsNullOrEmpty(repo.Description))

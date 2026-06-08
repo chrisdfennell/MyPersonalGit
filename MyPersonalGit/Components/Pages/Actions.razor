@@ -17,7 +17,7 @@
 @rendermode InteractiveServer
 @implements IDisposable
 
-<PageTitle>Actions - @RepoName</PageTitle>
+<PageTitle>@L["Actions_Title"] - @RepoName</PageTitle>
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -143,19 +143,19 @@
                         </small>
                     </div>
                     <div class="text-end text-muted small">
-                        <div>Triggered by <strong>@selectedRun.TriggeredBy</strong></div>
-                        <div>Started: @selectedRun.CreatedAt.ToString("MMM dd, yyyy HH:mm:ss") UTC</div>
+                        <div>@L["Actions_TriggeredBy"] <strong>@selectedRun.TriggeredBy</strong></div>
+                        <div>@L["Actions_Started"]: @selectedRun.CreatedAt.ToString("MMM dd, yyyy HH:mm:ss") UTC</div>
                         @if (selectedRun.CompletedAt.HasValue)
                         {
-                            <div>Finished: @selectedRun.CompletedAt.Value.ToString("HH:mm:ss") UTC</div>
+                            <div>@L["Actions_Finished"]: @selectedRun.CompletedAt.Value.ToString("HH:mm:ss") UTC</div>
                         }
                         @if (selectedRun.CompletedAt.HasValue && selectedRun.StartedAt.HasValue)
                         {
-                            <div><strong>Total: @FormatDuration(selectedRun.CompletedAt.Value - selectedRun.StartedAt.Value)</strong></div>
+                            <div><strong>@L["Actions_Total"]: @FormatDuration(selectedRun.CompletedAt.Value - selectedRun.StartedAt.Value)</strong></div>
                         }
                         else if (selectedRun.StartedAt.HasValue)
                         {
-                            <div><i class="bi bi-hourglass-split me-1"></i>Running: @FormatDuration(DateTime.UtcNow - selectedRun.StartedAt.Value)</div>
+                            <div><i class="bi bi-hourglass-split me-1"></i>@L["Actions_Running"]: @FormatDuration(DateTime.UtcNow - selectedRun.StartedAt.Value)</div>
                         }
                         <div class="mt-2 d-flex gap-2">
                             @if (selectedRun.Status == WorkflowStatus.Queued || selectedRun.Status == WorkflowStatus.InProgress)
@@ -298,7 +298,7 @@
                             }
                             else
                             {
-                                <span>Add a <code>.github/workflows/*.yml</code> file to your repository, or create a manual run.</span>
+                                <span>@L["Actions_AddYmlPrefix"] <code>.github/workflows/*.yml</code> @L["Actions_AddYmlSuffix"]</span>
                             }
                         </p>
                     </div>
@@ -386,11 +386,11 @@
                                             }
                                         </div>
                                         <small class="text-muted">
-                                            Created @FormatDate(webhook.CreatedAt)
+                                            @L["Actions_Created"] @FormatDate(webhook.CreatedAt)
                                             @if (webhook.LastTriggeredAt.HasValue)
                                             {
                                                 <span class="mx-2">·</span>
-                                                <span>Last triggered @FormatDate(webhook.LastTriggeredAt.Value)</span>
+                                                <span>@L["Actions_LastTriggered"] @FormatDate(webhook.LastTriggeredAt.Value)</span>
                                             }
                                         </small>
                                     </div>
@@ -433,17 +433,17 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-8">
-                                <p class="mb-1"><strong>URL:</strong> <code>@selectedWebhook.Url</code></p>
-                                <p class="mb-1"><strong>Events:</strong>
+                                <p class="mb-1"><strong>@L["Actions_UrlLabel"]:</strong> <code>@selectedWebhook.Url</code></p>
+                                <p class="mb-1"><strong>@L["Actions_Events"]:</strong>
                                     @foreach (var evt in selectedWebhook.Events)
                                     {
                                         <span class="badge bg-secondary me-1">@evt</span>
                                     }
                                 </p>
-                                <p class="mb-1"><strong>Created:</strong> @FormatDate(selectedWebhook.CreatedAt)</p>
+                                <p class="mb-1"><strong>@L["Actions_Created"]:</strong> @FormatDate(selectedWebhook.CreatedAt)</p>
                                 @if (selectedWebhook.LastTriggeredAt.HasValue)
                                 {
-                                    <p class="mb-0"><strong>Last triggered:</strong> @FormatDate(selectedWebhook.LastTriggeredAt.Value)</p>
+                                    <p class="mb-0"><strong>@L["Actions_LastTriggered"]:</strong> @FormatDate(selectedWebhook.LastTriggeredAt.Value)</p>
                                 }
                             </div>
                         </div>
@@ -466,9 +466,9 @@
                                         <div class="d-flex align-items-center mb-1">
                                             <i class="bi @(delivery.Success ? "bi-check-circle-fill text-success" : "bi-x-circle-fill text-danger") me-2"></i>
                                             <strong>@delivery.Event</strong>
-                                            <span class="badge @(delivery.Success ? "bg-success" : "bg-danger") ms-2">@(delivery.StatusCode > 0 ? delivery.StatusCode.ToString() : "Error")</span>
+                                            <span class="badge @(delivery.Success ? "bg-success" : "bg-danger") ms-2">@(delivery.StatusCode > 0 ? delivery.StatusCode.ToString() : L["Actions_Error"])</span>
                                         </div>
-                                        <small class="text-muted">Delivered @FormatDate(delivery.DeliveredAt)</small>
+                                        <small class="text-muted">@L["Actions_Delivered"] @FormatDate(delivery.DeliveredAt)</small>
 
                                         @if (expandedDeliveryId == delivery.Id)
                                         {
@@ -488,7 +488,7 @@
                                         }
                                     </div>
                                     <div class="btn-group">
-                                        <button class="btn btn-sm btn-outline-secondary" @onclick="() => ToggleDeliveryDetails(delivery.Id)" title="@(expandedDeliveryId == delivery.Id ? "Collapse" : "Expand")">
+                                        <button class="btn btn-sm btn-outline-secondary" @onclick="() => ToggleDeliveryDetails(delivery.Id)" title="@(expandedDeliveryId == delivery.Id ? L["Actions_Collapse"] : L["Actions_Expand"])">
                                             <i class="bi bi-@(expandedDeliveryId == delivery.Id ? "chevron-up" : "chevron-down")"></i>
                                         </button>
                                         @if (UserService.IsLoggedIn)
@@ -550,7 +550,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">@(editingWebhookId.HasValue ? "Edit Webhook" : "Add Webhook")</h5>
+                    <h5 class="modal-title">@(editingWebhookId.HasValue ? L["Actions_EditWebhook"] : L["Actions_AddWebhook"])</h5>
                     <button type="button" class="btn-close" aria-label="@L["Common_Close"]" @onclick="() => ShowWebhookModal = false"></button>
                 </div>
                 <div class="modal-body">
@@ -559,8 +559,8 @@
                         <input type="url" class="form-control" @bind="NewWebhookUrl" placeholder="https://example.com/webhook" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Secret @(editingWebhookId.HasValue ? "(leave blank to keep current)" : "")</label>
-                        <input type="password" class="form-control" @bind="NewWebhookSecret" placeholder="@(editingWebhookId.HasValue ? "Leave blank to keep current" : "Enter webhook secret")" />
+                        <label class="form-label">@L["Actions_Secret"] @(editingWebhookId.HasValue ? L["Actions_LeaveBlankParen"] : "")</label>
+                        <input type="password" class="form-control" @bind="NewWebhookSecret" placeholder="@(editingWebhookId.HasValue ? L["Actions_LeaveBlankKeep"] : L["Actions_EnterWebhookSecret"])" />
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">@L["Actions_Events"]</label>
@@ -568,37 +568,37 @@
                             <div class="col-6">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("push")" @onchange="@((e) => ToggleEvent(e, "push"))" />
-                                    <label class="form-check-label">Push</label>
+                                    <label class="form-check-label">@L["Actions_EventPush"]</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("pull_request")" @onchange="@((e) => ToggleEvent(e, "pull_request"))" />
-                                    <label class="form-check-label">Pull Request</label>
+                                    <label class="form-check-label">@L["Actions_EventPullRequest"]</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("issues")" @onchange="@((e) => ToggleEvent(e, "issues"))" />
-                                    <label class="form-check-label">Issues</label>
+                                    <label class="form-check-label">@L["Actions_EventIssues"]</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("release")" @onchange="@((e) => ToggleEvent(e, "release"))" />
-                                    <label class="form-check-label">Release</label>
+                                    <label class="form-check-label">@L["Actions_EventRelease"]</label>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("workflow_run")" @onchange="@((e) => ToggleEvent(e, "workflow_run"))" />
-                                    <label class="form-check-label">Workflow Run</label>
+                                    <label class="form-check-label">@L["Actions_EventWorkflowRun"]</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("create")" @onchange="@((e) => ToggleEvent(e, "create"))" />
-                                    <label class="form-check-label">Branch/Tag Create</label>
+                                    <label class="form-check-label">@L["Actions_EventCreate"]</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("delete")" @onchange="@((e) => ToggleEvent(e, "delete"))" />
-                                    <label class="form-check-label">Branch/Tag Delete</label>
+                                    <label class="form-check-label">@L["Actions_EventDelete"]</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" checked="@SelectedEvents.Contains("fork")" @onchange="@((e) => ToggleEvent(e, "fork"))" />
-                                    <label class="form-check-label">Fork</label>
+                                    <label class="form-check-label">@L["Actions_EventFork"]</label>
                                 </div>
                             </div>
                         </div>

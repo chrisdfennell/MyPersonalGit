@@ -251,7 +251,7 @@ else
                             <div class="form-check">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.RequireAuth" id="requireAuth" />
                                 <label class="form-check-label" for="requireAuth">
-                                    Require Authentication
+                                    @L["Admin_RequireAuthentication"]
                                 </label>
                             </div>
                         </div>
@@ -260,7 +260,7 @@ else
                             <div class="form-check">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.AllowUserRegistration" id="allowReg" />
                                 <label class="form-check-label" for="allowReg">
-                                    Allow User Registration
+                                    @L["Admin_AllowUserRegistration"]
                                 </label>
                             </div>
                         </div>
@@ -269,7 +269,7 @@ else
                             <div class="form-check">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.RequireEmailVerification" id="requireEmail" />
                                 <label class="form-check-label" for="requireEmail">
-                                    Require Email Verification
+                                    @L["Admin_RequireEmailVerification"]
                                 </label>
                             </div>
                         </div>
@@ -299,7 +299,7 @@ else
                                 <div class="form-check form-switch">
                                     <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableActions" id="enableActions" />
                                     <label class="form-check-label" for="enableActions">
-                                        Actions / CI-CD
+                                        @L["Admin_ActionsCiCd"]
                                     </label>
                                 </div>
                             </div>
@@ -307,7 +307,7 @@ else
                                 <div class="form-check form-switch">
                                     <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableWiki" id="enableWiki" />
                                     <label class="form-check-label" for="enableWiki">
-                                        Wiki
+                                        @L["Admin_Wiki"]
                                     </label>
                                 </div>
                             </div>
@@ -315,7 +315,7 @@ else
                                 <div class="form-check form-switch">
                                     <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableIssues" id="enableIssues" />
                                     <label class="form-check-label" for="enableIssues">
-                                        Issues
+                                        @L["Admin_Issues"]
                                     </label>
                                 </div>
                             </div>
@@ -323,7 +323,7 @@ else
                                 <div class="form-check form-switch">
                                     <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableProjects" id="enableProjects" />
                                     <label class="form-check-label" for="enableProjects">
-                                        Projects
+                                        @L["Admin_Projects"]
                                     </label>
                                 </div>
                             </div>
@@ -341,7 +341,7 @@ else
                             <div class="form-check form-switch">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.EmailNotificationsEnabled" id="emailEnabled" />
                                 <label class="form-check-label" for="emailEnabled">
-                                    Enable Email Notifications
+                                    @L["Admin_EnableEmailNotifications"]
                                 </label>
                             </div>
                         </div>
@@ -372,7 +372,7 @@ else
                             <div class="form-check form-switch">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.SmtpEnableSsl" id="smtpSsl" />
                                 <label class="form-check-label" for="smtpSsl">
-                                    Enable SSL/TLS
+                                    @L["Admin_EnableSslTls"]
                                 </label>
                             </div>
                         </div>
@@ -418,7 +418,7 @@ else
                             <div class="form-check form-switch">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.EnablePushNotifications" id="enablePush" />
                                 <label class="form-check-label" for="enablePush">
-                                    Enable Push Notifications
+                                    @L["Admin_EnablePushNotifications"]
                                 </label>
                             </div>
                         </div>
@@ -426,7 +426,7 @@ else
                         <h6 class="text-muted mb-2"><small>ntfy</small></h6>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Server URL</label>
+                                <label class="form-label">@L["Admin_ServerUrl"]</label>
                                 <InputText class="form-control" @bind-Value="Settings.NtfyUrl" placeholder="https://ntfy.sh" />
                             </div>
                             <div class="col-md-6 mb-3">
@@ -444,7 +444,7 @@ else
                         <h6 class="text-muted mb-2"><small>Gotify</small></h6>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Server URL</label>
+                                <label class="form-label">@L["Admin_ServerUrl"]</label>
                                 <InputText class="form-control" @bind-Value="Settings.GotifyUrl" placeholder="https://gotify.example.com" />
                             </div>
                             <div class="col-md-6 mb-3">
@@ -675,7 +675,7 @@ else
                             <div class="form-check form-switch">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.EnableBuiltInSshServer" id="enableSsh" />
                                 <label class="form-check-label" for="enableSsh">
-                                    Enable Built-in SSH Server
+                                    @L["Admin_EnableBuiltInSsh"]
                                 </label>
                             </div>
                         </div>
@@ -700,7 +700,7 @@ else
                             <div class="form-check form-switch">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.SignMergeCommits" id="signMergeCommits" />
                                 <label class="form-check-label" for="signMergeCommits">
-                                    Sign merge commits with GPG
+                                    @L["Admin_SignMergeCommits"]
                                 </label>
                             </div>
                         </div>
@@ -725,7 +725,7 @@ else
                             <div class="form-check form-switch">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapEnabled" id="ldapEnabled" />
                                 <label class="form-check-label" for="ldapEnabled">
-                                    Enable LDAP Authentication
+                                    @L["Admin_EnableLdapAuth"]
                                 </label>
                             </div>
                         </div>
@@ -746,19 +746,19 @@ else
                             <div class="form-check form-check-inline">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapUseSsl" id="ldapSsl" />
                                 <label class="form-check-label" for="ldapSsl">
-                                    Use SSL (LDAPS)
+                                    @L["Admin_UseSslLdaps"]
                                 </label>
                             </div>
                             <div class="form-check form-check-inline">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapStartTls" id="ldapStartTls" />
                                 <label class="form-check-label" for="ldapStartTls">
-                                    Use StartTLS
+                                    @L["Admin_UseStartTls"]
                                 </label>
                             </div>
                             <div class="form-check form-check-inline">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.LdapSkipCertificateValidation" id="ldapSkipCert" />
                                 <label class="form-check-label" for="ldapSkipCert">
-                                    Skip Certificate Validation
+                                    @L["Admin_SkipCertValidation"]
                                 </label>
                             </div>
                         </div>
@@ -1120,7 +1120,7 @@ else
                                                        @onchange="e => provider.IsEnabled = (bool)(e.Value ?? false)"
                                                        id="oauth-@provider.ProviderName" />
                                                 <label class="form-check-label small" for="oauth-@provider.ProviderName">
-                                                    Enable this provider
+                                                    @L["Admin_EnableThisProvider"]
                                                 </label>
                                             </div>
                                             <button class="btn btn-sm btn-primary" @onclick="() => SaveOAuthProvider(provider)">
@@ -1157,11 +1157,11 @@ else
                 <div class="modal-body">
                     <EditForm Model="NewUser" OnValidSubmit="AddUser">
                         <div class="mb-3">
-                            <label class="form-label">Username</label>
+                            <label class="form-label">@L["Admin_Username"]</label>
                             <InputText class="form-control" @bind-Value="NewUser.Username" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
+                            <label class="form-label">@L["Admin_Email"]</label>
                             <InputText type="email" class="form-control" @bind-Value="NewUser.Email" />
                         </div>
                         <div class="mb-3">
@@ -1172,7 +1172,7 @@ else
                             <div class="form-check">
                                 <InputCheckbox class="form-check-input" @bind-Value="NewUser.IsAdmin" id="newUserAdmin" />
                                 <label class="form-check-label" for="newUserAdmin">
-                                    Administrator
+                                    @L["Admin_Administrator"]
                                 </label>
                             </div>
                         </div>
@@ -1202,18 +1202,18 @@ else
                 <div class="modal-body">
                     <EditForm Model="EditingUser" OnValidSubmit="SaveEditUser">
                         <div class="mb-3">
-                            <label class="form-label">Username</label>
+                            <label class="form-label">@L["Admin_Username"]</label>
                             <input class="form-control" value="@EditingUser.Username" disabled />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
+                            <label class="form-label">@L["Admin_Email"]</label>
                             <InputText type="email" class="form-control" @bind-Value="EditingUser.Email" />
                         </div>
                         <div class="mb-3">
                             <div class="form-check">
                                 <InputCheckbox class="form-check-input" @bind-Value="EditingUser.IsAdmin" id="editUserAdmin" />
                                 <label class="form-check-label" for="editUserAdmin">
-                                    Administrator
+                                    @L["Admin_Administrator"]
                                 </label>
                             </div>
                         </div>
@@ -1221,7 +1221,7 @@ else
                             <div class="form-check">
                                 <InputCheckbox class="form-check-input" @bind-Value="EditingUser.IsActive" id="editUserActive" />
                                 <label class="form-check-label" for="editUserActive">
-                                    Active
+                                    @L["Admin_ActiveLabel"]
                                 </label>
                             </div>
                         </div>

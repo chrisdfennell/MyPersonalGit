@@ -4630,4 +4630,292 @@
   <data name="Org_PermAdmin" xml:space="preserve">
     <value>Administrador</value>
   </data>
+  <data name="Wiki_TipSlashes" xml:space="preserve">
+    <value>Usa &lt;strong&gt;barras&lt;/strong&gt; en los nombres de página (p. ej. "guides/setup") para organizar subpáginas</value>
+  </data>
+  <data name="Wiki_TipRevisionSuffix" xml:space="preserve">
+    <value>para que no se pierda nada</value>
+  </data>
+  <data name="Security_FixedInVersion" xml:space="preserve">
+    <value>Corregido en la versión:</value>
+  </data>
+  <data name="Security_SeverityLow" xml:space="preserve">
+    <value>Baja</value>
+  </data>
+  <data name="Todo_FilesSuffix" xml:space="preserve">
+    <value>archivos.</value>
+  </data>
+  <data name="Actions_Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Security_SeverityMedium" xml:space="preserve">
+    <value>Media</value>
+  </data>
+  <data name="Actions_Secret" xml:space="preserve">
+    <value>Secreto</value>
+  </data>
+  <data name="Profile_ContributionsInLastYear" xml:space="preserve">
+    <value>contribuciones en el último año</value>
+  </data>
+  <data name="Actions_LeaveBlankToKeepCurrentPlaceholder" xml:space="preserve">
+    <value>Dejar en blanco para mantener el actual</value>
+  </data>
+  <data name="Actions_Collapse" xml:space="preserve">
+    <value>Contraer</value>
+  </data>
+  <data name="Profile_DayWed" xml:space="preserve">
+    <value>mié</value>
+  </data>
+  <data name="Actions_UrlLabel" xml:space="preserve">
+    <value>URL</value>
+  </data>
+  <data name="Security_Scanning" xml:space="preserve">
+    <value>Analizando...</value>
+  </data>
+  <data name="Wiki_On" xml:space="preserve">
+    <value>el</value>
+  </data>
+  <data name="Actions_Created" xml:space="preserve">
+    <value>Creado</value>
+  </data>
+  <data name="Wiki_TipRevisionPrefix" xml:space="preserve">
+    <value>Cada edición se registra con</value>
+  </data>
+  <data name="Wiki_ViewingRevision" xml:space="preserve">
+    <value>Viendo la revisión</value>
+  </data>
+  <data name="Actions_EventPullRequest" xml:space="preserve">
+    <value>Pull request</value>
+  </data>
+  <data name="Security_SeverityHigh" xml:space="preserve">
+    <value>Alta</value>
+  </data>
+  <data name="Wiki_Write" xml:space="preserve">
+    <value>Escribir</value>
+  </data>
+  <data name="Security_SeverityCritical" xml:space="preserve">
+    <value>Crítica</value>
+  </data>
+  <data name="Actions_Started" xml:space="preserve">
+    <value>Iniciado</value>
+  </data>
+  <data name="Actions_PageTitle" xml:space="preserve">
+    <value>Acciones</value>
+  </data>
+  <data name="Wiki_Words" xml:space="preserve">
+    <value>palabras</value>
+  </data>
+  <data name="Todo_ColMessage" xml:space="preserve">
+    <value>Mensaje</value>
+  </data>
+  <data name="Actions_LeaveBlankKeep" xml:space="preserve">
+    <value>Deja en blanco para mantener el actual</value>
+  </data>
+  <data name="Wiki_LastUpdatedBy" xml:space="preserve">
+    <value>Última actualización por</value>
+  </data>
+  <data name="Todo_FilesFound" xml:space="preserve">
+    <value>archivos. Se encontraron</value>
+  </data>
+  <data name="Wiki_NoPagesMatch" xml:space="preserve">
+    <value>Ninguna página coincide con tu búsqueda</value>
+  </data>
+  <data name="Wiki_TipHome" xml:space="preserve">
+    <value>Crea una página de &lt;strong&gt;Inicio&lt;/strong&gt; como punto de entrada principal de tu wiki</value>
+  </data>
+  <data name="Profile_ContributionsOn" xml:space="preserve">
+    <value>contribuciones el</value>
+  </data>
+  <data name="Actions_EventCreate" xml:space="preserve">
+    <value>Crear rama/etiqueta</value>
+  </data>
+  <data name="Actions_Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="Actions_Finished" xml:space="preserve">
+    <value>Finalizado</value>
+  </data>
+  <data name="Wiki_TipMarkdown" xml:space="preserve">
+    <value>incluyendo tablas, bloques de código e imágenes</value>
+  </data>
+  <data name="Todo_ColFile" xml:space="preserve">
+    <value>Archivo</value>
+  </data>
+  <data name="Wiki_MinRead" xml:space="preserve">
+    <value>min de lectura</value>
+  </data>
+  <data name="Wiki_QuickStartTips" xml:space="preserve">
+    <value>Consejos de inicio rápido</value>
+  </data>
+  <data name="Actions_EnterWebhookSecret" xml:space="preserve">
+    <value>Introduce el secreto del webhook</value>
+  </data>
+  <data name="Actions_AddYmlPrefix" xml:space="preserve">
+    <value>Añade un archivo</value>
+  </data>
+  <data name="Security_Patched" xml:space="preserve">
+    <value>Parcheado:</value>
+  </data>
+  <data name="Profile_DayMon" xml:space="preserve">
+    <value>lun</value>
+  </data>
+  <data name="Actions_LastTriggeredLabel" xml:space="preserve">
+    <value>Última activación:</value>
+  </data>
+  <data name="Actions_EventFork" xml:space="preserve">
+    <value>Bifurcación</value>
+  </data>
+  <data name="Actions_LastTriggered" xml:space="preserve">
+    <value>Última activación</value>
+  </data>
+  <data name="Wiki_TipHomePage" xml:space="preserve">
+    <value>como punto de entrada principal de tu wiki</value>
+  </data>
+  <data name="Todo_NoTodosFound" xml:space="preserve">
+    <value>No se encontraron TODO</value>
+  </data>
+  <data name="Actions_CreatedLabel" xml:space="preserve">
+    <value>Creado:</value>
+  </data>
+  <data name="Todo_ScannedPrefix" xml:space="preserve">
+    <value>Se analizaron</value>
+  </data>
+  <data name="Wiki_BreadcrumbWiki" xml:space="preserve">
+    <value>Wiki</value>
+  </data>
+  <data name="Security_PageTitle" xml:space="preserve">
+    <value>Seguridad</value>
+  </data>
+  <data name="Wiki_TipRevisionHistory" xml:space="preserve">
+    <value>Cada edición se registra con &lt;strong&gt;historial de revisiones&lt;/strong&gt; para que nada se pierda</value>
+  </data>
+  <data name="Wiki_Revert" xml:space="preserve">
+    <value>Revertir</value>
+  </data>
+  <data name="Wiki_ConfirmDelete" xml:space="preserve">
+    <value>Confirmar eliminación</value>
+  </data>
+  <data name="Projects_IssueNumberPlaceholder" xml:space="preserve">
+    <value>N.º de incidencia</value>
+  </data>
+  <data name="Actions_EventIssues" xml:space="preserve">
+    <value>Incidencias</value>
+  </data>
+  <data name="Todo_NoneFound" xml:space="preserve">
+    <value>No se encontraron TODOs</value>
+  </data>
+  <data name="Security_ReportedBy" xml:space="preserve">
+    <value>Informado por</value>
+  </data>
+  <data name="Profile_RepositoriesCountLabel" xml:space="preserve">
+    <value>repositorios</value>
+  </data>
+  <data name="Security_LastScanned" xml:space="preserve">
+    <value>Último análisis:</value>
+  </data>
+  <data name="Todo_ColLine" xml:space="preserve">
+    <value>Línea</value>
+  </data>
+  <data name="Actions_LeaveBlankParen" xml:space="preserve">
+    <value>(deja en blanco para mantener el actual)</value>
+  </data>
+  <data name="Actions_EditWebhook" xml:space="preserve">
+    <value>Editar webhook</value>
+  </data>
+  <data name="Actions_Expand" xml:space="preserve">
+    <value>Expandir</value>
+  </data>
+  <data name="Actions_Running" xml:space="preserve">
+    <value>En ejecución</value>
+  </data>
+  <data name="Actions_AddManualRunHint" xml:space="preserve">
+    <value>Agrega un archivo &lt;code&gt;.github/workflows/*.yml&lt;/code&gt; a tu repositorio o crea una ejecución manual.</value>
+  </data>
+  <data name="Todo_CleanCodebase" xml:space="preserve">
+    <value>Tu base de código está limpia: no se detectaron comentarios TODO, FIXME, HACK ni XXX.</value>
+  </data>
+  <data name="Wiki_EditPrefix" xml:space="preserve">
+    <value>Editar:</value>
+  </data>
+  <data name="Projects_CardTypeIssue" xml:space="preserve">
+    <value>Incidencia</value>
+  </data>
+  <data name="Security_Type" xml:space="preserve">
+    <value>Tipo:</value>
+  </data>
+  <data name="Actions_LeaveBlankToKeepCurrent" xml:space="preserve">
+    <value>(dejar en blanco para mantener el actual)</value>
+  </data>
+  <data name="Wiki_Print" xml:space="preserve">
+    <value>Imprimir</value>
+  </data>
+  <data name="Actions_TriggeredBy" xml:space="preserve">
+    <value>Activado por</value>
+  </data>
+  <data name="Todo_ItemsAcross" xml:space="preserve">
+    <value>elementos en</value>
+  </data>
+  <data name="Todo_ColType" xml:space="preserve">
+    <value>Tipo</value>
+  </data>
+  <data name="Wiki_Home" xml:space="preserve">
+    <value>Inicio</value>
+  </data>
+  <data name="Profile_DayFri" xml:space="preserve">
+    <value>vie</value>
+  </data>
+  <data name="Projects_CardTypeNote" xml:space="preserve">
+    <value>Nota</value>
+  </data>
+  <data name="Actions_EventsLabel" xml:space="preserve">
+    <value>Eventos:</value>
+  </data>
+  <data name="Profile_PinnedRepositories" xml:space="preserve">
+    <value>Repositorios fijados</value>
+  </data>
+  <data name="Wiki_Preview" xml:space="preserve">
+    <value>Vista previa</value>
+  </data>
+  <data name="Actions_EventRelease" xml:space="preserve">
+    <value>Versión</value>
+  </data>
+  <data name="Profile_Public" xml:space="preserve">
+    <value>Público</value>
+  </data>
+  <data name="Security_VulnerabilitiesLabel" xml:space="preserve">
+    <value>vulnerabilidades</value>
+  </data>
+  <data name="Actions_AddYmlSuffix" xml:space="preserve">
+    <value>a tu repositorio, o crea una ejecución manual.</value>
+  </data>
+  <data name="Wiki_TipSlashesSuffix" xml:space="preserve">
+    <value>en los nombres de página (p. ej. "guides/setup") para organizar subpáginas</value>
+  </data>
+  <data name="Todo_FilesFoundMid" xml:space="preserve">
+    <value>archivos. Se encontraron</value>
+  </data>
+  <data name="Wiki_OnThisPage" xml:space="preserve">
+    <value>En esta página</value>
+  </data>
+  <data name="Profile_Private" xml:space="preserve">
+    <value>Privado</value>
+  </data>
+  <data name="Security_Affected" xml:space="preserve">
+    <value>Afectado:</value>
+  </data>
+  <data name="Actions_EventDelete" xml:space="preserve">
+    <value>Eliminar rama/etiqueta</value>
+  </data>
+  <data name="Wiki_TipSlashesPrefix" xml:space="preserve">
+    <value>Usa</value>
+  </data>
+  <data name="Actions_EventPush" xml:space="preserve">
+    <value>Push</value>
+  </data>
+  <data name="Actions_EventWorkflowRun" xml:space="preserve">
+    <value>Ejecución de flujo de trabajo</value>
+  </data>
+  <data name="Actions_Delivered" xml:space="preserve">
+    <value>Entregado</value>
+  </data>
 </root>

@@ -4630,4 +4630,292 @@
   <data name="Org_PermAdmin" xml:space="preserve">
     <value>Yönetici</value>
   </data>
+  <data name="Wiki_TipSlashes" xml:space="preserve">
+    <value>Alt sayfaları düzenlemek için sayfa adlarında &lt;strong&gt;eğik çizgi&lt;/strong&gt; kullanın (örn. "guides/setup")</value>
+  </data>
+  <data name="Wiki_TipRevisionSuffix" xml:space="preserve">
+    <value>böylece hiçbir şey kaybolmaz</value>
+  </data>
+  <data name="Security_FixedInVersion" xml:space="preserve">
+    <value>Düzeltildiği sürüm:</value>
+  </data>
+  <data name="Security_SeverityLow" xml:space="preserve">
+    <value>Düşük</value>
+  </data>
+  <data name="Todo_FilesSuffix" xml:space="preserve">
+    <value>dosyada.</value>
+  </data>
+  <data name="Actions_Total" xml:space="preserve">
+    <value>Toplam</value>
+  </data>
+  <data name="Security_SeverityMedium" xml:space="preserve">
+    <value>Orta</value>
+  </data>
+  <data name="Actions_Secret" xml:space="preserve">
+    <value>Gizli anahtar</value>
+  </data>
+  <data name="Profile_ContributionsInLastYear" xml:space="preserve">
+    <value>son bir yıldaki katkı</value>
+  </data>
+  <data name="Actions_LeaveBlankToKeepCurrentPlaceholder" xml:space="preserve">
+    <value>Mevcut değeri korumak için boş bırakın</value>
+  </data>
+  <data name="Actions_Collapse" xml:space="preserve">
+    <value>Daralt</value>
+  </data>
+  <data name="Profile_DayWed" xml:space="preserve">
+    <value>Çar</value>
+  </data>
+  <data name="Actions_UrlLabel" xml:space="preserve">
+    <value>URL</value>
+  </data>
+  <data name="Security_Scanning" xml:space="preserve">
+    <value>Taranıyor...</value>
+  </data>
+  <data name="Wiki_On" xml:space="preserve">
+    <value>tarihinde</value>
+  </data>
+  <data name="Actions_Created" xml:space="preserve">
+    <value>Oluşturuldu</value>
+  </data>
+  <data name="Wiki_TipRevisionPrefix" xml:space="preserve">
+    <value>Her düzenleme şununla izlenir:</value>
+  </data>
+  <data name="Wiki_ViewingRevision" xml:space="preserve">
+    <value>Revizyon görüntüleniyor</value>
+  </data>
+  <data name="Actions_EventPullRequest" xml:space="preserve">
+    <value>Pull Request</value>
+  </data>
+  <data name="Security_SeverityHigh" xml:space="preserve">
+    <value>Yüksek</value>
+  </data>
+  <data name="Wiki_Write" xml:space="preserve">
+    <value>Yaz</value>
+  </data>
+  <data name="Security_SeverityCritical" xml:space="preserve">
+    <value>Kritik</value>
+  </data>
+  <data name="Actions_Started" xml:space="preserve">
+    <value>Başladı</value>
+  </data>
+  <data name="Actions_PageTitle" xml:space="preserve">
+    <value>Eylemler</value>
+  </data>
+  <data name="Wiki_Words" xml:space="preserve">
+    <value>kelime</value>
+  </data>
+  <data name="Todo_ColMessage" xml:space="preserve">
+    <value>Mesaj</value>
+  </data>
+  <data name="Actions_LeaveBlankKeep" xml:space="preserve">
+    <value>Mevcut değeri korumak için boş bırakın</value>
+  </data>
+  <data name="Wiki_LastUpdatedBy" xml:space="preserve">
+    <value>Son güncelleyen</value>
+  </data>
+  <data name="Todo_FilesFound" xml:space="preserve">
+    <value>dosya. Bulunan:</value>
+  </data>
+  <data name="Wiki_NoPagesMatch" xml:space="preserve">
+    <value>Aramanızla eşleşen sayfa yok</value>
+  </data>
+  <data name="Wiki_TipHome" xml:space="preserve">
+    <value>Vikiniz için ana giriş noktası olarak bir &lt;strong&gt;Ana Sayfa&lt;/strong&gt; oluşturun</value>
+  </data>
+  <data name="Profile_ContributionsOn" xml:space="preserve">
+    <value>katkı tarihi</value>
+  </data>
+  <data name="Actions_EventCreate" xml:space="preserve">
+    <value>Dal/Etiket Oluşturma</value>
+  </data>
+  <data name="Actions_Error" xml:space="preserve">
+    <value>Hata</value>
+  </data>
+  <data name="Actions_Finished" xml:space="preserve">
+    <value>Bitti</value>
+  </data>
+  <data name="Wiki_TipMarkdown" xml:space="preserve">
+    <value>tablolar, kod blokları ve görseller dahil</value>
+  </data>
+  <data name="Todo_ColFile" xml:space="preserve">
+    <value>Dosya</value>
+  </data>
+  <data name="Wiki_MinRead" xml:space="preserve">
+    <value>dk okuma</value>
+  </data>
+  <data name="Wiki_QuickStartTips" xml:space="preserve">
+    <value>Hızlı başlangıç ipuçları</value>
+  </data>
+  <data name="Actions_EnterWebhookSecret" xml:space="preserve">
+    <value>Webhook gizli anahtarını girin</value>
+  </data>
+  <data name="Actions_AddYmlPrefix" xml:space="preserve">
+    <value>Bir</value>
+  </data>
+  <data name="Security_Patched" xml:space="preserve">
+    <value>Yamalandı:</value>
+  </data>
+  <data name="Profile_DayMon" xml:space="preserve">
+    <value>Pzt</value>
+  </data>
+  <data name="Actions_LastTriggeredLabel" xml:space="preserve">
+    <value>Son tetikleme:</value>
+  </data>
+  <data name="Actions_EventFork" xml:space="preserve">
+    <value>Fork</value>
+  </data>
+  <data name="Actions_LastTriggered" xml:space="preserve">
+    <value>Son tetikleme</value>
+  </data>
+  <data name="Wiki_TipHomePage" xml:space="preserve">
+    <value>wiki'nizin ana giriş noktası olarak</value>
+  </data>
+  <data name="Todo_NoTodosFound" xml:space="preserve">
+    <value>TODO bulunamadı</value>
+  </data>
+  <data name="Actions_CreatedLabel" xml:space="preserve">
+    <value>Oluşturuldu:</value>
+  </data>
+  <data name="Todo_ScannedPrefix" xml:space="preserve">
+    <value>Tarandı:</value>
+  </data>
+  <data name="Wiki_BreadcrumbWiki" xml:space="preserve">
+    <value>Viki</value>
+  </data>
+  <data name="Security_PageTitle" xml:space="preserve">
+    <value>Güvenlik</value>
+  </data>
+  <data name="Wiki_TipRevisionHistory" xml:space="preserve">
+    <value>Her düzenleme &lt;strong&gt;revizyon geçmişi&lt;/strong&gt; ile izlenir, böylece hiçbir şey kaybolmaz</value>
+  </data>
+  <data name="Wiki_Revert" xml:space="preserve">
+    <value>Geri al</value>
+  </data>
+  <data name="Wiki_ConfirmDelete" xml:space="preserve">
+    <value>Silmeyi onayla</value>
+  </data>
+  <data name="Projects_IssueNumberPlaceholder" xml:space="preserve">
+    <value>Sorun no</value>
+  </data>
+  <data name="Actions_EventIssues" xml:space="preserve">
+    <value>Sorunlar</value>
+  </data>
+  <data name="Todo_NoneFound" xml:space="preserve">
+    <value>TODO bulunamadı</value>
+  </data>
+  <data name="Security_ReportedBy" xml:space="preserve">
+    <value>Bildiren</value>
+  </data>
+  <data name="Profile_RepositoriesCountLabel" xml:space="preserve">
+    <value>depo</value>
+  </data>
+  <data name="Security_LastScanned" xml:space="preserve">
+    <value>Son tarama:</value>
+  </data>
+  <data name="Todo_ColLine" xml:space="preserve">
+    <value>Satır</value>
+  </data>
+  <data name="Actions_LeaveBlankParen" xml:space="preserve">
+    <value>(mevcut değeri korumak için boş bırakın)</value>
+  </data>
+  <data name="Actions_EditWebhook" xml:space="preserve">
+    <value>Webhook'u Düzenle</value>
+  </data>
+  <data name="Actions_Expand" xml:space="preserve">
+    <value>Genişlet</value>
+  </data>
+  <data name="Actions_Running" xml:space="preserve">
+    <value>Çalışıyor</value>
+  </data>
+  <data name="Actions_AddManualRunHint" xml:space="preserve">
+    <value>Deponuza bir &lt;code&gt;.github/workflows/*.yml&lt;/code&gt; dosyası ekleyin veya manuel bir çalıştırma oluşturun.</value>
+  </data>
+  <data name="Todo_CleanCodebase" xml:space="preserve">
+    <value>Kod tabanınız temiz — TODO, FIXME, HACK veya XXX yorumu bulunamadı.</value>
+  </data>
+  <data name="Wiki_EditPrefix" xml:space="preserve">
+    <value>Düzenle:</value>
+  </data>
+  <data name="Projects_CardTypeIssue" xml:space="preserve">
+    <value>Sorun</value>
+  </data>
+  <data name="Security_Type" xml:space="preserve">
+    <value>Tür:</value>
+  </data>
+  <data name="Actions_LeaveBlankToKeepCurrent" xml:space="preserve">
+    <value>(mevcut değeri korumak için boş bırakın)</value>
+  </data>
+  <data name="Wiki_Print" xml:space="preserve">
+    <value>Yazdır</value>
+  </data>
+  <data name="Actions_TriggeredBy" xml:space="preserve">
+    <value>Tetikleyen</value>
+  </data>
+  <data name="Todo_ItemsAcross" xml:space="preserve">
+    <value>öğe,</value>
+  </data>
+  <data name="Todo_ColType" xml:space="preserve">
+    <value>Tür</value>
+  </data>
+  <data name="Wiki_Home" xml:space="preserve">
+    <value>Ana Sayfa</value>
+  </data>
+  <data name="Profile_DayFri" xml:space="preserve">
+    <value>Cum</value>
+  </data>
+  <data name="Projects_CardTypeNote" xml:space="preserve">
+    <value>Not</value>
+  </data>
+  <data name="Actions_EventsLabel" xml:space="preserve">
+    <value>Olaylar:</value>
+  </data>
+  <data name="Profile_PinnedRepositories" xml:space="preserve">
+    <value>Sabitlenmiş Depolar</value>
+  </data>
+  <data name="Wiki_Preview" xml:space="preserve">
+    <value>Önizleme</value>
+  </data>
+  <data name="Actions_EventRelease" xml:space="preserve">
+    <value>Sürüm</value>
+  </data>
+  <data name="Profile_Public" xml:space="preserve">
+    <value>Herkese Açık</value>
+  </data>
+  <data name="Security_VulnerabilitiesLabel" xml:space="preserve">
+    <value>güvenlik açığı</value>
+  </data>
+  <data name="Actions_AddYmlSuffix" xml:space="preserve">
+    <value>dosyasını deponuza ekleyin veya manuel bir çalıştırma oluşturun.</value>
+  </data>
+  <data name="Wiki_TipSlashesSuffix" xml:space="preserve">
+    <value>kullanarak (örn. "guides/setup") alt sayfaları düzenleyin</value>
+  </data>
+  <data name="Todo_FilesFoundMid" xml:space="preserve">
+    <value>dosya. Bulundu:</value>
+  </data>
+  <data name="Wiki_OnThisPage" xml:space="preserve">
+    <value>Bu sayfada</value>
+  </data>
+  <data name="Profile_Private" xml:space="preserve">
+    <value>Özel</value>
+  </data>
+  <data name="Security_Affected" xml:space="preserve">
+    <value>Etkilenen:</value>
+  </data>
+  <data name="Actions_EventDelete" xml:space="preserve">
+    <value>Dal/Etiket Silme</value>
+  </data>
+  <data name="Wiki_TipSlashesPrefix" xml:space="preserve">
+    <value>Sayfa adlarında</value>
+  </data>
+  <data name="Actions_EventPush" xml:space="preserve">
+    <value>Push</value>
+  </data>
+  <data name="Actions_EventWorkflowRun" xml:space="preserve">
+    <value>İş Akışı Çalıştırması</value>
+  </data>
+  <data name="Actions_Delivered" xml:space="preserve">
+    <value>Teslim edildi</value>
+  </data>
 </root>

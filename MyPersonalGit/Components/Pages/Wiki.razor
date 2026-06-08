@@ -32,7 +32,7 @@
     {
         <nav aria-label="wiki-breadcrumb" class="mb-2">
             <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="/repo/@RepoName/wiki" class="text-decoration-none">Wiki</a></li>
+                <li class="breadcrumb-item"><a href="/repo/@RepoName/wiki" class="text-decoration-none">@L["Wiki_Title"]</a></li>
                 @{
                     var slugParts = Slug.Split('/');
                     var accumPath = "";
@@ -71,11 +71,11 @@
                 <div class="list-group list-group-flush">
                     <a href="/repo/@RepoName/wiki/Home"
                        class="list-group-item list-group-item-action @(Slug == "Home" || Slug == "home" ? "active" : "")">
-                        <i class="bi bi-house-door me-1"></i> Home
+                        <i class="bi bi-house-door me-1"></i> @L["Wiki_Home"]
                     </a>
                     @if (FilteredPages.Count == 0 && Pages.Count > 0)
                     {
-                        <div class="list-group-item text-muted"><small>No pages match your search</small></div>
+                        <div class="list-group-item text-muted"><small>@L["Wiki_NoPagesMatch"]</small></div>
                     }
                     else if (Pages.Count == 0)
                     {
@@ -107,12 +107,12 @@
                         @if (Pages.Count == 0)
                         {
                             <div class="text-start mx-auto" style="max-width: 480px;">
-                                <h5 class="text-muted mb-3">Quick-start tips</h5>
+                                <h5 class="text-muted mb-3">@L["Wiki_QuickStartTips"]</h5>
                                 <ul class="list-group list-group-flush mb-4">
-                                    <li class="list-group-item"><i class="bi bi-house-door text-primary me-2"></i> Create a <strong>Home</strong> page as the main entry point for your wiki</li>
-                                    <li class="list-group-item"><i class="bi bi-markdown text-primary me-2"></i> Pages support full <strong>Markdown</strong> including tables, code blocks, and images</li>
-                                    <li class="list-group-item"><i class="bi bi-clock-history text-primary me-2"></i> Every edit is tracked with <strong>revision history</strong> so nothing is lost</li>
-                                    <li class="list-group-item"><i class="bi bi-diagram-3 text-primary me-2"></i> Use <strong>slashes</strong> in page names (e.g. "guides/setup") to organize sub-pages</li>
+                                    <li class="list-group-item"><i class="bi bi-house-door text-primary me-2"></i> Create a <strong>Home</strong> @L["Wiki_TipHomePage"]</li>
+                                    <li class="list-group-item"><i class="bi bi-markdown text-primary me-2"></i> Pages support full <strong>Markdown</strong> @L["Wiki_TipMarkdown"]</li>
+                                    <li class="list-group-item"><i class="bi bi-clock-history text-primary me-2"></i> @L["Wiki_TipRevisionPrefix"] <strong>revision history</strong> @L["Wiki_TipRevisionSuffix"]</li>
+                                    <li class="list-group-item"><i class="bi bi-diagram-3 text-primary me-2"></i> @L["Wiki_TipSlashesPrefix"] <strong>slashes</strong> @L["Wiki_TipSlashesSuffix"]</li>
                                 </ul>
                             </div>
                         }
@@ -131,19 +131,19 @@
                 {
                     <div class="card">
                         <div class="card-header">
-                            <h4>Edit: @CurrentPage.Title</h4>
+                            <h4>@L["Wiki_EditPrefix"] @CurrentPage.Title</h4>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
                                 <ul class="nav nav-tabs mb-2">
                                     <li class="nav-item">
                                         <button class="nav-link @(editPreviewTab == "write" ? "active" : "")" @onclick='() => editPreviewTab = "write"'>
-                                            <i class="bi bi-pencil me-1"></i> Write
+                                            <i class="bi bi-pencil me-1"></i> @L["Wiki_Write"]
                                         </button>
                                     </li>
                                     <li class="nav-item">
                                         <button class="nav-link @(editPreviewTab == "preview" ? "active" : "")" @onclick='() => editPreviewTab = "preview"'>
-                                            <i class="bi bi-eye me-1"></i> Preview
+                                            <i class="bi bi-eye me-1"></i> @L["Wiki_Preview"]
                                         </button>
                                     </li>
                                 </ul>
@@ -189,17 +189,17 @@
                                     <i class="bi bi-clock-history"></i> @L["Wiki_History"]
                                 </button>
                                 <button class="btn btn-sm btn-outline-secondary" @onclick="PrintPage">
-                                    <i class="bi bi-printer"></i> Print
+                                    <i class="bi bi-printer"></i> @L["Wiki_Print"]
                                 </button>
                                 @if (UserService.IsLoggedIn)
                                 {
                                     @if (confirmingDelete)
                                     {
                                         <button class="btn btn-sm btn-danger" @onclick="ConfirmDelete">
-                                            <i class="bi bi-exclamation-triangle"></i> Confirm Delete
+                                            <i class="bi bi-exclamation-triangle"></i> @L["Wiki_ConfirmDelete"]
                                         </button>
                                         <button class="btn btn-sm btn-secondary" @onclick="() => confirmingDelete = false">
-                                            Cancel
+                                            @L["Common_Cancel"]
                                         </button>
                                     }
                                     else
@@ -234,7 +234,7 @@
                                                         @if (UserService.IsLoggedIn)
                                                         {
                                                             <button class="btn btn-sm btn-outline-warning" @onclick="() => RevertToRevision(revision.Id)" title="@L["Wiki_RevertRevision"]">
-                                                                <i class="bi bi-arrow-counterclockwise"></i> Revert
+                                                                <i class="bi bi-arrow-counterclockwise"></i> @L["Wiki_Revert"]
                                                             </button>
                                                         }
                                                     </div>
@@ -248,7 +248,7 @@
                             @if (ViewingRevisionId.HasValue)
                             {
                                 <div class="alert alert-info d-flex justify-content-between align-items-center">
-                                    <span>Viewing revision @ViewingRevisionId</span>
+                                    <span>@L["Wiki_ViewingRevision"] @ViewingRevisionId</span>
                                     <button class="btn btn-sm btn-primary" @onclick="() => ViewingRevisionId = null">
                                         @L["Wiki_ViewCurrentVersion"]
                                     </button>
@@ -265,7 +265,7 @@
                                 @if (tocHeadings.Count > 0)
                                 {
                                     <nav class="wiki-toc ms-4 flex-shrink-0" style="width: 220px; position: sticky; top: 1rem; align-self: flex-start;">
-                                        <h6 class="text-muted text-uppercase small fw-bold mb-2">On this page</h6>
+                                        <h6 class="text-muted text-uppercase small fw-bold mb-2">@L["Wiki_OnThisPage"]</h6>
                                         <ul class="list-unstyled small">
                                             @foreach (var heading in tocHeadings)
                                             {
@@ -280,12 +280,12 @@
                         </div>
                         <div class="card-footer text-muted">
                             <small>
-                                Last updated by @CurrentPage.Author on @FormatDate(CurrentPage.UpdatedAt)
+                                @L["Wiki_LastUpdatedBy"] @CurrentPage.Author on @FormatDate(CurrentPage.UpdatedAt)
                                 @{
                                     var wordCount = GetWordCount(DisplayContent);
                                     var readingMinutes = Math.Max(1, (int)Math.Ceiling(wordCount / 200.0));
                                 }
-                                &mdash; @wordCount words &middot; ~@readingMinutes min read
+                                &mdash; @wordCount @L["Wiki_Words"] &middot; ~@readingMinutes @L["Wiki_MinRead"]
                             </small>
                         </div>
                     </div>

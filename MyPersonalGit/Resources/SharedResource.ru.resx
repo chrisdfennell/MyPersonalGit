@@ -4630,4 +4630,292 @@
   <data name="Org_PermAdmin" xml:space="preserve">
     <value>Администратор</value>
   </data>
+  <data name="Wiki_TipSlashes" xml:space="preserve">
+    <value>Используйте &lt;strong&gt;косые черты&lt;/strong&gt; в именах страниц (например, "guides/setup") для организации подстраниц</value>
+  </data>
+  <data name="Wiki_TipRevisionSuffix" xml:space="preserve">
+    <value>чтобы ничего не потерялось</value>
+  </data>
+  <data name="Security_FixedInVersion" xml:space="preserve">
+    <value>Исправлено в версии:</value>
+  </data>
+  <data name="Security_SeverityLow" xml:space="preserve">
+    <value>Низкая</value>
+  </data>
+  <data name="Todo_FilesSuffix" xml:space="preserve">
+    <value>файлах.</value>
+  </data>
+  <data name="Actions_Total" xml:space="preserve">
+    <value>Всего</value>
+  </data>
+  <data name="Security_SeverityMedium" xml:space="preserve">
+    <value>Средняя</value>
+  </data>
+  <data name="Actions_Secret" xml:space="preserve">
+    <value>Секрет</value>
+  </data>
+  <data name="Profile_ContributionsInLastYear" xml:space="preserve">
+    <value>вкладов за последний год</value>
+  </data>
+  <data name="Actions_LeaveBlankToKeepCurrentPlaceholder" xml:space="preserve">
+    <value>Оставьте пустым, чтобы сохранить текущий</value>
+  </data>
+  <data name="Actions_Collapse" xml:space="preserve">
+    <value>Свернуть</value>
+  </data>
+  <data name="Profile_DayWed" xml:space="preserve">
+    <value>ср</value>
+  </data>
+  <data name="Actions_UrlLabel" xml:space="preserve">
+    <value>URL</value>
+  </data>
+  <data name="Security_Scanning" xml:space="preserve">
+    <value>Сканирование...</value>
+  </data>
+  <data name="Wiki_On" xml:space="preserve">
+    <value>в</value>
+  </data>
+  <data name="Actions_Created" xml:space="preserve">
+    <value>Создано</value>
+  </data>
+  <data name="Wiki_TipRevisionPrefix" xml:space="preserve">
+    <value>Каждое изменение отслеживается через</value>
+  </data>
+  <data name="Wiki_ViewingRevision" xml:space="preserve">
+    <value>Просмотр редакции</value>
+  </data>
+  <data name="Actions_EventPullRequest" xml:space="preserve">
+    <value>Pull request</value>
+  </data>
+  <data name="Security_SeverityHigh" xml:space="preserve">
+    <value>Высокая</value>
+  </data>
+  <data name="Wiki_Write" xml:space="preserve">
+    <value>Написать</value>
+  </data>
+  <data name="Security_SeverityCritical" xml:space="preserve">
+    <value>Критическая</value>
+  </data>
+  <data name="Actions_Started" xml:space="preserve">
+    <value>Начато</value>
+  </data>
+  <data name="Actions_PageTitle" xml:space="preserve">
+    <value>Действия</value>
+  </data>
+  <data name="Wiki_Words" xml:space="preserve">
+    <value>слов</value>
+  </data>
+  <data name="Todo_ColMessage" xml:space="preserve">
+    <value>Сообщение</value>
+  </data>
+  <data name="Actions_LeaveBlankKeep" xml:space="preserve">
+    <value>Оставьте пустым, чтобы сохранить текущий</value>
+  </data>
+  <data name="Wiki_LastUpdatedBy" xml:space="preserve">
+    <value>Последнее обновление от</value>
+  </data>
+  <data name="Todo_FilesFound" xml:space="preserve">
+    <value>файлов. Найдено</value>
+  </data>
+  <data name="Wiki_NoPagesMatch" xml:space="preserve">
+    <value>Нет страниц, соответствующих вашему запросу</value>
+  </data>
+  <data name="Wiki_TipHome" xml:space="preserve">
+    <value>Создайте &lt;strong&gt;Главную&lt;/strong&gt; страницу как основную точку входа в вики</value>
+  </data>
+  <data name="Profile_ContributionsOn" xml:space="preserve">
+    <value>вкладов</value>
+  </data>
+  <data name="Actions_EventCreate" xml:space="preserve">
+    <value>Создание ветки/тега</value>
+  </data>
+  <data name="Actions_Error" xml:space="preserve">
+    <value>Ошибка</value>
+  </data>
+  <data name="Actions_Finished" xml:space="preserve">
+    <value>Завершено</value>
+  </data>
+  <data name="Wiki_TipMarkdown" xml:space="preserve">
+    <value>включая таблицы, блоки кода и изображения</value>
+  </data>
+  <data name="Todo_ColFile" xml:space="preserve">
+    <value>Файл</value>
+  </data>
+  <data name="Wiki_MinRead" xml:space="preserve">
+    <value>мин чтения</value>
+  </data>
+  <data name="Wiki_QuickStartTips" xml:space="preserve">
+    <value>Советы по быстрому старту</value>
+  </data>
+  <data name="Actions_EnterWebhookSecret" xml:space="preserve">
+    <value>Введите секрет webhook</value>
+  </data>
+  <data name="Actions_AddYmlPrefix" xml:space="preserve">
+    <value>Добавьте файл</value>
+  </data>
+  <data name="Security_Patched" xml:space="preserve">
+    <value>Исправлено:</value>
+  </data>
+  <data name="Profile_DayMon" xml:space="preserve">
+    <value>пн</value>
+  </data>
+  <data name="Actions_LastTriggeredLabel" xml:space="preserve">
+    <value>Последний запуск:</value>
+  </data>
+  <data name="Actions_EventFork" xml:space="preserve">
+    <value>Форк</value>
+  </data>
+  <data name="Actions_LastTriggered" xml:space="preserve">
+    <value>Последний запуск</value>
+  </data>
+  <data name="Wiki_TipHomePage" xml:space="preserve">
+    <value>как главную страницу вашей вики</value>
+  </data>
+  <data name="Todo_NoTodosFound" xml:space="preserve">
+    <value>TODO не найдены</value>
+  </data>
+  <data name="Actions_CreatedLabel" xml:space="preserve">
+    <value>Создано:</value>
+  </data>
+  <data name="Todo_ScannedPrefix" xml:space="preserve">
+    <value>Просканировано</value>
+  </data>
+  <data name="Wiki_BreadcrumbWiki" xml:space="preserve">
+    <value>Вики</value>
+  </data>
+  <data name="Security_PageTitle" xml:space="preserve">
+    <value>Безопасность</value>
+  </data>
+  <data name="Wiki_TipRevisionHistory" xml:space="preserve">
+    <value>Каждое изменение отслеживается с помощью &lt;strong&gt;истории версий&lt;/strong&gt;, поэтому ничего не теряется</value>
+  </data>
+  <data name="Wiki_Revert" xml:space="preserve">
+    <value>Откатить</value>
+  </data>
+  <data name="Wiki_ConfirmDelete" xml:space="preserve">
+    <value>Подтвердить удаление</value>
+  </data>
+  <data name="Projects_IssueNumberPlaceholder" xml:space="preserve">
+    <value>№ задачи</value>
+  </data>
+  <data name="Actions_EventIssues" xml:space="preserve">
+    <value>Задачи</value>
+  </data>
+  <data name="Todo_NoneFound" xml:space="preserve">
+    <value>TODO не найдены</value>
+  </data>
+  <data name="Security_ReportedBy" xml:space="preserve">
+    <value>Сообщил</value>
+  </data>
+  <data name="Profile_RepositoriesCountLabel" xml:space="preserve">
+    <value>репозиториев</value>
+  </data>
+  <data name="Security_LastScanned" xml:space="preserve">
+    <value>Последнее сканирование:</value>
+  </data>
+  <data name="Todo_ColLine" xml:space="preserve">
+    <value>Строка</value>
+  </data>
+  <data name="Actions_LeaveBlankParen" xml:space="preserve">
+    <value>(оставьте пустым, чтобы сохранить текущий)</value>
+  </data>
+  <data name="Actions_EditWebhook" xml:space="preserve">
+    <value>Изменить webhook</value>
+  </data>
+  <data name="Actions_Expand" xml:space="preserve">
+    <value>Развернуть</value>
+  </data>
+  <data name="Actions_Running" xml:space="preserve">
+    <value>Выполняется</value>
+  </data>
+  <data name="Actions_AddManualRunHint" xml:space="preserve">
+    <value>Добавьте файл &lt;code&gt;.github/workflows/*.yml&lt;/code&gt; в репозиторий или создайте запуск вручную.</value>
+  </data>
+  <data name="Todo_CleanCodebase" xml:space="preserve">
+    <value>Ваша кодовая база чистая — комментарии TODO, FIXME, HACK или XXX не обнаружены.</value>
+  </data>
+  <data name="Wiki_EditPrefix" xml:space="preserve">
+    <value>Редактировать:</value>
+  </data>
+  <data name="Projects_CardTypeIssue" xml:space="preserve">
+    <value>Задача</value>
+  </data>
+  <data name="Security_Type" xml:space="preserve">
+    <value>Тип:</value>
+  </data>
+  <data name="Actions_LeaveBlankToKeepCurrent" xml:space="preserve">
+    <value>(оставьте пустым, чтобы сохранить текущий)</value>
+  </data>
+  <data name="Wiki_Print" xml:space="preserve">
+    <value>Печать</value>
+  </data>
+  <data name="Actions_TriggeredBy" xml:space="preserve">
+    <value>Запущено пользователем</value>
+  </data>
+  <data name="Todo_ItemsAcross" xml:space="preserve">
+    <value>элементов в</value>
+  </data>
+  <data name="Todo_ColType" xml:space="preserve">
+    <value>Тип</value>
+  </data>
+  <data name="Wiki_Home" xml:space="preserve">
+    <value>Главная</value>
+  </data>
+  <data name="Profile_DayFri" xml:space="preserve">
+    <value>пт</value>
+  </data>
+  <data name="Projects_CardTypeNote" xml:space="preserve">
+    <value>Заметка</value>
+  </data>
+  <data name="Actions_EventsLabel" xml:space="preserve">
+    <value>События:</value>
+  </data>
+  <data name="Profile_PinnedRepositories" xml:space="preserve">
+    <value>Закреплённые репозитории</value>
+  </data>
+  <data name="Wiki_Preview" xml:space="preserve">
+    <value>Предпросмотр</value>
+  </data>
+  <data name="Actions_EventRelease" xml:space="preserve">
+    <value>Релиз</value>
+  </data>
+  <data name="Profile_Public" xml:space="preserve">
+    <value>Публичный</value>
+  </data>
+  <data name="Security_VulnerabilitiesLabel" xml:space="preserve">
+    <value>уязвимостей</value>
+  </data>
+  <data name="Actions_AddYmlSuffix" xml:space="preserve">
+    <value>в свой репозиторий или создайте ручной запуск.</value>
+  </data>
+  <data name="Wiki_TipSlashesSuffix" xml:space="preserve">
+    <value>в именах страниц (напр. "guides/setup") для организации подстраниц</value>
+  </data>
+  <data name="Todo_FilesFoundMid" xml:space="preserve">
+    <value>файлов. Найдено</value>
+  </data>
+  <data name="Wiki_OnThisPage" xml:space="preserve">
+    <value>На этой странице</value>
+  </data>
+  <data name="Profile_Private" xml:space="preserve">
+    <value>Приватный</value>
+  </data>
+  <data name="Security_Affected" xml:space="preserve">
+    <value>Затронуто:</value>
+  </data>
+  <data name="Actions_EventDelete" xml:space="preserve">
+    <value>Удаление ветки/тега</value>
+  </data>
+  <data name="Wiki_TipSlashesPrefix" xml:space="preserve">
+    <value>Используйте</value>
+  </data>
+  <data name="Actions_EventPush" xml:space="preserve">
+    <value>Push</value>
+  </data>
+  <data name="Actions_EventWorkflowRun" xml:space="preserve">
+    <value>Запуск рабочего процесса</value>
+  </data>
+  <data name="Actions_Delivered" xml:space="preserve">
+    <value>Доставлено</value>
+  </data>
 </root>

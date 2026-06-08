@@ -57,8 +57,8 @@
         {
             <div class="text-center py-5 text-muted">
                 <i class="bi bi-check-circle display-4 d-block mb-3 text-success"></i>
-                <h3>No TODOs found</h3>
-                <p>Your codebase is clean — no TODO, FIXME, HACK, or XXX comments detected.</p>
+                <h3>@L["Todo_NoneFound"]</h3>
+                <p>@L["Todo_CleanCodebase"]</p>
             </div>
         }
         else
@@ -86,10 +86,10 @@
                     <div class="table-responsive"><table class="table table-sm table-hover mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 80px;" class="ps-3">Type</th>
-                                <th>File</th>
-                                <th style="width: 60px;" class="text-end">Line</th>
-                                <th class="pe-3">Message</th>
+                                <th style="width: 80px;" class="ps-3">@L["Todo_ColType"]</th>
+                                <th>@L["Todo_ColFile"]</th>
+                                <th style="width: 60px;" class="text-end">@L["Todo_ColLine"]</th>
+                                <th class="pe-3">@L["Todo_ColMessage"]</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -115,7 +115,7 @@
 
             <p class="text-muted small mt-3">
                 <i class="bi bi-info-circle me-1"></i>
-                Scanned @filesScanned files. Found @items.Count items across @items.Select(i => i.FilePath).Distinct().Count() files.
+                @L["Todo_ScannedPrefix"] @filesScanned @L["Todo_FilesFound"] @items.Count @L["Todo_ItemsAcross"] @items.Select(i => i.FilePath).Distinct().Count() @L["Todo_FilesSuffix"]
             </p>
         }
     }

@@ -13,7 +13,7 @@
 @inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>Security - @RepoName</PageTitle>
+<PageTitle>@L["Security_PageTitle"] - @RepoName</PageTitle>
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -68,7 +68,7 @@
                         @if (LatestScan != null)
                         {
                             <div class="mt-3">
-                                <p class="text-muted mb-2">Last scanned: @FormatDate(LatestScan.ScannedAt)</p>
+                                <p class="text-muted mb-2">@L["Security_LastScanned"] @FormatDate(LatestScan.ScannedAt)</p>
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span>@L["Security_TotalVulnerabilities"]</span>
                                     <span class="badge bg-secondary">@LatestScan.VulnerabilitiesFound</span>
@@ -96,7 +96,7 @@
                             <p class="text-muted mt-3">@L["Security_NoScansYet"]</p>
                         }
                         <button class="btn btn-primary mt-3 w-100" @onclick="RunSecurityScan" disabled="@isScanning">
-                            @if (isScanning) { <span class="spinner-border spinner-border-sm me-2"></span> <text>Scanning...</text> }
+                            @if (isScanning) { <span class="spinner-border spinner-border-sm me-2"></span> <text>@L["Security_Scanning"]</text> }
                             else { <i class="bi bi-shield-check me-2"></i> <text>@L["Security_RunSecurityScan"]</text> }
                         </button>
                         @if (!string.IsNullOrEmpty(scanError)) { <div class="alert alert-danger mt-2 small">@scanError</div> }
@@ -165,14 +165,14 @@
                                 </div>
                                 <p class="mb-1 text-muted">@advisory.Description</p>
                                 <small class="text-muted">
-                                    Affected: @advisory.AffectedVersions
+                                    @L["Security_Affected"] @advisory.AffectedVersions
                                     @if (!string.IsNullOrEmpty(advisory.PatchedVersions))
                                     {
                                         <span class="mx-2">•</span>
-                                        <span>Patched: @advisory.PatchedVersions</span>
+                                        <span>@L["Security_Patched"] @advisory.PatchedVersions</span>
                                     }
                                     <span class="mx-2">•</span>
-                                    Reported by @advisory.Reporter
+                                    @L["Security_ReportedBy"] @advisory.Reporter
                                     <span class="mx-2">•</span>
                                     @FormatDate(advisory.CreatedAt)
                                 </small>
@@ -272,7 +272,7 @@
                     <h3 class="mt-3">@L["Security_NoDependenciesScanned"]</h3>
                     <p class="text-muted">@L["Security_NoDependenciesDescription"]</p>
                     <button class="btn btn-primary" @onclick="RunSecurityScan" disabled="@isScanning">
-                        @if (isScanning) { <span class="spinner-border spinner-border-sm me-2"></span> <text>Scanning...</text> }
+                        @if (isScanning) { <span class="spinner-border spinner-border-sm me-2"></span> <text>@L["Security_Scanning"]</text> }
                         else { <i class="bi bi-shield-check me-2"></i> <text>@L["Security_RunSecurityScan"]</text> }
                     </button>
                 </div>
@@ -281,7 +281,7 @@
         else
         {
             <div class="mb-3">
-                <p class="text-muted">Last scanned: @FormatDate(LatestScan.ScannedAt)</p>
+                <p class="text-muted">@L["Security_LastScanned"] @FormatDate(LatestScan.ScannedAt)</p>
             </div>
 
             <div class="list-group">
@@ -291,12 +291,12 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="flex-grow-1">
                                 <h6 class="mb-1">@dependency.Name <span class="text-muted">@dependency.Version</span></h6>
-                                <small class="text-muted">Type: @dependency.Type</small>
+                                <small class="text-muted">@L["Security_Type"] @dependency.Type</small>
                                 
                                 @if (dependency.Vulnerabilities.Count > 0)
                                 {
                                     <div class="mt-2">
-                                        <span class="badge bg-danger">@dependency.Vulnerabilities.Count vulnerabilities</span>
+                                        <span class="badge bg-danger">@dependency.Vulnerabilities.Count @L["Security_VulnerabilitiesLabel"]</span>
                                         @foreach (var vuln in dependency.Vulnerabilities)
                                         {
                                             <div class="alert alert-@GetSeverityAlertClass(vuln.Severity) mt-2 mb-0">
@@ -306,7 +306,7 @@
                                                         <p class="mb-1">@vuln.Description</p>
                                                         @if (!string.IsNullOrEmpty(vuln.FixedVersion))
                                                         {
-                                                            <small>Fixed in version: @vuln.FixedVersion</small>
+                                                            <small>@L["Security_FixedInVersion"] @vuln.FixedVersion</small>
                                                         }
                                                     </div>
                                                     <span class="badge @GetSeverityBadgeClass(vuln.Severity)">@vuln.Severity</span>
@@ -351,10 +351,10 @@
                     <div class="mb-3">
                         <label class="form-label">@L["Security_Severity"]</label>
                         <select class="form-select" @bind="NewAdvisorySeverity">
-                            <option value="@SecuritySeverity.Low">Low</option>
-                            <option value="@SecuritySeverity.Medium">Medium</option>
-                            <option value="@SecuritySeverity.High">High</option>
-                            <option value="@SecuritySeverity.Critical">Critical</option>
+                            <option value="@SecuritySeverity.Low">@L["Security_SeverityLow"]</option>
+                            <option value="@SecuritySeverity.Medium">@L["Security_SeverityMedium"]</option>
+                            <option value="@SecuritySeverity.High">@L["Security_SeverityHigh"]</option>
+                            <option value="@SecuritySeverity.Critical">@L["Security_SeverityCritical"]</option>
                         </select>
                     </div>
                     <div class="mb-3">
