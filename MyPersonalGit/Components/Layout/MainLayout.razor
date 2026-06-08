@@ -1,83 +1,42 @@
 @inherits LayoutComponentBase
-@implements IDisposable
 @using MyPersonalGit.Data
 @using MyPersonalGit.Services
-@using Microsoft.JSInterop
-@using Microsoft.Extensions.Localization
-@using MyPersonalGit.Resources
-@inject IAdminService AdminService
+@inject AdminService AdminService
 @inject CurrentUserService UserService
-@inject INotificationService NotificationService
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
-@inject IStringLocalizer<SharedResource> L
-@inject IUserProfileService UserProfileService
 
 <div class="gh-app">
     <header class="gh-header">
         <div class="container-xl d-flex align-items-center py-2 px-3">
             <a class="gh-logo me-3 text-white text-decoration-none d-flex align-items-center" href="/">
-                <svg height="32" aria-hidden="true" viewBox="0 0 16 16" version="1.1" width="32">
-                    <!-- Masked cat: cat head silhouette with superhero domino mask -->
-                    <path fill="currentColor" d="M8,15.5 C4,15.5 1.5,12 1.5,9 C1.5,7 2,5.5 3.5,5 L1,0.5 L5.5,4 C6.3,3.5 7.1,3.2 8,3.2 C8.9,3.2 9.7,3.5 10.5,4 L15,0.5 L12.5,5 C14,5.5 14.5,7 14.5,9 C14.5,12 12,15.5 8,15.5Z"/>
-                    <rect x="2.5" y="7" width="11" height="3.5" rx="1.75" style="fill: var(--gh-header, #24292f)"/>
-                    <circle cx="5.5" cy="8.75" r="1.3" fill="currentColor"/>
-                    <circle cx="10.5" cy="8.75" r="1.3" fill="currentColor"/>
-                    <path style="fill: var(--gh-header, #24292f)" d="M7.5,11.8 L8,12.6 L8.5,11.8Z"/>
+                <svg height="32" aria-hidden="true" viewBox="0 0 16 16" version="1.1" width="32" fill="currentColor">
+                    <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
                 </svg>
                 <span class="ms-2 fw-semibold">Personal Git</span>
             </a>
 
             <div class="gh-search-container d-none d-md-flex flex-grow-1 mx-2" style="max-width: 300px;">
                 <div class="input-group input-group-sm bg-dark-subtle rounded-2 border border-secondary border-opacity-50">
-                    <input id="global-search-input" type="text" class="form-control bg-transparent border-0 text-white placeholder-secondary" placeholder="@L["Search_Placeholder"]" />
+                    <input type="text" class="form-control bg-transparent border-0 text-white placeholder-secondary" placeholder="Search or jump to..." />
                     <span class="input-group-text bg-transparent border-0 text-secondary">/</span>
                 </div>
             </div>
 
             <nav class="gh-nav-links d-none d-lg-flex ms-3 gap-3">
-                <a href="/search?type=pulls" class="text-white text-opacity-75 text-decoration-none small fw-semibold">@L["Nav_PullRequests"]</a>
-                <a href="/search?type=issues" class="text-white text-opacity-75 text-decoration-none small fw-semibold">@L["Nav_Issues"]</a>
-                <a href="/search" class="text-white text-opacity-75 text-decoration-none small fw-semibold">@L["Nav_Search"]</a>
-                <a href="/snippets" class="text-white text-opacity-75 text-decoration-none small fw-semibold">@L["Nav_Snippets"]</a>
-                <a href="/packages" class="text-white text-opacity-75 text-decoration-none small fw-semibold">@L["Nav_Packages"]</a>
-                @if (UserService.IsAdmin)
-                {
-                    <a href="/admin" class="text-white text-opacity-75 text-decoration-none small fw-semibold">
-                        <i class="bi bi-shield-lock me-1"></i>@L["Nav_Admin"]
-                    </a>
-                }
+                <a href="/search?type=pulls" class="text-white text-opacity-75 text-decoration-none small fw-semibold">Pull requests</a>
+                <a href="/search?type=issues" class="text-white text-opacity-75 text-decoration-none small fw-semibold">Issues</a>
+                <a href="/search" class="text-white text-opacity-75 text-decoration-none small fw-semibold">Search</a>
+                <a href="/admin" class="text-white text-opacity-75 text-decoration-none small fw-semibold">
+                    <i class="bi bi-shield-lock me-1"></i>Admin
+                </a>
             </nav>
 
             <div class="ms-auto d-flex align-items-center gap-3">
-                <div class="dropdown">
-                    <button class="btn btn-link text-white text-opacity-75 p-0" type="button" data-bs-toggle="dropdown" title="@L["Nav_Language"]">
-                        <i class="bi bi-translate"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" style="min-width: 140px;">
-                        @foreach (var (code, name) in supportedLanguages)
-                        {
-                            <li>
-                                <button class="dropdown-item small @(currentCulture == code ? "active" : "")" @onclick="() => SetLanguage(code)">
-                                    @name
-                                </button>
-                            </li>
-                        }
-                    </ul>
-                </div>
-                <button class="btn btn-link text-white text-opacity-75 p-0" @onclick="ToggleTheme" title="@L["Nav_ToggleDarkMode"]">
-                    <i class="bi @(currentTheme == "dark" ? "bi-sun-fill" : "bi-moon-fill")"></i>
-                </button>
                 @if (UserService.IsLoggedIn)
                 {
-                    <a href="/notifications" class="text-white text-opacity-75 text-decoration-none position-relative">
+                    <a href="/notifications" class="text-white text-opacity-75 text-decoration-none">
                         <i class="bi bi-bell"></i>
-                        @if (unreadNotificationCount > 0)
-                        {
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
-                                @(unreadNotificationCount > 99 ? "99+" : unreadNotificationCount)
-                            </span>
-                        }
                     </a>
                     <div class="dropdown">
                         <button class="btn btn-link text-white text-opacity-75 text-decoration-none p-0 d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -85,62 +44,35 @@
                             <i class="bi bi-caret-down-fill ms-1" style="font-size: 0.6rem;"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="/">@L["Nav_NewRepository"]</a></li>
-                            <li><a class="dropdown-item" href="/search?type=issues">@L["Nav_Issues"]</a></li>
-                            <li><a class="dropdown-item" href="/search?type=pulls">@L["Nav_PullRequests"]</a></li>
+                            <li><a class="dropdown-item" href="/repo/new">New repository</a></li>
+                            <li><a class="dropdown-item" href="/issues/new">New issue</a></li>
+                            <li><a class="dropdown-item" href="/projects/new">New project</a></li>
                         </ul>
                     </div>
                     <div class="dropdown">
                         <button class="btn btn-link text-white text-decoration-none p-0 d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="@(userAvatarUrl ?? GetAvatarUrl(UserService.Username, 24))" alt="@UserService.Username" class="rounded-circle border border-white border-opacity-25" style="width: 24px; height: 24px; object-fit: cover;" />
+                            <div class="gh-avatar rounded-circle bg-secondary border border-white border-opacity-25 d-flex align-items-center justify-content-center text-white" style="width: 24px; height: 24px;">
+                                <i class="bi bi-person-fill" style="font-size: 0.8rem;"></i>
+                            </div>
                             <i class="bi bi-caret-down-fill ms-1 text-white text-opacity-75" style="font-size: 0.6rem;"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><span class="dropdown-item-text fw-semibold">@UserService.Username</span></li>
                             <li><hr class="dropdown-divider" /></li>
-                            <li><a class="dropdown-item" href="/profile/@UserService.Username">@L["Nav_Profile"]</a></li>
-                            <li><a class="dropdown-item" href="/settings">@L["Nav_Settings"]</a></li>
+                            <li><a class="dropdown-item" href="/profile/@UserService.Username">Your profile</a></li>
+                            <li><a class="dropdown-item" href="/settings">Settings</a></li>
                             <li><hr class="dropdown-divider" /></li>
-                            <li><button class="dropdown-item" @onclick="HandleLogout">@L["Nav_SignOut"]</button></li>
+                            <li><button class="dropdown-item" @onclick="HandleLogout">Sign out</button></li>
                         </ul>
                     </div>
                 }
                 else
                 {
-                    <a href="/login" class="btn btn-sm btn-outline-light">@L["Nav_SignIn"]</a>
+                    <a href="/login" class="btn btn-sm btn-outline-light">Sign in</a>
                 }
             </div>
         </div>
     </header>
-
-    @if (showShortcutsHelp)
-    {
-        <div class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 9999;" @onclick="() => showShortcutsHelp = false">
-            <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation="true">
-                <div class="modal-content">
-                    <div class="modal-header py-2">
-                        <h5 class="modal-title"><i class="bi bi-keyboard me-2"></i>@L["Shortcuts_Title"]</h5>
-                        <button class="btn-close" @onclick="() => showShortcutsHelp = false"></button>
-                    </div>
-                    <div class="modal-body">
-                        <table class="table table-sm mb-0">
-                            <tbody>
-                                <tr><td><kbd>/</kbd></td><td>@L["Shortcuts_FocusSearch"]</td></tr>
-                                <tr><td><kbd>?</kbd></td><td>@L["Shortcuts_ShowHelp"]</td></tr>
-                                <tr><td><kbd>g</kbd> <kbd>h</kbd></td><td>@L["Shortcuts_GoHome"]</td></tr>
-                                <tr><td><kbd>g</kbd> <kbd>i</kbd></td><td>@L["Shortcuts_GoIssues"]</td></tr>
-                                <tr><td><kbd>g</kbd> <kbd>p</kbd></td><td>@L["Shortcuts_GoPRs"]</td></tr>
-                                <tr><td><kbd>g</kbd> <kbd>a</kbd></td><td>@L["Shortcuts_GoActions"]</td></tr>
-                                <tr><td><kbd>g</kbd> <kbd>s</kbd></td><td>@L["Shortcuts_GoSettings"]</td></tr>
-                                <tr><td><kbd>g</kbd> <kbd>n</kbd></td><td>@L["Shortcuts_GoNotifications"]</td></tr>
-                                <tr><td><kbd>Esc</kbd></td><td>@L["Shortcuts_CloseModal"]</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
 
     <main class="gh-main">
         <div class="container-xl py-4 px-3">
@@ -151,11 +83,10 @@
     <footer class="gh-footer border-top py-5 mt-auto">
         <div class="container-xl px-3 d-flex flex-wrap justify-content-center gap-4 small">
             <span class="text-muted">© @DateTime.Now.Year PersonalGit, Inc.</span>
-            <a href="/terms" class="text-decoration-none text-primary-emphasis">@L["Footer_Terms"]</a>
-            <a href="/privacy" class="text-decoration-none text-primary-emphasis">@L["Footer_Privacy"]</a>
-            <a href="/docs" class="text-decoration-none text-primary-emphasis">@L["Footer_Docs"]</a>
-            <a href="/contact" class="text-decoration-none text-primary-emphasis">@L["Footer_Contact"]</a>
-            <a href="/stats" class="text-decoration-none text-primary-emphasis">@L["Footer_Stats"]</a>
+            <a href="#" class="text-decoration-none text-primary-emphasis">Terms</a>
+            <a href="#" class="text-decoration-none text-primary-emphasis">Privacy</a>
+            <a href="#" class="text-decoration-none text-primary-emphasis">Docs</a>
+            <a href="#" class="text-decoration-none text-primary-emphasis">Contact</a>
         </div>
     </footer>
 </div>
@@ -212,246 +143,23 @@
     .gh-main {
         flex: 1;
     }
-
-    /* Dark mode overrides */
-    [data-bs-theme="dark"] {
-        --gh-header: #161b22;
-        --gh-border: #30363d;
-        --gh-text: #e6edf3;
-        --gh-bg: #0d1117;
-    }
-
-    [data-bs-theme="dark"] body {
-        background-color: var(--gh-bg);
-        color: var(--gh-text);
-    }
-
-    [data-bs-theme="dark"] .gh-header {
-        background-color: #161b22;
-    }
-
-    [data-bs-theme="dark"] .list-group-item {
-        background-color: #161b22;
-        border-color: #30363d;
-        color: #e6edf3;
-    }
-
-    [data-bs-theme="dark"] .list-group-item:hover,
-    [data-bs-theme="dark"] .list-group-item-action:hover {
-        background-color: #1c2128;
-    }
-
-    [data-bs-theme="dark"] .card {
-        background-color: #161b22;
-        border-color: #30363d;
-    }
-
-    [data-bs-theme="dark"] .card-header {
-        border-color: #30363d;
-    }
-
-    [data-bs-theme="dark"] .modal-content {
-        background-color: #161b22;
-        border-color: #30363d;
-        color: #e6edf3;
-    }
-
-    [data-bs-theme="dark"] .bg-light,
-    [data-bs-theme="dark"] .bg-light-subtle {
-        background-color: #161b22 !important;
-    }
-
-    [data-bs-theme="dark"] .border,
-    [data-bs-theme="dark"] .border-bottom,
-    [data-bs-theme="dark"] .border-top,
-    [data-bs-theme="dark"] .border-end {
-        border-color: #30363d !important;
-    }
-
-    [data-bs-theme="dark"] code {
-        background-color: rgba(110,118,129,0.4);
-        color: #e6edf3;
-    }
-
-    [data-bs-theme="dark"] .form-control,
-    [data-bs-theme="dark"] .form-select {
-        background-color: #0d1117;
-        border-color: #30363d;
-        color: #e6edf3;
-    }
-
-    [data-bs-theme="dark"] .form-control:focus,
-    [data-bs-theme="dark"] .form-select:focus {
-        background-color: #0d1117;
-        border-color: #58a6ff;
-        color: #e6edf3;
-    }
-
-    [data-bs-theme="dark"] .dropdown-menu {
-        background-color: #161b22;
-        border-color: #30363d;
-    }
-
-    [data-bs-theme="dark"] .dropdown-item {
-        color: #e6edf3;
-    }
-
-    [data-bs-theme="dark"] .dropdown-item:hover {
-        background-color: #1c2128;
-    }
-
-    [data-bs-theme="dark"] .text-dark {
-        color: #e6edf3 !important;
-    }
-
-    [data-bs-theme="dark"] .text-muted {
-        color: #8b949e !important;
-    }
-
-    [data-bs-theme="dark"] .nav-tabs .nav-link {
-        color: #8b949e;
-    }
-
-    [data-bs-theme="dark"] .nav-tabs .nav-link.active {
-        background-color: #0d1117;
-        border-color: #30363d #30363d #0d1117;
-        color: #e6edf3;
-    }
-
-    [data-bs-theme="dark"] .gh-footer {
-        border-color: #30363d !important;
-    }
-
-    [data-bs-theme="dark"] .input-group-text {
-        background-color: #161b22;
-        border-color: #30363d;
-        color: #e6edf3;
-    }
-
-    [data-bs-theme="dark"] .breadcrumb-item a {
-        color: #58a6ff;
-    }
-
-    [data-bs-theme="dark"] .breadcrumb-item.active {
-        color: #e6edf3;
-    }
-
-    [data-bs-theme="dark"] .btn-outline-secondary {
-        color: #8b949e;
-        border-color: #30363d;
-    }
-
-    [data-bs-theme="dark"] .btn-outline-secondary:hover {
-        background-color: #30363d;
-        color: #e6edf3;
-    }
-
-    [data-bs-theme="dark"] .btn-light {
-        background-color: #21262d;
-        border-color: #30363d;
-        color: #e6edf3;
-    }
-
-    [data-bs-theme="dark"] .btn-light:hover {
-        background-color: #30363d;
-    }
 </style>
 
 @code {
-    private string currentTheme = "light";
-    private string currentCulture = "en";
-    private int unreadNotificationCount;
-    private string? userAvatarUrl;
-    private bool showShortcutsHelp;
-    private DotNetObjectReference<MainLayout>? _dotNetRef;
-    private System.Threading.Timer? _notificationTimer;
-
-    private static readonly (string Code, string Name)[] supportedLanguages = new[]
-    {
-        ("en", "English"), ("es", "Español"), ("fr", "Français"), ("de", "Deutsch"),
-        ("ja", "日本語"), ("ko", "한국어"), ("zh", "中文"), ("pt", "Português"),
-        ("ru", "Русский"), ("it", "Italiano"), ("tr", "Türkçe")
-    };
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             try
             {
-                currentTheme = await JS.InvokeAsync<string>("themeHelper.init");
-                currentCulture = await JS.InvokeAsync<string>("eval", "document.cookie.match(/\\.AspNetCore\\.Culture=c%3D([^|&;]+)/)?.[1] || navigator.language?.substring(0,2) || 'en'") ?? "en";
                 var sessionId = await JS.InvokeAsync<string>("sessionHelper.get", "sessionId");
                 if (!string.IsNullOrEmpty(sessionId))
                 {
                     await UserService.InitializeFromSessionAsync(sessionId);
-                    if (UserService.IsLoggedIn)
-                    {
-                        try { unreadNotificationCount = await NotificationService.GetUnreadCountAsync(UserService.Username); } catch { }
-                        try { var profile = await UserProfileService.GetProfileAsync(UserService.Username); userAvatarUrl = string.IsNullOrEmpty(profile.AvatarUrl) ? null : profile.AvatarUrl; } catch { }
-
-                        // Auto-refresh notification count every 60 seconds
-                        _notificationTimer = new System.Threading.Timer(async _ =>
-                        {
-                            try
-                            {
-                                var count = await NotificationService.GetUnreadCountAsync(UserService.Username);
-                                if (count != unreadNotificationCount)
-                                {
-                                    unreadNotificationCount = count;
-                                    await InvokeAsync(StateHasChanged);
-                                }
-                            }
-                            catch { }
-                        }, null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(60));
-                    }
+                    StateHasChanged();
                 }
-
-                // Initialize keyboard shortcuts
-                _dotNetRef = DotNetObjectReference.Create(this);
-                await JS.InvokeVoidAsync("keyboardShortcuts.init", _dotNetRef);
-
-                StateHasChanged();
             }
             catch { }
-        }
-    }
-
-    private async Task SetLanguage(string culture)
-    {
-        currentCulture = culture;
-        await JS.InvokeVoidAsync("eval", $"document.cookie = '.AspNetCore.Culture=c%3D{culture}|uic%3D{culture};path=/;max-age=31536000'");
-        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
-    }
-
-    private async Task ToggleTheme()
-    {
-        currentTheme = currentTheme == "dark" ? "light" : "dark";
-        await JS.InvokeVoidAsync("themeHelper.set", currentTheme);
-    }
-
-    private static string GetAvatarUrl(string username, int size = 32)
-    {
-        // Gravatar hash from username (or email if available)
-        var input = (username ?? "anonymous").Trim().ToLowerInvariant();
-        var hash = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(input));
-        var hex = Convert.ToHexString(hash).ToLowerInvariant();
-        return $"https://www.gravatar.com/avatar/{hex}?s={size}&d=identicon";
-    }
-
-    [JSInvokable]
-    public void OnShortcut(string shortcut)
-    {
-        switch (shortcut)
-        {
-            case "help":
-                showShortcutsHelp = !showShortcutsHelp;
-                InvokeAsync(StateHasChanged);
-                break;
-            case "escape":
-                showShortcutsHelp = false;
-                InvokeAsync(StateHasChanged);
-                break;
         }
     }
 
@@ -460,11 +168,5 @@
         await UserService.LogoutAsync();
         await JS.InvokeVoidAsync("sessionHelper.remove", "sessionId");
         Navigation.NavigateTo("/login", forceLoad: true);
-    }
-
-    public void Dispose()
-    {
-        _notificationTimer?.Dispose();
-        _dotNetRef?.Dispose();
     }
 }

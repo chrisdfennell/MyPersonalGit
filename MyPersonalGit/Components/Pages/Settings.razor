@@ -2,80 +2,40 @@
 @page "/settings/{Tab}"
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
-@using MyPersonalGit.Services
-@using Microsoft.Extensions.Localization
-@using MyPersonalGit.Resources
 @using UserProfileModel = MyPersonalGit.Models.UserProfile
-@inject IUserProfileService ProfileService
-@inject IGpgKeyService GpgKeyService
-@inject ITwoFactorService TwoFactorService
-@inject IWebAuthnService WebAuthnService
-@inject IJSRuntime JS
-@inject ISecretsService SecretsService
-@inject IAuthService AuthService
-@inject IOAuthService OAuthService
-@inject CurrentUserService UserService
+@inject UserProfileService ProfileService
 @inject NavigationManager Navigation
-@inject IStringLocalizer<SharedResource> L
-@inject IWebHostEnvironment WebHostEnv
 @rendermode InteractiveServer
 
-<PageTitle>@L["Settings_Title"] - MyPersonalGit</PageTitle>
+<PageTitle>Settings - MyPersonalGit</PageTitle>
 
-@if (!UserService.IsLoggedIn)
-{
-    <div class="container py-5 text-center">
-        <i class="bi bi-gear" style="font-size: 4rem; color: #6c757d;"></i>
-        <h3 class="mt-3">@L["Settings_AuthRequired"]</h3>
-        <p class="text-muted">@L["Settings_AuthRequiredMessage"]</p>
-        <a href="/login" class="btn btn-primary">@L["Settings_SignIn"]</a>
-    </div>
-}
-else
-{
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col-md-3">
             <div class="list-group">
                 <a class="list-group-item list-group-item-action @(ActiveTab == "profile" ? "active" : "")" 
                    @onclick='() => SetTab("profile")' style="cursor: pointer;">
-                    <i class="bi bi-person"></i> @L["Settings_Profile"]
+                    <i class="bi bi-person"></i> Profile
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "account" ? "active" : "")" 
                    @onclick='() => SetTab("account")' style="cursor: pointer;">
-                    <i class="bi bi-shield-lock"></i> @L["Settings_AccountSecurity"]
+                    <i class="bi bi-shield-lock"></i> Account Security
                 </a>
-                <a class="list-group-item list-group-item-action @(ActiveTab == "ssh" ? "active" : "")"
+                <a class="list-group-item list-group-item-action @(ActiveTab == "ssh" ? "active" : "")" 
                    @onclick='() => SetTab("ssh")' style="cursor: pointer;">
-                    <i class="bi bi-key"></i> @L["Settings_SSHKeys"]
-                </a>
-                <a class="list-group-item list-group-item-action @(ActiveTab == "gpg" ? "active" : "")"
-                   @onclick='() => SetTab("gpg")' style="cursor: pointer;">
-                    <i class="bi bi-shield-lock-fill"></i> @L["Settings_GPGKeys"]
+                    <i class="bi bi-key"></i> SSH Keys
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "tokens" ? "active" : "")" 
                    @onclick='() => SetTab("tokens")' style="cursor: pointer;">
-                    <i class="bi bi-code-square"></i> @L["Settings_AccessTokens"]
+                    <i class="bi bi-code-square"></i> Access Tokens
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "sessions" ? "active" : "")" 
                    @onclick='() => SetTab("sessions")' style="cursor: pointer;">
-                    <i class="bi bi-laptop"></i> @L["Settings_Sessions"]
+                    <i class="bi bi-laptop"></i> Sessions
                 </a>
-                <a class="list-group-item list-group-item-action @(ActiveTab == "passkeys" ? "active" : "")"
-                   @onclick='() => SetTab("passkeys")' style="cursor: pointer;">
-                    <i class="bi bi-fingerprint"></i> @L["Settings_Passkeys"]
-                </a>
-                <a class="list-group-item list-group-item-action @(ActiveTab == "notifications" ? "active" : "")"
+                <a class="list-group-item list-group-item-action @(ActiveTab == "notifications" ? "active" : "")" 
                    @onclick='() => SetTab("notifications")' style="cursor: pointer;">
-                    <i class="bi bi-bell"></i> @L["Settings_Notifications"]
-                </a>
-                <a class="list-group-item list-group-item-action @(ActiveTab == "secrets" ? "active" : "")"
-                   @onclick='() => SetTab("secrets")' style="cursor: pointer;">
-                    <i class="bi bi-key-fill"></i> Secrets
-                </a>
-                <a class="list-group-item list-group-item-action @(ActiveTab == "linked" ? "active" : "")"
-                   @onclick='() => SetTab("linked")' style="cursor: pointer;">
-                    <i class="bi bi-link-45deg"></i> @L["Settings_LinkedAccounts"]
+                    <i class="bi bi-bell"></i> Notifications
                 </a>
             </div>
         </div>
@@ -85,72 +45,35 @@ else
             {
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">@L["Settings_PublicProfile"]</h5>
+                        <h5 class="mb-0">Public Profile</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label">@L["Settings_AvatarUrl"]</label>
-                            <div class="d-flex align-items-start gap-3">
-                                @if (!string.IsNullOrEmpty(UserProfileData.AvatarUrl))
-                                {
-                                    <img src="@UserProfileData.AvatarUrl" alt="Avatar preview" class="rounded-circle border"
-                                         style="width: 80px; height: 80px; object-fit: cover;" />
-                                }
-                                else
-                                {
-                                    <div class="rounded-circle border d-flex align-items-center justify-content-center bg-secondary text-white"
-                                         style="width: 80px; height: 80px; font-size: 2rem; flex-shrink: 0;">
-                                        <i class="bi bi-person"></i>
-                                    </div>
-                                }
-                                <div class="flex-grow-1">
-                                    <div class="input-group mb-2">
-                                        <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
-                                        <input type="url" class="form-control" @bind="UserProfileData.AvatarUrl"
-                                               placeholder="https://example.com/avatar.jpg" />
-                                    </div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="text-muted small">or</span>
-                                        <label class="btn btn-outline-secondary btn-sm mb-0">
-                                            <i class="bi bi-upload"></i> Upload image
-                                            <InputFile OnChange="OnAvatarFileSelected" accept="image/jpeg,image/png,image/gif,image/webp"
-                                                       style="display: none;" />
-                                        </label>
-                                        @if (avatarUploading)
-                                        {
-                                            <span class="spinner-border spinner-border-sm text-secondary"></span>
-                                        }
-                                        @if (!string.IsNullOrEmpty(avatarUploadError))
-                                        {
-                                            <span class="text-danger small">@avatarUploadError</span>
-                                        }
-                                    </div>
-                                    <div class="form-text">JPEG, PNG, GIF, or WebP. Max 5 MB.</div>
-                                </div>
-                            </div>
+                            <label class="form-label">Avatar URL</label>
+                            <input type="text" class="form-control" @bind="UserProfileData.AvatarUrl" placeholder="https://example.com/avatar.jpg" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">@L["Settings_FullName"]</label>
+                            <label class="form-label">Full Name</label>
                             <input type="text" class="form-control" @bind="UserProfileData.FullName" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">@L["Settings_Bio"]</label>
+                            <label class="form-label">Bio</label>
                             <textarea class="form-control" rows="3" @bind="UserProfileData.Bio"></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">@L["Settings_Company"]</label>
+                            <label class="form-label">Company</label>
                             <input type="text" class="form-control" @bind="UserProfileData.Company" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">@L["Settings_Location"]</label>
+                            <label class="form-label">Location</label>
                             <input type="text" class="form-control" @bind="UserProfileData.Location" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">@L["Settings_Website"]</label>
+                            <label class="form-label">Website</label>
                             <input type="url" class="form-control" @bind="UserProfileData.Website" placeholder="https://example.com" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">@L["Settings_TwitterUsername"]</label>
+                            <label class="form-label">Twitter Username</label>
                             <div class="input-group">
                                 <span class="input-group-text">@("@")</span>
                                 <input type="text" class="form-control" @bind="UserProfileData.TwitterHandle" />
@@ -160,12 +83,12 @@ else
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" @bind="UserProfileData.IsPublic" id="isPublic" />
                                 <label class="form-check-label" for="isPublic">
-                                    @L["Settings_MakeProfilePublic"]
+                                    Make profile public
                                 </label>
                             </div>
                         </div>
                         <button class="btn btn-primary" @onclick="SaveProfile">
-                            <i class="bi bi-check-lg"></i> @L["Settings_SaveProfile"]
+                            <i class="bi bi-check-lg"></i> Save Profile
                         </button>
                     </div>
                 </div>
@@ -174,127 +97,41 @@ else
             {
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0">@L["Settings_ChangePassword"]</h5>
+                        <h5 class="mb-0">Change Password</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label">@L["Settings_CurrentPassword"]</label>
+                            <label class="form-label">Current Password</label>
                             <input type="password" class="form-control" @bind="CurrentPassword" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">@L["Settings_NewPassword"]</label>
+                            <label class="form-label">New Password</label>
                             <input type="password" class="form-control" @bind="NewPassword" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">@L["Settings_ConfirmNewPassword"]</label>
+                            <label class="form-label">Confirm New Password</label>
                             <input type="password" class="form-control" @bind="ConfirmPassword" />
                         </div>
                         <button class="btn btn-primary" @onclick="ChangePassword">
-                            <i class="bi bi-shield-check"></i> @L["Settings_UpdatePassword"]
+                            <i class="bi bi-shield-check"></i> Update Password
                         </button>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">@L["Settings_TwoFactorAuth"]</h5>
+                        <h5 class="mb-0">Two-Factor Authentication</h5>
                     </div>
                     <div class="card-body">
-                        @if (!string.IsNullOrEmpty(TwoFactorMessage))
-                        {
-                            <div class="alert @(TwoFactorMessageIsError ? "alert-danger" : "alert-success") alert-dismissible">
-                                @TwoFactorMessage
-                                <button type="button" class="btn-close" @onclick='() => TwoFactorMessage = ""'></button>
-                            </div>
-                        }
-
-                        @if (TwoFactor.IsEnabled && !ShowTwoFactorSetup)
+                        @if (TwoFactor.IsEnabled)
                         {
                             <div class="alert alert-success">
                                 <i class="bi bi-shield-check"></i> Two-factor authentication is enabled
                             </div>
                             <p>Enabled on @TwoFactor.EnabledAt?.ToString("g")</p>
-
-                            @if (ShowRecoveryCodes && RecoveryCodes.Length > 0)
-                            {
-                                <div class="alert alert-warning">
-                                    <strong>Recovery Codes</strong>
-                                    <p class="mb-2">Save these codes in a safe place. Each code can only be used once.</p>
-                                    <div class="bg-dark text-light p-3 rounded font-monospace">
-                                        @foreach (var recoveryCode in RecoveryCodes)
-                                        {
-                                            <div>@recoveryCode</div>
-                                        }
-                                    </div>
-                                </div>
-                            }
-
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-outline-primary" @onclick="RegenerateRecoveryCodes">
-                                    <i class="bi bi-arrow-repeat"></i> Regenerate Recovery Codes
-                                </button>
-                                <button class="btn btn-danger" @onclick='() => ShowDisable2FAConfirm = true'>
-                                    <i class="bi bi-x-circle"></i> Disable 2FA
-                                </button>
-                            </div>
-
-                            @if (ShowDisable2FAConfirm)
-                            {
-                                <div class="mt-3 p-3 border rounded">
-                                    <p class="mb-2"><strong>Enter your current TOTP code to disable 2FA:</strong></p>
-                                    <div class="input-group" style="max-width: 300px;">
-                                        <input type="text" class="form-control font-monospace" @bind="Disable2FACode"
-                                               placeholder="000000" maxlength="6" inputmode="numeric" />
-                                        <button class="btn btn-danger" @onclick="Disable2FA">@L["Settings_Confirm"]</button>
-                                        <button class="btn btn-secondary" @onclick='() => { ShowDisable2FAConfirm = false; Disable2FACode = ""; }'>@L["Settings_Cancel"]</button>
-                                    </div>
-                                </div>
-                            }
-                        }
-                        else if (ShowTwoFactorSetup)
-                        {
-                            <div class="mb-3">
-                                <h6>Step 1: Add to your authenticator app</h6>
-                                <p>Scan the QR code with your authenticator app:</p>
-                                <div class="d-flex justify-content-center bg-white p-3 rounded mb-3 border" style="max-width: 250px;">
-                                    <div id="qrcode-2fa"></div>
-                                </div>
-                                <details class="mb-3">
-                                    <summary class="small text-muted" style="cursor: pointer;">Can't scan? Enter manually</summary>
-                                    <div class="bg-light p-3 rounded mt-2">
-                                        <p class="small mb-1"><strong>Secret key:</strong></p>
-                                        <code class="text-break user-select-all">@TwoFactorSetupSecret</code>
-                                        <p class="small mt-2 mb-1"><strong>Full URI:</strong></p>
-                                        <code class="text-break small" style="font-size: 11px;">@TwoFactorSetupUri</code>
-                                    </div>
-                                </details>
-                            </div>
-
-                            <div class="mb-3">
-                                <h6>Step 2: Verify setup</h6>
-                                <p>Enter the 6-digit code from your authenticator app to confirm setup:</p>
-                                <div class="input-group" style="max-width: 300px;">
-                                    <input type="text" class="form-control font-monospace text-center" @bind="VerifySetupCode"
-                                           placeholder="000000" maxlength="6" inputmode="numeric" />
-                                    <button class="btn btn-primary" @onclick="VerifyAndActivate2FA">@L["Settings_Verify"]</button>
-                                </div>
-                            </div>
-
-                            <button class="btn btn-secondary" @onclick="Cancel2FASetup">@L["Settings_Cancel"]</button>
-
-                            @if (ShowRecoveryCodes && RecoveryCodes.Length > 0)
-                            {
-                                <div class="alert alert-warning mt-3">
-                                    <strong>Save your recovery codes!</strong>
-                                    <p class="mb-2">These codes can be used to access your account if you lose your authenticator device. Each code can only be used once. Store them securely.</p>
-                                    <div class="bg-dark text-light p-3 rounded font-monospace">
-                                        @foreach (var recoveryCode in RecoveryCodes)
-                                        {
-                                            <div>@recoveryCode</div>
-                                        }
-                                    </div>
-                                </div>
-                            }
+                            <button class="btn btn-danger" @onclick="Disable2FA">
+                                <i class="bi bi-x-circle"></i> Disable 2FA
+                            </button>
                         }
                         else
                         {
@@ -352,86 +189,16 @@ else
                     </div>
                 </div>
             }
-            else if (ActiveTab == "gpg")
-            {
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">GPG Keys</h5>
-                        <button class="btn btn-primary btn-sm" @onclick='() => ShowAddGpgKey = true'>
-                            <i class="bi bi-plus-lg"></i> Add GPG Key
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        @if (GpgKeys.Count == 0)
-                        {
-                            <p class="text-muted">No GPG keys configured. Add a GPG key to sign and verify commits.</p>
-                        }
-                        else
-                        {
-                            <div class="list-group">
-                                @foreach (var key in GpgKeys)
-                                {
-                                    <div class="list-group-item">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <h6 class="mb-1">
-                                                    <i class="bi bi-shield-lock-fill text-success"></i>
-                                                    <span class="font-monospace">@key.KeyId</span>
-                                                    @if (key.IsVerified)
-                                                    {
-                                                        <span class="badge bg-success ms-2">Verified</span>
-                                                    }
-                                                </h6>
-                                                <p class="mb-1 small">
-                                                    <strong>Key ID:</strong> <span class="font-monospace">@key.LongKeyId</span>
-                                                </p>
-                                                <p class="mb-1 small">
-                                                    <strong>Email:</strong> @key.PrimaryEmail
-                                                    @if (key.Emails.Count > 1)
-                                                    {
-                                                        <span class="text-muted">(+@(key.Emails.Count - 1) more)</span>
-                                                    }
-                                                </p>
-                                                <small class="text-muted">
-                                                    Added @key.CreatedAt.ToString("MMM d, yyyy")
-                                                    @if (key.ExpiresAt.HasValue)
-                                                    {
-                                                        <span> &middot; Expires @key.ExpiresAt.Value.ToString("MMM d, yyyy")</span>
-                                                    }
-                                                </small>
-                                            </div>
-                                            <button class="btn btn-danger btn-sm" @onclick="() => DeleteGpgKey(key.Id)">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
-                </div>
-            }
             else if (ActiveTab == "tokens")
             {
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Personal Access Tokens</h5>
                         <button class="btn btn-primary btn-sm" @onclick='() => ShowAddToken = true'>
-                            <i class="bi bi-plus-lg"></i> @L["Settings_GenerateToken"]
+                            <i class="bi bi-plus-lg"></i> Generate Token
                         </button>
                     </div>
                     <div class="card-body">
-                        @if (!string.IsNullOrEmpty(lastGeneratedToken))
-                        {
-                            <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
-                                <i class="bi bi-key-fill"></i>
-                                <div class="flex-grow-1">
-                                    <strong>Your new token:</strong>
-                                    <code class="ms-2 user-select-all">@lastGeneratedToken</code>
-                                </div>
-                                <small class="text-muted">Copy it now — you won't see it again.</small>
-                            </div>
-                        }
                         @if (Tokens.Count == 0)
                         {
                             <p class="text-muted">No personal access tokens</p>
@@ -447,12 +214,6 @@ else
                                                 <h6 class="mb-1">@token.Name</h6>
                                                 <p class="mb-1">
                                                     <span class="badge bg-secondary">@string.Join(", ", token.Scopes)</span>
-                                                    @if (token.AllowedRoutes?.Length > 0)
-                                                    {
-                                                        <span class="badge bg-info ms-1" title="@string.Join(", ", token.AllowedRoutes)">
-                                                            <i class="bi bi-shield-lock"></i> @token.AllowedRoutes.Length route(s)
-                                                        </span>
-                                                    }
                                                 </p>
                                                 <small class="text-muted">
                                                     Created @token.CreatedAt.ToString("MMM d, yyyy")
@@ -518,76 +279,6 @@ else
                     </div>
                 </div>
             }
-            else if (ActiveTab == "passkeys")
-            {
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">@L["Settings_PasskeysTitle"]</h5>
-                        <button class="btn btn-primary btn-sm" @onclick="RegisterPasskey" disabled="@(!webAuthnSupported)">
-                            <i class="bi bi-plus-lg"></i> @L["Settings_RegisterNewKey"]
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        @if (!webAuthnSupported)
-                        {
-                            <div class="alert alert-warning">
-                                <i class="bi bi-exclamation-triangle me-2"></i>@(webAuthnUnsupportedReason ?? "Your browser does not support WebAuthn/Passkeys.")
-                            </div>
-                        }
-                        @if (!string.IsNullOrEmpty(webAuthnMessage))
-                        {
-                            <div class="alert @(webAuthnMessageIsError ? "alert-danger" : "alert-success") alert-dismissible">
-                                @webAuthnMessage
-                                <button type="button" class="btn-close" @onclick='() => webAuthnMessage = ""'></button>
-                            </div>
-                        }
-                        @if (showPasskeyNameInput)
-                        {
-                            <div class="mb-3">
-                                <label class="form-label">@L["Settings_KeyName"]</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" @bind="newPasskeyName" placeholder="@L["Settings_KeyNamePlaceholder"]" />
-                                    <button class="btn btn-primary" @onclick="CompletePasskeyRegistration">@L["Settings_Register"]</button>
-                                    <button class="btn btn-secondary" @onclick='() => showPasskeyNameInput = false'>@L["Settings_Cancel"]</button>
-                                </div>
-                            </div>
-                        }
-                        @if (webAuthnCredentials.Count == 0)
-                        {
-                            <p class="text-muted">@L["Settings_NoPasskeys"]</p>
-                            <p class="small text-muted">@L["Settings_PasskeysHelp"]</p>
-                        }
-                        else
-                        {
-                            <div class="list-group">
-                                @foreach (var cred in webAuthnCredentials)
-                                {
-                                    <div class="list-group-item">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <h6 class="mb-1">
-                                                    <i class="bi @(cred.IsPlatform ? "bi-fingerprint" : "bi-key") me-1"></i>
-                                                    @cred.Name
-                                                </h6>
-                                                <small class="text-muted">
-                                                    Registered @cred.CreatedAt.ToString("MMM d, yyyy")
-                                                    @if (cred.LastUsedAt.HasValue)
-                                                    {
-                                                        <span> • Last used @cred.LastUsedAt.Value.ToString("MMM d, yyyy")</span>
-                                                    }
-                                                </small>
-                                            </div>
-                                            <button class="btn btn-danger btn-sm" @onclick="() => DeletePasskey(cred.Id)">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
-                </div>
-            }
             else if (ActiveTab == "notifications")
             {
                 <div class="card">
@@ -597,26 +288,7 @@ else
                     <div class="card-body">
                         <div class="mb-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" @bind="UserProfileData.PushNotificationsEnabled" id="pushEnabled" />
-                                <label class="form-check-label" for="pushEnabled">
-                                    <strong>Push notifications (ntfy/Gotify)</strong>
-                                    <small class="text-muted d-block">Send notifications to external push services when configured by admin</small>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" @bind="UserProfileData.EmailNotificationsEnabled" id="emailEnabled" />
-                                <label class="form-check-label" for="emailEnabled">
-                                    <strong>Email notifications</strong>
-                                    <small class="text-muted d-block">Receive email notifications when SMTP is configured by admin</small>
-                                </label>
-                            </div>
-                        </div>
-                        <hr />
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" @bind="UserProfileData.NotifyOnPullRequest" id="notifyPR" />
+                                <input class="form-check-input" type="checkbox" @bind="NotifyOnPullRequest" id="notifyPR" />
                                 <label class="form-check-label" for="notifyPR">
                                     Pull request notifications
                                 </label>
@@ -624,7 +296,7 @@ else
                         </div>
                         <div class="mb-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" @bind="UserProfileData.NotifyOnIssue" id="notifyIssue" />
+                                <input class="form-check-input" type="checkbox" @bind="NotifyOnIssue" id="notifyIssue" />
                                 <label class="form-check-label" for="notifyIssue">
                                     Issue notifications
                                 </label>
@@ -632,7 +304,7 @@ else
                         </div>
                         <div class="mb-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" @bind="UserProfileData.NotifyOnMention" id="notifyMention" />
+                                <input class="form-check-input" type="checkbox" @bind="NotifyOnMention" id="notifyMention" />
                                 <label class="form-check-label" for="notifyMention">
                                     Mention notifications
                                 </label>
@@ -640,7 +312,7 @@ else
                         </div>
                         <div class="mb-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" @bind="UserProfileData.NotifyOnComment" id="notifyComment" />
+                                <input class="form-check-input" type="checkbox" @bind="NotifyOnComment" id="notifyComment" />
                                 <label class="form-check-label" for="notifyComment">
                                     Comment notifications
                                 </label>
@@ -649,128 +321,6 @@ else
                         <button class="btn btn-primary" @onclick="SaveNotificationSettings">
                             <i class="bi bi-check-lg"></i> Save Preferences
                         </button>
-                    </div>
-                </div>
-            }
-            else if (ActiveTab == "secrets")
-            {
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-key-fill me-2"></i>User Secrets</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted small">User-level secrets are available in all workflow runs for your repositories. Repository-level secrets override these.</p>
-
-                        @if (userSecrets.Any())
-                        {
-                            <div class="list-group mb-3">
-                                @foreach (var secret in userSecrets)
-                                {
-                                    <div class="list-group-item d-flex justify-content-between align-items-center py-2">
-                                        <div>
-                                            <code class="fw-bold">@secret.Name</code>
-                                            <br /><small class="text-muted">Updated @secret.UpdatedAt.ToString("MMM d, yyyy")</small>
-                                        </div>
-                                        <div class="d-flex gap-1">
-                                            <button class="btn btn-outline-primary btn-sm" @onclick="() => BeginEditUserSecret(secret.Name)">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteUserSecret(secret.Name)">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <p class="text-muted">No user secrets configured.</p>
-                        }
-
-                        <div class="border rounded p-3 bg-light-subtle">
-                            <h6 class="small fw-bold mb-2">@(editingUserSecretName != null ? "Update Secret" : "Add Secret")</h6>
-                            <div class="mb-2">
-                                <input type="text" class="form-control form-control-sm" @bind="newUserSecretName"
-                                       placeholder="SECRET_NAME" disabled="@(editingUserSecretName != null)" />
-                            </div>
-                            <div class="mb-2">
-                                <input type="password" class="form-control form-control-sm" @bind="newUserSecretValue" placeholder="@L["Settings_SecretValue"]" />
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-gh-primary btn-sm" @onclick="SaveUserSecret"
-                                        disabled="@(string.IsNullOrWhiteSpace(newUserSecretName) || string.IsNullOrWhiteSpace(newUserSecretValue))">
-                                    @(editingUserSecretName != null ? "Update" : "Add Secret")
-                                </button>
-                                @if (editingUserSecretName != null)
-                                {
-                                    <button class="btn btn-outline-secondary btn-sm" @onclick="CancelEditUserSecret">@L["Settings_Cancel"]</button>
-                                }
-                            </div>
-                            @if (!string.IsNullOrEmpty(userSecretMessage))
-                            {
-                                <small class="@(userSecretMessageSuccess ? "text-success" : "text-danger") mt-1 d-block">@userSecretMessage</small>
-                            }
-                        </div>
-                    </div>
-                </div>
-            }
-            else if (ActiveTab == "linked")
-            {
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Linked Accounts</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted">Manage external accounts linked to your MyPersonalGit profile for single sign-on.</p>
-
-                        @if (!string.IsNullOrEmpty(LinkedAccountMessage))
-                        {
-                            <div class="alert alert-info">@LinkedAccountMessage</div>
-                        }
-
-                        @if (externalLogins.Any())
-                        {
-                            <div class="list-group mb-3">
-                                @foreach (var login in externalLogins)
-                                {
-                                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <i class="bi @MyPersonalGit.Data.OAuthService.GetProviderIcon(login.Provider) me-2"
-                                               style="color: @MyPersonalGit.Data.OAuthService.GetProviderColor(login.Provider);"></i>
-                                            <strong>@GetProviderDisplayName(login.Provider)</strong>
-                                            @if (!string.IsNullOrEmpty(login.ProviderUsername))
-                                            {
-                                                <span class="text-muted ms-1">(@login.ProviderUsername)</span>
-                                            }
-                                            <br /><small class="text-muted">Linked @login.LinkedAt.ToString("MMM d, yyyy")</small>
-                                        </div>
-                                        <button class="btn btn-outline-danger btn-sm" @onclick="() => UnlinkAccount(login.Provider)">
-                                            <i class="bi bi-x-lg me-1"></i> Unlink
-                                        </button>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <p class="text-muted">No linked accounts.</p>
-                        }
-
-                        @if (enabledOAuthProviders.Any())
-                        {
-                            <h6 class="mt-3">Link a new account</h6>
-                            <div class="d-flex flex-wrap gap-2">
-                                @foreach (var provider in enabledOAuthProviders.Where(p => !externalLogins.Any(l => l.Provider == p.ProviderName)))
-                                {
-                                    <a href="/oauth/login/@provider.ProviderName" class="btn btn-outline-secondary btn-sm">
-                                        <i class="bi @MyPersonalGit.Data.OAuthService.GetProviderIcon(provider.ProviderName) me-1"
-                                           style="color: @MyPersonalGit.Data.OAuthService.GetProviderColor(provider.ProviderName);"></i>
-                                        Link @(provider.DisplayName ?? provider.ProviderName)
-                                    </a>
-                                }
-                            </div>
-                        }
                     </div>
                 </div>
             }
@@ -790,7 +340,7 @@ else
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Title</label>
-                        <input type="text" class="form-control" @bind="NewSshKeyTitle" placeholder="@L["Settings_SshKeyPlaceholder"]" />
+                        <input type="text" class="form-control" @bind="NewSshKeyTitle" placeholder="My SSH Key" />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Key</label>
@@ -799,8 +349,8 @@ else
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick='() => ShowAddSshKey = false'>@L["Settings_Cancel"]</button>
-                    <button type="button" class="btn btn-primary" @onclick="AddSshKey">@L["Settings_AddKey"]</button>
+                    <button type="button" class="btn btn-secondary" @onclick='() => ShowAddSshKey = false'>Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="AddSshKey">Add Key</button>
                 </div>
             </div>
         </div>
@@ -819,7 +369,7 @@ else
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Token Name</label>
-                        <input type="text" class="form-control" @bind="NewTokenName" placeholder="@L["Settings_TokenPlaceholder"]" />
+                        <input type="text" class="form-control" @bind="NewTokenName" placeholder="My Token" />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Scopes</label>
@@ -840,66 +390,26 @@ else
                         <label class="form-label">Expiration (days)</label>
                         <input type="number" class="form-control" @bind="TokenExpirationDays" placeholder="30" />
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Route Restrictions <span class="badge bg-secondary">Optional</span></label>
-                        <textarea class="form-control font-monospace" rows="3" @bind="TokenAllowedRoutes"
-                                  placeholder="/api/packages/**&#10;/api/v1/repos/MyRepo/**"></textarea>
-                        <div class="form-text">
-                            One glob pattern per line. If empty, the token can access all routes matching its scopes.
-                            Use <code>**</code> to match any sub-path (e.g. <code>/api/packages/**</code>).
-                        </div>
-                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick='() => ShowAddToken = false'>@L["Settings_Cancel"]</button>
-                    <button type="button" class="btn btn-primary" @onclick="GenerateToken">@L["Settings_GenerateToken"]</button>
+                    <button type="button" class="btn btn-secondary" @onclick='() => ShowAddToken = false'>Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="GenerateToken">Generate Token</button>
                 </div>
             </div>
         </div>
     </div>
 }
-@if (ShowAddGpgKey)
-{
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add GPG Key</h5>
-                    <button type="button" class="btn-close" @onclick='() => ShowAddGpgKey = false'></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">GPG Public Key</label>
-                        <textarea class="form-control font-monospace" rows="10" @bind="NewGpgKeyContent"
-                                  placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----&#10;&#10;...&#10;&#10;-----END PGP PUBLIC KEY BLOCK-----"></textarea>
-                        <div class="form-text">Paste your ASCII-armored GPG public key.</div>
-                    </div>
-                    @if (!string.IsNullOrEmpty(GpgKeyError))
-                    {
-                        <div class="alert alert-danger small">@GpgKeyError</div>
-                    }
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick='() => ShowAddGpgKey = false'>@L["Settings_Cancel"]</button>
-                    <button type="button" class="btn btn-primary" @onclick="AddGpgKey">@L["Settings_AddKey"]</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
-} @* end else (IsLoggedIn) *@
 
 @code {
     [Parameter]
     public string? Tab { get; set; }
 
     private string ActiveTab = "profile";
+    private string CurrentUsername = "admin";
 
     private UserProfileModel UserProfileData = new();
     private TwoFactorAuth TwoFactor = new();
     private List<SshKey> SshKeys = new();
-    private List<GpgKey> GpgKeys = new();
     private List<PersonalAccessToken> Tokens = new();
     private List<ActiveUserSession> Sessions = new();
 
@@ -907,62 +417,21 @@ else
     private string NewPassword = "";
     private string ConfirmPassword = "";
 
-    // 2FA setup state
-    private bool ShowTwoFactorSetup = false;
-    private string TwoFactorSetupSecret = "";
-    private string TwoFactorSetupUri = "";
-    private string VerifySetupCode = "";
-    private bool ShowRecoveryCodes = false;
-    private string[] RecoveryCodes = Array.Empty<string>();
-    private bool ShowDisable2FAConfirm = false;
-    private string Disable2FACode = "";
-    private string TwoFactorMessage = "";
-    private bool TwoFactorMessageIsError = false;
-
-    // WebAuthn / Passkeys
-    private List<WebAuthnCredential> webAuthnCredentials = new();
-    private bool webAuthnSupported = false;
-    private string? webAuthnUnsupportedReason;
-    private string webAuthnMessage = "";
-    private bool webAuthnMessageIsError = false;
-    private bool showPasskeyNameInput = false;
-    private string newPasskeyName = "";
-
-    // Notification preferences now stored in UserProfileData
-
-    // Avatar upload
-    private bool avatarUploading = false;
-    private string avatarUploadError = "";
+    private bool NotifyOnPullRequest = true;
+    private bool NotifyOnIssue = true;
+    private bool NotifyOnMention = true;
+    private bool NotifyOnComment = true;
 
     private bool ShowAddSshKey = false;
     private string NewSshKeyTitle = "";
     private string NewSshKeyContent = "";
 
-    private bool ShowAddGpgKey = false;
-    private string NewGpgKeyContent = "";
-    private string GpgKeyError = "";
-
     private bool ShowAddToken = false;
     private string NewTokenName = "";
-    private string lastGeneratedToken = "";
     private bool TokenScopeRepo = false;
     private bool TokenScopeUser = false;
     private bool TokenScopeAdmin = false;
     private int TokenExpirationDays = 30;
-    private string TokenAllowedRoutes = "";
-
-    // Linked accounts
-    private List<ExternalLogin> externalLogins = new();
-    private List<OAuthProviderConfig> enabledOAuthProviders = new();
-    private string? LinkedAccountMessage;
-
-    // User secrets
-    private List<UserSecret> userSecrets = new();
-    private string newUserSecretName = "";
-    private string newUserSecretValue = "";
-    private string? editingUserSecretName = null;
-    private string userSecretMessage = "";
-    private bool userSecretMessageSuccess = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -973,34 +442,12 @@ else
         await LoadData();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            try
-            {
-                webAuthnSupported = await JS.InvokeAsync<bool>("webAuthn.isSupported");
-                if (!webAuthnSupported)
-                {
-                    webAuthnUnsupportedReason = await JS.InvokeAsync<string?>("webAuthn.getUnsupportedReason");
-                }
-                StateHasChanged();
-            }
-            catch { }
-        }
-        if (ShowTwoFactorSetup && !string.IsNullOrEmpty(TwoFactorSetupUri))
-        {
-            try { await JS.InvokeVoidAsync("generateQRCode", "qrcode-2fa", TwoFactorSetupUri); } catch { }
-        }
-    }
-
-    protected override Task OnParametersSetAsync()
+    protected override async Task OnParametersSetAsync()
     {
         if (!string.IsNullOrEmpty(Tab))
         {
             ActiveTab = Tab;
         }
-        return Task.CompletedTask;
     }
 
     private void SetTab(string tab)
@@ -1011,22 +458,11 @@ else
 
     private async Task LoadData()
     {
-        if (!UserService.IsLoggedIn) return;
-        UserProfileData = await ProfileService.GetProfileAsync(UserService.Username);
-        TwoFactor = await ProfileService.Get2FAAsync(UserService.Username) ?? new();
-        SshKeys = await ProfileService.GetSshKeysAsync(UserService.Username);
-        Tokens = await ProfileService.GetTokensAsync(UserService.Username);
-        Sessions = await ProfileService.GetSessionsAsync(UserService.Username);
-
-        var user = await AuthService.GetUserByUsernameAsync(UserService.Username);
-        if (user != null)
-        {
-            GpgKeys = await GpgKeyService.GetUserGpgKeysAsync(user.Id);
-            externalLogins = await OAuthService.GetExternalLoginsAsync(user.Id);
-        }
-        enabledOAuthProviders = await OAuthService.GetEnabledProvidersAsync();
-        webAuthnCredentials = await WebAuthnService.GetCredentialsAsync(UserService.Username);
-        try { userSecrets = await SecretsService.GetUserSecretsAsync(UserService.Username); } catch { userSecrets = new(); }
+        UserProfileData = await ProfileService.GetProfileAsync(CurrentUsername);
+        TwoFactor = await ProfileService.Get2FAAsync(CurrentUsername);
+        SshKeys = await ProfileService.GetSshKeysAsync(CurrentUsername);
+        Tokens = await ProfileService.GetTokensAsync(CurrentUsername);
+        Sessions = await ProfileService.GetSessionsAsync(CurrentUsername);
     }
 
     private async Task SaveProfile()
@@ -1034,176 +470,29 @@ else
         await ProfileService.SaveProfileAsync(UserProfileData);
     }
 
-    private async Task OnAvatarFileSelected(InputFileChangeEventArgs e)
-    {
-        avatarUploadError = "";
-        avatarUploading = true;
-        StateHasChanged();
-
-        try
-        {
-            var file = e.File;
-            if (file.Size > 5 * 1024 * 1024)
-            {
-                avatarUploadError = "File must be under 5 MB.";
-                return;
-            }
-
-            var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
-            if (!allowedTypes.Contains(file.ContentType.ToLowerInvariant()))
-            {
-                avatarUploadError = "Only JPEG, PNG, GIF, and WebP are allowed.";
-                return;
-            }
-
-            var uploadsDir = Path.Combine(WebHostEnv.WebRootPath, "uploads", "avatars");
-            Directory.CreateDirectory(uploadsDir);
-
-            // Delete any existing avatar for this user
-            foreach (var existing in Directory.GetFiles(uploadsDir, $"{UserService.Username}.*"))
-                File.Delete(existing);
-
-            var ext = Path.GetExtension(file.Name).ToLowerInvariant();
-            if (string.IsNullOrEmpty(ext)) ext = ".png";
-            var safeFilename = $"{UserService.Username}{ext}";
-            var filePath = Path.Combine(uploadsDir, safeFilename);
-
-            await using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
-            await using var fs = new FileStream(filePath, FileMode.Create);
-            await stream.CopyToAsync(fs);
-
-            var avatarUrl = $"/uploads/avatars/{safeFilename}?v={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
-            UserProfileData.AvatarUrl = avatarUrl;
-            await ProfileService.SaveProfileAsync(UserProfileData);
-        }
-        catch (Exception ex)
-        {
-            avatarUploadError = $"Upload failed: {ex.Message}";
-        }
-        finally
-        {
-            avatarUploading = false;
-            StateHasChanged();
-        }
-    }
-
-    private Task ChangePassword()
+    private async Task ChangePassword()
     {
         if (NewPassword != ConfirmPassword)
         {
-            return Task.CompletedTask;
+            return;
         }
-        return Task.CompletedTask;
     }
 
     private async Task Enable2FA()
     {
-        TwoFactorMessage = "";
-        var user = await AuthService.GetUserByUsernameAsync(UserService.Username);
-        if (user == null) return;
-
-        try
-        {
-            var setupInfo = await TwoFactorService.EnableTwoFactor(user.Id);
-            TwoFactorSetupSecret = setupInfo.Secret;
-            TwoFactorSetupUri = setupInfo.TotpUri;
-            ShowTwoFactorSetup = true;
-            ShowRecoveryCodes = false;
-            VerifySetupCode = "";
-        }
-        catch (Exception)
-        {
-            TwoFactorMessage = "Failed to initiate 2FA setup. Please try again.";
-            TwoFactorMessageIsError = true;
-        }
-    }
-
-    private async Task VerifyAndActivate2FA()
-    {
-        TwoFactorMessage = "";
-        var user = await AuthService.GetUserByUsernameAsync(UserService.Username);
-        if (user == null) return;
-
-        var success = await TwoFactorService.VerifyAndActivate(user.Id, VerifySetupCode);
-        if (success)
-        {
-            TwoFactorMessage = "Two-factor authentication has been enabled successfully.";
-            TwoFactorMessageIsError = false;
-
-            // Reload the 2FA data to get the recovery codes
-            await LoadData();
-            var twoFa = await ProfileService.Get2FAAsync(UserService.Username);
-            if (twoFa != null)
-            {
-                RecoveryCodes = twoFa.BackupCodes;
-                ShowRecoveryCodes = true;
-            }
-            ShowTwoFactorSetup = true; // Keep showing setup page with recovery codes
-        }
-        else
-        {
-            TwoFactorMessage = "Invalid verification code. Please check the code and try again.";
-            TwoFactorMessageIsError = true;
-        }
-    }
-
-    private void Cancel2FASetup()
-    {
-        ShowTwoFactorSetup = false;
-        TwoFactorSetupSecret = "";
-        TwoFactorSetupUri = "";
-        VerifySetupCode = "";
-        ShowRecoveryCodes = false;
-        RecoveryCodes = Array.Empty<string>();
+        await ProfileService.Enable2FAAsync(CurrentUsername);
+        await LoadData();
     }
 
     private async Task Disable2FA()
     {
-        TwoFactorMessage = "";
-        var user = await AuthService.GetUserByUsernameAsync(UserService.Username);
-        if (user == null) return;
-
-        var success = await TwoFactorService.DisableTwoFactor(user.Id, Disable2FACode);
-        if (success)
-        {
-            TwoFactorMessage = "Two-factor authentication has been disabled.";
-            TwoFactorMessageIsError = false;
-            ShowDisable2FAConfirm = false;
-            Disable2FACode = "";
-            ShowRecoveryCodes = false;
-            RecoveryCodes = Array.Empty<string>();
-            await LoadData();
-        }
-        else
-        {
-            TwoFactorMessage = "Invalid TOTP code. Please try again.";
-            TwoFactorMessageIsError = true;
-        }
-    }
-
-    private async Task RegenerateRecoveryCodes()
-    {
-        TwoFactorMessage = "";
-        var user = await AuthService.GetUserByUsernameAsync(UserService.Username);
-        if (user == null) return;
-
-        RecoveryCodes = await TwoFactorService.GenerateRecoveryCodes(user.Id);
-        if (RecoveryCodes.Length > 0)
-        {
-            ShowRecoveryCodes = true;
-            TwoFactorMessage = "Recovery codes have been regenerated. Save them securely.";
-            TwoFactorMessageIsError = false;
-        }
-        else
-        {
-            TwoFactorMessage = "Failed to regenerate recovery codes.";
-            TwoFactorMessageIsError = true;
-        }
+        await ProfileService.Disable2FAAsync(CurrentUsername);
+        await LoadData();
     }
 
     private async Task AddSshKey()
     {
-        await ProfileService.AddSshKeyAsync(UserService.Username, NewSshKeyTitle, NewSshKeyContent);
+        await ProfileService.AddSshKeyAsync(CurrentUsername, NewSshKeyTitle, NewSshKeyContent);
         ShowAddSshKey = false;
         NewSshKeyTitle = "";
         NewSshKeyContent = "";
@@ -1212,31 +501,7 @@ else
 
     private async Task DeleteSshKey(int id)
     {
-        await ProfileService.DeleteSshKeyAsync(UserService.Username, id);
-        await LoadData();
-    }
-
-    private async Task AddGpgKey()
-    {
-        GpgKeyError = "";
-        var user = await AuthService.GetUserByUsernameAsync(UserService.Username);
-        if (user == null) return;
-
-        var key = await GpgKeyService.AddGpgKeyAsync(user.Id, NewGpgKeyContent);
-        if (key == null)
-        {
-            GpgKeyError = "Invalid GPG public key or key already exists. Please paste a valid ASCII-armored PGP public key.";
-            return;
-        }
-
-        ShowAddGpgKey = false;
-        NewGpgKeyContent = "";
-        await LoadData();
-    }
-
-    private async Task DeleteGpgKey(int id)
-    {
-        await GpgKeyService.DeleteGpgKeyAsync(id);
+        await ProfileService.DeleteSshKeyAsync(CurrentUsername, id);
         await LoadData();
     }
 
@@ -1247,159 +512,29 @@ else
         if (TokenScopeUser) scopes.Add("user");
         if (TokenScopeAdmin) scopes.Add("admin");
 
-        var allowedRoutes = TokenAllowedRoutes
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(r => !string.IsNullOrWhiteSpace(r))
-            .ToArray();
-
         DateTime? expiresAt = TokenExpirationDays > 0 ? DateTime.UtcNow.AddDays(TokenExpirationDays) : null;
-        lastGeneratedToken = await ProfileService.CreateTokenAsync(UserService.Username, NewTokenName, scopes.ToArray(), expiresAt, allowedRoutes);
+        await ProfileService.CreateTokenAsync(CurrentUsername, NewTokenName, scopes.ToArray(), expiresAt);
         ShowAddToken = false;
         NewTokenName = "";
         TokenScopeRepo = false;
         TokenScopeUser = false;
         TokenScopeAdmin = false;
-        TokenAllowedRoutes = "";
         await LoadData();
     }
 
     private async Task DeleteToken(int id)
     {
-        await ProfileService.DeleteTokenAsync(UserService.Username, id);
+        await ProfileService.DeleteTokenAsync(CurrentUsername, id);
         await LoadData();
     }
 
     private async Task RevokeSession(int id)
     {
-        await ProfileService.RevokeSessionAsync(UserService.Username, id);
+        await ProfileService.RevokeSessionAsync(CurrentUsername, id);
         await LoadData();
     }
 
     private async Task SaveNotificationSettings()
     {
-        await ProfileService.SaveProfileAsync(UserProfileData);
-    }
-
-    private async Task UnlinkAccount(string provider)
-    {
-        var user = await AuthService.GetUserByUsernameAsync(UserService.Username);
-        if (user != null)
-        {
-            await OAuthService.UnlinkExternalLoginAsync(user.Id, provider);
-            LinkedAccountMessage = $"{GetProviderDisplayName(provider)} account unlinked.";
-            await LoadData();
-        }
-    }
-
-    private static string GetProviderDisplayName(string provider) => provider.ToLowerInvariant() switch
-    {
-        "github" => "GitHub",
-        "google" => "Google",
-        "microsoft" => "Microsoft",
-        "gitlab" => "GitLab",
-        "bitbucket" => "Bitbucket",
-        "facebook" => "Facebook",
-        "discord" => "Discord",
-        "twitter" => "X (Twitter)",
-        _ => provider
-    };
-
-    // --- WebAuthn / Passkey methods ---
-    private async Task RegisterPasskey()
-    {
-        webAuthnMessage = "";
-        showPasskeyNameInput = true;
-        newPasskeyName = "";
-    }
-
-    private async Task CompletePasskeyRegistration()
-    {
-        if (string.IsNullOrWhiteSpace(newPasskeyName))
-        {
-            webAuthnMessage = L["Settings_EnterKeyName"];
-            webAuthnMessageIsError = true;
-            return;
-        }
-
-        try
-        {
-            var options = await WebAuthnService.GenerateRegistrationOptionsAsync(UserService.Username);
-            var optionsJson = System.Text.Json.JsonSerializer.Serialize(options);
-            var attestationJson = await JS.InvokeAsync<string>("webAuthn.register", options);
-
-            var credential = await WebAuthnService.VerifyRegistrationAsync(UserService.Username, newPasskeyName, attestationJson);
-            if (credential != null)
-            {
-                webAuthnMessage = L["Settings_PasskeyRegistered"];
-                webAuthnMessageIsError = false;
-                showPasskeyNameInput = false;
-                webAuthnCredentials = await WebAuthnService.GetCredentialsAsync(UserService.Username);
-            }
-            else
-            {
-                webAuthnMessage = "Registration verification failed. Please try again.";
-                webAuthnMessageIsError = true;
-            }
-        }
-        catch (Exception ex)
-        {
-            webAuthnMessage = $"Registration failed: {ex.Message}";
-            webAuthnMessageIsError = true;
-        }
-    }
-
-    private async Task DeletePasskey(int id)
-    {
-        await WebAuthnService.DeleteCredentialAsync(UserService.Username, id);
-        webAuthnCredentials = await WebAuthnService.GetCredentialsAsync(UserService.Username);
-        webAuthnMessage = L["Settings_PasskeyRemoved"];
-        webAuthnMessageIsError = false;
-    }
-
-    // --- User secrets methods ---
-    private async Task SaveUserSecret()
-    {
-        userSecretMessage = "";
-        if (string.IsNullOrWhiteSpace(newUserSecretName) || string.IsNullOrWhiteSpace(newUserSecretValue)) return;
-        var result = await SecretsService.SetUserSecretAsync(UserService.Username, newUserSecretName.Trim(), newUserSecretValue);
-        if (result)
-        {
-            userSecretMessage = editingUserSecretName != null ? "Secret updated." : "Secret added.";
-            userSecretMessageSuccess = true;
-            newUserSecretName = "";
-            newUserSecretValue = "";
-            editingUserSecretName = null;
-            userSecrets = await SecretsService.GetUserSecretsAsync(UserService.Username);
-        }
-        else
-        {
-            userSecretMessage = "Failed to save secret. Name must start with a letter or underscore, and contain only A-Z, 0-9, _.";
-            userSecretMessageSuccess = false;
-        }
-    }
-
-    private async Task DeleteUserSecret(string name)
-    {
-        userSecretMessage = "";
-        await SecretsService.DeleteUserSecretAsync(UserService.Username, name);
-        userSecrets = await SecretsService.GetUserSecretsAsync(UserService.Username);
-        userSecretMessage = $"Secret '{name}' deleted.";
-        userSecretMessageSuccess = true;
-    }
-
-    private void BeginEditUserSecret(string name)
-    {
-        editingUserSecretName = name;
-        newUserSecretName = name;
-        newUserSecretValue = "";
-        userSecretMessage = "";
-    }
-
-    private void CancelEditUserSecret()
-    {
-        editingUserSecretName = null;
-        newUserSecretName = "";
-        newUserSecretValue = "";
-        userSecretMessage = "";
     }
 }

@@ -1,48 +1,51 @@
 using System.Text.Json;
-using System.Text.RegularExpressions;
-using LibGit2Sharp;
-using Microsoft.EntityFrameworkCore;
 using MyPersonalGit.Models;
 
 namespace MyPersonalGit.Data;
 
-public interface ISecurityService
+public class SecurityService
 {
-    Task<List<SecurityAdvisory>> GetAdvisoriesAsync(string repoName);
-    Task<SecurityAdvisory> CreateAdvisoryAsync(string repoName, string title, string description, SecuritySeverity severity, string affectedVersions, string reporter);
-    Task<bool> PublishAdvisoryAsync(string repoName, int advisoryId);
-    Task<bool> CloseAdvisoryAsync(string repoName, int advisoryId, string? patchedVersions = null);
-    Task<List<SecurityScan>> GetScansAsync(string repoName);
-    Task<SecurityScan?> GetLatestScanAsync(string repoName);
-    Task<SecurityScan> CreateScanAsync(string repoName, List<Dependency> dependencies);
-    Task<SecurityScan> ScanRepositoryAsync(string repoName, string repoPath);
-}
-
-public class SecurityService : ISecurityService
-{
-    private readonly IDbContextFactory<AppDbContext> _dbFactory;
+    private readonly string _dataPath;
     private readonly ILogger<SecurityService> _logger;
 
-    public SecurityService(IDbContextFactory<AppDbContext> dbFactory, ILogger<SecurityService> logger)
+    public SecurityService(IConfiguration configuration, ILogger<SecurityService> logger)
     {
-        _dbFactory = dbFactory;
+        var projectRoot = configuration["ProjectRoot"] ?? throw new InvalidOperationException("ProjectRoot not configured");
+        _dataPath = Path.Combine(projectRoot, ".mypersonalgit");
         _logger = logger;
+        Directory.CreateDirectory(_dataPath);
     }
+
+    private string GetAdvisoriesFilePath(string repoName) => Path.Combine(_dataPath, $"{repoName}_advisories.json");
+    private string GetScansFilePath(string repoName) => Path.Combine(_dataPath, $"{repoName}_scans.json");
 
     public async Task<List<SecurityAdvisory>> GetAdvisoriesAsync(string repoName)
     {
-        using var db = _dbFactory.CreateDbContext();
-        return await db.SecurityAdvisories.Where(a => a.RepoName == repoName).ToListAsync();
+        var filePath = GetAdvisoriesFilePath(repoName);
+        if (!File.Exists(filePath))
+            return new List<SecurityAdvisory>();
+
+        try
+        {
+            var json = await File.ReadAllTextAsync(filePath);
+            return JsonSerializer.Deserialize<List<SecurityAdvisory>>(json) ?? new List<SecurityAdvisory>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load advisories for {RepoName}", repoName);
+            return new List<SecurityAdvisory>();
+        }
     }
 
     public async Task<SecurityAdvisory> CreateAdvisoryAsync(
-        string repoName, string title, string description,
+        string repoName, string title, string description, 
         SecuritySeverity severity, string affectedVersions, string reporter)
     {
-        using var db = _dbFactory.CreateDbContext();
-
+        var advisories = await GetAdvisoriesAsync(repoName);
+        
         var advisory = new SecurityAdvisory
         {
+            Id = advisories.Count > 0 ? advisories.Max(a => a.Id) + 1 : 1,
             RepoName = repoName,
             Title = title,
             Description = description,
@@ -53,531 +56,103 @@ public class SecurityService : ISecurityService
             CreatedAt = DateTime.UtcNow
         };
 
-        db.SecurityAdvisories.Add(advisory);
-        await db.SaveChangesAsync();
-
-        _logger.LogInformation("Security advisory '{Title}' created for {RepoName} by {Reporter}", title, repoName, reporter);
+        advisories.Add(advisory);
+        await SaveAdvisoriesAsync(repoName, advisories);
         return advisory;
     }
 
     public async Task<bool> PublishAdvisoryAsync(string repoName, int advisoryId)
     {
-        using var db = _dbFactory.CreateDbContext();
-
-        var advisory = await db.SecurityAdvisories
-            .FirstOrDefaultAsync(a => a.Id == advisoryId && a.RepoName == repoName);
-
+        var advisories = await GetAdvisoriesAsync(repoName);
+        var advisory = advisories.FirstOrDefault(a => a.Id == advisoryId);
+        
         if (advisory == null)
             return false;
 
         advisory.State = SecurityAdvisoryState.Published;
         advisory.PublishedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync();
-
-        _logger.LogInformation("Advisory {AdvisoryId} published for {RepoName}", advisoryId, repoName);
+        await SaveAdvisoriesAsync(repoName, advisories);
         return true;
     }
 
     public async Task<bool> CloseAdvisoryAsync(string repoName, int advisoryId, string? patchedVersions = null)
     {
-        using var db = _dbFactory.CreateDbContext();
-
-        var advisory = await db.SecurityAdvisories
-            .FirstOrDefaultAsync(a => a.Id == advisoryId && a.RepoName == repoName);
-
+        var advisories = await GetAdvisoriesAsync(repoName);
+        var advisory = advisories.FirstOrDefault(a => a.Id == advisoryId);
+        
         if (advisory == null)
             return false;
 
         advisory.State = SecurityAdvisoryState.Closed;
         advisory.ClosedAt = DateTime.UtcNow;
         advisory.PatchedVersions = patchedVersions;
-        await db.SaveChangesAsync();
-
-        _logger.LogInformation("Advisory {AdvisoryId} closed for {RepoName}", advisoryId, repoName);
+        await SaveAdvisoriesAsync(repoName, advisories);
         return true;
     }
 
     public async Task<List<SecurityScan>> GetScansAsync(string repoName)
     {
-        using var db = _dbFactory.CreateDbContext();
-        return await db.SecurityScans
-            .Include(s => s.Dependencies)
-                .ThenInclude(d => d.Vulnerabilities)
-            .Where(s => s.RepoName == repoName)
-            .ToListAsync();
+        var filePath = GetScansFilePath(repoName);
+        if (!File.Exists(filePath))
+            return new List<SecurityScan>();
+
+        try
+        {
+            var json = await File.ReadAllTextAsync(filePath);
+            return JsonSerializer.Deserialize<List<SecurityScan>>(json) ?? new List<SecurityScan>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load scans for {RepoName}", repoName);
+            return new List<SecurityScan>();
+        }
     }
 
     public async Task<SecurityScan?> GetLatestScanAsync(string repoName)
     {
-        using var db = _dbFactory.CreateDbContext();
-        return await db.SecurityScans
-            .Include(s => s.Dependencies)
-                .ThenInclude(d => d.Vulnerabilities)
-            .Where(s => s.RepoName == repoName)
-            .OrderByDescending(s => s.ScannedAt)
-            .FirstOrDefaultAsync();
+        var scans = await GetScansAsync(repoName);
+        return scans.OrderByDescending(s => s.ScannedAt).FirstOrDefault();
     }
 
     public async Task<SecurityScan> CreateScanAsync(string repoName, List<Dependency> dependencies)
     {
-        using var db = _dbFactory.CreateDbContext();
-
+        var scans = await GetScansAsync(repoName);
+        
         var vulnerabilitiesFound = dependencies.Sum(d => d.Vulnerabilities.Count);
+        var criticalCount = dependencies.Sum(d => d.Vulnerabilities.Count(v => v.Severity == SecuritySeverity.Critical));
+        var highCount = dependencies.Sum(d => d.Vulnerabilities.Count(v => v.Severity == SecuritySeverity.High));
+        var mediumCount = dependencies.Sum(d => d.Vulnerabilities.Count(v => v.Severity == SecuritySeverity.Medium));
+        var lowCount = dependencies.Sum(d => d.Vulnerabilities.Count(v => v.Severity == SecuritySeverity.Low));
 
         var scan = new SecurityScan
         {
+            Id = scans.Count > 0 ? scans.Max(s => s.Id) + 1 : 1,
             RepoName = repoName,
             ScannedAt = DateTime.UtcNow,
             VulnerabilitiesFound = vulnerabilitiesFound,
-            CriticalCount = dependencies.Sum(d => d.Vulnerabilities.Count(v => v.Severity == SecuritySeverity.Critical)),
-            HighCount = dependencies.Sum(d => d.Vulnerabilities.Count(v => v.Severity == SecuritySeverity.High)),
-            MediumCount = dependencies.Sum(d => d.Vulnerabilities.Count(v => v.Severity == SecuritySeverity.Medium)),
-            LowCount = dependencies.Sum(d => d.Vulnerabilities.Count(v => v.Severity == SecuritySeverity.Low)),
+            CriticalCount = criticalCount,
+            HighCount = highCount,
+            MediumCount = mediumCount,
+            LowCount = lowCount,
             Dependencies = dependencies
         };
 
-        db.SecurityScans.Add(scan);
-        await db.SaveChangesAsync();
-
-        _logger.LogInformation("Security scan completed for {RepoName}: {Count} vulnerabilities found", repoName, scan.VulnerabilitiesFound);
+        scans.Add(scan);
+        await SaveScansAsync(repoName, scans);
         return scan;
     }
 
-    /// <summary>
-    /// Scans a repository by extracting dependencies from project files and checking
-    /// them against the OSV (Open Source Vulnerabilities) API.
-    /// Supports: .csproj (NuGet), package.json (npm), requirements.txt (PyPI).
-    /// </summary>
-    public async Task<SecurityScan> ScanRepositoryAsync(string repoName, string repoPath)
+    private async Task SaveAdvisoriesAsync(string repoName, List<SecurityAdvisory> advisories)
     {
-        _logger.LogInformation("Starting security scan for {RepoName}", repoName);
-
-        // Extract dependencies from repo files
-        var dependencies = ExtractDependencies(repoPath);
-        _logger.LogInformation("Found {Count} dependencies in {RepoName}", dependencies.Count, repoName);
-
-        // Check each dependency against OSV API
-        using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-        foreach (var dep in dependencies)
-        {
-            try
-            {
-                var vulns = await QueryOsvAsync(httpClient, dep.Name, dep.Version, dep.Type);
-                dep.Vulnerabilities = vulns;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to check vulnerabilities for {Package} {Version}", dep.Name, dep.Version);
-            }
-        }
-
-        return await CreateScanAsync(repoName, dependencies);
+        var filePath = GetAdvisoriesFilePath(repoName);
+        var json = JsonSerializer.Serialize(advisories, new JsonSerializerOptions { WriteIndented = true });
+        await File.WriteAllTextAsync(filePath, json);
     }
 
-    /// <summary>Extracts dependencies from .csproj, package.json, requirements.txt, Cargo.toml, Gemfile, composer.json, go.mod, pom.xml, pubspec.yaml in the repo.</summary>
-    private static List<Dependency> ExtractDependencies(string repoPath)
+    private async Task SaveScansAsync(string repoName, List<SecurityScan> scans)
     {
-        var dependencies = new List<Dependency>();
-
-        if (!LibGit2Sharp.Repository.IsValid(repoPath)) return dependencies;
-
-        using var repo = new LibGit2Sharp.Repository(repoPath);
-        var head = repo.Head;
-        if (head?.Tip == null) return dependencies;
-
-        // Walk the tree to find dependency files
-        WalkTree(head.Tip.Tree, "", dependencies);
-
-        // Deduplicate (same package can appear in multiple .csproj files)
-        return dependencies
-            .GroupBy(d => $"{d.Type}:{d.Name}:{d.Version}")
-            .Select(g => g.First())
-            .ToList();
-    }
-
-    private static void WalkTree(Tree tree, string path, List<Dependency> dependencies)
-    {
-        foreach (var entry in tree)
-        {
-            var fullPath = string.IsNullOrEmpty(path) ? entry.Name : $"{path}/{entry.Name}";
-
-            if (entry.TargetType == TreeEntryTargetType.Tree)
-            {
-                WalkTree((Tree)entry.Target, fullPath, dependencies);
-            }
-            else if (entry.TargetType == TreeEntryTargetType.Blob)
-            {
-                var name = entry.Name.ToLowerInvariant();
-                if (name.EndsWith(".csproj"))
-                    ParseCsproj((Blob)entry.Target, dependencies);
-                else if (name == "package.json")
-                    ParsePackageJson((Blob)entry.Target, dependencies);
-                else if (name == "requirements.txt")
-                    ParseRequirementsTxt((Blob)entry.Target, dependencies);
-                else if (name == "cargo.toml")
-                    ParseCargoToml((Blob)entry.Target, dependencies);
-                else if (name == "gemfile" || name.EndsWith(".gemspec"))
-                    ParseGemfile((Blob)entry.Target, dependencies);
-                else if (name == "composer.json")
-                    ParseComposerJson((Blob)entry.Target, dependencies);
-                else if (name == "go.mod")
-                    ParseGoMod((Blob)entry.Target, dependencies);
-                else if (name == "pom.xml")
-                    ParsePomXml((Blob)entry.Target, dependencies);
-                else if (name == "pubspec.yaml")
-                    ParsePubspecYaml((Blob)entry.Target, dependencies);
-            }
-        }
-    }
-
-    private static void ParseCsproj(Blob blob, List<Dependency> dependencies)
-    {
-        try
-        {
-            using var reader = new StreamReader(blob.GetContentStream());
-            var content = reader.ReadToEnd();
-            // Match <PackageReference Include="Name" Version="1.2.3" />
-            var matches = Regex.Matches(content,
-                @"<PackageReference\s+Include=""([^""]+)""\s+Version=""([^""]+)""",
-                RegexOptions.IgnoreCase);
-            foreach (Match match in matches)
-            {
-                dependencies.Add(new Dependency
-                {
-                    Name = match.Groups[1].Value,
-                    Version = match.Groups[2].Value,
-                    Type = "NuGet",
-                    Vulnerabilities = new List<Vulnerability>()
-                });
-            }
-        }
-        catch { }
-    }
-
-    private static void ParsePackageJson(Blob blob, List<Dependency> dependencies)
-    {
-        try
-        {
-            using var reader = new StreamReader(blob.GetContentStream());
-            var content = reader.ReadToEnd();
-            using var doc = JsonDocument.Parse(content);
-            var root = doc.RootElement;
-
-            foreach (var section in new[] { "dependencies", "devDependencies" })
-            {
-                if (!root.TryGetProperty(section, out var deps)) continue;
-                foreach (var dep in deps.EnumerateObject())
-                {
-                    var version = dep.Value.GetString() ?? "";
-                    // Strip version prefixes: ^1.2.3 -> 1.2.3, ~1.2.3 -> 1.2.3, >=1.0 -> 1.0
-                    version = Regex.Replace(version, @"^[\^~>=<]*", "");
-                    if (string.IsNullOrEmpty(version) || !char.IsDigit(version[0])) continue;
-
-                    dependencies.Add(new Dependency
-                    {
-                        Name = dep.Name,
-                        Version = version,
-                        Type = "npm",
-                        Vulnerabilities = new List<Vulnerability>()
-                    });
-                }
-            }
-        }
-        catch { }
-    }
-
-    private static void ParseRequirementsTxt(Blob blob, List<Dependency> dependencies)
-    {
-        try
-        {
-            using var reader = new StreamReader(blob.GetContentStream());
-            string? line;
-            while ((line = reader.ReadLine()) != null)
-            {
-                line = line.Trim();
-                if (string.IsNullOrEmpty(line) || line.StartsWith('#') || line.StartsWith('-')) continue;
-                // Match: package==1.2.3 or package>=1.2.3
-                var match = Regex.Match(line, @"^([a-zA-Z0-9_.-]+)\s*[=~!><]=?\s*([0-9][^\s,;]*)");
-                if (match.Success)
-                {
-                    dependencies.Add(new Dependency
-                    {
-                        Name = match.Groups[1].Value,
-                        Version = match.Groups[2].Value,
-                        Type = "PyPI",
-                        Vulnerabilities = new List<Vulnerability>()
-                    });
-                }
-            }
-        }
-        catch { }
-    }
-
-    private static void ParseCargoToml(Blob blob, List<Dependency> dependencies)
-    {
-        try
-        {
-            using var reader = new StreamReader(blob.GetContentStream());
-            string? line;
-            bool inDeps = false;
-            while ((line = reader.ReadLine()) != null)
-            {
-                line = line.Trim();
-                if (line.StartsWith("[dependencies]") || line.StartsWith("[dev-dependencies]") || line.StartsWith("[build-dependencies]"))
-                { inDeps = true; continue; }
-                if (line.StartsWith("[")) { inDeps = false; continue; }
-                if (!inDeps || string.IsNullOrEmpty(line) || line.StartsWith('#')) continue;
-                // name = "1.2.3" or name = { version = "1.2.3" }
-                var match = Regex.Match(line, @"^([a-zA-Z0-9_-]+)\s*=\s*""([^""]+)""");
-                if (!match.Success)
-                    match = Regex.Match(line, @"^([a-zA-Z0-9_-]+)\s*=\s*\{.*version\s*=\s*""([^""]+)""");
-                if (match.Success)
-                    dependencies.Add(new Dependency { Name = match.Groups[1].Value, Version = match.Groups[2].Value.TrimStart('^').TrimStart('~'), Type = "crates.io", Vulnerabilities = new() });
-            }
-        }
-        catch { }
-    }
-
-    private static void ParseGemfile(Blob blob, List<Dependency> dependencies)
-    {
-        try
-        {
-            using var reader = new StreamReader(blob.GetContentStream());
-            string? line;
-            while ((line = reader.ReadLine()) != null)
-            {
-                line = line.Trim();
-                if (string.IsNullOrEmpty(line) || line.StartsWith('#')) continue;
-                // gem 'name', '~> 1.2' or gem "name", ">= 1.0"
-                var match = Regex.Match(line, @"gem\s+['""]([^'""]+)['""]\s*,\s*['""][~>=<]*\s*([0-9][^'""]*)['""]");
-                if (match.Success)
-                    dependencies.Add(new Dependency { Name = match.Groups[1].Value, Version = match.Groups[2].Value, Type = "RubyGems", Vulnerabilities = new() });
-                else
-                {
-                    // gem 'name' (no version)
-                    match = Regex.Match(line, @"gem\s+['""]([^'""]+)['""]");
-                    if (match.Success)
-                        dependencies.Add(new Dependency { Name = match.Groups[1].Value, Version = "0", Type = "RubyGems", Vulnerabilities = new() });
-                }
-            }
-        }
-        catch { }
-    }
-
-    private static void ParseComposerJson(Blob blob, List<Dependency> dependencies)
-    {
-        try
-        {
-            using var reader = new StreamReader(blob.GetContentStream());
-            var content = reader.ReadToEnd();
-            using var doc = JsonDocument.Parse(content);
-            var root = doc.RootElement;
-            foreach (var section in new[] { "require", "require-dev" })
-            {
-                if (!root.TryGetProperty(section, out var deps)) continue;
-                foreach (var dep in deps.EnumerateObject())
-                {
-                    if (dep.Name == "php" || dep.Name.StartsWith("ext-")) continue;
-                    var version = Regex.Replace(dep.Value.GetString() ?? "", @"^[\^~>=<]*", "");
-                    if (!string.IsNullOrEmpty(version) && char.IsDigit(version[0]))
-                        dependencies.Add(new Dependency { Name = dep.Name, Version = version, Type = "Packagist", Vulnerabilities = new() });
-                }
-            }
-        }
-        catch { }
-    }
-
-    private static void ParseGoMod(Blob blob, List<Dependency> dependencies)
-    {
-        try
-        {
-            using var reader = new StreamReader(blob.GetContentStream());
-            string? line;
-            bool inRequire = false;
-            while ((line = reader.ReadLine()) != null)
-            {
-                line = line.Trim();
-                if (line == "require (") { inRequire = true; continue; }
-                if (line == ")") { inRequire = false; continue; }
-                if (line.StartsWith("require "))
-                {
-                    var match = Regex.Match(line, @"require\s+(\S+)\s+v?(\S+)");
-                    if (match.Success)
-                        dependencies.Add(new Dependency { Name = match.Groups[1].Value, Version = match.Groups[2].Value, Type = "Go", Vulnerabilities = new() });
-                }
-                else if (inRequire)
-                {
-                    var match = Regex.Match(line, @"^(\S+)\s+v?(\S+)");
-                    if (match.Success && !line.StartsWith("//"))
-                        dependencies.Add(new Dependency { Name = match.Groups[1].Value, Version = match.Groups[2].Value, Type = "Go", Vulnerabilities = new() });
-                }
-            }
-        }
-        catch { }
-    }
-
-    private static void ParsePomXml(Blob blob, List<Dependency> dependencies)
-    {
-        try
-        {
-            using var reader = new StreamReader(blob.GetContentStream());
-            var content = reader.ReadToEnd();
-            var matches = Regex.Matches(content,
-                @"<dependency>\s*<groupId>([^<]+)</groupId>\s*<artifactId>([^<]+)</artifactId>\s*<version>([^<]+)</version>",
-                RegexOptions.Singleline);
-            foreach (Match match in matches)
-                dependencies.Add(new Dependency { Name = $"{match.Groups[1].Value}:{match.Groups[2].Value}", Version = match.Groups[3].Value, Type = "Maven", Vulnerabilities = new() });
-        }
-        catch { }
-    }
-
-    private static void ParsePubspecYaml(Blob blob, List<Dependency> dependencies)
-    {
-        try
-        {
-            using var reader = new StreamReader(blob.GetContentStream());
-            string? line;
-            bool inDeps = false;
-            while ((line = reader.ReadLine()) != null)
-            {
-                if (line == "dependencies:" || line == "dev_dependencies:") { inDeps = true; continue; }
-                if (!line.StartsWith(" ") && !line.StartsWith("\t") && line.Length > 0) { inDeps = false; continue; }
-                if (!inDeps) continue;
-                line = line.Trim();
-                if (string.IsNullOrEmpty(line) || line.StartsWith('#')) continue;
-                // name: ^1.2.3 or name: ">=1.0.0"
-                var match = Regex.Match(line, @"^([a-zA-Z0-9_]+):\s*[\^~>=]*""?([0-9][^""'\s]*)""?");
-                if (match.Success)
-                    dependencies.Add(new Dependency { Name = match.Groups[1].Value, Version = match.Groups[2].Value, Type = "Pub", Vulnerabilities = new() });
-            }
-        }
-        catch { }
-    }
-
-    /// <summary>Queries the OSV.dev API for known vulnerabilities for a package.</summary>
-    private static async Task<List<Vulnerability>> QueryOsvAsync(HttpClient client, string packageName, string version, string ecosystem)
-    {
-        var vulns = new List<Vulnerability>();
-
-        // Map our ecosystem names to OSV ecosystem names
-        var osvEcosystem = ecosystem switch
-        {
-            "NuGet" => "NuGet",
-            "npm" => "npm",
-            "PyPI" => "PyPI",
-            "crates.io" => "crates.io",
-            "RubyGems" => "RubyGems",
-            "Packagist" => "Packagist",
-            "Go" => "Go",
-            "Maven" => "Maven",
-            "Pub" => "Pub",
-            _ => ecosystem
-        };
-
-        var payload = JsonSerializer.Serialize(new
-        {
-            version,
-            package_ = new { name = packageName, ecosystem = osvEcosystem }
-        });
-        // OSV API uses "package" not "package_" — fix the JSON
-        payload = payload.Replace("\"package_\"", "\"package\"");
-
-        var response = await client.PostAsync("https://api.osv.dev/v1/query",
-            new StringContent(payload, System.Text.Encoding.UTF8, "application/json"));
-
-        if (!response.IsSuccessStatusCode) return vulns;
-
-        var json = await response.Content.ReadAsStringAsync();
-        using var doc = JsonDocument.Parse(json);
-
-        if (!doc.RootElement.TryGetProperty("vulns", out var vulnsArray)) return vulns;
-
-        foreach (var vuln in vulnsArray.EnumerateArray())
-        {
-            var id = vuln.TryGetProperty("id", out var idProp) ? idProp.GetString() ?? "" : "";
-            var summary = vuln.TryGetProperty("summary", out var sumProp) ? sumProp.GetString() ?? "" : "";
-            var details = vuln.TryGetProperty("details", out var detProp) ? detProp.GetString() ?? "" : "";
-
-            // Determine severity from database_specific or severity array
-            var severity = SecuritySeverity.Medium;
-            if (vuln.TryGetProperty("database_specific", out var dbSpec) &&
-                dbSpec.TryGetProperty("severity", out var sevProp))
-            {
-                severity = sevProp.GetString()?.ToUpperInvariant() switch
-                {
-                    "CRITICAL" => SecuritySeverity.Critical,
-                    "HIGH" => SecuritySeverity.High,
-                    "MODERATE" or "MEDIUM" => SecuritySeverity.Medium,
-                    "LOW" => SecuritySeverity.Low,
-                    _ => SecuritySeverity.Medium
-                };
-            }
-            else if (vuln.TryGetProperty("severity", out var sevArray) && sevArray.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var s in sevArray.EnumerateArray())
-                {
-                    if (s.TryGetProperty("score", out var score))
-                    {
-                        var cvss = score.GetString() ?? "";
-                        // Parse CVSS score from vector string if present
-                        if (double.TryParse(cvss, out var cvssScore))
-                        {
-                            severity = cvssScore switch
-                            {
-                                >= 9.0 => SecuritySeverity.Critical,
-                                >= 7.0 => SecuritySeverity.High,
-                                >= 4.0 => SecuritySeverity.Medium,
-                                _ => SecuritySeverity.Low
-                            };
-                        }
-                    }
-                }
-            }
-
-            // Find fixed version from affected ranges
-            string? fixedVersion = null;
-            if (vuln.TryGetProperty("affected", out var affected))
-            {
-                foreach (var aff in affected.EnumerateArray())
-                {
-                    if (!aff.TryGetProperty("ranges", out var ranges)) continue;
-                    foreach (var range in ranges.EnumerateArray())
-                    {
-                        if (!range.TryGetProperty("events", out var events)) continue;
-                        foreach (var evt in events.EnumerateArray())
-                        {
-                            if (evt.TryGetProperty("fixed", out var fixedProp))
-                                fixedVersion = fixedProp.GetString();
-                        }
-                    }
-                }
-            }
-
-            var url = $"https://osv.dev/vulnerability/{id}";
-            if (vuln.TryGetProperty("references", out var refs))
-            {
-                foreach (var r in refs.EnumerateArray())
-                {
-                    if (r.TryGetProperty("type", out var typeProp) && typeProp.GetString() == "ADVISORY" &&
-                        r.TryGetProperty("url", out var urlProp))
-                    {
-                        url = urlProp.GetString() ?? url;
-                        break;
-                    }
-                }
-            }
-
-            vulns.Add(new Vulnerability
-            {
-                VulnerabilityId = id,
-                Title = string.IsNullOrEmpty(summary) ? id : summary,
-                Description = string.IsNullOrEmpty(details) ? summary : (details.Length > 500 ? details[..500] + "..." : details),
-                Severity = severity,
-                FixedVersion = fixedVersion,
-                Url = url
-            });
-        }
-
-        return vulns;
+        var filePath = GetScansFilePath(repoName);
+        var json = JsonSerializer.Serialize(scans, new JsonSerializerOptions { WriteIndented = true });
+        await File.WriteAllTextAsync(filePath, json);
     }
 }

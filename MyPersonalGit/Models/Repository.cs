@@ -2,32 +2,19 @@ namespace MyPersonalGit.Models;
 
 public class Repository
 {
-    public int Id { get; set; }
     public required string Name { get; set; }
     public string? Description { get; set; }
-    public string? WebsiteUrl { get; set; }
     public required string Owner { get; set; }
     public bool IsPrivate { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public int Stars { get; set; }
     public int Forks { get; set; }
-    public int Watchers { get; set; }
     public List<string> Topics { get; set; } = new();
     public string? DefaultBranch { get; set; } = "main";
     public bool HasIssues { get; set; } = true;
     public bool HasWiki { get; set; } = true;
     public bool HasProjects { get; set; } = true;
-    public string? ForkedFrom { get; set; }
-    public bool IsArchived { get; set; }
-    public DateTime? ArchivedAt { get; set; }
-    public bool HasPages { get; set; }
-    public string PagesBranch { get; set; } = "gh-pages";
-    public bool IsTemplate { get; set; }
-    public int? TemplateRepositoryId { get; set; }
-    public string? ExternalIssueTrackerUrl { get; set; }
-    public string? ExternalIssueTrackerPattern { get; set; } // e.g., "PROJ-{id}"
-    public bool UseExternalIssueTracker { get; set; }
 }
 
 public class RepositoryStar
@@ -36,14 +23,6 @@ public class RepositoryStar
     public required string RepoName { get; set; }
     public required string Username { get; set; }
     public DateTime StarredAt { get; set; } = DateTime.UtcNow;
-}
-
-public class RepositoryWatch
-{
-    public int Id { get; set; }
-    public required string RepoName { get; set; }
-    public required string Username { get; set; }
-    public DateTime WatchedAt { get; set; } = DateTime.UtcNow;
 }
 
 public class RepositoryFork

@@ -1,14 +1,11 @@
 @page "/register"
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
-@using Microsoft.Extensions.Localization
-@using MyPersonalGit.Resources
-@inject IAuthService AuthService
+@inject AuthService AuthService
 @inject NavigationManager Navigation
-@inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
-<PageTitle>@L["Register_PageTitle"]</PageTitle>
+<PageTitle>Register - MyPersonalGit</PageTitle>
 
 <div class="container mt-5">
     <div class="row justify-content-center">
@@ -16,8 +13,8 @@
             <div class="card shadow">
                 <div class="card-body p-4">
                     <div class="text-center mb-4">
-                        <h2 class="fw-bold">@L["Register_CreateAccount"]</h2>
-                        <p class="text-muted">@L["Register_Subtitle"]</p>
+                        <h2 class="fw-bold">Create Account</h2>
+                        <p class="text-muted">Join MyPersonalGit today</p>
                     </div>
 
                     @if (!string.IsNullOrEmpty(ErrorMessage))
@@ -38,31 +35,31 @@
                         <DataAnnotationsValidator />
                         
                         <div class="mb-3">
-                            <label for="username" class="form-label">@L["Register_Username"]</label>
-                            <InputText id="username" class="form-control" @bind-Value="registerModel.Username" placeholder="@L["Register_UsernamePlaceholder"]" />
+                            <label for="username" class="form-label">Username</label>
+                            <InputText id="username" class="form-control" @bind-Value="registerModel.Username" placeholder="Choose a username" />
                             <ValidationMessage For="@(() => registerModel.Username)" />
                         </div>
 
                         <div class="mb-3">
-                            <label for="email" class="form-label">@L["Register_Email"]</label>
-                            <InputText id="email" type="email" class="form-control" @bind-Value="registerModel.Email" placeholder="@L["Register_EmailPlaceholder"]" />
+                            <label for="email" class="form-label">Email</label>
+                            <InputText id="email" type="email" class="form-control" @bind-Value="registerModel.Email" placeholder="Enter your email" />
                             <ValidationMessage For="@(() => registerModel.Email)" />
                         </div>
 
                         <div class="mb-3">
-                            <label for="fullName" class="form-label">@L["Register_FullName"]</label>
-                            <InputText id="fullName" class="form-control" @bind-Value="registerModel.FullName" placeholder="@L["Register_FullNamePlaceholder"]" />
+                            <label for="fullName" class="form-label">Full Name (Optional)</label>
+                            <InputText id="fullName" class="form-control" @bind-Value="registerModel.FullName" placeholder="Enter your full name" />
                         </div>
 
                         <div class="mb-3">
-                            <label for="password" class="form-label">@L["Register_Password"]</label>
-                            <InputText id="password" type="password" class="form-control" @bind-Value="registerModel.Password" placeholder="@L["Register_PasswordPlaceholder"]" />
+                            <label for="password" class="form-label">Password</label>
+                            <InputText id="password" type="password" class="form-control" @bind-Value="registerModel.Password" placeholder="Create a password" />
                             <ValidationMessage For="@(() => registerModel.Password)" />
                         </div>
 
                         <div class="mb-3">
-                            <label for="confirmPassword" class="form-label">@L["Register_ConfirmPassword"]</label>
-                            <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="registerModel.ConfirmPassword" placeholder="@L["Register_ConfirmPasswordPlaceholder"]" />
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="registerModel.ConfirmPassword" placeholder="Confirm your password" />
                             <ValidationMessage For="@(() => registerModel.ConfirmPassword)" />
                         </div>
 
@@ -70,18 +67,18 @@
                             @if (IsLoading)
                             {
                                 <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                <span>@L["Register_CreatingAccount"]</span>
+                                <span>Creating account...</span>
                             }
                             else
                             {
-                                <span>@L["Register_CreateAccountButton"]</span>
+                                <span>Create account</span>
                             }
                         </button>
                     </EditForm>
 
                     <div class="text-center">
                         <p class="text-muted mb-0">
-                            @L["Register_AlreadyHaveAccount"] <a href="/login" class="text-decoration-none">@L["Register_SignIn"]</a>
+                            Already have an account? <a href="/login" class="text-decoration-none">Sign in</a>
                         </p>
                     </div>
                 </div>
@@ -106,13 +103,13 @@
         {
             if (registerModel.Password != registerModel.ConfirmPassword)
             {
-                ErrorMessage = L["Register_PasswordsDontMatch"];
+                ErrorMessage = "Passwords do not match";
                 return;
             }
 
             if (registerModel.Password.Length < 6)
             {
-                ErrorMessage = L["Register_PasswordTooShort"];
+                ErrorMessage = "Password must be at least 6 characters long";
                 return;
             }
 
@@ -125,18 +122,18 @@
 
             if (user != null)
             {
-                SuccessMessage = L["Register_Success"];
+                SuccessMessage = "Account created successfully! Redirecting to login...";
                 await Task.Delay(2000);
                 Navigation.NavigateTo("/login");
             }
             else
             {
-                ErrorMessage = L["Register_UserExists"];
+                ErrorMessage = "Username or email already exists";
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            ErrorMessage = L["Register_Error"];
+            ErrorMessage = "An error occurred during registration. Please try again.";
         }
         finally
         {
