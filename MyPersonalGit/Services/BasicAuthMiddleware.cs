@@ -185,6 +185,13 @@ public sealed class BasicAuthMiddleware
         if (path.Contains("git-receive-pack") || query == "git-receive-pack")
             return false;
 
+        // An LFS object upload is a PUT to .../info/lfs/objects/{oid}. Without this it
+        // would be classified as a read, letting anonymous users push LFS objects to
+        // public repos and read-only collaborators write to private ones.
+        if (HttpMethods.IsPut(request.Method) &&
+            path.Contains("/info/lfs/objects/", StringComparison.OrdinalIgnoreCase))
+            return false;
+
         // Everything else (info/refs with upload-pack, git-upload-pack) is a read
         return true;
     }

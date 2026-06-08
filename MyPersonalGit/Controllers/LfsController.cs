@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyPersonalGit.Data;
 using MyPersonalGit.Models;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -47,7 +48,7 @@ public class LfsController : ControllerBase
                 if (existing != null)
                 {
                     var filePath = GetLfsObjectPath(repoName, obj.Oid);
-                    if (System.IO.File.Exists(filePath))
+                    if (filePath != null && System.IO.File.Exists(filePath))
                     {
                         responseObjects.Add(new
                         {
@@ -119,6 +120,8 @@ public class LfsController : ControllerBase
     public async Task<IActionResult> Upload(string repoName, string oid)
     {
         var filePath = GetLfsObjectPath(repoName, oid);
+        if (filePath == null)
+            return BadRequest(new { message = "Invalid object id." });
         var dir = Path.GetDirectoryName(filePath)!;
         Directory.CreateDirectory(dir);
 
@@ -154,18 +157,28 @@ public class LfsController : ControllerBase
     public IActionResult Download(string repoName, string oid)
     {
         var filePath = GetLfsObjectPath(repoName, oid);
-        if (!System.IO.File.Exists(filePath))
+        if (filePath == null || !System.IO.File.Exists(filePath))
             return NotFound(new { message = "Object not found." });
 
         return PhysicalFile(filePath, "application/octet-stream");
     }
 
-    private string GetLfsObjectPath(string repoName, string oid)
+    private string? GetLfsObjectPath(string repoName, string oid)
     {
+        // oid is an attacker-controlled route param — must be a 64-char hex SHA-256
+        // before we slice it ([..2]/[2..4] would throw on short input) or use it in a path.
+        if (!IsValidLfsOid(oid)) return null;
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
-        // Store in /repos/.lfs/{repoName}/{oid[0:2]}/{oid[2:4]}/{oid}
-        return Path.Combine(projectRoot, ".lfs", repoName, oid[..2], oid[2..4], oid);
+        var lfsBase = Path.Combine(projectRoot, ".lfs");
+        // Store in <root>/.lfs/{repoName}/{oid[0:2]}/{oid[2:4]}/{oid} — route every
+        // user-controlled segment (repoName, oid) through SafePath to block traversal.
+        return SafePath.CombineUnder(lfsBase, repoName, oid[..2], oid[2..4], oid);
     }
+
+    private static bool IsValidLfsOid(string? oid)
+        => !string.IsNullOrEmpty(oid)
+           && oid.Length == 64
+           && oid.All(c => (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'));
 }
 
 // Request/response DTOs for Git LFS Batch API
