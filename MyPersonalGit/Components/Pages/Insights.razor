@@ -308,7 +308,7 @@
                         <div class="card mb-4">
                             <div class="card-header">@L["Traffic_TopReferrers"]</div>
                             <div class="card-body p-0">
-                                <table class="table table-sm mb-0">
+                                <div class="table-responsive"><table class="table table-sm mb-0">
                                     <thead><tr><th>@L["Traffic_Referrer"]</th><th class="text-end">@L["Traffic_Views"]</th></tr></thead>
                                     <tbody>
                                         @foreach (var (referrer, count) in topReferrers)
@@ -316,7 +316,7 @@
                                             <tr><td>@referrer</td><td class="text-end">@count</td></tr>
                                         }
                                     </tbody>
-                                </table>
+                                </table></div>
                             </div>
                         </div>
                     }
@@ -326,7 +326,7 @@
                         <div class="card">
                             <div class="card-header">@L["Traffic_PopularContent"]</div>
                             <div class="card-body p-0">
-                                <table class="table table-sm mb-0">
+                                <div class="table-responsive"><table class="table table-sm mb-0">
                                     <thead><tr><th>@L["Traffic_Path"]</th><th class="text-end">@L["Traffic_Views"]</th></tr></thead>
                                     <tbody>
                                         @foreach (var (path, count) in popularPages)
@@ -334,7 +334,7 @@
                                             <tr><td>@path</td><td class="text-end">@count</td></tr>
                                         }
                                     </tbody>
-                                </table>
+                                </table></div>
                             </div>
                         </div>
                     }

@@ -80,7 +80,7 @@
                 <i class="bi bi-people me-1"></i> @L["Pulse_TopContributors"]
             </div>
             <div class="card-body p-0">
-                <table class="table table-sm mb-0">
+                <div class="table-responsive"><table class="table table-sm mb-0">
                     <thead><tr><th>@L["Pulse_Contributor"]</th><th class="text-end">@L["Pulse_Commits"]</th></tr></thead>
                     <tbody>
                         @foreach (var (name, count) in topContributors)
@@ -88,7 +88,7 @@
                             <tr><td>@name</td><td class="text-end">@count</td></tr>
                         }
                     </tbody>
-                </table>
+                </table></div>
             </div>
         </div>
     }
@@ -100,7 +100,7 @@
                 <i class="bi bi-diagram-2 me-1"></i> @L["Pulse_ActiveBranches"]
             </div>
             <div class="card-body p-0">
-                <table class="table table-sm mb-0">
+                <div class="table-responsive"><table class="table table-sm mb-0">
                     <thead><tr><th>@L["Pulse_Branch"]</th><th>@L["Pulse_LastCommit"]</th><th class="text-end">@L["Pulse_Ahead"]</th></tr></thead>
                     <tbody>
                         @foreach (var branch in activeBranches)
@@ -112,7 +112,7 @@
                             </tr>
                         }
                     </tbody>
-                </table>
+                </table></div>
             </div>
         </div>
     }

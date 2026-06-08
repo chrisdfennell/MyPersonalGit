@@ -126,12 +126,12 @@
 
 @if (showCreateModal)
 {
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">@L["Env_NewEnvironment"]</h5>
-                    <button class="btn-close" @onclick="() => showCreateModal = false"></button>
+                    <button class="btn-close" aria-label="Close" @onclick="() => showCreateModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
