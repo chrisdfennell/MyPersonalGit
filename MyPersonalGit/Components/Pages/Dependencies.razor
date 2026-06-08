@@ -1,0 +1,139 @@
+@page "/repo/{RepoName}/dependencies"
+@using MyPersonalGit.Data
+@using MyPersonalGit.Resources
+@using Microsoft.Extensions.Localization
+@inject IDependencyService DependencyService
+@inject IStringLocalizer<SharedResource> L
+@rendermode InteractiveServer
+
+<PageTitle>@L["Dep_Title"] · @RepoName</PageTitle>
+
+<div class="container-fluid px-3 px-md-4 py-3" style="max-width: 1100px;">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@L["Dep_Title"]</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex align-items-center mb-1">
+        <i class="bi bi-diagram-3 fs-4 me-2 text-primary" aria-hidden="true"></i>
+        <h1 class="h4 fw-bold mb-0">@L["Dep_Title"]</h1>
+    </div>
+    <p class="text-muted">@L["Dep_Subtitle"]</p>
+
+    @if (loading)
+    {
+        <div class="d-flex align-items-center text-muted py-5">
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            <span>@L["Dep_Loading"]</span>
+        </div>
+    }
+    else if (deps.Count == 0)
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-box-seam fs-1 text-muted d-block mb-3" aria-hidden="true"></i>
+                <p class="mb-1 fw-semibold">@L["Dep_Empty"]</p>
+                <p class="text-muted small mb-0">@L["Dep_EmptyHint"]</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex flex-wrap gap-3 mb-4">
+            <div class="card border-0 shadow-sm flex-fill text-center">
+                <div class="card-body py-3">
+                    <div class="h3 fw-bold mb-0">@deps.Count</div>
+                    <div class="text-muted small">@L["Dep_TotalDeps"]</div>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm flex-fill text-center">
+                <div class="card-body py-3">
+                    <div class="h3 fw-bold mb-0">@ecosystems.Count</div>
+                    <div class="text-muted small">@L["Dep_Ecosystems"]</div>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm flex-fill text-center">
+                <div class="card-body py-3">
+                    <div class="h3 fw-bold mb-0">@manifests.Count</div>
+                    <div class="text-muted small">@L["Dep_Manifests"]</div>
+                </div>
+            </div>
+        </div>
+
+        @foreach (var manifest in deps.GroupBy(d => d.ManifestPath).OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase))
+        {
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-body-tertiary d-flex align-items-center">
+                    <i class="bi bi-file-earmark-text me-2 text-muted" aria-hidden="true"></i>
+                    <code class="text-body">@manifest.Key</code>
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis ms-2">@manifest.Count()</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">@L["Dep_ColName"]</th>
+                                <th scope="col">@L["Dep_ColVersion"]</th>
+                                <th scope="col" class="text-end">@L["Dep_ColEcosystem"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in manifest.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="fw-medium">@d.Name</span>
+                                        @if (d.IsDev)
+                                        {
+                                            <span class="badge bg-info-subtle text-info-emphasis ms-2">@L["Dep_Dev"]</span>
+                                        }
+                                    </td>
+                                    <td><code class="small text-body-secondary">@(string.IsNullOrEmpty(d.Version) ? "—" : d.Version)</code></td>
+                                    <td class="text-end"><span class="badge rounded-pill @EcoClass(d.Ecosystem)">@d.Ecosystem</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string RepoName { get; set; } = "";
+
+    private bool loading = true;
+    private IReadOnlyList<DependencyItem> deps = Array.Empty<DependencyItem>();
+    private HashSet<string> ecosystems = new();
+    private HashSet<string> manifests = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            deps = await DependencyService.GetDependenciesAsync(RepoName);
+            ecosystems = deps.Select(d => d.Ecosystem).ToHashSet();
+            manifests = deps.Select(d => d.ManifestPath).ToHashSet();
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private static string EcoClass(string ecosystem) => ecosystem switch
+    {
+        "npm" => "bg-danger-subtle text-danger-emphasis",
+        "NuGet" => "bg-primary-subtle text-primary-emphasis",
+        "pip" => "bg-warning-subtle text-warning-emphasis",
+        "Go" => "bg-info-subtle text-info-emphasis",
+        "Cargo" => "bg-secondary-subtle text-secondary-emphasis",
+        "Composer" => "bg-success-subtle text-success-emphasis",
+        "RubyGems" => "bg-danger-subtle text-danger-emphasis",
+        "Maven" => "bg-warning-subtle text-warning-emphasis",
+        _ => "bg-secondary-subtle text-secondary-emphasis"
+    };
+}

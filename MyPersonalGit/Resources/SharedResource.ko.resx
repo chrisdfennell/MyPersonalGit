@@ -3877,4 +3877,40 @@
   <data name="Setup_ErrPasswordMatch" xml:space="preserve">
     <value>비밀번호가 일치하지 않습니다.</value>
   </data>
+  <data name="Dep_Title" xml:space="preserve">
+    <value>종속성</value>
+  </data>
+  <data name="Dep_Subtitle" xml:space="preserve">
+    <value>이 저장소가 매니페스트에 선언한 패키지</value>
+  </data>
+  <data name="Dep_Loading" xml:space="preserve">
+    <value>종속성 로드 중…</value>
+  </data>
+  <data name="Dep_Empty" xml:space="preserve">
+    <value>이 저장소에서 종속성 매니페스트를 찾을 수 없습니다.</value>
+  </data>
+  <data name="Dep_EmptyHint" xml:space="preserve">
+    <value>package.json, *.csproj, requirements.txt, go.mod, Cargo.toml, composer.json, Gemfile 또는 pom.xml을 추가하세요.</value>
+  </data>
+  <data name="Dep_TotalDeps" xml:space="preserve">
+    <value>종속성</value>
+  </data>
+  <data name="Dep_Ecosystems" xml:space="preserve">
+    <value>에코시스템</value>
+  </data>
+  <data name="Dep_Manifests" xml:space="preserve">
+    <value>매니페스트</value>
+  </data>
+  <data name="Dep_ColName" xml:space="preserve">
+    <value>패키지</value>
+  </data>
+  <data name="Dep_ColVersion" xml:space="preserve">
+    <value>버전</value>
+  </data>
+  <data name="Dep_ColEcosystem" xml:space="preserve">
+    <value>에코시스템</value>
+  </data>
+  <data name="Dep_Dev" xml:space="preserve">
+    <value>dev</value>
+  </data>
 </root>

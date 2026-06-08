@@ -241,6 +241,11 @@ else
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link text-muted text-decoration-none" href="/repo/@RepoName/dependencies">
+                        <i class="bi bi-diagram-3 me-1"></i> @L["Dep_Title"]
+                    </a>
+                </li>
+                <li class="nav-item">
                     <button class="nav-link @(activeTab == "commits" || activeTab == "commit-detail" ? "active fw-bold" : "text-muted")" @onclick='() => SetTab("commits")'>
                         <i class="bi bi-clock-history me-1"></i> @L["Repo_Commits"]
                         <span class="badge rounded-pill bg-secondary bg-opacity-10 text-body ms-1">@commitCount</span>

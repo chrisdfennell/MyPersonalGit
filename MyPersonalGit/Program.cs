@@ -148,6 +148,7 @@ builder.Services.AddSingleton<IDeployKeyService, DeployKeyService>();
 builder.Services.AddSingleton<IGpgKeyService, GpgKeyService>();
 builder.Services.AddSingleton<ITemplateService, TemplateService>();
 builder.Services.AddSingleton<ICodeOwnersService, CodeOwnersService>();
+builder.Services.AddSingleton<IDependencyService, DependencyService>();
 builder.Services.AddSingleton<ITwoFactorService, TwoFactorService>();
 builder.Services.AddHostedService<WorkflowSchedulerService>();
 builder.Services.AddSingleton<IOAuthService, OAuthService>();

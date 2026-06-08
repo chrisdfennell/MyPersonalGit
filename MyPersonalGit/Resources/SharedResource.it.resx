@@ -3877,4 +3877,40 @@
   <data name="Setup_ErrPasswordMatch" xml:space="preserve">
     <value>Le password non corrispondono.</value>
   </data>
+  <data name="Dep_Title" xml:space="preserve">
+    <value>Dipendenze</value>
+  </data>
+  <data name="Dep_Subtitle" xml:space="preserve">
+    <value>Pacchetti che questo repository dichiara nei suoi manifest</value>
+  </data>
+  <data name="Dep_Loading" xml:space="preserve">
+    <value>Caricamento dipendenze…</value>
+  </data>
+  <data name="Dep_Empty" xml:space="preserve">
+    <value>Nessun manifest delle dipendenze trovato in questo repository.</value>
+  </data>
+  <data name="Dep_EmptyHint" xml:space="preserve">
+    <value>Aggiungi un package.json, *.csproj, requirements.txt, go.mod, Cargo.toml, composer.json, Gemfile o pom.xml.</value>
+  </data>
+  <data name="Dep_TotalDeps" xml:space="preserve">
+    <value>dipendenze</value>
+  </data>
+  <data name="Dep_Ecosystems" xml:space="preserve">
+    <value>ecosistemi</value>
+  </data>
+  <data name="Dep_Manifests" xml:space="preserve">
+    <value>manifest</value>
+  </data>
+  <data name="Dep_ColName" xml:space="preserve">
+    <value>Pacchetto</value>
+  </data>
+  <data name="Dep_ColVersion" xml:space="preserve">
+    <value>Versione</value>
+  </data>
+  <data name="Dep_ColEcosystem" xml:space="preserve">
+    <value>Ecosistema</value>
+  </data>
+  <data name="Dep_Dev" xml:space="preserve">
+    <value>dev</value>
+  </data>
 </root>
