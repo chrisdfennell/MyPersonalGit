@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -35,9 +36,10 @@ public class DebianController : ControllerBase
             return BadRequest("Only .deb packages are supported");
 
         // Store the file on disk
-        var diskDir = Path.Combine(StorePath, "pool", distribution, component);
-        Directory.CreateDirectory(diskDir);
-        var destPath = Path.Combine(diskDir, filename);
+        var destPath = SafePath.CombineUnder(StorePath, "pool", distribution, component, filename);
+        if (destPath == null)
+            return BadRequest(new { error = "Invalid distribution, component, or filename." });
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
         await using (var fs = new FileStream(destPath, FileMode.Create))
             await Request.Body.CopyToAsync(fs);
@@ -138,8 +140,8 @@ Date: {DateTime.UtcNow:R}";
     [HttpGet("pool/{distribution}/{component}/{filename}")]
     public async Task<IActionResult> Download(string distribution, string component, string filename)
     {
-        var filePath = Path.Combine(StorePath, "pool", distribution, component, filename);
-        if (!System.IO.File.Exists(filePath))
+        var filePath = SafePath.CombineUnder(StorePath, "pool", distribution, component, filename);
+        if (filePath == null || !System.IO.File.Exists(filePath))
             return NotFound();
 
         // Derive package name from filename

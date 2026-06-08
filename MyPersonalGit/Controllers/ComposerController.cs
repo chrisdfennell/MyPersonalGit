@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -96,9 +97,10 @@ public class ComposerController : ControllerBase
         if (archiveBytes != null && archiveFilename != null)
         {
             // Store the archive file
-            var pkgDir = Path.Combine(StorePath, vendor, packageName, version);
-            Directory.CreateDirectory(pkgDir);
-            var destPath = Path.Combine(pkgDir, archiveFilename);
+            var destPath = SafePath.CombineUnder(StorePath, vendor, packageName, version, archiveFilename);
+            if (destPath == null)
+                return BadRequest(new { error = "Invalid package coordinates or filename." });
+            Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
             await System.IO.File.WriteAllBytesAsync(destPath, archiveBytes);
 
             sha = BitConverter.ToString(SHA256.HashData(archiveBytes))
@@ -207,8 +209,8 @@ public class ComposerController : ControllerBase
     [HttpGet("files/{vendor}/{name}/{version}/{filename}")]
     public async Task<IActionResult> Download(string vendor, string name, string version, string filename)
     {
-        var filePath = Path.Combine(StorePath, vendor.ToLowerInvariant(), name.ToLowerInvariant(), version, filename);
-        if (!System.IO.File.Exists(filePath))
+        var filePath = SafePath.CombineUnder(StorePath, vendor.ToLowerInvariant(), name.ToLowerInvariant(), version, filename);
+        if (filePath == null || !System.IO.File.Exists(filePath))
             return NotFound();
 
         var fullName = $"{vendor}/{name}";
