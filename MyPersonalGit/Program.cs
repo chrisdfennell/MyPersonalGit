@@ -578,20 +578,11 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"Warning: Failed to seed secret scan patterns: {ex.Message}");
     }
 
-    if (!db.Users.Any())
+    if (!db.Users.Any(u => u.IsAdmin))
     {
-        db.Users.Add(new User
-        {
-            Username = "admin",
-            Email = "admin@localhost",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin"),
-            IsAdmin = true,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        });
-        db.SaveChanges();
-        Console.WriteLine("==> Default admin account created (username: admin, password: admin)");
-        Console.WriteLine("==> IMPORTANT: Change the default password immediately!");
+        // No admin yet — instead of seeding a default admin/admin, the first-run setup
+        // wizard at /setup lets the operator create the admin account with a chosen password.
+        Console.WriteLine("==> No admin account found. Complete first-run setup in your browser at /setup");
     }
 
     // Emergency password reset via environment variable
@@ -739,6 +730,10 @@ app.UseWebSockets();
 
 // Use standard .NET 8 static file middleware
 app.UseStaticFiles();
+
+// First-run: redirect to /setup until an admin account exists (no default admin/admin)
+app.UseSetupRedirect();
+
 app.UseAntiforgery();
 
 // Static site hosting for repository Pages
