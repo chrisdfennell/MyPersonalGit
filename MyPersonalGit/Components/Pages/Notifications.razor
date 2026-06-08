@@ -42,11 +42,17 @@ else
         </div>
     </div>
 
-    @if (NotificationsList.Count == 0)
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">@L["Common_Loading"]</span></div>
+        </div>
+    }
+    else if (NotificationsList.Count == 0)
     {
         <div class="card">
             <div class="card-body text-center py-5">
-                <i class="bi bi-bell-slash" style="font-size: 4rem; color: #6c757d;"></i>
+                <i class="bi bi-bell-slash" style="font-size: 4rem; color: #6c757d;" aria-hidden="true"></i>
                 <h3 class="mt-3">@L["Notif_NoNotifications"]</h3>
                 <p class="text-muted">@(ShowUnreadOnly ? L["Notifications_AllCaughtUp"] : L["Notifications_NoNotifications"])</p>
             </div>
@@ -59,7 +65,9 @@ else
             {
                 <div class="list-group-item @(notification.IsRead ? "" : "list-group-item-primary")">
                     <div class="d-flex justify-content-between align-items-start">
-                        <div class="flex-grow-1" style="cursor: pointer;" @onclick="() => NavigateToNotification(notification)">
+                        <div class="flex-grow-1" style="cursor: pointer;" role="button" tabindex="0"
+                             @onclick="() => NavigateToNotification(notification)"
+                             @onkeydown="(e) => HandleNotificationKey(e, notification)">
                             <div class="d-flex align-items-center mb-2">
                                 <i class="@GetNotificationIcon(notification.Type) me-2"></i>
                                 <h6 class="mb-0">@notification.Title</h6>
@@ -78,12 +86,12 @@ else
                         <div class="btn-group">
                             @if (!notification.IsRead)
                             {
-                                <button class="btn btn-sm btn-outline-primary" @onclick="() => MarkAsRead(notification.Id)">
-                                    <i class="bi bi-check"></i>
+                                <button class="btn btn-sm btn-outline-primary" @onclick="() => MarkAsRead(notification.Id)" title="Mark as read" aria-label="Mark as read">
+                                    <i class="bi bi-check" aria-hidden="true"></i>
                                 </button>
                             }
-                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteNotification(notification.Id)">
-                                <i class="bi bi-trash"></i>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteNotification(notification.Id)" title="Delete notification" aria-label="Delete notification">
+                                <i class="bi bi-trash" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
@@ -98,6 +106,7 @@ else
     private List<Notification> NotificationsList { get; set; } = new();
     private int UnreadCount { get; set; }
     private bool ShowUnreadOnly { get; set; } = true;
+    private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -107,8 +116,22 @@ else
     private async Task LoadNotifications()
     {
         if (!UserService.IsLoggedIn) return;
-        NotificationsList = await NotificationService.GetNotificationsAsync(UserService.Username, ShowUnreadOnly);
-        UnreadCount = await NotificationService.GetUnreadCountAsync(UserService.Username);
+        isLoading = true;
+        try
+        {
+            NotificationsList = await NotificationService.GetNotificationsAsync(UserService.Username, ShowUnreadOnly);
+            UnreadCount = await NotificationService.GetUnreadCountAsync(UserService.Username);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void HandleNotificationKey(KeyboardEventArgs e, Notification notification)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+            NavigateToNotification(notification);
     }
 
     private async Task MarkAsRead(int notificationId)

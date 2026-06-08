@@ -47,13 +47,13 @@
 
                             <div class="mb-3">
                                 <label for="usernameOrEmail" class="form-label">@L["Login_Username"]</label>
-                                <InputText id="usernameOrEmail" class="form-control" @bind-Value="loginModel.UsernameOrEmail" placeholder="@L["Login_UsernamePlaceholder"]" />
+                                <InputText id="usernameOrEmail" class="form-control" @bind-Value="loginModel.UsernameOrEmail" placeholder="@L["Login_UsernamePlaceholder"]" autocomplete="username" autofocus />
                                 <ValidationMessage For="@(() => loginModel.UsernameOrEmail)" />
                             </div>
 
                             <div class="mb-3">
                                 <label for="password" class="form-label">@L["Login_Password"]</label>
-                                <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" placeholder="@L["Login_PasswordPlaceholder"]" />
+                                <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" placeholder="@L["Login_PasswordPlaceholder"]" autocomplete="current-password" />
                                 <ValidationMessage For="@(() => loginModel.Password)" />
                             </div>
 
@@ -96,14 +96,14 @@
                             @if (UseRecoveryCode)
                             {
                                 <label for="recoveryCode" class="form-label">@L["Login_RecoveryCode"]</label>
-                                <input id="recoveryCode" type="text" class="form-control font-monospace" @bind="TwoFactorCode" placeholder="@L["Login_RecoveryCodePlaceholder"]" />
+                                <input id="recoveryCode" type="text" class="form-control font-monospace" @bind="TwoFactorCode" placeholder="@L["Login_RecoveryCodePlaceholder"]" autocomplete="one-time-code" />
                                 <div class="form-text">@L["Login_RecoveryCodeHelp"]</div>
                             }
                             else
                             {
                                 <label for="totpCode" class="form-label">@L["Login_AuthenticationCode"]</label>
                                 <input id="totpCode" type="text" class="form-control font-monospace text-center" @bind="TwoFactorCode"
-                                       placeholder="000000" maxlength="6" inputmode="numeric" />
+                                       placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
                                 <div class="form-text">@L["Login_AuthCodeHelp"]</div>
                             }
                         </div>
@@ -128,24 +128,15 @@
                         }
 
                         <div class="text-center mb-2">
-                            @if (UseRecoveryCode)
-                            {
-                                <a href="javascript:void(0)" class="text-decoration-none" @onclick="ToggleRecoveryCode">
-                                    @L["Login_UseAuthenticatorInstead"]
-                                </a>
-                            }
-                            else
-                            {
-                                <a href="javascript:void(0)" class="text-decoration-none" @onclick="ToggleRecoveryCode">
-                                    @L["Login_UseRecoveryCode"]
-                                </a>
-                            }
+                            <button type="button" class="btn btn-link p-0 text-decoration-none" @onclick="ToggleRecoveryCode">
+                                @(UseRecoveryCode ? L["Login_UseAuthenticatorInstead"] : L["Login_UseRecoveryCode"])
+                            </button>
                         </div>
 
                         <div class="text-center">
-                            <a href="javascript:void(0)" class="text-decoration-none text-muted" @onclick="BackToLogin">
-                                <i class="bi bi-arrow-left me-1"></i>@L["Login_BackToLogin"]
-                            </a>
+                            <button type="button" class="btn btn-link p-0 text-decoration-none text-muted" @onclick="BackToLogin">
+                                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>@L["Login_BackToLogin"]
+                            </button>
                         </div>
                     }
 

@@ -39,13 +39,13 @@
                         
                         <div class="mb-3">
                             <label for="username" class="form-label">@L["Register_Username"]</label>
-                            <InputText id="username" class="form-control" @bind-Value="registerModel.Username" placeholder="@L["Register_UsernamePlaceholder"]" />
+                            <InputText id="username" class="form-control" @bind-Value="registerModel.Username" placeholder="@L["Register_UsernamePlaceholder"]" autocomplete="username" autofocus />
                             <ValidationMessage For="@(() => registerModel.Username)" />
                         </div>
 
                         <div class="mb-3">
                             <label for="email" class="form-label">@L["Register_Email"]</label>
-                            <InputText id="email" type="email" class="form-control" @bind-Value="registerModel.Email" placeholder="@L["Register_EmailPlaceholder"]" />
+                            <InputText id="email" type="email" class="form-control" @bind-Value="registerModel.Email" placeholder="@L["Register_EmailPlaceholder"]" autocomplete="email" />
                             <ValidationMessage For="@(() => registerModel.Email)" />
                         </div>
 
@@ -56,13 +56,13 @@
 
                         <div class="mb-3">
                             <label for="password" class="form-label">@L["Register_Password"]</label>
-                            <InputText id="password" type="password" class="form-control" @bind-Value="registerModel.Password" placeholder="@L["Register_PasswordPlaceholder"]" />
+                            <InputText id="password" type="password" class="form-control" @bind-Value="registerModel.Password" placeholder="@L["Register_PasswordPlaceholder"]" autocomplete="new-password" />
                             <ValidationMessage For="@(() => registerModel.Password)" />
                         </div>
 
                         <div class="mb-3">
                             <label for="confirmPassword" class="form-label">@L["Register_ConfirmPassword"]</label>
-                            <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="registerModel.ConfirmPassword" placeholder="@L["Register_ConfirmPasswordPlaceholder"]" />
+                            <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="registerModel.ConfirmPassword" placeholder="@L["Register_ConfirmPasswordPlaceholder"]" autocomplete="new-password" />
                             <ValidationMessage For="@(() => registerModel.ConfirmPassword)" />
                         </div>
 

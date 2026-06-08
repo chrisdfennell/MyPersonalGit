@@ -71,12 +71,13 @@
                 <input type="text"
                        class="form-control form-control-sm border-secondary-subtle py-2 shadow-none"
                        placeholder="@L["Home_FindRepoPlaceholder"]"
+                       aria-label="@L["Home_FindRepoPlaceholder"]"
                        @bind="searchTerm"
                        @bind:event="oninput" />
                 @if (!string.IsNullOrEmpty(searchTerm))
                 {
-                    <button class="btn btn-outline-secondary btn-sm" @onclick="() => searchTerm = string.Empty">
-                        <i class="bi bi-x"></i>
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="() => searchTerm = string.Empty" aria-label="Clear search">
+                        <i class="bi bi-x" aria-hidden="true"></i>
                     </button>
                 }
             </div>
@@ -85,10 +86,10 @@
             </div>
         </div>
 
-        @if (repositories == null)
+        @if (isLoading)
         {
             <div class="text-center py-5">
-                <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+                <div class="spinner-border spinner-border-sm text-secondary" role="status"><span class="visually-hidden">@L["Common_Loading"]</span></div>
             </div>
         }
         else if (!FilteredRepos.Any())
@@ -230,12 +231,12 @@
 
 @if (showModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;">
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="createRepoTitle" style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title fw-bold">@L["Home_CreateNewRepo"]</h5>
-                    <button type="button" class="btn-close shadow-none" @onclick="() => showModal = false"></button>
+                    <h5 class="modal-title fw-bold" id="createRepoTitle">@L["Home_CreateNewRepo"]</h5>
+                    <button type="button" class="btn-close shadow-none" @onclick="() => showModal = false" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     @if (templateRepos.Any())
@@ -351,6 +352,7 @@
     private List<MyPersonalGit.Models.UserActivity> recentActivities = new();
     private string searchTerm = "";
     private string RootPath = "/repos";
+    private bool isLoading = true;
 
     private bool showModal = false;
     private string newRepoName = "";
@@ -376,8 +378,15 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadRepositories();
-        try { recentActivities = await ActivityService.GetRecentActivitiesAsync(20); } catch { }
+        try
+        {
+            await LoadRepositories();
+            try { recentActivities = await ActivityService.GetRecentActivitiesAsync(20); } catch { }
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
