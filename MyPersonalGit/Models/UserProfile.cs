@@ -2,6 +2,7 @@ namespace MyPersonalGit.Models;
 
 public class UserProfile
 {
+    public int Id { get; set; }
     public string Username { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
@@ -14,6 +15,14 @@ public class UserProfile
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public bool IsPublic { get; set; } = true;
+
+    // Notification preferences
+    public bool PushNotificationsEnabled { get; set; } = true;
+    public bool EmailNotificationsEnabled { get; set; } = true;
+    public bool NotifyOnPullRequest { get; set; } = true;
+    public bool NotifyOnIssue { get; set; } = true;
+    public bool NotifyOnMention { get; set; } = true;
+    public bool NotifyOnComment { get; set; } = true;
 }
 
 public class UserActivity
@@ -68,6 +77,13 @@ public class PersonalAccessToken
     public DateTime CreatedAt { get; set; }
     public DateTime? ExpiresAt { get; set; }
     public DateTime? LastUsed { get; set; }
+
+    /// <summary>
+    /// Route-level restrictions. If empty, all routes matching the scopes are allowed.
+    /// Glob patterns like "/api/packages/**" or "/api/v1/repos/MyRepo/**" restrict the token
+    /// to only those API paths.
+    /// </summary>
+    public string[] AllowedRoutes { get; set; } = Array.Empty<string>();
 }
 
 public class ActiveUserSession
@@ -84,9 +100,19 @@ public class ActiveUserSession
 
 public class TwoFactorAuth
 {
+    public int Id { get; set; }
     public string Username { get; set; } = string.Empty;
     public bool IsEnabled { get; set; }
     public string Secret { get; set; } = string.Empty;
     public string[] BackupCodes { get; set; } = Array.Empty<string>();
     public DateTime? EnabledAt { get; set; }
+}
+
+public class PinnedRepository
+{
+    public int Id { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string RepoName { get; set; } = string.Empty;
+    public int SortOrder { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

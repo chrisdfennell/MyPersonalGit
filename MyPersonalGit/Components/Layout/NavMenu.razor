@@ -1,28 +1,39 @@
 @using MyPersonalGit.Data
-@inject NotificationService NotificationService
+@using MyPersonalGit.Services
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@inject INotificationService NotificationService
+@inject CurrentUserService UserService
+@inject IStringLocalizer<SharedResource> L
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">MyPersonalGit</a>
         <div class="ms-auto d-flex gap-2">
-            <a href="/notifications" class="btn btn-sm btn-outline-light position-relative">
-                <i class="bi bi-bell"></i>
-                @if (UnreadCount > 0)
-                {
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                        @UnreadCount
-                    </span>
-                }
-            </a>
-            <a href="/profile/@CurrentUser" class="btn btn-sm btn-outline-light">
-                <i class="bi bi-person-circle"></i> Profile
-            </a>
-            <a href="/settings" class="btn btn-sm btn-outline-light">
-                <i class="bi bi-gear"></i>
-            </a>
-            <a href="/admin" class="btn btn-sm btn-outline-light">
-                <i class="bi bi-shield-lock"></i> Admin
-            </a>
+            @if (UserService.IsLoggedIn)
+            {
+                <a href="/notifications" class="btn btn-sm btn-outline-light position-relative">
+                    <i class="bi bi-bell"></i>
+                    @if (UnreadCount > 0)
+                    {
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            @UnreadCount
+                        </span>
+                    }
+                </a>
+                <a href="/profile/@UserService.Username" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-person-circle"></i> @L["Nav_Profile"]
+                </a>
+                <a href="/settings" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-gear"></i>
+                </a>
+            }
+            @if (UserService.IsAdmin)
+            {
+                <a href="/admin" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-shield-lock"></i> @L["Nav_Admin"]
+                </a>
+            }
         </div>
     </div>
 </div>
@@ -33,53 +44,72 @@
     <nav class="nav flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> @L["Nav_Home"]
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="explore">
+                <span class="bi bi-compass" aria-hidden="true"></span> @L["Nav_Explore"]
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="search">
-                <span class="bi bi-search" aria-hidden="true"></span> Search
+                <span class="bi bi-search" aria-hidden="true"></span> @L["Nav_Search"]
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="notifications">
-                <span class="bi bi-bell" aria-hidden="true"></span> Notifications
-                @if (UnreadCount > 0)
-                {
-                    <span class="badge bg-danger rounded-pill ms-2">@UnreadCount</span>
-                }
+            <NavLink class="nav-link" href="orgs">
+                <span class="bi bi-people" aria-hidden="true"></span> @L["Nav_Organizations"]
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="@($"/profile/{CurrentUser}")">
-                <span class="bi bi-person-circle" aria-hidden="true"></span> Profile
-            </NavLink>
-        </div>
+        @if (UserService.IsLoggedIn)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="notifications">
+                    <span class="bi bi-bell" aria-hidden="true"></span> @L["Nav_Notifications"]
+                    @if (UnreadCount > 0)
+                    {
+                        <span class="badge bg-danger rounded-pill ms-2">@UnreadCount</span>
+                    }
+                </NavLink>
+            </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="settings">
-                <span class="bi bi-gear" aria-hidden="true"></span> Settings
-            </NavLink>
-        </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="@($"/profile/{UserService.Username}")">
+                    <span class="bi bi-person-circle" aria-hidden="true"></span> @L["Nav_Profile"]
+                </NavLink>
+            </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="admin">
-                <span class="bi bi-shield-lock" aria-hidden="true"></span> Admin
-            </NavLink>
-        </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="settings">
+                    <span class="bi bi-gear" aria-hidden="true"></span> @L["Nav_Settings"]
+                </NavLink>
+            </div>
+        }
+
+        @if (UserService.IsAdmin)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin">
+                    <span class="bi bi-shield-lock" aria-hidden="true"></span> @L["Nav_Admin"]
+                </NavLink>
+            </div>
+        }
     </nav>
 </div>
 
 @code {
     private int UnreadCount { get; set; }
-    private string CurrentUser { get; set; } = "admin";
 
     protected override async Task OnInitializedAsync()
     {
-        UnreadCount = await NotificationService.GetUnreadCountAsync(CurrentUser);
+        if (UserService.IsLoggedIn)
+        {
+            UnreadCount = await NotificationService.GetUnreadCountAsync(UserService.Username);
+        }
     }
 }
-

@@ -1,20 +1,38 @@
 using LibGit2Sharp;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MyPersonalGit.Data;
 
 namespace MyPersonalGit.Controllers;
 
 [ApiController]
 [Route("api/v1/repos")]
+[EnableRateLimiting("api")]
 public class RepositoriesController : ControllerBase
 {
-    private readonly RepositoryService _repoService;
+    private readonly IRepositoryService _repoService;
+    private readonly IReleaseService _releaseService;
+    private readonly IArchiveService _archiveService;
+    private readonly IBlameService _blameService;
+    private readonly ITemplateService _templateService;
+    private readonly ICodeOwnersService _codeOwnersService;
+    private readonly ITagProtectionService _tagProtectionService;
+    private readonly IRepositoryLabelService _labelService;
     private readonly IConfiguration _config;
+    private readonly ILogger<RepositoriesController> _logger;
 
-    public RepositoriesController(RepositoryService repoService, IConfiguration config)
+    public RepositoriesController(IRepositoryService repoService, IReleaseService releaseService, IArchiveService archiveService, IBlameService blameService, ITemplateService templateService, ICodeOwnersService codeOwnersService, ITagProtectionService tagProtectionService, IRepositoryLabelService labelService, IConfiguration config, ILogger<RepositoriesController> logger)
     {
         _repoService = repoService;
+        _releaseService = releaseService;
+        _archiveService = archiveService;
+        _blameService = blameService;
+        _templateService = templateService;
+        _codeOwnersService = codeOwnersService;
+        _tagProtectionService = tagProtectionService;
+        _labelService = labelService;
         _config = config;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -22,6 +40,10 @@ public class RepositoriesController : ControllerBase
     {
         var repos = await _repoService.GetRepositoriesAsync();
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
+
+        // Filter private repos unless the API caller is the owner
+        var currentUser = User.Identity?.Name;
+        repos = repos.Where(r => !r.IsPrivate || (currentUser != null && r.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))).ToList();
 
         var result = repos.Select(r =>
         {
@@ -37,7 +59,7 @@ public class RepositoriesController : ControllerBase
                     defaultBranch = repo.Head?.FriendlyName;
                     commitCount = repo.Commits.Count();
                 }
-                catch { }
+                catch (Exception ex) { _logger.LogWarning(ex, "Failed to read git repository"); }
             }
 
             return new
@@ -64,6 +86,14 @@ public class RepositoriesController : ControllerBase
     {
         var repo = await _repoService.GetRepositoryAsync(repoName);
         if (repo == null) return NotFound(new { error = $"Repository '{repoName}' not found" });
+
+        // Enforce private repo access
+        if (repo.IsPrivate)
+        {
+            var currentUser = User.Identity?.Name;
+            if (currentUser == null || !repo.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))
+                return NotFound(new { error = $"Repository '{repoName}' not found" });
+        }
 
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
         var repoPath = Path.Combine(projectRoot, repoName);
@@ -116,7 +146,7 @@ public class RepositoriesController : ControllerBase
         {
             name = b.FriendlyName,
             is_head = b.IsCurrentRepositoryHead,
-            commit = b.Tip != null ? new { sha = b.Tip.Sha, message = b.Tip.MessageShort, author = b.Tip.Author.Name, date = b.Tip.Author.When.DateTime } : null
+            commit = b.Tip != null ? new { sha = b.Tip.Sha, message = b.Tip.MessageShort, author = b.Tip.Author.Name, date = b.Tip.Author.When.UtcDateTime } : null
         });
 
         return Ok(branches);
@@ -159,7 +189,7 @@ public class RepositoriesController : ControllerBase
                 message = c.MessageShort,
                 author = c.Author.Name,
                 email = c.Author.Email,
-                date = c.Author.When.DateTime
+                date = c.Author.When.UtcDateTime
             });
 
         return Ok(commits);
@@ -212,5 +242,344 @@ public class RepositoriesController : ControllerBase
         }).OrderByDescending(e => e.type == "dir").ThenBy(e => e.name);
 
         return Ok(new { type = "dir", path = path ?? "/", entries = items });
+    }
+
+    [HttpGet("{repoName}/archive/zip")]
+    public async Task<IActionResult> DownloadZipLegacy(string repoName, [FromQuery] string? @ref = null)
+    {
+        return await DownloadArchive(repoName, @ref, ArchiveFormat.Zip);
+    }
+
+    [HttpGet("{repoName}/archive/{refAndFormat}")]
+    public async Task<IActionResult> DownloadArchiveByRef(string repoName, string refAndFormat)
+    {
+        ArchiveFormat format;
+        string gitRef;
+
+        if (refAndFormat.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
+        {
+            format = ArchiveFormat.TarGz;
+            gitRef = refAndFormat[..^7]; // remove ".tar.gz"
+        }
+        else if (refAndFormat.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            format = ArchiveFormat.Zip;
+            gitRef = refAndFormat[..^4]; // remove ".zip"
+        }
+        else
+        {
+            return BadRequest(new { error = "Unsupported archive format. Use .zip or .tar.gz" });
+        }
+
+        return await DownloadArchive(repoName, gitRef, format);
+    }
+
+    private async Task<IActionResult> DownloadArchive(string repoName, string? gitRef, ArchiveFormat format)
+    {
+        var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
+        var repoPath = Path.Combine(projectRoot, repoName);
+        if (!Repository.IsValid(repoPath))
+        {
+            repoPath = Path.Combine(projectRoot, repoName + ".git");
+            if (!Repository.IsValid(repoPath))
+                return NotFound(new { error = $"Repository '{repoName}' not found" });
+        }
+
+        // Enforce private repo access
+        var meta = await _repoService.GetRepositoryAsync(repoName);
+        if (meta is { IsPrivate: true })
+        {
+            var currentUser = User.Identity?.Name;
+            if (currentUser == null || !meta.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))
+                return NotFound(new { error = $"Repository '{repoName}' not found" });
+        }
+
+        var displayName = repoName.EndsWith(".git") ? repoName[..^4] : repoName;
+        var stream = _archiveService.CreateArchive(repoPath, gitRef, format, out var resolvedRef);
+        if (stream == null)
+            return NotFound(new { error = "Invalid ref or empty repository" });
+
+        var (contentType, extension) = format switch
+        {
+            ArchiveFormat.TarGz => ("application/gzip", ".tar.gz"),
+            _ => ("application/zip", ".zip")
+        };
+
+        return File(stream, contentType, $"{displayName}-{resolvedRef}{extension}");
+    }
+
+    [HttpGet("{repoName}/releases")]
+    public async Task<IActionResult> ListReleases(string repoName)
+    {
+        var releases = await _releaseService.GetReleasesAsync(repoName);
+        return Ok(releases.Select(r => new
+        {
+            r.Id, r.TagName, r.Title, r.Body, r.Author, r.IsDraft, r.IsPrerelease,
+            created_at = r.CreatedAt, published_at = r.PublishedAt,
+            assets = r.Assets.Select(a => new { a.Id, a.FileName, a.Size, a.ContentType, a.DownloadCount })
+        }));
+    }
+
+    [HttpGet("{repoName}/releases/{releaseId}/assets/{assetId}")]
+    public async Task<IActionResult> DownloadAsset(string repoName, int releaseId, int assetId)
+    {
+        var (asset, data) = await _releaseService.GetAssetAsync(assetId);
+        if (asset == null || data == null) return NotFound(new { error = "Asset not found" });
+        return File(data, asset.ContentType, asset.FileName);
+    }
+
+    [HttpGet("templates")]
+    public async Task<IActionResult> ListTemplates()
+    {
+        var templates = await _templateService.GetTemplatesAsync();
+        var currentUser = User.Identity?.Name;
+        // Filter private templates unless the caller is the owner
+        templates = templates.Where(r => !r.IsPrivate || (currentUser != null && r.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))).ToList();
+
+        return Ok(templates.Select(r => new
+        {
+            r.Id,
+            r.Name,
+            r.Description,
+            r.Owner,
+            r.IsPrivate,
+            r.DefaultBranch,
+            created_at = r.CreatedAt,
+            updated_at = r.UpdatedAt
+        }));
+    }
+
+    [HttpPost("create-from-template")]
+    public async Task<IActionResult> CreateFromTemplate([FromBody] CreateFromTemplateRequest request)
+    {
+        var currentUser = User.Identity?.Name;
+        if (string.IsNullOrEmpty(currentUser))
+            return Unauthorized(new { error = "Authentication required" });
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { error = "Repository name is required" });
+
+        var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
+        var repo = await _templateService.CreateFromTemplateAsync(request.TemplateId, currentUser, request.Name, request.Description, request.IsPrivate, projectRoot);
+
+        if (repo == null)
+            return BadRequest(new { error = "Failed to create repository from template. Template may not exist or repository name is taken." });
+
+        return Ok(new
+        {
+            repo.Id,
+            repo.Name,
+            repo.Description,
+            repo.Owner,
+            repo.IsPrivate,
+            template_id = repo.TemplateRepositoryId,
+            created_at = repo.CreatedAt
+        });
+    }
+
+    public class CreateFromTemplateRequest
+    {
+        public int TemplateId { get; set; }
+        public string Name { get; set; } = "";
+        public string? Description { get; set; }
+        public bool IsPrivate { get; set; }
+    }
+
+    [HttpGet("{owner}/{repoName}/blame/{branch}/{**path}")]
+    public async Task<IActionResult> GetBlame(string owner, string repoName, string branch, string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return BadRequest(new { error = "File path is required" });
+
+        // Enforce private repo access
+        var meta = await _repoService.GetRepositoryAsync(repoName);
+        if (meta is { IsPrivate: true })
+        {
+            var currentUser = User.Identity?.Name;
+            if (currentUser == null || !meta.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))
+                return NotFound(new { error = $"Repository '{repoName}' not found" });
+        }
+
+        var hunks = _blameService.GetBlame(owner, repoName, branch, path);
+        if (!hunks.Any())
+            return NotFound(new { error = $"Unable to get blame for '{path}'" });
+
+        return Ok(new
+        {
+            repository = repoName,
+            owner,
+            branch,
+            path,
+            hunks = hunks.Select(h => new
+            {
+                start_line = h.FinalStartLineNumber + 1,
+                line_count = h.LineCount,
+                commit_sha = h.CommitSha,
+                short_sha = h.ShortSha,
+                author_name = h.AuthorName,
+                author_email = h.AuthorEmail,
+                date = h.Date,
+                message = h.MessageSummary,
+                lines = h.Lines
+            })
+        });
+    }
+
+    [HttpGet("{owner}/{repoName}/codeowners/{**path}")]
+    public async Task<IActionResult> GetCodeOwners(string owner, string repoName, string path, [FromQuery] string? branch = null)
+    {
+        if (string.IsNullOrEmpty(path))
+            return BadRequest(new { error = "File path is required" });
+
+        // Enforce private repo access
+        var meta = await _repoService.GetRepositoryAsync(repoName);
+        if (meta is { IsPrivate: true })
+        {
+            var currentUser = User.Identity?.Name;
+            if (currentUser == null || !meta.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))
+                return NotFound(new { error = $"Repository '{repoName}' not found" });
+        }
+
+        var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
+        var repoPath = Path.Combine(projectRoot, repoName);
+        if (!Repository.IsValid(repoPath))
+        {
+            repoPath = Path.Combine(projectRoot, repoName + ".git");
+            if (!Repository.IsValid(repoPath))
+                return NotFound(new { error = $"Repository '{repoName}' not found" });
+        }
+
+        var targetBranch = branch ?? "main";
+        try
+        {
+            using var repo = new Repository(repoPath);
+            var branchRef = repo.Branches[targetBranch] ?? repo.Branches["main"] ?? repo.Branches["master"] ?? repo.Head;
+            if (branchRef != null)
+                targetBranch = branchRef.FriendlyName;
+        }
+        catch { }
+
+        var owners = _codeOwnersService.GetCodeOwnersForFile(repoPath, targetBranch, path);
+
+        return Ok(new
+        {
+            repository = repoName,
+            owner,
+            branch = targetBranch,
+            path,
+            owners
+        });
+    }
+
+    // --- Tag Protection ---
+
+    [HttpGet("{repoName}/tag-protection")]
+    public async Task<IActionResult> ListTagProtectionRules(string repoName)
+    {
+        var rules = await _tagProtectionService.GetRulesAsync(repoName);
+        return Ok(rules.Select(r => new
+        {
+            r.Id, tag_pattern = r.TagPattern, prevent_deletion = r.PreventDeletion,
+            prevent_force_push = r.PreventForcePush, restrict_creation = r.RestrictCreation,
+            allowed_users = r.AllowedUsers, require_signed_tags = r.RequireSignedTags,
+            created_at = r.CreatedAt, updated_at = r.UpdatedAt
+        }));
+    }
+
+    [HttpPost("{repoName}/tag-protection")]
+    public async Task<IActionResult> AddTagProtectionRule(string repoName, [FromBody] TagProtectionRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.TagPattern))
+            return BadRequest(new { error = "Tag pattern is required" });
+
+        var rule = await _tagProtectionService.AddRuleAsync(repoName, new Models.TagProtectionRule
+        {
+            TagPattern = request.TagPattern,
+            PreventDeletion = request.PreventDeletion,
+            PreventForcePush = request.PreventForcePush,
+            RestrictCreation = request.RestrictCreation,
+            AllowedUsers = request.AllowedUsers ?? new(),
+            RequireSignedTags = request.RequireSignedTags
+        });
+
+        return Created($"/api/v1/repos/{repoName}/tag-protection/{rule.Id}", new
+        {
+            rule.Id, tag_pattern = rule.TagPattern, prevent_deletion = rule.PreventDeletion,
+            prevent_force_push = rule.PreventForcePush, restrict_creation = rule.RestrictCreation,
+            allowed_users = rule.AllowedUsers, require_signed_tags = rule.RequireSignedTags
+        });
+    }
+
+    [HttpDelete("{repoName}/tag-protection/{ruleId:int}")]
+    public async Task<IActionResult> DeleteTagProtectionRule(string repoName, int ruleId)
+    {
+        var deleted = await _tagProtectionService.DeleteRuleAsync(repoName, ruleId);
+        if (!deleted) return NotFound(new { error = "Tag protection rule not found" });
+        return NoContent();
+    }
+
+    public class TagProtectionRequest
+    {
+        public string TagPattern { get; set; } = "";
+        public bool PreventDeletion { get; set; } = true;
+        public bool PreventForcePush { get; set; } = true;
+        public bool RestrictCreation { get; set; }
+        public List<string>? AllowedUsers { get; set; }
+        public bool RequireSignedTags { get; set; }
+    }
+
+    // --- Repository Labels ---
+
+    [HttpGet("{repoName}/labels")]
+    public async Task<IActionResult> ListLabels(string repoName)
+    {
+        var labels = await _labelService.GetLabelsAsync(repoName);
+        return Ok(labels.Select(l => new
+        {
+            l.Id, l.Name, l.Color, l.Description, created_at = l.CreatedAt
+        }));
+    }
+
+    [HttpPost("{repoName}/labels")]
+    public async Task<IActionResult> AddLabel(string repoName, [FromBody] LabelRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { error = "Label name is required" });
+
+        var label = await _labelService.AddLabelAsync(repoName, request.Name, request.Color ?? "#0075ca", request.Description);
+        if (label == null)
+            return Conflict(new { error = "Label with this name already exists" });
+
+        return Created($"/api/v1/repos/{repoName}/labels/{label.Id}", new
+        {
+            label.Id, label.Name, label.Color, label.Description, created_at = label.CreatedAt
+        });
+    }
+
+    [HttpPut("{repoName}/labels/{labelId:int}")]
+    public async Task<IActionResult> UpdateLabel(string repoName, int labelId, [FromBody] LabelRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { error = "Label name is required" });
+
+        var label = await _labelService.UpdateLabelAsync(repoName, labelId, request.Name, request.Color ?? "#0075ca", request.Description);
+        if (label == null) return NotFound(new { error = "Label not found" });
+
+        return Ok(new { label.Id, label.Name, label.Color, label.Description });
+    }
+
+    [HttpDelete("{repoName}/labels/{labelId:int}")]
+    public async Task<IActionResult> DeleteLabel(string repoName, int labelId)
+    {
+        var deleted = await _labelService.DeleteLabelAsync(repoName, labelId);
+        if (!deleted) return NotFound(new { error = "Label not found" });
+        return NoContent();
+    }
+
+    public class LabelRequest
+    {
+        public string Name { get; set; } = "";
+        public string? Color { get; set; }
+        public string? Description { get; set; }
     }
 }

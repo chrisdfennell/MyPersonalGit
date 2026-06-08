@@ -1,49 +1,57 @@
-using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using MyPersonalGit.Models;
 
 namespace MyPersonalGit.Data;
 
-public class WikiService
+public interface IWikiService
 {
-    private readonly string _dataPath;
+    Task<List<WikiPage>> GetPagesAsync(string repoName);
+    Task<WikiPage?> GetPageAsync(string repoName, string slug);
+    Task<WikiPage> CreatePageAsync(string repoName, string title, string content, string author);
+    Task<WikiPage> UpdatePageAsync(string repoName, string slug, string content, string author, string message);
+    Task DeletePageAsync(string repoName, string slug);
+    Task<WikiPageRevision?> GetRevisionAsync(string repoName, string slug, int revisionId);
+}
 
-    public WikiService(IConfiguration configuration)
+public class WikiService : IWikiService
+{
+    private readonly IDbContextFactory<AppDbContext> _dbFactory;
+    private readonly ILogger<WikiService> _logger;
+
+    public WikiService(IDbContextFactory<AppDbContext> dbFactory, ILogger<WikiService> logger)
     {
-        var projectRoot = configuration["ProjectRoot"] ?? throw new InvalidOperationException("ProjectRoot not configured");
-        _dataPath = Path.Combine(projectRoot, ".mypersonalgit");
-        Directory.CreateDirectory(_dataPath);
+        _dbFactory = dbFactory;
+        _logger = logger;
     }
-
-    private string GetWikiFilePath(string repoName) => Path.Combine(_dataPath, $"{repoName}_wiki.json");
 
     public async Task<List<WikiPage>> GetPagesAsync(string repoName)
     {
-        var filePath = GetWikiFilePath(repoName);
-        if (!File.Exists(filePath))
-            return new List<WikiPage>();
-
-        var json = await File.ReadAllTextAsync(filePath);
-        return JsonSerializer.Deserialize<List<WikiPage>>(json) ?? new List<WikiPage>();
+        using var db = _dbFactory.CreateDbContext();
+        return await db.WikiPages
+            .Include(p => p.Revisions)
+            .Where(p => p.RepoName == repoName)
+            .ToListAsync();
     }
 
     public async Task<WikiPage?> GetPageAsync(string repoName, string slug)
     {
-        var pages = await GetPagesAsync(repoName);
-        return pages.FirstOrDefault(p => p.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
+        using var db = _dbFactory.CreateDbContext();
+        return await db.WikiPages
+            .Include(p => p.Revisions)
+            .FirstOrDefaultAsync(p => p.RepoName == repoName && p.Slug.ToLower() == slug.ToLower());
     }
 
     public async Task<WikiPage> CreatePageAsync(string repoName, string title, string content, string author)
     {
-        var pages = await GetPagesAsync(repoName);
+        using var db = _dbFactory.CreateDbContext();
+
         var slug = GenerateSlug(title);
-        
-        var existingPage = pages.FirstOrDefault(p => p.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
-        if (existingPage != null)
+
+        if (await db.WikiPages.AnyAsync(p => p.RepoName == repoName && p.Slug.ToLower() == slug.ToLower()))
             throw new InvalidOperationException($"A page with slug '{slug}' already exists");
 
         var page = new WikiPage
         {
-            Id = pages.Count > 0 ? pages.Max(p => p.Id) + 1 : 1,
             RepoName = repoName,
             Title = title,
             Slug = slug,
@@ -55,7 +63,6 @@ public class WikiService
             {
                 new WikiPageRevision
                 {
-                    Id = 1,
                     Content = content,
                     Author = author,
                     Message = "Initial page creation",
@@ -64,62 +71,67 @@ public class WikiService
             }
         };
 
-        pages.Add(page);
-        await SavePagesAsync(repoName, pages);
+        db.WikiPages.Add(page);
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Wiki page '{Title}' created in {RepoName} by {Author}", title, repoName, author);
         return page;
     }
 
     public async Task<WikiPage> UpdatePageAsync(string repoName, string slug, string content, string author, string message)
     {
-        var pages = await GetPagesAsync(repoName);
-        var page = pages.FirstOrDefault(p => p.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
-        
-        if (page == null)
-            throw new InvalidOperationException($"Page with slug '{slug}' not found");
+        using var db = _dbFactory.CreateDbContext();
 
-        var revision = new WikiPageRevision
+        var page = await db.WikiPages
+            .Include(p => p.Revisions)
+            .FirstOrDefaultAsync(p => p.RepoName == repoName && p.Slug.ToLower() == slug.ToLower())
+            ?? throw new InvalidOperationException($"Page with slug '{slug}' not found");
+
+        page.Content = content;
+        page.UpdatedAt = DateTime.UtcNow;
+        page.Revisions.Add(new WikiPageRevision
         {
-            Id = page.Revisions.Count + 1,
+            WikiPageId = page.Id,
             Content = content,
             Author = author,
             Message = message,
             CreatedAt = DateTime.UtcNow
-        };
+        });
 
-        page.Content = content;
-        page.UpdatedAt = DateTime.UtcNow;
-        page.Revisions.Add(revision);
+        await db.SaveChangesAsync();
 
-        await SavePagesAsync(repoName, pages);
+        _logger.LogInformation("Wiki page '{Slug}' updated in {RepoName} by {Author}", slug, repoName, author);
         return page;
     }
 
     public async Task DeletePageAsync(string repoName, string slug)
     {
-        var pages = await GetPagesAsync(repoName);
-        var page = pages.FirstOrDefault(p => p.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
-        
+        using var db = _dbFactory.CreateDbContext();
+
+        var page = await db.WikiPages
+            .FirstOrDefaultAsync(p => p.RepoName == repoName && p.Slug.ToLower() == slug.ToLower());
+
         if (page != null)
         {
-            pages.Remove(page);
-            await SavePagesAsync(repoName, pages);
+            db.WikiPages.Remove(page);
+            await db.SaveChangesAsync();
         }
+
+        _logger.LogInformation("Wiki page '{Slug}' deleted from {RepoName}", slug, repoName);
     }
 
     public async Task<WikiPageRevision?> GetRevisionAsync(string repoName, string slug, int revisionId)
     {
-        var page = await GetPageAsync(repoName, slug);
+        using var db = _dbFactory.CreateDbContext();
+
+        var page = await db.WikiPages
+            .Include(p => p.Revisions)
+            .FirstOrDefaultAsync(p => p.RepoName == repoName && p.Slug.ToLower() == slug.ToLower());
+
         return page?.Revisions.FirstOrDefault(r => r.Id == revisionId);
     }
 
-    private async Task SavePagesAsync(string repoName, List<WikiPage> pages)
-    {
-        var filePath = GetWikiFilePath(repoName);
-        var json = JsonSerializer.Serialize(pages, new JsonSerializerOptions { WriteIndented = true });
-        await File.WriteAllTextAsync(filePath, json);
-    }
-
-    private string GenerateSlug(string title)
+    private static string GenerateSlug(string title)
     {
         return title.ToLowerInvariant()
             .Replace(" ", "-")

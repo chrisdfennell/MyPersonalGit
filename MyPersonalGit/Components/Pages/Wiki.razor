@@ -1,10 +1,18 @@
 @page "/repo/{RepoName}/wiki"
-@page "/repo/{RepoName}/wiki/{Slug}"
+@page "/repo/{RepoName}/wiki/{**Slug}"
 @using MyPersonalGit.Data
 @using MyPersonalGit.Models
+@using MyPersonalGit.Services
 @using Markdig
-@inject WikiService WikiService
+@using Microsoft.Extensions.Localization
+@using MyPersonalGit.Resources
+@using Markdig.Syntax
+@using Markdig.Syntax.Inlines
+@inject IWikiService WikiService
+@inject CurrentUserService UserService
 @inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+@inject IJSRuntime JS
 @rendermode InteractiveServer
 
 <PageTitle>@(string.IsNullOrEmpty(Slug) ? "Wiki" : CurrentPage?.Title ?? "Wiki") - @RepoName</PageTitle>
@@ -14,33 +22,73 @@
         <i class="bi bi-journal-bookmark text-muted me-2 h4 mb-0"></i>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0 h4">
-                <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Repositories</a></li>
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none">@L["Nav_Repositories"]</a></li>
                 <li class="breadcrumb-item"><a href="/repo/@RepoName" class="text-decoration-none">@RepoName</a></li>
-                <li class="breadcrumb-item active fw-bold" aria-current="page">Wiki</li>
+                <li class="breadcrumb-item active fw-bold" aria-current="page">@L["Wiki_Title"]</li>
             </ol>
         </nav>
     </div>
+    @if (!string.IsNullOrEmpty(Slug) && Slug.Contains("/"))
+    {
+        <nav aria-label="wiki-breadcrumb" class="mb-2">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/repo/@RepoName/wiki" class="text-decoration-none">Wiki</a></li>
+                @{
+                    var slugParts = Slug.Split('/');
+                    var accumPath = "";
+                    for (int i = 0; i < slugParts.Length; i++)
+                    {
+                        accumPath += (i > 0 ? "/" : "") + slugParts[i];
+                        if (i < slugParts.Length - 1)
+                        {
+                            <li class="breadcrumb-item"><a href="/repo/@RepoName/wiki/@accumPath" class="text-decoration-none">@slugParts[i]</a></li>
+                        }
+                        else
+                        {
+                            <li class="breadcrumb-item active" aria-current="page">@slugParts[i]</li>
+                        }
+                    }
+                }
+            </ol>
+        </nav>
+    }
     <div class="row">
         <div class="col-md-3">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Wiki Pages</h5>
-                    <button class="btn btn-sm btn-primary" @onclick="ShowCreateModal">
-                        <i class="bi bi-plus"></i>
-                    </button>
+                    <h5 class="mb-0">@L["Wiki_Pages"] <span class="badge bg-secondary">@Pages.Count</span></h5>
+                    @if (UserService.IsLoggedIn)
+                    {
+                        <button class="btn btn-sm btn-primary" @onclick="ShowCreateModal">
+                            <i class="bi bi-plus"></i>
+                        </button>
+                    }
+                </div>
+                <div class="p-2">
+                    <input type="text" class="form-control form-control-sm" placeholder="@L["Wiki_SearchPages"]"
+                           @bind="wikiSearchTerm" @bind:event="oninput" />
                 </div>
                 <div class="list-group list-group-flush">
-                    @if (Pages.Count == 0)
+                    <a href="/repo/@RepoName/wiki/Home"
+                       class="list-group-item list-group-item-action @(Slug == "Home" || Slug == "home" ? "active" : "")">
+                        <i class="bi bi-house-door me-1"></i> Home
+                    </a>
+                    @if (FilteredPages.Count == 0 && Pages.Count > 0)
                     {
-                        <div class="list-group-item text-muted">No pages yet</div>
+                        <div class="list-group-item text-muted"><small>No pages match your search</small></div>
+                    }
+                    else if (Pages.Count == 0)
+                    {
+                        <div class="list-group-item text-muted">@L["Wiki_NoPagesYet"]</div>
                     }
                     else
                     {
-                        @foreach (var page in Pages.OrderBy(p => p.Title))
+                        @foreach (var page in FilteredPages.OrderBy(p => p.Title))
                         {
                             <a href="@($"/repo/{RepoName}/wiki/{page.Slug}")"
                                class="list-group-item list-group-item-action @(page.Slug == Slug ? "active" : "")">
-                                @(page.Title)
+                                <div>@(page.Title)</div>
+                                <small class="@(page.Slug == Slug ? "text-white-50" : "text-muted")">@FormatDate(page.UpdatedAt)</small>
                             </a>
                         }
                     }
@@ -54,11 +102,26 @@
                 <div class="card">
                     <div class="card-body text-center py-5">
                         <i class="bi bi-book" style="font-size: 4rem; color: #6c757d;"></i>
-                        <h3 class="mt-3">Welcome to the Wiki</h3>
-                        <p class="text-muted">Create your first wiki page to get started</p>
-                        <button class="btn btn-primary" @onclick="ShowCreateModal">
-                            <i class="bi bi-plus"></i> Create First Page
-                        </button>
+                        <h3 class="mt-3">@L["Wiki_Welcome"]</h3>
+                        <p class="text-muted">@L["Wiki_CreateFirstPrompt"]</p>
+                        @if (Pages.Count == 0)
+                        {
+                            <div class="text-start mx-auto" style="max-width: 480px;">
+                                <h5 class="text-muted mb-3">Quick-start tips</h5>
+                                <ul class="list-group list-group-flush mb-4">
+                                    <li class="list-group-item"><i class="bi bi-house-door text-primary me-2"></i> Create a <strong>Home</strong> page as the main entry point for your wiki</li>
+                                    <li class="list-group-item"><i class="bi bi-markdown text-primary me-2"></i> Pages support full <strong>Markdown</strong> including tables, code blocks, and images</li>
+                                    <li class="list-group-item"><i class="bi bi-clock-history text-primary me-2"></i> Every edit is tracked with <strong>revision history</strong> so nothing is lost</li>
+                                    <li class="list-group-item"><i class="bi bi-diagram-3 text-primary me-2"></i> Use <strong>slashes</strong> in page names (e.g. "guides/setup") to organize sub-pages</li>
+                                </ul>
+                            </div>
+                        }
+                        @if (UserService.IsLoggedIn)
+                        {
+                            <button class="btn btn-primary" @onclick="ShowCreateModal">
+                                <i class="bi bi-plus"></i> @L["Wiki_CreateFirstPage"]
+                            </button>
+                        }
                     </div>
                 </div>
             }
@@ -72,19 +135,39 @@
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label class="form-label">Content (Markdown)</label>
-                                <textarea class="form-control font-monospace" rows="20" @bind="EditContent"></textarea>
+                                <ul class="nav nav-tabs mb-2">
+                                    <li class="nav-item">
+                                        <button class="nav-link @(editPreviewTab == "write" ? "active" : "")" @onclick='() => editPreviewTab = "write"'>
+                                            <i class="bi bi-pencil me-1"></i> Write
+                                        </button>
+                                    </li>
+                                    <li class="nav-item">
+                                        <button class="nav-link @(editPreviewTab == "preview" ? "active" : "")" @onclick='() => editPreviewTab = "preview"'>
+                                            <i class="bi bi-eye me-1"></i> Preview
+                                        </button>
+                                    </li>
+                                </ul>
+                                @if (editPreviewTab == "write")
+                                {
+                                    <textarea class="form-control font-monospace" rows="20" @bind="EditContent"></textarea>
+                                }
+                                else
+                                {
+                                    <div class="wiki-content border rounded p-3" style="min-height: 200px;">
+                                        @((MarkupString)RenderMarkdown(EditContent))
+                                    </div>
+                                }
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Commit Message</label>
-                                <input type="text" class="form-control" @bind="CommitMessage" placeholder="Describe your changes..." />
+                                <label class="form-label">@L["Wiki_CommitMessage"]</label>
+                                <input type="text" class="form-control" @bind="CommitMessage" placeholder="@L["Wiki_CommitMessagePlaceholder"]" />
                             </div>
                             <div class="d-flex gap-2">
                                 <button class="btn btn-primary" @onclick="SaveEdit">
-                                    <i class="bi bi-check"></i> Save Changes
+                                    <i class="bi bi-check"></i> @L["Wiki_SaveChanges"]
                                 </button>
                                 <button class="btn btn-secondary" @onclick="CancelEdit">
-                                    <i class="bi bi-x"></i> Cancel
+                                    <i class="bi bi-x"></i> @L["Wiki_Cancel"]
                                 </button>
                             </div>
                         </div>
@@ -96,22 +179,43 @@
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h3 class="mb-0">@CurrentPage.Title</h3>
                             <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary" @onclick="StartEdit">
-                                    <i class="bi bi-pencil"></i> Edit
-                                </button>
+                                @if (UserService.IsLoggedIn)
+                                {
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="StartEdit">
+                                        <i class="bi bi-pencil"></i> @L["Wiki_Edit"]
+                                    </button>
+                                }
                                 <button class="btn btn-sm btn-outline-secondary" @onclick="() => ShowHistory = !ShowHistory">
-                                    <i class="bi bi-clock-history"></i> History
+                                    <i class="bi bi-clock-history"></i> @L["Wiki_History"]
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger" @onclick="DeletePage">
-                                    <i class="bi bi-trash"></i> Delete
+                                <button class="btn btn-sm btn-outline-secondary" @onclick="PrintPage">
+                                    <i class="bi bi-printer"></i> Print
                                 </button>
+                                @if (UserService.IsLoggedIn)
+                                {
+                                    @if (confirmingDelete)
+                                    {
+                                        <button class="btn btn-sm btn-danger" @onclick="ConfirmDelete">
+                                            <i class="bi bi-exclamation-triangle"></i> Confirm Delete
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" @onclick="() => confirmingDelete = false">
+                                            Cancel
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="DeletePage">
+                                            <i class="bi bi-trash"></i> @L["Wiki_Delete"]
+                                        </button>
+                                    }
+                                }
                             </div>
                         </div>
                         <div class="card-body">
                             @if (ShowHistory)
                             {
                                 <div class="mb-4">
-                                    <h5>Revision History</h5>
+                                    <h5>@L["Wiki_RevisionHistory"]</h5>
                                     <div class="list-group">
                                         @foreach (var revision in CurrentPage.Revisions.OrderByDescending(r => r.CreatedAt))
                                         {
@@ -123,33 +227,65 @@
                                                             by @revision.Author on @FormatDate(revision.CreatedAt)
                                                         </small>
                                                     </div>
-                                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => ViewRevision(revision.Id)">
-                                                        View
-                                                    </button>
+                                                    <div class="btn-group">
+                                                        <button class="btn btn-sm btn-outline-primary" @onclick="() => ViewRevision(revision.Id)">
+                                                            @L["Wiki_View"]
+                                                        </button>
+                                                        @if (UserService.IsLoggedIn)
+                                                        {
+                                                            <button class="btn btn-sm btn-outline-warning" @onclick="() => RevertToRevision(revision.Id)" title="@L["Wiki_RevertRevision"]">
+                                                                <i class="bi bi-arrow-counterclockwise"></i> Revert
+                                                            </button>
+                                                        }
+                                                    </div>
                                                 </div>
                                             </div>
                                         }
                                     </div>
                                 </div>
                             }
-                            
+
                             @if (ViewingRevisionId.HasValue)
                             {
                                 <div class="alert alert-info d-flex justify-content-between align-items-center">
                                     <span>Viewing revision @ViewingRevisionId</span>
                                     <button class="btn btn-sm btn-primary" @onclick="() => ViewingRevisionId = null">
-                                        View Current Version
+                                        @L["Wiki_ViewCurrentVersion"]
                                     </button>
                                 </div>
                             }
 
-                            <div class="wiki-content">
-                                @((MarkupString)RenderMarkdown(DisplayContent))
+                            <div class="d-flex">
+                                <div class="wiki-content flex-grow-1">
+                                    @((MarkupString)RenderMarkdown(DisplayContent))
+                                </div>
+                                @{
+                                    var tocHeadings = ExtractHeadings(DisplayContent);
+                                }
+                                @if (tocHeadings.Count > 0)
+                                {
+                                    <nav class="wiki-toc ms-4 flex-shrink-0" style="width: 220px; position: sticky; top: 1rem; align-self: flex-start;">
+                                        <h6 class="text-muted text-uppercase small fw-bold mb-2">On this page</h6>
+                                        <ul class="list-unstyled small">
+                                            @foreach (var heading in tocHeadings)
+                                            {
+                                                <li style="padding-left: @((heading.Level - 1) * 12)px" class="mb-1">
+                                                    <a href="#@heading.Id" class="text-decoration-none text-muted">@heading.Text</a>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </nav>
+                                }
                             </div>
                         </div>
                         <div class="card-footer text-muted">
                             <small>
                                 Last updated by @CurrentPage.Author on @FormatDate(CurrentPage.UpdatedAt)
+                                @{
+                                    var wordCount = GetWordCount(DisplayContent);
+                                    var readingMinutes = Math.Max(1, (int)Math.Ceiling(wordCount / 200.0));
+                                }
+                                &mdash; @wordCount words &middot; ~@readingMinutes min read
                             </small>
                         </div>
                     </div>
@@ -158,7 +294,7 @@
             else
             {
                 <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle"></i> Page not found
+                    <i class="bi bi-exclamation-triangle"></i> @L["Wiki_PageNotFound"]
                 </div>
             }
         </div>
@@ -171,22 +307,22 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Create New Wiki Page</h5>
+                    <h5 class="modal-title">@L["Wiki_CreateNewPage"]</h5>
                     <button type="button" class="btn-close" @onclick="() => ShowCreatePage = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Page Title</label>
-                        <input type="text" class="form-control" @bind="NewPageTitle" placeholder="Enter page title..." />
+                        <label class="form-label">@L["Wiki_PageTitle"]</label>
+                        <input type="text" class="form-control" @bind="NewPageTitle" placeholder="@L["Wiki_PageTitlePlaceholder"]" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Content (Markdown)</label>
+                        <label class="form-label">@L["Wiki_ContentMarkdown"]</label>
                         <textarea class="form-control font-monospace" rows="10" @bind="NewPageContent" placeholder="# Your content here..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="() => ShowCreatePage = false">Cancel</button>
-                    <button type="button" class="btn btn-primary" @onclick="CreatePage">Create Page</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => ShowCreatePage = false">@L["Wiki_Cancel"]</button>
+                    <button type="button" class="btn btn-primary" @onclick="CreatePage">@L["Wiki_CreatePage"]</button>
                 </div>
             </div>
         </div>
@@ -203,12 +339,20 @@
     private bool IsEditing { get; set; }
     private bool ShowHistory { get; set; }
     private int? ViewingRevisionId { get; set; }
-    
+
     private string NewPageTitle { get; set; } = "";
     private string NewPageContent { get; set; } = "";
     private string EditContent { get; set; } = "";
     private string CommitMessage { get; set; } = "";
     private string DisplayContent { get; set; } = "";
+    private string wikiSearchTerm = "";
+    private string editPreviewTab = "write";
+    private bool confirmingDelete = false;
+
+    private List<WikiPage> FilteredPages => string.IsNullOrWhiteSpace(wikiSearchTerm)
+        ? Pages
+        : Pages.Where(p => p.Title.Contains(wikiSearchTerm, StringComparison.OrdinalIgnoreCase)
+                        || p.Slug.Contains(wikiSearchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -224,6 +368,7 @@
             DisplayContent = CurrentPage?.Content ?? "";
             ViewingRevisionId = null;
             ShowHistory = false;
+            confirmingDelete = false;
         }
         else
         {
@@ -245,12 +390,13 @@
 
     private async Task CreatePage()
     {
+        if (!UserService.IsLoggedIn) return;
         if (string.IsNullOrWhiteSpace(NewPageTitle))
             return;
 
         try
         {
-            var page = await WikiService.CreatePageAsync(RepoName, NewPageTitle, NewPageContent, "current-user");
+            var page = await WikiService.CreatePageAsync(RepoName, NewPageTitle, NewPageContent, UserService.Username);
             ShowCreatePage = false;
             await LoadPages();
             Navigation.NavigateTo($"/repo/{RepoName}/wiki/{page.Slug}");
@@ -263,20 +409,23 @@
 
     private void StartEdit()
     {
+        if (!UserService.IsLoggedIn) return;
         if (CurrentPage == null) return;
         EditContent = CurrentPage.Content;
         CommitMessage = "";
+        editPreviewTab = "write";
         IsEditing = true;
     }
 
     private async Task SaveEdit()
     {
+        if (!UserService.IsLoggedIn) return;
         if (CurrentPage == null || string.IsNullOrWhiteSpace(CommitMessage))
             return;
 
         try
         {
-            await WikiService.UpdatePageAsync(RepoName, CurrentPage.Slug, EditContent, "current-user", CommitMessage);
+            await WikiService.UpdatePageAsync(RepoName, CurrentPage.Slug, EditContent, UserService.Username, CommitMessage);
             IsEditing = false;
             CurrentPage = await WikiService.GetPageAsync(RepoName, CurrentPage.Slug);
             DisplayContent = CurrentPage?.Content ?? "";
@@ -294,11 +443,20 @@
         CommitMessage = "";
     }
 
-    private async Task DeletePage()
+    private void DeletePage()
     {
+        if (!UserService.IsLoggedIn) return;
+        if (CurrentPage == null) return;
+        confirmingDelete = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (!UserService.IsLoggedIn) return;
         if (CurrentPage == null) return;
 
         await WikiService.DeletePageAsync(RepoName, CurrentPage.Slug);
+        confirmingDelete = false;
         Navigation.NavigateTo($"/repo/{RepoName}/wiki");
     }
 
@@ -324,13 +482,95 @@
         return date.ToString("MMM dd, yyyy");
     }
 
+    private static readonly MarkdownPipeline _mdPipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .UseEmojiAndSmiley()
+        .Build();
+
     private string RenderMarkdown(string markdown)
     {
         if (string.IsNullOrEmpty(markdown)) return "";
-        var pipeline = new Markdig.MarkdownPipelineBuilder()
-            .UseAdvancedExtensions()
-            .Build();
-        return Markdig.Markdown.ToHtml(markdown, pipeline);
+
+        var document = Markdig.Markdown.Parse(markdown, _mdPipeline);
+
+        foreach (var node in document.Descendants())
+        {
+            if (node is LinkInline link && link.IsImage && !string.IsNullOrEmpty(link.Url))
+            {
+                if (link.Url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                    link.Url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                    link.Url.StartsWith("//") ||
+                    link.Url.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var resolvedPath = link.Url.TrimStart('/');
+                link.Url = $"/raw/{RepoName}/{resolvedPath}?branch=main";
+            }
+        }
+
+        var writer = new System.IO.StringWriter();
+        var renderer = new Markdig.Renderers.HtmlRenderer(writer);
+        _mdPipeline.Setup(renderer);
+        renderer.Render(document);
+        writer.Flush();
+
+        var html = System.Text.RegularExpressions.Regex.Replace(writer.ToString(),
+            @"(?<!<a[^>]*>)\s*<img\s+([^>]*?)src=""([^""]+)""([^>]*?)/?>",
+            @"<a href=""$2"" target=""_blank"" rel=""noopener""><img src=""$2"" $1$3 /></a>");
+        return html;
+    }
+
+    private async Task RevertToRevision(int revisionId)
+    {
+        if (!UserService.IsLoggedIn || CurrentPage == null) return;
+
+        var revision = await WikiService.GetRevisionAsync(RepoName, CurrentPage.Slug, revisionId);
+        if (revision == null) return;
+
+        await WikiService.UpdatePageAsync(RepoName, CurrentPage.Slug, revision.Content, UserService.Username,
+            $"Reverted to revision #{revisionId} ({revision.Message})");
+        CurrentPage = await WikiService.GetPageAsync(RepoName, CurrentPage.Slug);
+        DisplayContent = CurrentPage?.Content ?? "";
+        ViewingRevisionId = null;
+    }
+
+    private async Task PrintPage()
+    {
+        await JS.InvokeVoidAsync("window.print");
+    }
+
+    private int GetWordCount(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return 0;
+        return content.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length;
+    }
+
+    private record TocHeading(int Level, string Text, string Id);
+
+    private List<TocHeading> ExtractHeadings(string markdown)
+    {
+        if (string.IsNullOrEmpty(markdown)) return new();
+
+        var headings = new List<TocHeading>();
+        var lines = markdown.Split('\n');
+        foreach (var line in lines)
+        {
+            var trimmed = line.TrimStart();
+            if (trimmed.StartsWith("### "))
+                headings.Add(new TocHeading(3, trimmed[4..].Trim(), Slugify(trimmed[4..].Trim())));
+            else if (trimmed.StartsWith("## "))
+                headings.Add(new TocHeading(2, trimmed[3..].Trim(), Slugify(trimmed[3..].Trim())));
+            else if (trimmed.StartsWith("# "))
+                headings.Add(new TocHeading(1, trimmed[2..].Trim(), Slugify(trimmed[2..].Trim())));
+        }
+        return headings;
+    }
+
+    private static string Slugify(string text)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(text.ToLowerInvariant(), @"[^\w\- ]", "")
+            .Replace(" ", "-")
+            .Trim('-');
     }
 }
 
@@ -385,5 +625,47 @@
     .wiki-content table th {
         background-color: #f6f8fa;
         font-weight: 600;
+    }
+
+    .wiki-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+
+    .wiki-content img:hover {
+        opacity: 0.85;
+    }
+
+    .wiki-content a > img {
+        display: block;
+    }
+
+    .wiki-toc {
+        border-left: 2px solid #e9ecef;
+        padding-left: 1rem;
+    }
+
+    .wiki-toc a:hover {
+        color: #0d6efd !important;
+    }
+
+    @@media print {
+        .btn-group, .card-header .btn, .wiki-toc, .col-md-3 {
+            display: none !important;
+        }
+        .col-md-9 {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 0 0 100% !important;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .wiki-toc {
+            display: none;
+        }
     }
 </style>

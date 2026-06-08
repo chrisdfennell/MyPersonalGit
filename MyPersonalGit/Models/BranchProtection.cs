@@ -3,6 +3,7 @@ namespace MyPersonalGit.Models;
 public class BranchProtectionRule
 {
     public int Id { get; set; }
+    public string RepoName { get; set; } = string.Empty;
     public required string BranchPattern { get; set; }
     public bool RequirePullRequest { get; set; }
     public int RequiredApprovals { get; set; }
@@ -13,6 +14,10 @@ public class BranchProtectionRule
     public bool RequireLinearHistory { get; set; }
     public bool RestrictPushes { get; set; }
     public List<string> AllowedPushUsers { get; set; } = new();
+    public bool RequireCodeOwnersApproval { get; set; }
+    public bool RequireSignedCommits { get; set; }
+    /// <summary>Glob patterns for files that require review to modify (e.g., "*.lock", "migrations/**", ".github/workflows/*")</summary>
+    public List<string> ProtectedFilePatterns { get; set; } = new();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

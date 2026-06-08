@@ -8,8 +8,30 @@ retryButton.addEventListener("click", retry);
 const resumeButton = document.getElementById("components-resume-button");
 resumeButton.addEventListener("click", resume);
 
+function applyThemeToDialog() {
+    var isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    if (isDark) {
+        reconnectModal.style.setProperty('background-color', '#1e1e2e', 'important');
+        reconnectModal.style.setProperty('color', '#c9d1d9', 'important');
+        reconnectModal.style.setProperty('border-color', '#444', 'important');
+        // Also style child paragraphs
+        reconnectModal.querySelectorAll('p').forEach(function(p) {
+            p.style.setProperty('color', '#8b949e', 'important');
+        });
+        // Style the animation rings
+        reconnectModal.querySelectorAll('.components-rejoining-animation div').forEach(function(d) {
+            d.style.setProperty('border-color', '#58a6ff', 'important');
+        });
+    } else {
+        reconnectModal.style.backgroundColor = '';
+        reconnectModal.style.color = '';
+        reconnectModal.style.borderColor = '';
+    }
+}
+
 function handleReconnectStateChanged(event) {
     if (event.detail.state === "show") {
+        applyThemeToDialog();
         reconnectModal.showModal();
     } else if (event.detail.state === "hide") {
         reconnectModal.close();

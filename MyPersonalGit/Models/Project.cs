@@ -22,6 +22,7 @@ public enum ProjectState
 public class ProjectColumn
 {
     public int Id { get; set; }
+    public int ProjectId { get; set; }
     public required string Name { get; set; }
     public int Order { get; set; }
     public List<ProjectCard> Cards { get; set; } = new();
@@ -30,6 +31,7 @@ public class ProjectColumn
 public class ProjectCard
 {
     public int Id { get; set; }
+    public int ProjectColumnId { get; set; }
     public required string Title { get; set; }
     public string? Note { get; set; }
     public int Order { get; set; }

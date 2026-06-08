@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Text;
+using LibGit2Sharp;
+using MyPersonalGit.Data;
 
 namespace MyPersonalGit.Services;
 
@@ -30,7 +32,7 @@ public sealed class GitHttpBackendMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, IIssueAutoCloseService issueAutoCloseService, IWorkflowService workflowService, IAGitFlowService agitFlowService, IRepositoryTrafficService trafficService, ISecretScanService secretScanService)
     {
         // Only handle /git/* paths; let everything else pass through.
         if (!context.Request.Path.StartsWithSegments("/git", out var remaining))
@@ -53,6 +55,23 @@ public sealed class GitHttpBackendMiddleware
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             await context.Response.WriteAsync("Invalid path.");
             return;
+        }
+
+        // Block push to archived repos
+        var reqService = context.Request.Query["service"].FirstOrDefault() ?? "";
+        if (pathInfo.Contains("git-receive-pack") || reqService == "git-receive-pack")
+        {
+            var segments = pathInfo.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (segments.Length >= 1)
+            {
+                var repoMeta = await repoService.GetRepositoryAsync(segments[0]);
+                if (repoMeta?.IsArchived == true)
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await context.Response.WriteAsync("Repository is archived and read-only.");
+                    return;
+                }
+            }
         }
 
         // git http-backend needs CGI env vars.
@@ -104,6 +123,29 @@ public sealed class GitHttpBackendMiddleware
             var envKey = "HTTP_" + key.ToUpperInvariant().Replace('-', '_');
             // Some headers can appear multiple times; join with comma per CGI convention.
             psi.Environment[envKey] = string.Join(",", header.Value.ToArray());
+        }
+
+        // Track git operation type for Prometheus metrics + traffic recording
+        var service = context.Request.Query["service"].FirstOrDefault() ?? "";
+        if (service == "git-upload-pack" || pathInfo.EndsWith("/git-upload-pack"))
+        {
+            // upload-pack = fetch/clone; distinguish by checking if repo has refs
+            var repoDir = Path.Combine(projectRoot, pathInfo.Split('/')[1]);
+            var isClone = !Directory.Exists(Path.Combine(repoDir, "refs", "heads")) ||
+                          !Directory.EnumerateFiles(Path.Combine(repoDir, "refs", "heads")).Any();
+            var opType = isClone ? "clone" : "fetch";
+            GitOperationCounters.Increment(opType);
+
+            // Record traffic
+            var trafficRepoName = pathInfo.Split('/', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+            if (trafficRepoName.EndsWith(".git", StringComparison.OrdinalIgnoreCase))
+                trafficRepoName = trafficRepoName[..^4];
+            var clientIp = context.Connection.RemoteIpAddress?.ToString();
+            _ = trafficService.RecordEventAsync(trafficRepoName, opType, ipAddress: clientIp);
+        }
+        else if (service == "git-receive-pack" || pathInfo.EndsWith("/git-receive-pack"))
+        {
+            GitOperationCounters.Increment("push");
         }
 
         using var process = Process.Start(psi);
@@ -225,6 +267,103 @@ public sealed class GitHttpBackendMiddleware
             _logger.LogWarning("git http-backend stderr: {stderr}", stderr);
 
         try { await process.WaitForExitAsync(context.RequestAborted); } catch { }
+
+        // After a successful push, scan new commits for issue auto-close keywords and trigger workflows
+        _logger.LogInformation("Git operation completed: method={Method} path={Path} service={Service} exitCode={ExitCode}",
+            context.Request.Method, pathInfo, service, process.ExitCode);
+
+        if (process.ExitCode == 0 &&
+            (service == "git-receive-pack" || pathInfo.EndsWith("/git-receive-pack")) &&
+            context.Request.Method == "POST")
+        {
+            var segments = pathInfo.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (segments.Length >= 1)
+            {
+                var repoDir = Path.Combine(projectRoot, segments[0]);
+                // Use the directory name as the repo name — this must match the DB name.
+                // Some repos are stored as "MyRepo.git", others as "MyRepo".
+                var repoName = segments[0];
+                var remoteUser = context.User?.Identity?.Name ?? "system";
+                var branch = "main";
+                var sha = "HEAD";
+                var commitMsg = "Push";
+
+                // Open repo once for both issue auto-close and workflow trigger
+                if (Repository.IsValid(repoDir))
+                {
+                    try
+                    {
+                        using (var repo = new Repository(repoDir))
+                        {
+                            var defaultBranch = repo.Branches["main"] ?? repo.Branches["master"] ?? repo.Head;
+                            if (defaultBranch?.Tip != null)
+                            {
+                                branch = defaultBranch.FriendlyName;
+                                sha = defaultBranch.Tip.Sha;
+                                commitMsg = defaultBranch.Tip.MessageShort;
+
+                                var filter = new CommitFilter
+                                {
+                                    IncludeReachableFrom = defaultBranch.Tip,
+                                    SortBy = CommitSortStrategies.Time
+                                };
+                                foreach (var commit in repo.Commits.QueryBy(filter).Take(20))
+                                {
+                                    await issueAutoCloseService.ProcessCommitMessage(repoName, commit.Message, commit.Sha, remoteUser);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to process issue auto-close after push.");
+                    }
+
+                    // Trigger workflows that listen for push events
+                    try
+                    {
+                        _logger.LogInformation("Triggering push workflows for {RepoName} branch={Branch}", repoName, branch);
+                        await workflowService.TriggerPushWorkflowsAsync(repoName, repoDir, branch, sha, commitMsg, remoteUser);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to trigger push workflows.");
+                    }
+
+                    // Secret scanning: scan pushed commits for leaked credentials
+                    try
+                    {
+                        if (Repository.IsValid(repoDir))
+                        {
+                            await secretScanService.ScanPushAsync(repoName, repoDir, sha);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to run secret scan after push.");
+                    }
+
+                    // AGit Flow: detect pushes to refs/for/* and create PRs
+                    try
+                    {
+                        if (Repository.IsValid(repoDir))
+                        {
+                            using var agitRepo = new Repository(repoDir);
+                            foreach (var reference in agitRepo.Refs.Where(r => r.CanonicalName.StartsWith("refs/for/")))
+                            {
+                                var prNumber = await agitFlowService.ProcessAGitPushAsync(repoDir, repoName, reference.CanonicalName, remoteUser);
+                                if (prNumber.HasValue)
+                                    _logger.LogInformation("AGit: created/updated PR #{Number} for {Ref}", prNumber.Value, reference.CanonicalName);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to process AGit flow.");
+                    }
+                }
+            }
+        }
     }
 }
 
