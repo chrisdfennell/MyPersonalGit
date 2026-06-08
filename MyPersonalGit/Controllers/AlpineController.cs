@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -35,9 +36,10 @@ public class AlpineController : ControllerBase
             return BadRequest("Only .apk packages are supported");
 
         // Store the file on disk
-        var diskDir = Path.Combine(StorePath, repository, arch);
-        Directory.CreateDirectory(diskDir);
-        var destPath = Path.Combine(diskDir, filename);
+        var destPath = SafePath.CombineUnder(StorePath, repository, arch, filename);
+        if (destPath == null)
+            return BadRequest(new { error = "Invalid repository, arch, or filename." });
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
         await using (var fs = new FileStream(destPath, FileMode.Create))
             await Request.Body.CopyToAsync(fs);
@@ -131,8 +133,8 @@ public class AlpineController : ControllerBase
     [HttpGet("{repository}/{arch}/{filename}")]
     public async Task<IActionResult> Download(string repository, string arch, string filename)
     {
-        var filePath = Path.Combine(StorePath, repository, arch, filename);
-        if (!System.IO.File.Exists(filePath))
+        var filePath = SafePath.CombineUnder(StorePath, repository, arch, filename);
+        if (filePath == null || !System.IO.File.Exists(filePath))
             return NotFound();
 
         // Derive package name from filename

@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -49,9 +50,10 @@ public class HelmController : ControllerBase
         var chartVersion = baseName[(lastDash + 1)..];
 
         // Store the file on disk
-        var diskDir = Path.Combine(StorePath, chartName);
-        Directory.CreateDirectory(diskDir);
-        var destPath = Path.Combine(diskDir, filename);
+        var destPath = SafePath.CombineUnder(StorePath, chartName, filename);
+        if (destPath == null)
+            return BadRequest(new { error = "Invalid chart name or filename." });
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
         await using (var fs = new FileStream(destPath, FileMode.Create))
             await chart.CopyToAsync(fs);
@@ -124,8 +126,8 @@ public class HelmController : ControllerBase
             var chartName = baseName[..lastDash];
             var chartVersion = baseName[(lastDash + 1)..];
 
-            var filePath = Path.Combine(StorePath, chartName, filename);
-            if (!System.IO.File.Exists(filePath))
+            var filePath = SafePath.CombineUnder(StorePath, chartName, filename);
+            if (filePath == null || !System.IO.File.Exists(filePath))
                 return NotFound();
 
             await _packageService.IncrementDownloadAsync(chartName, "helm", chartVersion);
@@ -137,8 +139,8 @@ public class HelmController : ControllerBase
         var dirs = Directory.Exists(StorePath) ? Directory.GetDirectories(StorePath) : [];
         foreach (var dir in dirs)
         {
-            var filePath = Path.Combine(dir, filename);
-            if (System.IO.File.Exists(filePath))
+            var filePath = SafePath.CombineUnder(dir, filename);
+            if (filePath != null && System.IO.File.Exists(filePath))
                 return PhysicalFile(filePath, "application/gzip", filename);
         }
 

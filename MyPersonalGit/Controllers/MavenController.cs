@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -45,9 +46,10 @@ public class MavenController : ControllerBase
         var coordinate = $"{groupId}:{artifactId}";
 
         // Store the file on disk
-        var diskDir = Path.Combine(StorePath, Path.Combine(segments[..^1]));
-        Directory.CreateDirectory(diskDir);
-        var destPath = Path.Combine(diskDir, filename);
+        var destPath = SafePath.CombineUnder(StorePath, segments);
+        if (destPath == null)
+            return BadRequest("Invalid Maven path.");
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
         await using (var fs = new FileStream(destPath, FileMode.Create))
             await Request.Body.CopyToAsync(fs);
@@ -108,8 +110,8 @@ public class MavenController : ControllerBase
         if (segments.Length < 4)
             return NotFound();
 
-        var filePath = Path.Combine(StorePath, Path.Combine(segments));
-        if (!System.IO.File.Exists(filePath))
+        var filePath = SafePath.CombineUnder(StorePath, segments);
+        if (filePath == null || !System.IO.File.Exists(filePath))
             return NotFound();
 
         var filename = segments[^1];
@@ -173,8 +175,8 @@ public class MavenController : ControllerBase
     public IActionResult Head(string path)
     {
         var segments = path.Split('/');
-        var filePath = Path.Combine(StorePath, Path.Combine(segments));
-        if (!System.IO.File.Exists(filePath))
+        var filePath = SafePath.CombineUnder(StorePath, segments);
+        if (filePath == null || !System.IO.File.Exists(filePath))
             return NotFound();
 
         var fi = new FileInfo(filePath);
