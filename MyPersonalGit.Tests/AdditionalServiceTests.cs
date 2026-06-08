@@ -861,6 +861,27 @@ public class CommitCommentServiceTests
 // ============================================================================
 // SecretsService Tests
 // ============================================================================
+// ============================================================================
+// RegistryController sha256 digest validation (path-traversal / crash guard)
+// ============================================================================
+public class RegistryDigestValidationTests
+{
+    [Theory]
+    [InlineData("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", true)]  // valid, prefixed
+    [InlineData("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", true)]          // valid, bare
+    [InlineData("sha256:../../../etc/passwd", false)]   // path traversal attempt
+    [InlineData("sha256:ab", false)]                    // too short (old hash[..2] crash case)
+    [InlineData("sha256:", false)]                      // empty hash
+    [InlineData(null, false)]                           // null
+    [InlineData("", false)]                             // empty
+    [InlineData("sha256:E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855", false)] // uppercase (not [a-f0-9])
+    [InlineData("sha256:zzzz0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", false)] // non-hex chars
+    public void IsValidSha256Digest_ValidatesCorrectly(string? digest, bool expected)
+    {
+        Assert.Equal(expected, MyPersonalGit.Controllers.RegistryController.IsValidSha256Digest(digest));
+    }
+}
+
 public class SecretsServiceTests
 {
     private readonly ISecretsService _service;
@@ -892,6 +913,39 @@ public class SecretsServiceTests
         var secrets = await _service.GetSecretsAsync("repo");
         Assert.Single(secrets);
         Assert.Equal("MY_SECRET", secrets[0].Name);
+    }
+
+    [Fact]
+    public async Task Constructor_WithNoConfiguredKey_DoesNotThrow_AndRoundTripsSecrets()
+    {
+        // Regression: SecretsService used to do filesystem I/O in its constructor that threw
+        // UnauthorizedAccessException when the data dir wasn't writable (broke every test on CI).
+        // With no Secrets:EncryptionKey it must still construct and encrypt/decrypt without throwing.
+        var tempRoot = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "mpg-secrets-" + Guid.NewGuid().ToString("N"));
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        var factory = new TestDbContextFactory(options);
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Git:ProjectRoot"] = tempRoot
+                // intentionally no Secrets:EncryptionKey -> exercises the per-install/fallback key path
+            })
+            .Build();
+
+        ISecretsService service = new SecretsService(factory, NullLogger<SecretsService>.Instance, config);
+
+        try
+        {
+            Assert.True(await service.SetSecretAsync("repo", "MY_SECRET", "round-trip-value"));
+            var decrypted = await service.GetDecryptedSecretsAsync("repo");
+            Assert.Equal("round-trip-value", decrypted["MY_SECRET"]);
+        }
+        finally
+        {
+            try { if (System.IO.Directory.Exists(tempRoot)) System.IO.Directory.Delete(tempRoot, true); } catch { }
+        }
     }
 
     [Fact]

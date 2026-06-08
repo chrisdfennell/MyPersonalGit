@@ -40,7 +40,7 @@ public class RegistryController : ControllerBase
     private string UploadStorePath => Path.Combine(ProjectRoot, ".registry", "uploads");
 
     // Only accept well-formed sha256 digests; rejects path-traversal and avoids slicing crashes.
-    private static bool IsValidSha256Digest(string? digest)
+    internal static bool IsValidSha256Digest(string? digest)
     {
         if (string.IsNullOrEmpty(digest)) return false;
         var hash = digest.StartsWith("sha256:") ? digest[7..] : digest;
