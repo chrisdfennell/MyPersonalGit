@@ -3979,4 +3979,655 @@
   <data name="Stats_Subtitle" xml:space="preserve">
     <value>Bu Personal Git örneği için canlı istatistikler</value>
   </data>
+  <data name="Settings_Secrets" xml:space="preserve">
+    <value>Gizli Anahtarlar</value>
+  </data>
+  <data name="Settings_AvatarPreview" xml:space="preserve">
+    <value>Avatar önizlemesi</value>
+  </data>
+  <data name="Settings_Or" xml:space="preserve">
+    <value>veya</value>
+  </data>
+  <data name="Settings_UploadImage" xml:space="preserve">
+    <value>Resim yükle</value>
+  </data>
+  <data name="Settings_AvatarFormatHelp" xml:space="preserve">
+    <value>JPEG, PNG, GIF veya WebP. En fazla 5 MB.</value>
+  </data>
+  <data name="Settings_TwoFactorEnabled" xml:space="preserve">
+    <value>İki faktörlü kimlik doğrulama etkin</value>
+  </data>
+  <data name="Settings_EnabledOn" xml:space="preserve">
+    <value>Etkinleştirilme tarihi</value>
+  </data>
+  <data name="Settings_RecoveryCodes" xml:space="preserve">
+    <value>Kurtarma kodları</value>
+  </data>
+  <data name="Settings_RecoveryCodesSaveHint" xml:space="preserve">
+    <value>Bu kodları güvenli bir yerde saklayın. Her kod yalnızca bir kez kullanılabilir.</value>
+  </data>
+  <data name="Settings_RegenerateRecoveryCodes" xml:space="preserve">
+    <value>Kurtarma kodlarını yeniden oluştur</value>
+  </data>
+  <data name="Settings_Disable2FA" xml:space="preserve">
+    <value>2FA'yı devre dışı bırak</value>
+  </data>
+  <data name="Settings_Disable2FAPrompt" xml:space="preserve">
+    <value>2FA'yı devre dışı bırakmak için mevcut TOTP kodunuzu girin:</value>
+  </data>
+  <data name="Settings_2FAStep1" xml:space="preserve">
+    <value>Adım 1: Kimlik doğrulayıcı uygulamanıza ekleyin</value>
+  </data>
+  <data name="Settings_2FAScanPrompt" xml:space="preserve">
+    <value>QR kodunu kimlik doğrulayıcı uygulamanızla tarayın:</value>
+  </data>
+  <data name="Settings_2FACantScan" xml:space="preserve">
+    <value>Tarayamıyor musunuz? Elle girin</value>
+  </data>
+  <data name="Settings_SecretKey" xml:space="preserve">
+    <value>Gizli anahtar:</value>
+  </data>
+  <data name="Settings_FullUri" xml:space="preserve">
+    <value>Tam URI:</value>
+  </data>
+  <data name="Settings_2FAStep2" xml:space="preserve">
+    <value>Adım 2: Kurulumu doğrulayın</value>
+  </data>
+  <data name="Settings_2FAVerifyPrompt" xml:space="preserve">
+    <value>Kurulumu onaylamak için kimlik doğrulayıcı uygulamanızdaki 6 haneli kodu girin:</value>
+  </data>
+  <data name="Settings_SaveRecoveryCodes" xml:space="preserve">
+    <value>Kurtarma kodlarınızı kaydedin!</value>
+  </data>
+  <data name="Settings_RecoveryCodesLongHint" xml:space="preserve">
+    <value>Kimlik doğrulayıcı cihazınızı kaybederseniz bu kodlar hesabınıza erişmek için kullanılabilir. Her kod yalnızca bir kez kullanılabilir. Güvenli bir şekilde saklayın.</value>
+  </data>
+  <data name="Settings_TwoFactorNotEnabled" xml:space="preserve">
+    <value>İki faktörlü kimlik doğrulama etkin değil</value>
+  </data>
+  <data name="Settings_TwoFactorIntro" xml:space="preserve">
+    <value>İki faktörlü kimlik doğrulamayı etkinleştirerek hesabınıza ekstra bir güvenlik katmanı ekleyin.</value>
+  </data>
+  <data name="Settings_Enable2FA" xml:space="preserve">
+    <value>2FA'yı etkinleştir</value>
+  </data>
+  <data name="Settings_AddSSHKey" xml:space="preserve">
+    <value>SSH Anahtarı Ekle</value>
+  </data>
+  <data name="Settings_NoSSHKeys" xml:space="preserve">
+    <value>Yapılandırılmış SSH anahtarı yok</value>
+  </data>
+  <data name="Settings_Added" xml:space="preserve">
+    <value>Eklendi</value>
+  </data>
+  <data name="Settings_AddGPGKey" xml:space="preserve">
+    <value>GPG Anahtarı Ekle</value>
+  </data>
+  <data name="Settings_NoGPGKeys" xml:space="preserve">
+    <value>Yapılandırılmış GPG anahtarı yok. Commit'leri imzalamak ve doğrulamak için bir GPG anahtarı ekleyin.</value>
+  </data>
+  <data name="Settings_Verified" xml:space="preserve">
+    <value>Doğrulandı</value>
+  </data>
+  <data name="Settings_KeyId" xml:space="preserve">
+    <value>Anahtar Kimliği:</value>
+  </data>
+  <data name="Settings_Email" xml:space="preserve">
+    <value>E-posta:</value>
+  </data>
+  <data name="Settings_Expires" xml:space="preserve">
+    <value>Sona eriyor</value>
+  </data>
+  <data name="Settings_PersonalAccessTokens" xml:space="preserve">
+    <value>Kişisel Erişim Belirteçleri</value>
+  </data>
+  <data name="Settings_YourNewToken" xml:space="preserve">
+    <value>Yeni belirteciniz:</value>
+  </data>
+  <data name="Settings_CopyTokenNow" xml:space="preserve">
+    <value>Şimdi kopyalayın — onu bir daha görmeyeceksiniz.</value>
+  </data>
+  <data name="Settings_NoTokens" xml:space="preserve">
+    <value>Kişisel erişim belirteci yok</value>
+  </data>
+  <data name="Settings_Created" xml:space="preserve">
+    <value>Oluşturuldu</value>
+  </data>
+  <data name="Settings_ActiveSessions" xml:space="preserve">
+    <value>Etkin Oturumlar</value>
+  </data>
+  <data name="Settings_NoActiveSessions" xml:space="preserve">
+    <value>Etkin oturum yok</value>
+  </data>
+  <data name="Settings_Started" xml:space="preserve">
+    <value>Başladı</value>
+  </data>
+  <data name="Settings_Revoke" xml:space="preserve">
+    <value>İptal et</value>
+  </data>
+  <data name="Settings_WebAuthnUnsupported" xml:space="preserve">
+    <value>Tarayıcınız WebAuthn/Geçiş anahtarlarını desteklemiyor.</value>
+  </data>
+  <data name="Settings_Registered" xml:space="preserve">
+    <value>Kaydedildi</value>
+  </data>
+  <data name="Settings_NotificationPreferences" xml:space="preserve">
+    <value>Bildirim Tercihleri</value>
+  </data>
+  <data name="Settings_PushNotifications" xml:space="preserve">
+    <value>Anlık bildirimler (ntfy/Gotify)</value>
+  </data>
+  <data name="Settings_PushNotificationsHelp" xml:space="preserve">
+    <value>Yönetici tarafından yapılandırıldığında harici anlık bildirim hizmetlerine bildirim gönder</value>
+  </data>
+  <data name="Settings_EmailNotifications" xml:space="preserve">
+    <value>E-posta bildirimleri</value>
+  </data>
+  <data name="Settings_EmailNotificationsHelp" xml:space="preserve">
+    <value>Yönetici SMTP'yi yapılandırdığında e-posta bildirimleri al</value>
+  </data>
+  <data name="Settings_PullRequestNotifications" xml:space="preserve">
+    <value>Çekme isteği bildirimleri</value>
+  </data>
+  <data name="Settings_IssueNotifications" xml:space="preserve">
+    <value>Sorun bildirimleri</value>
+  </data>
+  <data name="Settings_MentionNotifications" xml:space="preserve">
+    <value>Bahsetme bildirimleri</value>
+  </data>
+  <data name="Settings_CommentNotifications" xml:space="preserve">
+    <value>Yorum bildirimleri</value>
+  </data>
+  <data name="Settings_SavePreferences" xml:space="preserve">
+    <value>Tercihleri Kaydet</value>
+  </data>
+  <data name="Settings_UserSecrets" xml:space="preserve">
+    <value>Kullanıcı Gizli Anahtarları</value>
+  </data>
+  <data name="Settings_UserSecretsHelp" xml:space="preserve">
+    <value>Kullanıcı düzeyindeki gizli anahtarlar, depolarınızdaki tüm iş akışı çalıştırmalarında kullanılabilir. Depo düzeyindeki gizli anahtarlar bunları geçersiz kılar.</value>
+  </data>
+  <data name="Settings_Updated" xml:space="preserve">
+    <value>Güncellendi</value>
+  </data>
+  <data name="Settings_NoUserSecrets" xml:space="preserve">
+    <value>Yapılandırılmış kullanıcı gizli anahtarı yok.</value>
+  </data>
+  <data name="Settings_UpdateSecret" xml:space="preserve">
+    <value>Gizli Anahtarı Güncelle</value>
+  </data>
+  <data name="Settings_AddSecret" xml:space="preserve">
+    <value>Gizli Anahtar Ekle</value>
+  </data>
+  <data name="Settings_Update" xml:space="preserve">
+    <value>Güncelle</value>
+  </data>
+  <data name="Settings_LinkedAccountsHelp" xml:space="preserve">
+    <value>Tek oturum açma için MyPersonalGit profilinize bağlı harici hesapları yönetin.</value>
+  </data>
+  <data name="Settings_Linked" xml:space="preserve">
+    <value>Bağlandı</value>
+  </data>
+  <data name="Settings_Unlink" xml:space="preserve">
+    <value>Bağlantıyı kaldır</value>
+  </data>
+  <data name="Settings_NoLinkedAccounts" xml:space="preserve">
+    <value>Bağlı hesap yok.</value>
+  </data>
+  <data name="Settings_LinkNewAccount" xml:space="preserve">
+    <value>Yeni hesap bağla</value>
+  </data>
+  <data name="Settings_Link" xml:space="preserve">
+    <value>Bağla</value>
+  </data>
+  <data name="Settings_Title_TitleLabel" xml:space="preserve">
+    <value>Başlık</value>
+  </data>
+  <data name="Settings_Key" xml:space="preserve">
+    <value>Anahtar</value>
+  </data>
+  <data name="Settings_GeneratePersonalAccessToken" xml:space="preserve">
+    <value>Kişisel Erişim Belirteci Oluştur</value>
+  </data>
+  <data name="Settings_TokenName" xml:space="preserve">
+    <value>Belirteç Adı</value>
+  </data>
+  <data name="Settings_Scopes" xml:space="preserve">
+    <value>Kapsamlar</value>
+  </data>
+  <data name="Settings_ScopeRepo" xml:space="preserve">
+    <value>repo - Tam depo erişimi</value>
+  </data>
+  <data name="Settings_ScopeUser" xml:space="preserve">
+    <value>user - Kullanıcı profili erişimi</value>
+  </data>
+  <data name="Settings_ScopeAdmin" xml:space="preserve">
+    <value>admin - Yönetici erişimi</value>
+  </data>
+  <data name="Settings_ExpirationDays" xml:space="preserve">
+    <value>Son kullanma (gün)</value>
+  </data>
+  <data name="Settings_RouteRestrictions" xml:space="preserve">
+    <value>Rota Kısıtlamaları</value>
+  </data>
+  <data name="Settings_RouteRestrictionsHelp" xml:space="preserve">
+    <value>Satır başına bir glob deseni. Boşsa, belirteç kapsamlarıyla eşleşen tüm rotalara erişebilir.</value>
+  </data>
+  <data name="Settings_GPGPublicKey" xml:space="preserve">
+    <value>GPG Genel Anahtarı</value>
+  </data>
+  <data name="Settings_OptionalBadge" xml:space="preserve">
+    <value>İsteğe bağlı</value>
+  </data>
+  <data name="Settings_RouteRestrictionsMatchHelp" xml:space="preserve">
+    <value>Herhangi bir alt yola eşleşmek için &lt;code&gt;**&lt;/code&gt; kullanın (örn. &lt;code&gt;/api/packages/**&lt;/code&gt;).</value>
+  </data>
+  <data name="Settings_GPGPublicKeyHelp" xml:space="preserve">
+    <value>ASCII zırhlı GPG genel anahtarınızı yapıştırın.</value>
+  </data>
+  <data name="Admin_ProjectRootLabel" xml:space="preserve">
+    <value>Proje Kök Dizini:</value>
+  </data>
+  <data name="Admin_AuthenticationLabel" xml:space="preserve">
+    <value>Kimlik Doğrulama:</value>
+  </data>
+  <data name="Admin_UserRegistrationLabel" xml:space="preserve">
+    <value>Kullanıcı Kaydı:</value>
+  </data>
+  <data name="Admin_ActionsCiCdLabel" xml:space="preserve">
+    <value>Actions/CI-CD:</value>
+  </data>
+  <data name="Admin_PrometheusMetricsLabel" xml:space="preserve">
+    <value>Prometheus Metrikleri:</value>
+  </data>
+  <data name="Admin_ActiveProviderLabel" xml:space="preserve">
+    <value>Etkin Sağlayıcı:</value>
+  </data>
+  <data name="Admin_DatabaseProvider" xml:space="preserve">
+    <value>Veritabanı Sağlayıcısı</value>
+  </data>
+  <data name="Admin_SqliteOption" xml:space="preserve">
+    <value>SQLite (varsayılan — yapılandırma gerektirmez)</value>
+  </data>
+  <data name="Admin_PostgresqlOption" xml:space="preserve">
+    <value>PostgreSQL (daha büyük dağıtımlar için)</value>
+  </data>
+  <data name="Admin_ConnectionString" xml:space="preserve">
+    <value>Bağlantı Dizesi</value>
+  </data>
+  <data name="Admin_ExampleLabel" xml:space="preserve">
+    <value>Örnek:</value>
+  </data>
+  <data name="Admin_SaveDatabaseSettings" xml:space="preserve">
+    <value>Veritabanı Ayarlarını Kaydet</value>
+  </data>
+  <data name="Admin_RequiresRestartHint" xml:space="preserve">
+    <value>Etkili olması için uygulamanın yeniden başlatılması gerekir</value>
+  </data>
+  <data name="Admin_General" xml:space="preserve">
+    <value>Genel</value>
+  </data>
+  <data name="Admin_ProjectRootDirectory" xml:space="preserve">
+    <value>Proje Kök Dizini</value>
+  </data>
+  <data name="Admin_ProjectRootHelp" xml:space="preserve">
+    <value>Depoların saklandığı kök dizin</value>
+  </data>
+  <data name="Admin_RequireAuthentication" xml:space="preserve">
+    <value>Kimlik Doğrulaması Gerektir</value>
+  </data>
+  <data name="Admin_AllowUserRegistration" xml:space="preserve">
+    <value>Kullanıcı Kaydına İzin Ver</value>
+  </data>
+  <data name="Admin_RequireEmailVerification" xml:space="preserve">
+    <value>E-posta Doğrulaması Gerektir</value>
+  </data>
+  <data name="Admin_MaxReposPerUser" xml:space="preserve">
+    <value>Kullanıcı Başına Maks. Depo</value>
+  </data>
+  <data name="Admin_MaxRepoSizeBytes" xml:space="preserve">
+    <value>Maks. Depo Boyutu (bayt)</value>
+  </data>
+  <data name="Admin_CurrentLabel" xml:space="preserve">
+    <value>Geçerli:</value>
+  </data>
+  <data name="Admin_ActionsCiCd" xml:space="preserve">
+    <value>Actions / CI-CD</value>
+  </data>
+  <data name="Admin_Wiki" xml:space="preserve">
+    <value>Wiki</value>
+  </data>
+  <data name="Admin_Issues" xml:space="preserve">
+    <value>Sorunlar</value>
+  </data>
+  <data name="Admin_Projects" xml:space="preserve">
+    <value>Projeler</value>
+  </data>
+  <data name="Admin_EnableEmailNotifications" xml:space="preserve">
+    <value>E-posta Bildirimlerini Etkinleştir</value>
+  </data>
+  <data name="Admin_SmtpServer" xml:space="preserve">
+    <value>SMTP Sunucusu</value>
+  </data>
+  <data name="Admin_SmtpPort" xml:space="preserve">
+    <value>SMTP Bağlantı Noktası</value>
+  </data>
+  <data name="Admin_SmtpUsername" xml:space="preserve">
+    <value>SMTP Kullanıcı Adı</value>
+  </data>
+  <data name="Admin_SmtpPassword" xml:space="preserve">
+    <value>SMTP Parolası</value>
+  </data>
+  <data name="Admin_EnableSslTls" xml:space="preserve">
+    <value>SSL/TLS'yi Etkinleştir</value>
+  </data>
+  <data name="Admin_FromAddress" xml:space="preserve">
+    <value>Gönderen Adresi</value>
+  </data>
+  <data name="Admin_FromName" xml:space="preserve">
+    <value>Gönderen Adı</value>
+  </data>
+  <data name="Admin_SendTestEmail" xml:space="preserve">
+    <value>Test E-postası Gönder</value>
+  </data>
+  <data name="Admin_EnablePushNotifications" xml:space="preserve">
+    <value>Anlık Bildirimleri Etkinleştir</value>
+  </data>
+  <data name="Admin_ServerUrl" xml:space="preserve">
+    <value>Sunucu URL'si</value>
+  </data>
+  <data name="Admin_Topic" xml:space="preserve">
+    <value>Konu</value>
+  </data>
+  <data name="Admin_AccessToken" xml:space="preserve">
+    <value>Erişim Belirteci</value>
+  </data>
+  <data name="Admin_AppToken" xml:space="preserve">
+    <value>Uygulama Belirteci</value>
+  </data>
+  <data name="Admin_SiteName" xml:space="preserve">
+    <value>Site Adı</value>
+  </data>
+  <data name="Admin_Preview" xml:space="preserve">
+    <value>(önizleme)</value>
+  </data>
+  <data name="Admin_Documentation" xml:space="preserve">
+    <value>Dokümantasyon</value>
+  </data>
+  <data name="Admin_Contact" xml:space="preserve">
+    <value>İletişim</value>
+  </data>
+  <data name="Admin_AiCodeCompletion" xml:space="preserve">
+    <value>Yapay Zeka Kod Tamamlama</value>
+  </data>
+  <data name="Admin_AiCompletionHelp" xml:space="preserve">
+    <value>Web IDE'de yapay zeka destekli satır içi kod tamamlamayı etkinleştirin. OpenAI uyumlu bir API uç noktası kullanır.</value>
+  </data>
+  <data name="Admin_EnableAiCompletion" xml:space="preserve">
+    <value>Yapay Zeka Tamamlamayı Etkinleştir</value>
+  </data>
+  <data name="Admin_ApiEndpoint" xml:space="preserve">
+    <value>API Uç Noktası</value>
+  </data>
+  <data name="Admin_ApiEndpointHelp" xml:space="preserve">
+    <value>OpenAI uyumlu API temel URL'si (ör. OpenAI, Ollama, LM Studio)</value>
+  </data>
+  <data name="Admin_ApiKey" xml:space="preserve">
+    <value>API Anahtarı</value>
+  </data>
+  <data name="Admin_Model" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="Admin_ModelHelp" xml:space="preserve">
+    <value>Model adı (ör. gpt-4o-mini, codestral-latest, deepseek-coder)</value>
+  </data>
+  <data name="Admin_AiChatAssistant" xml:space="preserve">
+    <value>Yapay Zeka Sohbeti ve Asistanı</value>
+  </data>
+  <data name="Admin_AiChatHelp" xml:space="preserve">
+    <value>Web IDE'de yapay zeka sohbeti, satır içi açıklama, yeniden düzenleme ve test oluşturmayı etkinleştirin. Yukarıdaki yapay zeka tamamlamasının etkin olması gerekir (aynı API uç noktasını kullanır).</value>
+  </data>
+  <data name="Admin_EnableAiChatAssistant" xml:space="preserve">
+    <value>Yapay Zeka Sohbeti ve Asistanını Etkinleştir</value>
+  </data>
+  <data name="Admin_RealtimeCollaboration" xml:space="preserve">
+    <value>Gerçek Zamanlı İşbirliği</value>
+  </data>
+  <data name="Admin_CollaborationHelp" xml:space="preserve">
+    <value>Web IDE'de gerçek zamanlı işbirlikçi düzenlemeyi etkinleştirin. Birden fazla kullanıcı, canlı imleç takibi ve mevcudiyet göstergeleriyle aynı dosyayı aynı anda düzenleyebilir.</value>
+  </data>
+  <data name="Admin_EnableRealtimeCollaboration" xml:space="preserve">
+    <value>Gerçek Zamanlı İşbirliğini Etkinleştir</value>
+  </data>
+  <data name="Admin_SshServerHelp" xml:space="preserve">
+    <value>Sistem OpenSSH'i gerektirmeden Git işlemleri için yerel bir SSH sunucusu çalıştırın. Kullanıcılar şu yolla klonlayabilir/gönderebilir</value>
+  </data>
+  <data name="Admin_EnableBuiltInSsh" xml:space="preserve">
+    <value>Yerleşik SSH Sunucusunu Etkinleştir</value>
+  </data>
+  <data name="Admin_SshPort" xml:space="preserve">
+    <value>SSH Bağlantı Noktası</value>
+  </data>
+  <data name="Admin_SshPortHelp" xml:space="preserve">
+    <value>Varsayılan: 2222. Sistem SSH'i çalışmıyorsa 22 kullanın. Yeniden başlatma gerektirir.</value>
+  </data>
+  <data name="Admin_MergeSigningHelp" xml:space="preserve">
+    <value>Web arayüzü üzerinden oluşturulan birleştirme, squash ve rebase işlemlerini GPG ile imzalayın. GPG anahtarı sunucunun anahtarlığına aktarılmalıdır (</value>
+  </data>
+  <data name="Admin_SignMergeCommits" xml:space="preserve">
+    <value>Birleştirme işlemlerini GPG ile imzala</value>
+  </data>
+  <data name="Admin_ServerGpgKeyId" xml:space="preserve">
+    <value>Sunucu GPG Anahtar Kimliği</value>
+  </data>
+  <data name="Admin_ServerGpgKeyIdHelp" xml:space="preserve">
+    <value>İmzalama için kullanılacak GPG anahtarının uzun veya kısa anahtar kimliği</value>
+  </data>
+  <data name="Admin_LdapAuthHelp" xml:space="preserve">
+    <value>Kullanıcıların etki alanı kimlik bilgileriyle oturum açabilmesi için LDAP/AD kimlik doğrulamasını etkinleştirin. Kullanıcılar ilk girişte otomatik olarak oluşturulur.</value>
+  </data>
+  <data name="Admin_EnableLdapAuth" xml:space="preserve">
+    <value>LDAP Kimlik Doğrulamasını Etkinleştir</value>
+  </data>
+  <data name="Admin_LdapServer" xml:space="preserve">
+    <value>LDAP Sunucusu</value>
+  </data>
+  <data name="Admin_Port" xml:space="preserve">
+    <value>Bağlantı Noktası</value>
+  </data>
+  <data name="Admin_LdapPortHelp" xml:space="preserve">
+    <value>389 (LDAP) veya 636 (LDAPS)</value>
+  </data>
+  <data name="Admin_UseSslLdaps" xml:space="preserve">
+    <value>SSL (LDAPS) Kullan</value>
+  </data>
+  <data name="Admin_UseStartTls" xml:space="preserve">
+    <value>StartTLS Kullan</value>
+  </data>
+  <data name="Admin_SkipCertValidation" xml:space="preserve">
+    <value>Sertifika Doğrulamasını Atla</value>
+  </data>
+  <data name="Admin_BindDn" xml:space="preserve">
+    <value>Bind DN</value>
+  </data>
+  <data name="Admin_ServiceAccount" xml:space="preserve">
+    <value>(hizmet hesabı)</value>
+  </data>
+  <data name="Admin_AnonymousBindHelp" xml:space="preserve">
+    <value>Anonim bind için boş bırakın</value>
+  </data>
+  <data name="Admin_BindPassword" xml:space="preserve">
+    <value>Bind Parolası</value>
+  </data>
+  <data name="Admin_SearchBaseDn" xml:space="preserve">
+    <value>Arama Temel DN</value>
+  </data>
+  <data name="Admin_UserSearchFilter" xml:space="preserve">
+    <value>Kullanıcı Arama Filtresi</value>
+  </data>
+  <data name="Admin_UserFilterHelp" xml:space="preserve">
+    <value>kullanıcı adıyla değiştirilir. Örnekler:</value>
+  </data>
+  <data name="Admin_UsernameAttribute" xml:space="preserve">
+    <value>Kullanıcı Adı Özniteliği</value>
+  </data>
+  <data name="Admin_EmailAttribute" xml:space="preserve">
+    <value>E-posta Özniteliği</value>
+  </data>
+  <data name="Admin_DisplayNameAttribute" xml:space="preserve">
+    <value>Görünen Ad Özniteliği</value>
+  </data>
+  <data name="Admin_AdminGroupDn" xml:space="preserve">
+    <value>Yönetici Grubu DN</value>
+  </data>
+  <data name="Admin_AdminGroupHelp" xml:space="preserve">
+    <value>Bu grubun üyeleri otomatik olarak yöneticiliğe yükseltilir. Atlamak için boş bırakın.</value>
+  </data>
+  <data name="Admin_TestLdapConnection" xml:space="preserve">
+    <value>LDAP Bağlantısını Test Et</value>
+  </data>
+  <data name="Admin_SaveAllSettings" xml:space="preserve">
+    <value>Tüm Ayarları Kaydet</value>
+  </data>
+  <data name="Admin_AdminRole" xml:space="preserve">
+    <value>Yönetici</value>
+  </data>
+  <data name="Admin_UserRole" xml:space="preserve">
+    <value>Kullanıcı</value>
+  </data>
+  <data name="Admin_StatusActive" xml:space="preserve">
+    <value>Etkin</value>
+  </data>
+  <data name="Admin_StatusInactive" xml:space="preserve">
+    <value>Etkin Değil</value>
+  </data>
+  <data name="Admin_GlobalSecretsHelp" xml:space="preserve">
+    <value>Genel gizli bilgiler tüm iş akışı çalıştırmaları için kullanılabilir. Aynı ada sahip depo düzeyindeki gizli bilgiler genel gizli bilgileri geçersiz kılar.</value>
+  </data>
+  <data name="Admin_UpdatedPrefix" xml:space="preserve">
+    <value>Güncellendi</value>
+  </data>
+  <data name="Admin_NoGlobalSecrets" xml:space="preserve">
+    <value>Yapılandırılmış genel gizli bilgi yok.</value>
+  </data>
+  <data name="Admin_Name" xml:space="preserve">
+    <value>Ad</value>
+  </data>
+  <data name="Admin_Value" xml:space="preserve">
+    <value>Değer</value>
+  </data>
+  <data name="Admin_SecretValuePlaceholder" xml:space="preserve">
+    <value>Gizli değer</value>
+  </data>
+  <data name="Admin_DownloadBackupHelp" xml:space="preserve">
+    <value>Tüm depoların ve veritabanının tam yedeğini şu biçimde indirin</value>
+  </data>
+  <data name="Admin_BackupArchiveSuffix" xml:space="preserve">
+    <value>arşiv olarak.</value>
+  </data>
+  <data name="Admin_RestoreWarningLabel" xml:space="preserve">
+    <value>Uyarı:</value>
+  </data>
+  <data name="Admin_RestoreWarningText" xml:space="preserve">
+    <value>Bir yedeği geri yüklemek mevcut tüm verilerin üzerine yazar. Geri yüklemeden sonra uygulama yeniden başlatılmalıdır.</value>
+  </data>
+  <data name="Admin_RestoreApiHelp" xml:space="preserve">
+    <value>Geri yükleme için doğrudan API'yi kullanın:</value>
+  </data>
+  <data name="Admin_RestoreApiSuffix" xml:space="preserve">
+    <value>bir tar.gz dosyasıyla.</value>
+  </data>
+  <data name="Admin_OAuthProvidersHelp" xml:space="preserve">
+    <value>Harici kimlik doğrulama sağlayıcılarını yapılandırın. Yalnızca hem Client ID hem de Client Secret doldurulmuş sağlayıcılar giriş sayfasında görünür.</value>
+  </data>
+  <data name="Admin_OAuthEnabled" xml:space="preserve">
+    <value>Etkin</value>
+  </data>
+  <data name="Admin_OAuthNotConfigured" xml:space="preserve">
+    <value>Yapılandırılmamış</value>
+  </data>
+  <data name="Admin_ClientId" xml:space="preserve">
+    <value>İstemci Kimliği</value>
+  </data>
+  <data name="Admin_ClientSecret" xml:space="preserve">
+    <value>İstemci Sırrı</value>
+  </data>
+  <data name="Admin_EnableThisProvider" xml:space="preserve">
+    <value>Bu sağlayıcıyı etkinleştir</value>
+  </data>
+  <data name="Admin_CallbackUrlLabel" xml:space="preserve">
+    <value>Geri Çağrı URL'si:</value>
+  </data>
+  <data name="Admin_CallbackUrlHelp" xml:space="preserve">
+    <value>Her sağlayıcı geri çağrı URL'siyle yapılandırılmalıdır:</value>
+  </data>
+  <data name="Admin_CallbackReplaceHelp" xml:space="preserve">
+    <value>şununla değiştirin: github, google, microsoft, gitlab, bitbucket, facebook, discord veya twitter</value>
+  </data>
+  <data name="Admin_EmailLabel" xml:space="preserve">
+    <value>E-posta</value>
+  </data>
+  <data name="Admin_Password" xml:space="preserve">
+    <value>Parola</value>
+  </data>
+  <data name="Admin_Administrator" xml:space="preserve">
+    <value>Yönetici</value>
+  </data>
+  <data name="Admin_EditUserTitle" xml:space="preserve">
+    <value>Kullanıcıyı Düzenle:</value>
+  </data>
+  <data name="Admin_ActiveLabel" xml:space="preserve">
+    <value>Etkin</value>
+  </data>
+  <data name="Admin_NewPassword" xml:space="preserve">
+    <value>Yeni Parola</value>
+  </data>
+  <data name="Admin_LeaveBlankKeep" xml:space="preserve">
+    <value>(geçerli olanı korumak için boş bırakın)</value>
+  </data>
+  <data name="Org_SecretsTab" xml:space="preserve">
+    <value>Gizli Bilgiler</value>
+  </data>
+  <data name="Org_RoleMember" xml:space="preserve">
+    <value>Üye</value>
+  </data>
+  <data name="Org_RoleOwner" xml:space="preserve">
+    <value>Sahip</value>
+  </data>
+  <data name="Org_MembersCount" xml:space="preserve">
+    <value>Üyeler</value>
+  </data>
+  <data name="Org_RepositoriesCount" xml:space="preserve">
+    <value>Depolar</value>
+  </data>
+  <data name="Org_SecretsHeader" xml:space="preserve">
+    <value>Kuruluş Gizli Bilgileri</value>
+  </data>
+  <data name="Org_SecretsDescription" xml:space="preserve">
+    <value>Kuruluş gizli bilgileri, bu kuruluşa ait tüm depoların iş akışı çalıştırmalarında kullanılabilir. Kullanıcı ve depo düzeyindeki gizli bilgiler bunları geçersiz kılar.</value>
+  </data>
+  <data name="Org_SecretUpdatedPrefix" xml:space="preserve">
+    <value>Güncellendi</value>
+  </data>
+  <data name="Org_NoSecrets" xml:space="preserve">
+    <value>Yapılandırılmış kuruluş gizli bilgisi yok.</value>
+  </data>
+  <data name="Org_UpdateSecret" xml:space="preserve">
+    <value>Gizli Bilgiyi Güncelle</value>
+  </data>
+  <data name="Org_AddSecret" xml:space="preserve">
+    <value>Gizli Bilgi Ekle</value>
+  </data>
+  <data name="Org_Update" xml:space="preserve">
+    <value>Güncelle</value>
+  </data>
+  <data name="Org_PermRead" xml:space="preserve">
+    <value>Okuma</value>
+  </data>
+  <data name="Org_PermWrite" xml:space="preserve">
+    <value>Yazma</value>
+  </data>
+  <data name="Org_PermAdmin" xml:space="preserve">
+    <value>Yönetici</value>
+  </data>
 </root>

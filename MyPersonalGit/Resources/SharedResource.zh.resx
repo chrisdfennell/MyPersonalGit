@@ -3979,4 +3979,655 @@
   <data name="Stats_Subtitle" xml:space="preserve">
     <value>此 Personal Git 实例的实时统计</value>
   </data>
+  <data name="Settings_Secrets" xml:space="preserve">
+    <value>密钥</value>
+  </data>
+  <data name="Settings_AvatarPreview" xml:space="preserve">
+    <value>头像预览</value>
+  </data>
+  <data name="Settings_Or" xml:space="preserve">
+    <value>或</value>
+  </data>
+  <data name="Settings_UploadImage" xml:space="preserve">
+    <value>上传图片</value>
+  </data>
+  <data name="Settings_AvatarFormatHelp" xml:space="preserve">
+    <value>JPEG、PNG、GIF 或 WebP。最大 5 MB。</value>
+  </data>
+  <data name="Settings_TwoFactorEnabled" xml:space="preserve">
+    <value>已启用双因素身份验证</value>
+  </data>
+  <data name="Settings_EnabledOn" xml:space="preserve">
+    <value>启用于</value>
+  </data>
+  <data name="Settings_RecoveryCodes" xml:space="preserve">
+    <value>恢复代码</value>
+  </data>
+  <data name="Settings_RecoveryCodesSaveHint" xml:space="preserve">
+    <value>请将这些代码保存在安全的地方。每个代码只能使用一次。</value>
+  </data>
+  <data name="Settings_RegenerateRecoveryCodes" xml:space="preserve">
+    <value>重新生成恢复代码</value>
+  </data>
+  <data name="Settings_Disable2FA" xml:space="preserve">
+    <value>禁用 2FA</value>
+  </data>
+  <data name="Settings_Disable2FAPrompt" xml:space="preserve">
+    <value>输入您当前的 TOTP 代码以禁用 2FA：</value>
+  </data>
+  <data name="Settings_2FAStep1" xml:space="preserve">
+    <value>第 1 步：添加到您的身份验证器应用</value>
+  </data>
+  <data name="Settings_2FAScanPrompt" xml:space="preserve">
+    <value>使用您的身份验证器应用扫描二维码：</value>
+  </data>
+  <data name="Settings_2FACantScan" xml:space="preserve">
+    <value>无法扫描？手动输入</value>
+  </data>
+  <data name="Settings_SecretKey" xml:space="preserve">
+    <value>密钥：</value>
+  </data>
+  <data name="Settings_FullUri" xml:space="preserve">
+    <value>完整 URI：</value>
+  </data>
+  <data name="Settings_2FAStep2" xml:space="preserve">
+    <value>第 2 步：验证设置</value>
+  </data>
+  <data name="Settings_2FAVerifyPrompt" xml:space="preserve">
+    <value>输入您身份验证器应用中的 6 位代码以确认设置：</value>
+  </data>
+  <data name="Settings_SaveRecoveryCodes" xml:space="preserve">
+    <value>请保存您的恢复代码！</value>
+  </data>
+  <data name="Settings_RecoveryCodesLongHint" xml:space="preserve">
+    <value>如果您丢失了身份验证设备，可以使用这些代码访问您的账户。每个代码只能使用一次。请妥善保管。</value>
+  </data>
+  <data name="Settings_TwoFactorNotEnabled" xml:space="preserve">
+    <value>未启用双因素身份验证</value>
+  </data>
+  <data name="Settings_TwoFactorIntro" xml:space="preserve">
+    <value>启用双因素身份验证，为您的账户增加一层额外的安全保护。</value>
+  </data>
+  <data name="Settings_Enable2FA" xml:space="preserve">
+    <value>启用 2FA</value>
+  </data>
+  <data name="Settings_AddSSHKey" xml:space="preserve">
+    <value>添加 SSH 密钥</value>
+  </data>
+  <data name="Settings_NoSSHKeys" xml:space="preserve">
+    <value>未配置 SSH 密钥</value>
+  </data>
+  <data name="Settings_Added" xml:space="preserve">
+    <value>添加于</value>
+  </data>
+  <data name="Settings_AddGPGKey" xml:space="preserve">
+    <value>添加 GPG 密钥</value>
+  </data>
+  <data name="Settings_NoGPGKeys" xml:space="preserve">
+    <value>未配置 GPG 密钥。添加 GPG 密钥以签名和验证提交。</value>
+  </data>
+  <data name="Settings_Verified" xml:space="preserve">
+    <value>已验证</value>
+  </data>
+  <data name="Settings_KeyId" xml:space="preserve">
+    <value>密钥 ID：</value>
+  </data>
+  <data name="Settings_Email" xml:space="preserve">
+    <value>电子邮件：</value>
+  </data>
+  <data name="Settings_Expires" xml:space="preserve">
+    <value>过期</value>
+  </data>
+  <data name="Settings_PersonalAccessTokens" xml:space="preserve">
+    <value>个人访问令牌</value>
+  </data>
+  <data name="Settings_YourNewToken" xml:space="preserve">
+    <value>您的新令牌：</value>
+  </data>
+  <data name="Settings_CopyTokenNow" xml:space="preserve">
+    <value>立即复制 — 您将无法再次看到它。</value>
+  </data>
+  <data name="Settings_NoTokens" xml:space="preserve">
+    <value>没有个人访问令牌</value>
+  </data>
+  <data name="Settings_Created" xml:space="preserve">
+    <value>创建于</value>
+  </data>
+  <data name="Settings_ActiveSessions" xml:space="preserve">
+    <value>活动会话</value>
+  </data>
+  <data name="Settings_NoActiveSessions" xml:space="preserve">
+    <value>没有活动会话</value>
+  </data>
+  <data name="Settings_Started" xml:space="preserve">
+    <value>开始于</value>
+  </data>
+  <data name="Settings_Revoke" xml:space="preserve">
+    <value>撤销</value>
+  </data>
+  <data name="Settings_WebAuthnUnsupported" xml:space="preserve">
+    <value>您的浏览器不支持 WebAuthn/通行密钥。</value>
+  </data>
+  <data name="Settings_Registered" xml:space="preserve">
+    <value>注册于</value>
+  </data>
+  <data name="Settings_NotificationPreferences" xml:space="preserve">
+    <value>通知偏好设置</value>
+  </data>
+  <data name="Settings_PushNotifications" xml:space="preserve">
+    <value>推送通知 (ntfy/Gotify)</value>
+  </data>
+  <data name="Settings_PushNotificationsHelp" xml:space="preserve">
+    <value>在管理员配置后向外部推送服务发送通知</value>
+  </data>
+  <data name="Settings_EmailNotifications" xml:space="preserve">
+    <value>电子邮件通知</value>
+  </data>
+  <data name="Settings_EmailNotificationsHelp" xml:space="preserve">
+    <value>在管理员配置 SMTP 后接收电子邮件通知</value>
+  </data>
+  <data name="Settings_PullRequestNotifications" xml:space="preserve">
+    <value>拉取请求通知</value>
+  </data>
+  <data name="Settings_IssueNotifications" xml:space="preserve">
+    <value>问题通知</value>
+  </data>
+  <data name="Settings_MentionNotifications" xml:space="preserve">
+    <value>提及通知</value>
+  </data>
+  <data name="Settings_CommentNotifications" xml:space="preserve">
+    <value>评论通知</value>
+  </data>
+  <data name="Settings_SavePreferences" xml:space="preserve">
+    <value>保存偏好设置</value>
+  </data>
+  <data name="Settings_UserSecrets" xml:space="preserve">
+    <value>用户密钥</value>
+  </data>
+  <data name="Settings_UserSecretsHelp" xml:space="preserve">
+    <value>用户级密钥可在您仓库的所有工作流运行中使用。仓库级密钥会覆盖这些密钥。</value>
+  </data>
+  <data name="Settings_Updated" xml:space="preserve">
+    <value>更新于</value>
+  </data>
+  <data name="Settings_NoUserSecrets" xml:space="preserve">
+    <value>未配置用户密钥。</value>
+  </data>
+  <data name="Settings_UpdateSecret" xml:space="preserve">
+    <value>更新密钥</value>
+  </data>
+  <data name="Settings_AddSecret" xml:space="preserve">
+    <value>添加密钥</value>
+  </data>
+  <data name="Settings_Update" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="Settings_LinkedAccountsHelp" xml:space="preserve">
+    <value>管理与您的 MyPersonalGit 个人资料关联的外部账户，以实现单点登录。</value>
+  </data>
+  <data name="Settings_Linked" xml:space="preserve">
+    <value>关联于</value>
+  </data>
+  <data name="Settings_Unlink" xml:space="preserve">
+    <value>取消关联</value>
+  </data>
+  <data name="Settings_NoLinkedAccounts" xml:space="preserve">
+    <value>没有关联账户。</value>
+  </data>
+  <data name="Settings_LinkNewAccount" xml:space="preserve">
+    <value>关联新账户</value>
+  </data>
+  <data name="Settings_Link" xml:space="preserve">
+    <value>关联</value>
+  </data>
+  <data name="Settings_Title_TitleLabel" xml:space="preserve">
+    <value>标题</value>
+  </data>
+  <data name="Settings_Key" xml:space="preserve">
+    <value>密钥</value>
+  </data>
+  <data name="Settings_GeneratePersonalAccessToken" xml:space="preserve">
+    <value>生成个人访问令牌</value>
+  </data>
+  <data name="Settings_TokenName" xml:space="preserve">
+    <value>令牌名称</value>
+  </data>
+  <data name="Settings_Scopes" xml:space="preserve">
+    <value>作用域</value>
+  </data>
+  <data name="Settings_ScopeRepo" xml:space="preserve">
+    <value>repo - 完整仓库访问权限</value>
+  </data>
+  <data name="Settings_ScopeUser" xml:space="preserve">
+    <value>user - 用户资料访问权限</value>
+  </data>
+  <data name="Settings_ScopeAdmin" xml:space="preserve">
+    <value>admin - 管理访问权限</value>
+  </data>
+  <data name="Settings_ExpirationDays" xml:space="preserve">
+    <value>有效期（天）</value>
+  </data>
+  <data name="Settings_RouteRestrictions" xml:space="preserve">
+    <value>路由限制</value>
+  </data>
+  <data name="Settings_RouteRestrictionsHelp" xml:space="preserve">
+    <value>每行一个 glob 模式。如果为空，令牌可以访问与其作用域匹配的所有路由。</value>
+  </data>
+  <data name="Settings_GPGPublicKey" xml:space="preserve">
+    <value>GPG 公钥</value>
+  </data>
+  <data name="Settings_OptionalBadge" xml:space="preserve">
+    <value>可选</value>
+  </data>
+  <data name="Settings_RouteRestrictionsMatchHelp" xml:space="preserve">
+    <value>使用 &lt;code&gt;**&lt;/code&gt; 匹配任何子路径（例如 &lt;code&gt;/api/packages/**&lt;/code&gt;）。</value>
+  </data>
+  <data name="Settings_GPGPublicKeyHelp" xml:space="preserve">
+    <value>粘贴您的 ASCII 装甲格式 GPG 公钥。</value>
+  </data>
+  <data name="Admin_ProjectRootLabel" xml:space="preserve">
+    <value>项目根目录:</value>
+  </data>
+  <data name="Admin_AuthenticationLabel" xml:space="preserve">
+    <value>身份验证:</value>
+  </data>
+  <data name="Admin_UserRegistrationLabel" xml:space="preserve">
+    <value>用户注册:</value>
+  </data>
+  <data name="Admin_ActionsCiCdLabel" xml:space="preserve">
+    <value>Actions/CI-CD:</value>
+  </data>
+  <data name="Admin_PrometheusMetricsLabel" xml:space="preserve">
+    <value>Prometheus 指标:</value>
+  </data>
+  <data name="Admin_ActiveProviderLabel" xml:space="preserve">
+    <value>活动提供程序:</value>
+  </data>
+  <data name="Admin_DatabaseProvider" xml:space="preserve">
+    <value>数据库提供程序</value>
+  </data>
+  <data name="Admin_SqliteOption" xml:space="preserve">
+    <value>SQLite（默认 — 无需配置）</value>
+  </data>
+  <data name="Admin_PostgresqlOption" xml:space="preserve">
+    <value>PostgreSQL（适用于大型部署）</value>
+  </data>
+  <data name="Admin_ConnectionString" xml:space="preserve">
+    <value>连接字符串</value>
+  </data>
+  <data name="Admin_ExampleLabel" xml:space="preserve">
+    <value>示例:</value>
+  </data>
+  <data name="Admin_SaveDatabaseSettings" xml:space="preserve">
+    <value>保存数据库设置</value>
+  </data>
+  <data name="Admin_RequiresRestartHint" xml:space="preserve">
+    <value>需要重启应用程序才能生效</value>
+  </data>
+  <data name="Admin_General" xml:space="preserve">
+    <value>常规</value>
+  </data>
+  <data name="Admin_ProjectRootDirectory" xml:space="preserve">
+    <value>项目根目录</value>
+  </data>
+  <data name="Admin_ProjectRootHelp" xml:space="preserve">
+    <value>存储仓库的根目录</value>
+  </data>
+  <data name="Admin_RequireAuthentication" xml:space="preserve">
+    <value>要求身份验证</value>
+  </data>
+  <data name="Admin_AllowUserRegistration" xml:space="preserve">
+    <value>允许用户注册</value>
+  </data>
+  <data name="Admin_RequireEmailVerification" xml:space="preserve">
+    <value>要求电子邮件验证</value>
+  </data>
+  <data name="Admin_MaxReposPerUser" xml:space="preserve">
+    <value>每个用户的最大仓库数</value>
+  </data>
+  <data name="Admin_MaxRepoSizeBytes" xml:space="preserve">
+    <value>最大仓库大小（字节）</value>
+  </data>
+  <data name="Admin_CurrentLabel" xml:space="preserve">
+    <value>当前:</value>
+  </data>
+  <data name="Admin_ActionsCiCd" xml:space="preserve">
+    <value>Actions / CI-CD</value>
+  </data>
+  <data name="Admin_Wiki" xml:space="preserve">
+    <value>Wiki</value>
+  </data>
+  <data name="Admin_Issues" xml:space="preserve">
+    <value>问题</value>
+  </data>
+  <data name="Admin_Projects" xml:space="preserve">
+    <value>项目</value>
+  </data>
+  <data name="Admin_EnableEmailNotifications" xml:space="preserve">
+    <value>启用电子邮件通知</value>
+  </data>
+  <data name="Admin_SmtpServer" xml:space="preserve">
+    <value>SMTP 服务器</value>
+  </data>
+  <data name="Admin_SmtpPort" xml:space="preserve">
+    <value>SMTP 端口</value>
+  </data>
+  <data name="Admin_SmtpUsername" xml:space="preserve">
+    <value>SMTP 用户名</value>
+  </data>
+  <data name="Admin_SmtpPassword" xml:space="preserve">
+    <value>SMTP 密码</value>
+  </data>
+  <data name="Admin_EnableSslTls" xml:space="preserve">
+    <value>启用 SSL/TLS</value>
+  </data>
+  <data name="Admin_FromAddress" xml:space="preserve">
+    <value>发件人地址</value>
+  </data>
+  <data name="Admin_FromName" xml:space="preserve">
+    <value>发件人名称</value>
+  </data>
+  <data name="Admin_SendTestEmail" xml:space="preserve">
+    <value>发送测试电子邮件</value>
+  </data>
+  <data name="Admin_EnablePushNotifications" xml:space="preserve">
+    <value>启用推送通知</value>
+  </data>
+  <data name="Admin_ServerUrl" xml:space="preserve">
+    <value>服务器 URL</value>
+  </data>
+  <data name="Admin_Topic" xml:space="preserve">
+    <value>主题</value>
+  </data>
+  <data name="Admin_AccessToken" xml:space="preserve">
+    <value>访问令牌</value>
+  </data>
+  <data name="Admin_AppToken" xml:space="preserve">
+    <value>应用令牌</value>
+  </data>
+  <data name="Admin_SiteName" xml:space="preserve">
+    <value>站点名称</value>
+  </data>
+  <data name="Admin_Preview" xml:space="preserve">
+    <value>（预览）</value>
+  </data>
+  <data name="Admin_Documentation" xml:space="preserve">
+    <value>文档</value>
+  </data>
+  <data name="Admin_Contact" xml:space="preserve">
+    <value>联系方式</value>
+  </data>
+  <data name="Admin_AiCodeCompletion" xml:space="preserve">
+    <value>AI 代码补全</value>
+  </data>
+  <data name="Admin_AiCompletionHelp" xml:space="preserve">
+    <value>在 Web IDE 中启用 AI 驱动的内联代码补全。使用与 OpenAI 兼容的 API 端点。</value>
+  </data>
+  <data name="Admin_EnableAiCompletion" xml:space="preserve">
+    <value>启用 AI 补全</value>
+  </data>
+  <data name="Admin_ApiEndpoint" xml:space="preserve">
+    <value>API 端点</value>
+  </data>
+  <data name="Admin_ApiEndpointHelp" xml:space="preserve">
+    <value>与 OpenAI 兼容的 API 基础 URL（例如 OpenAI、Ollama、LM Studio）</value>
+  </data>
+  <data name="Admin_ApiKey" xml:space="preserve">
+    <value>API 密钥</value>
+  </data>
+  <data name="Admin_Model" xml:space="preserve">
+    <value>模型</value>
+  </data>
+  <data name="Admin_ModelHelp" xml:space="preserve">
+    <value>模型名称（例如 gpt-4o-mini、codestral-latest、deepseek-coder）</value>
+  </data>
+  <data name="Admin_AiChatAssistant" xml:space="preserve">
+    <value>AI 聊天与助手</value>
+  </data>
+  <data name="Admin_AiChatHelp" xml:space="preserve">
+    <value>在 Web IDE 中启用 AI 聊天、内联解释、重构和测试生成。需要先启用上面的 AI 补全（使用相同的 API 端点）。</value>
+  </data>
+  <data name="Admin_EnableAiChatAssistant" xml:space="preserve">
+    <value>启用 AI 聊天与助手</value>
+  </data>
+  <data name="Admin_RealtimeCollaboration" xml:space="preserve">
+    <value>实时协作</value>
+  </data>
+  <data name="Admin_CollaborationHelp" xml:space="preserve">
+    <value>在 Web IDE 中启用实时协作编辑。多个用户可以同时编辑同一文件，并提供实时光标跟踪和在线状态指示。</value>
+  </data>
+  <data name="Admin_EnableRealtimeCollaboration" xml:space="preserve">
+    <value>启用实时协作</value>
+  </data>
+  <data name="Admin_SshServerHelp" xml:space="preserve">
+    <value>运行原生 SSH 服务器进行 Git 操作，无需系统 OpenSSH。用户可以通过以下方式克隆/推送</value>
+  </data>
+  <data name="Admin_EnableBuiltInSsh" xml:space="preserve">
+    <value>启用内置 SSH 服务器</value>
+  </data>
+  <data name="Admin_SshPort" xml:space="preserve">
+    <value>SSH 端口</value>
+  </data>
+  <data name="Admin_SshPortHelp" xml:space="preserve">
+    <value>默认值：2222。如果未运行系统 SSH，请使用 22。需要重启。</value>
+  </data>
+  <data name="Admin_MergeSigningHelp" xml:space="preserve">
+    <value>对通过 Web 界面创建的合并、压缩和变基提交进行 GPG 签名。GPG 密钥必须导入到服务器的密钥环中（</value>
+  </data>
+  <data name="Admin_SignMergeCommits" xml:space="preserve">
+    <value>使用 GPG 签名合并提交</value>
+  </data>
+  <data name="Admin_ServerGpgKeyId" xml:space="preserve">
+    <value>服务器 GPG 密钥 ID</value>
+  </data>
+  <data name="Admin_ServerGpgKeyIdHelp" xml:space="preserve">
+    <value>用于签名的 GPG 密钥的长或短密钥 ID</value>
+  </data>
+  <data name="Admin_LdapAuthHelp" xml:space="preserve">
+    <value>启用 LDAP/AD 身份验证，让用户使用其域凭据登录。用户在首次登录时自动配置。</value>
+  </data>
+  <data name="Admin_EnableLdapAuth" xml:space="preserve">
+    <value>启用 LDAP 身份验证</value>
+  </data>
+  <data name="Admin_LdapServer" xml:space="preserve">
+    <value>LDAP 服务器</value>
+  </data>
+  <data name="Admin_Port" xml:space="preserve">
+    <value>端口</value>
+  </data>
+  <data name="Admin_LdapPortHelp" xml:space="preserve">
+    <value>389（LDAP）或 636（LDAPS）</value>
+  </data>
+  <data name="Admin_UseSslLdaps" xml:space="preserve">
+    <value>使用 SSL (LDAPS)</value>
+  </data>
+  <data name="Admin_UseStartTls" xml:space="preserve">
+    <value>使用 StartTLS</value>
+  </data>
+  <data name="Admin_SkipCertValidation" xml:space="preserve">
+    <value>跳过证书验证</value>
+  </data>
+  <data name="Admin_BindDn" xml:space="preserve">
+    <value>Bind DN</value>
+  </data>
+  <data name="Admin_ServiceAccount" xml:space="preserve">
+    <value>（服务账户）</value>
+  </data>
+  <data name="Admin_AnonymousBindHelp" xml:space="preserve">
+    <value>匿名绑定时留空</value>
+  </data>
+  <data name="Admin_BindPassword" xml:space="preserve">
+    <value>绑定密码</value>
+  </data>
+  <data name="Admin_SearchBaseDn" xml:space="preserve">
+    <value>搜索基础 DN</value>
+  </data>
+  <data name="Admin_UserSearchFilter" xml:space="preserve">
+    <value>用户搜索过滤器</value>
+  </data>
+  <data name="Admin_UserFilterHelp" xml:space="preserve">
+    <value>将被替换为用户名。示例:</value>
+  </data>
+  <data name="Admin_UsernameAttribute" xml:space="preserve">
+    <value>用户名属性</value>
+  </data>
+  <data name="Admin_EmailAttribute" xml:space="preserve">
+    <value>电子邮件属性</value>
+  </data>
+  <data name="Admin_DisplayNameAttribute" xml:space="preserve">
+    <value>显示名称属性</value>
+  </data>
+  <data name="Admin_AdminGroupDn" xml:space="preserve">
+    <value>管理员组 DN</value>
+  </data>
+  <data name="Admin_AdminGroupHelp" xml:space="preserve">
+    <value>该组的成员将自动提升为管理员。留空以跳过。</value>
+  </data>
+  <data name="Admin_TestLdapConnection" xml:space="preserve">
+    <value>测试 LDAP 连接</value>
+  </data>
+  <data name="Admin_SaveAllSettings" xml:space="preserve">
+    <value>保存所有设置</value>
+  </data>
+  <data name="Admin_AdminRole" xml:space="preserve">
+    <value>管理员</value>
+  </data>
+  <data name="Admin_UserRole" xml:space="preserve">
+    <value>用户</value>
+  </data>
+  <data name="Admin_StatusActive" xml:space="preserve">
+    <value>活动</value>
+  </data>
+  <data name="Admin_StatusInactive" xml:space="preserve">
+    <value>非活动</value>
+  </data>
+  <data name="Admin_GlobalSecretsHelp" xml:space="preserve">
+    <value>全局密钥可用于所有工作流运行。同名的仓库级密钥将覆盖全局密钥。</value>
+  </data>
+  <data name="Admin_UpdatedPrefix" xml:space="preserve">
+    <value>更新于</value>
+  </data>
+  <data name="Admin_NoGlobalSecrets" xml:space="preserve">
+    <value>未配置全局密钥。</value>
+  </data>
+  <data name="Admin_Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="Admin_Value" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="Admin_SecretValuePlaceholder" xml:space="preserve">
+    <value>密钥值</value>
+  </data>
+  <data name="Admin_DownloadBackupHelp" xml:space="preserve">
+    <value>将所有仓库和数据库的完整备份下载为</value>
+  </data>
+  <data name="Admin_BackupArchiveSuffix" xml:space="preserve">
+    <value>存档。</value>
+  </data>
+  <data name="Admin_RestoreWarningLabel" xml:space="preserve">
+    <value>警告:</value>
+  </data>
+  <data name="Admin_RestoreWarningText" xml:space="preserve">
+    <value>还原备份将覆盖所有当前数据。还原后应重启应用程序。</value>
+  </data>
+  <data name="Admin_RestoreApiHelp" xml:space="preserve">
+    <value>直接使用 API 进行还原:</value>
+  </data>
+  <data name="Admin_RestoreApiSuffix" xml:space="preserve">
+    <value>并附带一个 tar.gz 文件。</value>
+  </data>
+  <data name="Admin_OAuthProvidersHelp" xml:space="preserve">
+    <value>配置外部身份验证提供程序。只有同时填写了 Client ID 和 Client Secret 的提供程序才会显示在登录页面上。</value>
+  </data>
+  <data name="Admin_OAuthEnabled" xml:space="preserve">
+    <value>已启用</value>
+  </data>
+  <data name="Admin_OAuthNotConfigured" xml:space="preserve">
+    <value>未配置</value>
+  </data>
+  <data name="Admin_ClientId" xml:space="preserve">
+    <value>客户端 ID</value>
+  </data>
+  <data name="Admin_ClientSecret" xml:space="preserve">
+    <value>客户端密钥</value>
+  </data>
+  <data name="Admin_EnableThisProvider" xml:space="preserve">
+    <value>启用此提供程序</value>
+  </data>
+  <data name="Admin_CallbackUrlLabel" xml:space="preserve">
+    <value>回调 URL:</value>
+  </data>
+  <data name="Admin_CallbackUrlHelp" xml:space="preserve">
+    <value>每个提供程序都应配置回调 URL:</value>
+  </data>
+  <data name="Admin_CallbackReplaceHelp" xml:space="preserve">
+    <value>替换为: github、google、microsoft、gitlab、bitbucket、facebook、discord 或 twitter</value>
+  </data>
+  <data name="Admin_EmailLabel" xml:space="preserve">
+    <value>电子邮件</value>
+  </data>
+  <data name="Admin_Password" xml:space="preserve">
+    <value>密码</value>
+  </data>
+  <data name="Admin_Administrator" xml:space="preserve">
+    <value>管理员</value>
+  </data>
+  <data name="Admin_EditUserTitle" xml:space="preserve">
+    <value>编辑用户:</value>
+  </data>
+  <data name="Admin_ActiveLabel" xml:space="preserve">
+    <value>活动</value>
+  </data>
+  <data name="Admin_NewPassword" xml:space="preserve">
+    <value>新密码</value>
+  </data>
+  <data name="Admin_LeaveBlankKeep" xml:space="preserve">
+    <value>（留空以保留当前密码）</value>
+  </data>
+  <data name="Org_SecretsTab" xml:space="preserve">
+    <value>密钥</value>
+  </data>
+  <data name="Org_RoleMember" xml:space="preserve">
+    <value>成员</value>
+  </data>
+  <data name="Org_RoleOwner" xml:space="preserve">
+    <value>所有者</value>
+  </data>
+  <data name="Org_MembersCount" xml:space="preserve">
+    <value>成员</value>
+  </data>
+  <data name="Org_RepositoriesCount" xml:space="preserve">
+    <value>仓库</value>
+  </data>
+  <data name="Org_SecretsHeader" xml:space="preserve">
+    <value>组织密钥</value>
+  </data>
+  <data name="Org_SecretsDescription" xml:space="preserve">
+    <value>组织密钥可用于该组织拥有的所有仓库的工作流运行。用户级和仓库级密钥会覆盖这些密钥。</value>
+  </data>
+  <data name="Org_SecretUpdatedPrefix" xml:space="preserve">
+    <value>更新于</value>
+  </data>
+  <data name="Org_NoSecrets" xml:space="preserve">
+    <value>未配置组织密钥。</value>
+  </data>
+  <data name="Org_UpdateSecret" xml:space="preserve">
+    <value>更新密钥</value>
+  </data>
+  <data name="Org_AddSecret" xml:space="preserve">
+    <value>添加密钥</value>
+  </data>
+  <data name="Org_Update" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="Org_PermRead" xml:space="preserve">
+    <value>读取</value>
+  </data>
+  <data name="Org_PermWrite" xml:space="preserve">
+    <value>写入</value>
+  </data>
+  <data name="Org_PermAdmin" xml:space="preserve">
+    <value>管理员</value>
+  </data>
 </root>

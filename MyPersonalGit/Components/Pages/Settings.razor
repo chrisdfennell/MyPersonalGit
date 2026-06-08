@@ -71,7 +71,7 @@ else
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "secrets" ? "active" : "")"
                    @onclick='() => SetTab("secrets")' style="cursor: pointer;">
-                    <i class="bi bi-key-fill"></i> Secrets
+                    <i class="bi bi-key-fill"></i> @L["Settings_Secrets"]
                 </a>
                 <a class="list-group-item list-group-item-action @(ActiveTab == "linked" ? "active" : "")"
                    @onclick='() => SetTab("linked")' style="cursor: pointer;">
@@ -93,7 +93,7 @@ else
                             <div class="d-flex align-items-start gap-3">
                                 @if (!string.IsNullOrEmpty(UserProfileData.AvatarUrl))
                                 {
-                                    <img src="@UserProfileData.AvatarUrl" alt="Avatar preview" class="rounded-circle border"
+                                    <img src="@UserProfileData.AvatarUrl" alt="@L["Settings_AvatarPreview"]" class="rounded-circle border"
                                          style="width: 80px; height: 80px; object-fit: cover;" />
                                 }
                                 else
@@ -110,9 +110,9 @@ else
                                                placeholder="https://example.com/avatar.jpg" />
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
-                                        <span class="text-muted small">or</span>
+                                        <span class="text-muted small">@L["Settings_Or"]</span>
                                         <label class="btn btn-outline-secondary btn-sm mb-0">
-                                            <i class="bi bi-upload"></i> Upload image
+                                            <i class="bi bi-upload"></i> @L["Settings_UploadImage"]
                                             <InputFile OnChange="OnAvatarFileSelected" accept="image/jpeg,image/png,image/gif,image/webp"
                                                        style="display: none;" />
                                         </label>
@@ -125,7 +125,7 @@ else
                                             <span class="text-danger small">@avatarUploadError</span>
                                         }
                                     </div>
-                                    <div class="form-text">JPEG, PNG, GIF, or WebP. Max 5 MB.</div>
+                                    <div class="form-text">@L["Settings_AvatarFormatHelp"]</div>
                                 </div>
                             </div>
                         </div>
@@ -211,15 +211,15 @@ else
                         @if (TwoFactor.IsEnabled && !ShowTwoFactorSetup)
                         {
                             <div class="alert alert-success">
-                                <i class="bi bi-shield-check"></i> Two-factor authentication is enabled
+                                <i class="bi bi-shield-check"></i> @L["Settings_TwoFactorEnabled"]
                             </div>
-                            <p>Enabled on @TwoFactor.EnabledAt?.ToString("g")</p>
+                            <p>@L["Settings_EnabledOn"] @TwoFactor.EnabledAt?.ToString("g")</p>
 
                             @if (ShowRecoveryCodes && RecoveryCodes.Length > 0)
                             {
                                 <div class="alert alert-warning">
-                                    <strong>Recovery Codes</strong>
-                                    <p class="mb-2">Save these codes in a safe place. Each code can only be used once.</p>
+                                    <strong>@L["Settings_RecoveryCodes"]</strong>
+                                    <p class="mb-2">@L["Settings_RecoveryCodesSaveHint"]</p>
                                     <div class="bg-dark text-light p-3 rounded font-monospace">
                                         @foreach (var recoveryCode in RecoveryCodes)
                                         {
@@ -231,17 +231,17 @@ else
 
                             <div class="d-flex gap-2">
                                 <button class="btn btn-outline-primary" @onclick="RegenerateRecoveryCodes">
-                                    <i class="bi bi-arrow-repeat"></i> Regenerate Recovery Codes
+                                    <i class="bi bi-arrow-repeat"></i> @L["Settings_RegenerateRecoveryCodes"]
                                 </button>
                                 <button class="btn btn-danger" @onclick='() => ShowDisable2FAConfirm = true'>
-                                    <i class="bi bi-x-circle"></i> Disable 2FA
+                                    <i class="bi bi-x-circle"></i> @L["Settings_Disable2FA"]
                                 </button>
                             </div>
 
                             @if (ShowDisable2FAConfirm)
                             {
                                 <div class="mt-3 p-3 border rounded">
-                                    <p class="mb-2"><strong>Enter your current TOTP code to disable 2FA:</strong></p>
+                                    <p class="mb-2"><strong>@L["Settings_Disable2FAPrompt"]</strong></p>
                                     <div class="input-group" style="max-width: 300px;">
                                         <input type="text" class="form-control font-monospace" @bind="Disable2FACode"
                                                placeholder="000000" maxlength="6" inputmode="numeric" />
@@ -254,25 +254,25 @@ else
                         else if (ShowTwoFactorSetup)
                         {
                             <div class="mb-3">
-                                <h6>Step 1: Add to your authenticator app</h6>
-                                <p>Scan the QR code with your authenticator app:</p>
+                                <h6>@L["Settings_2FAStep1"]</h6>
+                                <p>@L["Settings_2FAScanPrompt"]</p>
                                 <div class="d-flex justify-content-center bg-white p-3 rounded mb-3 border" style="max-width: 250px;">
                                     <div id="qrcode-2fa"></div>
                                 </div>
                                 <details class="mb-3">
-                                    <summary class="small text-muted" style="cursor: pointer;">Can't scan? Enter manually</summary>
+                                    <summary class="small text-muted" style="cursor: pointer;">@L["Settings_2FACantScan"]</summary>
                                     <div class="bg-light p-3 rounded mt-2">
-                                        <p class="small mb-1"><strong>Secret key:</strong></p>
+                                        <p class="small mb-1"><strong>@L["Settings_SecretKey"]</strong></p>
                                         <code class="text-break user-select-all">@TwoFactorSetupSecret</code>
-                                        <p class="small mt-2 mb-1"><strong>Full URI:</strong></p>
+                                        <p class="small mt-2 mb-1"><strong>@L["Settings_FullUri"]</strong></p>
                                         <code class="text-break small" style="font-size: 11px;">@TwoFactorSetupUri</code>
                                     </div>
                                 </details>
                             </div>
 
                             <div class="mb-3">
-                                <h6>Step 2: Verify setup</h6>
-                                <p>Enter the 6-digit code from your authenticator app to confirm setup:</p>
+                                <h6>@L["Settings_2FAStep2"]</h6>
+                                <p>@L["Settings_2FAVerifyPrompt"]</p>
                                 <div class="input-group" style="max-width: 300px;">
                                     <input type="text" class="form-control font-monospace text-center" @bind="VerifySetupCode"
                                            placeholder="000000" maxlength="6" inputmode="numeric" />
@@ -285,8 +285,8 @@ else
                             @if (ShowRecoveryCodes && RecoveryCodes.Length > 0)
                             {
                                 <div class="alert alert-warning mt-3">
-                                    <strong>Save your recovery codes!</strong>
-                                    <p class="mb-2">These codes can be used to access your account if you lose your authenticator device. Each code can only be used once. Store them securely.</p>
+                                    <strong>@L["Settings_SaveRecoveryCodes"]</strong>
+                                    <p class="mb-2">@L["Settings_RecoveryCodesLongHint"]</p>
                                     <div class="bg-dark text-light p-3 rounded font-monospace">
                                         @foreach (var recoveryCode in RecoveryCodes)
                                         {
@@ -299,11 +299,11 @@ else
                         else
                         {
                             <div class="alert alert-warning">
-                                <i class="bi bi-shield-exclamation"></i> Two-factor authentication is not enabled
+                                <i class="bi bi-shield-exclamation"></i> @L["Settings_TwoFactorNotEnabled"]
                             </div>
-                            <p>Add an extra layer of security to your account by enabling two-factor authentication.</p>
+                            <p>@L["Settings_TwoFactorIntro"]</p>
                             <button class="btn btn-primary" @onclick="Enable2FA">
-                                <i class="bi bi-shield-plus"></i> Enable 2FA
+                                <i class="bi bi-shield-plus"></i> @L["Settings_Enable2FA"]
                             </button>
                         }
                     </div>
@@ -313,15 +313,15 @@ else
             {
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">SSH Keys</h5>
+                        <h5 class="mb-0">@L["Settings_SSHKeys"]</h5>
                         <button class="btn btn-primary btn-sm" @onclick='() => ShowAddSshKey = true'>
-                            <i class="bi bi-plus-lg"></i> Add SSH Key
+                            <i class="bi bi-plus-lg"></i> @L["Settings_AddSSHKey"]
                         </button>
                     </div>
                     <div class="card-body">
                         @if (SshKeys.Count == 0)
                         {
-                            <p class="text-muted">No SSH keys configured</p>
+                            <p class="text-muted">@L["Settings_NoSSHKeys"]</p>
                         }
                         else
                         {
@@ -334,7 +334,7 @@ else
                                                 <h6 class="mb-1">@key.Title</h6>
                                                 <p class="mb-1 font-monospace small">@key.Fingerprint</p>
                                                 <small class="text-muted">
-                                                    Added @key.CreatedAt.ToString("MMM d, yyyy")
+                                                    @L["Settings_Added"] @key.CreatedAt.ToString("MMM d, yyyy")
                                                     @if (key.LastUsed.HasValue)
                                                     {
                                                         <span> • Last used @key.LastUsed.Value.ToString("MMM d, yyyy")</span>
@@ -356,15 +356,15 @@ else
             {
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">GPG Keys</h5>
+                        <h5 class="mb-0">@L["Settings_GPGKeys"]</h5>
                         <button class="btn btn-primary btn-sm" @onclick='() => ShowAddGpgKey = true'>
-                            <i class="bi bi-plus-lg"></i> Add GPG Key
+                            <i class="bi bi-plus-lg"></i> @L["Settings_AddGPGKey"]
                         </button>
                     </div>
                     <div class="card-body">
                         @if (GpgKeys.Count == 0)
                         {
-                            <p class="text-muted">No GPG keys configured. Add a GPG key to sign and verify commits.</p>
+                            <p class="text-muted">@L["Settings_NoGPGKeys"]</p>
                         }
                         else
                         {
@@ -379,24 +379,24 @@ else
                                                     <span class="font-monospace">@key.KeyId</span>
                                                     @if (key.IsVerified)
                                                     {
-                                                        <span class="badge bg-success ms-2">Verified</span>
+                                                        <span class="badge bg-success ms-2">@L["Settings_Verified"]</span>
                                                     }
                                                 </h6>
                                                 <p class="mb-1 small">
-                                                    <strong>Key ID:</strong> <span class="font-monospace">@key.LongKeyId</span>
+                                                    <strong>@L["Settings_KeyId"]</strong> <span class="font-monospace">@key.LongKeyId</span>
                                                 </p>
                                                 <p class="mb-1 small">
-                                                    <strong>Email:</strong> @key.PrimaryEmail
+                                                    <strong>@L["Settings_Email"]</strong> @key.PrimaryEmail
                                                     @if (key.Emails.Count > 1)
                                                     {
                                                         <span class="text-muted">(+@(key.Emails.Count - 1) more)</span>
                                                     }
                                                 </p>
                                                 <small class="text-muted">
-                                                    Added @key.CreatedAt.ToString("MMM d, yyyy")
+                                                    @L["Settings_Added"] @key.CreatedAt.ToString("MMM d, yyyy")
                                                     @if (key.ExpiresAt.HasValue)
                                                     {
-                                                        <span> &middot; Expires @key.ExpiresAt.Value.ToString("MMM d, yyyy")</span>
+                                                        <span> &middot; @L["Settings_Expires"] @key.ExpiresAt.Value.ToString("MMM d, yyyy")</span>
                                                     }
                                                 </small>
                                             </div>
@@ -415,7 +415,7 @@ else
             {
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Personal Access Tokens</h5>
+                        <h5 class="mb-0">@L["Settings_PersonalAccessTokens"]</h5>
                         <button class="btn btn-primary btn-sm" @onclick='() => ShowAddToken = true'>
                             <i class="bi bi-plus-lg"></i> @L["Settings_GenerateToken"]
                         </button>
@@ -426,15 +426,15 @@ else
                             <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
                                 <i class="bi bi-key-fill"></i>
                                 <div class="flex-grow-1">
-                                    <strong>Your new token:</strong>
+                                    <strong>@L["Settings_YourNewToken"]</strong>
                                     <code class="ms-2 user-select-all">@lastGeneratedToken</code>
                                 </div>
-                                <small class="text-muted">Copy it now — you won't see it again.</small>
+                                <small class="text-muted">@L["Settings_CopyTokenNow"]</small>
                             </div>
                         }
                         @if (Tokens.Count == 0)
                         {
-                            <p class="text-muted">No personal access tokens</p>
+                            <p class="text-muted">@L["Settings_NoTokens"]</p>
                         }
                         else
                         {
@@ -455,10 +455,10 @@ else
                                                     }
                                                 </p>
                                                 <small class="text-muted">
-                                                    Created @token.CreatedAt.ToString("MMM d, yyyy")
+                                                    @L["Settings_Created"] @token.CreatedAt.ToString("MMM d, yyyy")
                                                     @if (token.ExpiresAt.HasValue)
                                                     {
-                                                        <span> • Expires @token.ExpiresAt.Value.ToString("MMM d, yyyy")</span>
+                                                        <span> • @L["Settings_Expires"] @token.ExpiresAt.Value.ToString("MMM d, yyyy")</span>
                                                     }
                                                     @if (token.LastUsed.HasValue)
                                                     {
@@ -481,12 +481,12 @@ else
             {
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Active Sessions</h5>
+                        <h5 class="mb-0">@L["Settings_ActiveSessions"]</h5>
                     </div>
                     <div class="card-body">
                         @if (Sessions.Count == 0)
                         {
-                            <p class="text-muted">No active sessions</p>
+                            <p class="text-muted">@L["Settings_NoActiveSessions"]</p>
                         }
                         else
                         {
@@ -503,12 +503,12 @@ else
                                                     <i class="bi bi-geo-alt"></i> @session.IpAddress
                                                 </p>
                                                 <small class="text-muted">
-                                                    Started @session.CreatedAt.ToString("g")
+                                                    @L["Settings_Started"] @session.CreatedAt.ToString("g")
                                                     • Last activity @session.LastActivity.ToString("g")
                                                 </small>
                                             </div>
                                             <button class="btn btn-danger btn-sm" @onclick="() => RevokeSession(session.Id)">
-                                                <i class="bi bi-x-circle"></i> Revoke
+                                                <i class="bi bi-x-circle"></i> @L["Settings_Revoke"]
                                             </button>
                                         </div>
                                     </div>
@@ -531,7 +531,7 @@ else
                         @if (!webAuthnSupported)
                         {
                             <div class="alert alert-warning">
-                                <i class="bi bi-exclamation-triangle me-2"></i>@(webAuthnUnsupportedReason ?? "Your browser does not support WebAuthn/Passkeys.")
+                                <i class="bi bi-exclamation-triangle me-2"></i>@(webAuthnUnsupportedReason ?? L["Settings_WebAuthnUnsupported"])
                             </div>
                         }
                         @if (!string.IsNullOrEmpty(webAuthnMessage))
@@ -570,7 +570,7 @@ else
                                                     @cred.Name
                                                 </h6>
                                                 <small class="text-muted">
-                                                    Registered @cred.CreatedAt.ToString("MMM d, yyyy")
+                                                    @L["Settings_Registered"] @cred.CreatedAt.ToString("MMM d, yyyy")
                                                     @if (cred.LastUsedAt.HasValue)
                                                     {
                                                         <span> • Last used @cred.LastUsedAt.Value.ToString("MMM d, yyyy")</span>
@@ -592,15 +592,15 @@ else
             {
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Notification Preferences</h5>
+                        <h5 class="mb-0">@L["Settings_NotificationPreferences"]</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" @bind="UserProfileData.PushNotificationsEnabled" id="pushEnabled" />
                                 <label class="form-check-label" for="pushEnabled">
-                                    <strong>Push notifications (ntfy/Gotify)</strong>
-                                    <small class="text-muted d-block">Send notifications to external push services when configured by admin</small>
+                                    <strong>@L["Settings_PushNotifications"]</strong>
+                                    <small class="text-muted d-block">@L["Settings_PushNotificationsHelp"]</small>
                                 </label>
                             </div>
                         </div>
@@ -608,8 +608,8 @@ else
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" @bind="UserProfileData.EmailNotificationsEnabled" id="emailEnabled" />
                                 <label class="form-check-label" for="emailEnabled">
-                                    <strong>Email notifications</strong>
-                                    <small class="text-muted d-block">Receive email notifications when SMTP is configured by admin</small>
+                                    <strong>@L["Settings_EmailNotifications"]</strong>
+                                    <small class="text-muted d-block">@L["Settings_EmailNotificationsHelp"]</small>
                                 </label>
                             </div>
                         </div>
@@ -618,7 +618,7 @@ else
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" @bind="UserProfileData.NotifyOnPullRequest" id="notifyPR" />
                                 <label class="form-check-label" for="notifyPR">
-                                    Pull request notifications
+                                    @L["Settings_PullRequestNotifications"]
                                 </label>
                             </div>
                         </div>
@@ -626,7 +626,7 @@ else
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" @bind="UserProfileData.NotifyOnIssue" id="notifyIssue" />
                                 <label class="form-check-label" for="notifyIssue">
-                                    Issue notifications
+                                    @L["Settings_IssueNotifications"]
                                 </label>
                             </div>
                         </div>
@@ -634,7 +634,7 @@ else
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" @bind="UserProfileData.NotifyOnMention" id="notifyMention" />
                                 <label class="form-check-label" for="notifyMention">
-                                    Mention notifications
+                                    @L["Settings_MentionNotifications"]
                                 </label>
                             </div>
                         </div>
@@ -642,12 +642,12 @@ else
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" @bind="UserProfileData.NotifyOnComment" id="notifyComment" />
                                 <label class="form-check-label" for="notifyComment">
-                                    Comment notifications
+                                    @L["Settings_CommentNotifications"]
                                 </label>
                             </div>
                         </div>
                         <button class="btn btn-primary" @onclick="SaveNotificationSettings">
-                            <i class="bi bi-check-lg"></i> Save Preferences
+                            <i class="bi bi-check-lg"></i> @L["Settings_SavePreferences"]
                         </button>
                     </div>
                 </div>
@@ -656,10 +656,10 @@ else
             {
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-key-fill me-2"></i>User Secrets</h5>
+                        <h5 class="mb-0"><i class="bi bi-key-fill me-2"></i>@L["Settings_UserSecrets"]</h5>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted small">User-level secrets are available in all workflow runs for your repositories. Repository-level secrets override these.</p>
+                        <p class="text-muted small">@L["Settings_UserSecretsHelp"]</p>
 
                         @if (userSecrets.Any())
                         {
@@ -669,7 +669,7 @@ else
                                     <div class="list-group-item d-flex justify-content-between align-items-center py-2">
                                         <div>
                                             <code class="fw-bold">@secret.Name</code>
-                                            <br /><small class="text-muted">Updated @secret.UpdatedAt.ToString("MMM d, yyyy")</small>
+                                            <br /><small class="text-muted">@L["Settings_Updated"] @secret.UpdatedAt.ToString("MMM d, yyyy")</small>
                                         </div>
                                         <div class="d-flex gap-1">
                                             <button class="btn btn-outline-primary btn-sm" @onclick="() => BeginEditUserSecret(secret.Name)">
@@ -685,11 +685,11 @@ else
                         }
                         else
                         {
-                            <p class="text-muted">No user secrets configured.</p>
+                            <p class="text-muted">@L["Settings_NoUserSecrets"]</p>
                         }
 
                         <div class="border rounded p-3 bg-light-subtle">
-                            <h6 class="small fw-bold mb-2">@(editingUserSecretName != null ? "Update Secret" : "Add Secret")</h6>
+                            <h6 class="small fw-bold mb-2">@(editingUserSecretName != null ? L["Settings_UpdateSecret"] : L["Settings_AddSecret"])</h6>
                             <div class="mb-2">
                                 <input type="text" class="form-control form-control-sm" @bind="newUserSecretName"
                                        placeholder="SECRET_NAME" disabled="@(editingUserSecretName != null)" />
@@ -700,7 +700,7 @@ else
                             <div class="d-flex gap-2">
                                 <button class="btn btn-gh-primary btn-sm" @onclick="SaveUserSecret"
                                         disabled="@(string.IsNullOrWhiteSpace(newUserSecretName) || string.IsNullOrWhiteSpace(newUserSecretValue))">
-                                    @(editingUserSecretName != null ? "Update" : "Add Secret")
+                                    @(editingUserSecretName != null ? L["Settings_Update"] : L["Settings_AddSecret"])
                                 </button>
                                 @if (editingUserSecretName != null)
                                 {
@@ -719,10 +719,10 @@ else
             {
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Linked Accounts</h5>
+                        <h5 class="mb-0">@L["Settings_LinkedAccounts"]</h5>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted">Manage external accounts linked to your MyPersonalGit profile for single sign-on.</p>
+                        <p class="text-muted">@L["Settings_LinkedAccountsHelp"]</p>
 
                         @if (!string.IsNullOrEmpty(LinkedAccountMessage))
                         {
@@ -743,10 +743,10 @@ else
                                             {
                                                 <span class="text-muted ms-1">(@login.ProviderUsername)</span>
                                             }
-                                            <br /><small class="text-muted">Linked @login.LinkedAt.ToString("MMM d, yyyy")</small>
+                                            <br /><small class="text-muted">@L["Settings_Linked"] @login.LinkedAt.ToString("MMM d, yyyy")</small>
                                         </div>
                                         <button class="btn btn-outline-danger btn-sm" @onclick="() => UnlinkAccount(login.Provider)">
-                                            <i class="bi bi-x-lg me-1"></i> Unlink
+                                            <i class="bi bi-x-lg me-1"></i> @L["Settings_Unlink"]
                                         </button>
                                     </div>
                                 }
@@ -754,19 +754,19 @@ else
                         }
                         else
                         {
-                            <p class="text-muted">No linked accounts.</p>
+                            <p class="text-muted">@L["Settings_NoLinkedAccounts"]</p>
                         }
 
                         @if (enabledOAuthProviders.Any())
                         {
-                            <h6 class="mt-3">Link a new account</h6>
+                            <h6 class="mt-3">@L["Settings_LinkNewAccount"]</h6>
                             <div class="d-flex flex-wrap gap-2">
                                 @foreach (var provider in enabledOAuthProviders.Where(p => !externalLogins.Any(l => l.Provider == p.ProviderName)))
                                 {
                                     <a href="/oauth/login/@provider.ProviderName" class="btn btn-outline-secondary btn-sm">
                                         <i class="bi @MyPersonalGit.Data.OAuthService.GetProviderIcon(provider.ProviderName) me-1"
                                            style="color: @MyPersonalGit.Data.OAuthService.GetProviderColor(provider.ProviderName);"></i>
-                                        Link @(provider.DisplayName ?? provider.ProviderName)
+                                        @L["Settings_Link"] @(provider.DisplayName ?? provider.ProviderName)
                                     </a>
                                 }
                             </div>
@@ -784,16 +784,16 @@ else
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add SSH Key</h5>
+                    <h5 class="modal-title">@L["Settings_AddSSHKey"]</h5>
                     <button type="button" class="btn-close" aria-label="@L["Common_Close"]" @onclick='() => ShowAddSshKey = false'></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Title</label>
+                        <label class="form-label">@L["Settings_Title_TitleLabel"]</label>
                         <input type="text" class="form-control" @bind="NewSshKeyTitle" placeholder="@L["Settings_SshKeyPlaceholder"]" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Key</label>
+                        <label class="form-label">@L["Settings_Key"]</label>
                         <textarea class="form-control font-monospace" rows="5" @bind="NewSshKeyContent" 
                                   placeholder="ssh-rsa AAAAB3NzaC1yc2E..."></textarea>
                     </div>
@@ -813,40 +813,40 @@ else
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Generate Personal Access Token</h5>
+                    <h5 class="modal-title">@L["Settings_GeneratePersonalAccessToken"]</h5>
                     <button type="button" class="btn-close" aria-label="@L["Common_Close"]" @onclick='() => ShowAddToken = false'></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Token Name</label>
+                        <label class="form-label">@L["Settings_TokenName"]</label>
                         <input type="text" class="form-control" @bind="NewTokenName" placeholder="@L["Settings_TokenPlaceholder"]" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Scopes</label>
+                        <label class="form-label">@L["Settings_Scopes"]</label>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" @bind="TokenScopeRepo" id="scopeRepo" />
-                            <label class="form-check-label" for="scopeRepo">repo - Full repository access</label>
+                            <label class="form-check-label" for="scopeRepo">@L["Settings_ScopeRepo"]</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" @bind="TokenScopeUser" id="scopeUser" />
-                            <label class="form-check-label" for="scopeUser">user - User profile access</label>
+                            <label class="form-check-label" for="scopeUser">@L["Settings_ScopeUser"]</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" @bind="TokenScopeAdmin" id="scopeAdmin" />
-                            <label class="form-check-label" for="scopeAdmin">admin - Administrative access</label>
+                            <label class="form-check-label" for="scopeAdmin">@L["Settings_ScopeAdmin"]</label>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Expiration (days)</label>
+                        <label class="form-label">@L["Settings_ExpirationDays"]</label>
                         <input type="number" class="form-control" @bind="TokenExpirationDays" placeholder="30" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Route Restrictions <span class="badge bg-secondary">Optional</span></label>
+                        <label class="form-label">@L["Settings_RouteRestrictions"] <span class="badge bg-secondary">@L["Settings_OptionalBadge"]</span></label>
                         <textarea class="form-control font-monospace" rows="3" @bind="TokenAllowedRoutes"
                                   placeholder="/api/packages/**&#10;/api/v1/repos/MyRepo/**"></textarea>
                         <div class="form-text">
-                            One glob pattern per line. If empty, the token can access all routes matching its scopes.
-                            Use <code>**</code> to match any sub-path (e.g. <code>/api/packages/**</code>).
+                            @L["Settings_RouteRestrictionsHelp"]
+                            @L["Settings_RouteRestrictionsMatchHelp"]
                         </div>
                     </div>
                 </div>
@@ -864,15 +864,15 @@ else
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add GPG Key</h5>
+                    <h5 class="modal-title">@L["Settings_AddGPGKey"]</h5>
                     <button type="button" class="btn-close" aria-label="@L["Common_Close"]" @onclick='() => ShowAddGpgKey = false'></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">GPG Public Key</label>
+                        <label class="form-label">@L["Settings_GPGPublicKey"]</label>
                         <textarea class="form-control font-monospace" rows="10" @bind="NewGpgKeyContent"
                                   placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----&#10;&#10;...&#10;&#10;-----END PGP PUBLIC KEY BLOCK-----"></textarea>
-                        <div class="form-text">Paste your ASCII-armored GPG public key.</div>
+                        <div class="form-text">@L["Settings_GPGPublicKeyHelp"]</div>
                     </div>
                     @if (!string.IsNullOrEmpty(GpgKeyError))
                     {

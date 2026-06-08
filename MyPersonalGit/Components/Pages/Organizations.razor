@@ -100,7 +100,7 @@
             {
                 <li class="nav-item">
                     <button class="nav-link @(orgTab == "secrets" ? "active" : "")" @onclick="SwitchToSecretsTab">
-                        <i class="bi bi-key-fill me-1"></i> Secrets
+                        <i class="bi bi-key-fill me-1"></i> @L["Org_SecretsTab"]
                     </button>
                 </li>
                 <li class="nav-item">
@@ -119,8 +119,8 @@
                     <div class="input-group" style="max-width: 400px;">
                         <input type="text" class="form-control form-control-sm" @bind="newMemberUsername" placeholder="@L["Org_AddUserPlaceholder"]" />
                         <select class="form-select form-select-sm" style="max-width: 120px;" @bind="newMemberRole">
-                            <option value="@OrgRole.Member">Member</option>
-                            <option value="@OrgRole.Owner">Owner</option>
+                            <option value="@OrgRole.Member">@L["Org_RoleMember"]</option>
+                            <option value="@OrgRole.Owner">@L["Org_RoleOwner"]</option>
                         </select>
                         <button class="btn btn-gh-primary btn-sm" @onclick="AddMember">@L["Org_Add"]</button>
                     </div>
@@ -176,7 +176,7 @@
                         <span class="badge bg-info">@currentTeam.Permission @L["Org_Permission"]</span>
                     </div>
                     <div class="card-body">
-                        <h6 class="fw-bold small text-uppercase text-muted mb-2">Members (@currentTeam.Members.Count)</h6>
+                        <h6 class="fw-bold small text-uppercase text-muted mb-2">@L["Org_MembersCount"] (@currentTeam.Members.Count)</h6>
                         @if (isOrgOwner)
                         {
                             <div class="input-group mb-3" style="max-width: 350px;">
@@ -201,7 +201,7 @@
                             }
                         </div>
 
-                        <h6 class="fw-bold small text-uppercase text-muted mb-2">Repositories (@currentTeam.Repositories.Count)</h6>
+                        <h6 class="fw-bold small text-uppercase text-muted mb-2">@L["Org_RepositoriesCount"] (@currentTeam.Repositories.Count)</h6>
                         @if (isOrgOwner)
                         {
                             <div class="input-group mb-3" style="max-width: 350px;">
@@ -265,10 +265,10 @@
         {
             <div class="card shadow-sm" style="max-width: 600px;">
                 <div class="card-header bg-light-subtle py-2 fw-bold small">
-                    <i class="bi bi-key-fill me-1"></i> Organization Secrets
+                    <i class="bi bi-key-fill me-1"></i> @L["Org_SecretsHeader"]
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small">Organization secrets are available in workflow runs for all repositories owned by this organization. User and repo-level secrets override these.</p>
+                    <p class="text-muted small">@L["Org_SecretsDescription"]</p>
 
                     @if (orgSecrets.Any())
                     {
@@ -278,7 +278,7 @@
                                 <div class="list-group-item d-flex justify-content-between align-items-center py-2">
                                     <div>
                                         <code class="fw-bold">@secret.Name</code>
-                                        <br /><small class="text-muted">Updated @secret.UpdatedAt.ToString("MMM d, yyyy")</small>
+                                        <br /><small class="text-muted">@L["Org_SecretUpdatedPrefix"] @secret.UpdatedAt.ToString("MMM d, yyyy")</small>
                                     </div>
                                     <div class="d-flex gap-1">
                                         <button class="btn btn-outline-primary btn-sm" @onclick="() => BeginEditOrgSecret(secret.Name)">
@@ -294,11 +294,11 @@
                     }
                     else
                     {
-                        <p class="text-muted">No organization secrets configured.</p>
+                        <p class="text-muted">@L["Org_NoSecrets"]</p>
                     }
 
                     <div class="border rounded p-3 bg-light-subtle">
-                        <h6 class="small fw-bold mb-2">@(editingOrgSecretName != null ? "Update Secret" : "Add Secret")</h6>
+                        <h6 class="small fw-bold mb-2">@(editingOrgSecretName != null ? L["Org_UpdateSecret"] : L["Org_AddSecret"])</h6>
                         <div class="mb-2">
                             <input type="text" class="form-control form-control-sm" @bind="newOrgSecretName"
                                    placeholder="SECRET_NAME" disabled="@(editingOrgSecretName != null)" />
@@ -309,11 +309,11 @@
                         <div class="d-flex gap-2">
                             <button class="btn btn-gh-primary btn-sm" @onclick="SaveOrgSecret"
                                     disabled="@(string.IsNullOrWhiteSpace(newOrgSecretName) || string.IsNullOrWhiteSpace(newOrgSecretValue))">
-                                @(editingOrgSecretName != null ? "Update" : "Add Secret")
+                                @(editingOrgSecretName != null ? L["Org_Update"] : L["Org_AddSecret"])
                             </button>
                             @if (editingOrgSecretName != null)
                             {
-                                <button class="btn btn-outline-secondary btn-sm" @onclick="CancelEditOrgSecret">Cancel</button>
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="CancelEditOrgSecret">@L["Common_Cancel"]</button>
                             }
                         </div>
                         @if (!string.IsNullOrEmpty(orgSecretMessage))
@@ -411,9 +411,9 @@
                     <div class="mb-3">
                         <label class="form-label small fw-bold">@L["Org_Permission"]</label>
                         <select class="form-select" @bind="newTeamPermission">
-                            <option value="@TeamPermission.Read">Read</option>
-                            <option value="@TeamPermission.Write">Write</option>
-                            <option value="@TeamPermission.Admin">Admin</option>
+                            <option value="@TeamPermission.Read">@L["Org_PermRead"]</option>
+                            <option value="@TeamPermission.Write">@L["Org_PermWrite"]</option>
+                            <option value="@TeamPermission.Admin">@L["Org_PermAdmin"]</option>
                         </select>
                     </div>
                 </div>

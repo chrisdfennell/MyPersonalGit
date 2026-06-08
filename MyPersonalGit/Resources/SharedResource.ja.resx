@@ -3979,4 +3979,655 @@
   <data name="Stats_Subtitle" xml:space="preserve">
     <value>この Personal Git インスタンスのライブ統計</value>
   </data>
+  <data name="Settings_Secrets" xml:space="preserve">
+    <value>シークレット</value>
+  </data>
+  <data name="Settings_AvatarPreview" xml:space="preserve">
+    <value>アバターのプレビュー</value>
+  </data>
+  <data name="Settings_Or" xml:space="preserve">
+    <value>または</value>
+  </data>
+  <data name="Settings_UploadImage" xml:space="preserve">
+    <value>画像をアップロード</value>
+  </data>
+  <data name="Settings_AvatarFormatHelp" xml:space="preserve">
+    <value>JPEG、PNG、GIF、または WebP。最大 5 MB。</value>
+  </data>
+  <data name="Settings_TwoFactorEnabled" xml:space="preserve">
+    <value>二要素認証が有効になっています</value>
+  </data>
+  <data name="Settings_EnabledOn" xml:space="preserve">
+    <value>有効化日</value>
+  </data>
+  <data name="Settings_RecoveryCodes" xml:space="preserve">
+    <value>リカバリーコード</value>
+  </data>
+  <data name="Settings_RecoveryCodesSaveHint" xml:space="preserve">
+    <value>これらのコードを安全な場所に保管してください。各コードは一度だけ使用できます。</value>
+  </data>
+  <data name="Settings_RegenerateRecoveryCodes" xml:space="preserve">
+    <value>リカバリーコードを再生成</value>
+  </data>
+  <data name="Settings_Disable2FA" xml:space="preserve">
+    <value>2FA を無効化</value>
+  </data>
+  <data name="Settings_Disable2FAPrompt" xml:space="preserve">
+    <value>2FA を無効にするには現在の TOTP コードを入力してください：</value>
+  </data>
+  <data name="Settings_2FAStep1" xml:space="preserve">
+    <value>ステップ 1：認証アプリに追加する</value>
+  </data>
+  <data name="Settings_2FAScanPrompt" xml:space="preserve">
+    <value>認証アプリで QR コードをスキャンしてください：</value>
+  </data>
+  <data name="Settings_2FACantScan" xml:space="preserve">
+    <value>スキャンできませんか？手動で入力</value>
+  </data>
+  <data name="Settings_SecretKey" xml:space="preserve">
+    <value>シークレットキー：</value>
+  </data>
+  <data name="Settings_FullUri" xml:space="preserve">
+    <value>完全な URI：</value>
+  </data>
+  <data name="Settings_2FAStep2" xml:space="preserve">
+    <value>ステップ 2：設定を確認する</value>
+  </data>
+  <data name="Settings_2FAVerifyPrompt" xml:space="preserve">
+    <value>設定を確認するには、認証アプリの 6 桁のコードを入力してください：</value>
+  </data>
+  <data name="Settings_SaveRecoveryCodes" xml:space="preserve">
+    <value>リカバリーコードを保存してください！</value>
+  </data>
+  <data name="Settings_RecoveryCodesLongHint" xml:space="preserve">
+    <value>認証デバイスを紛失した場合、これらのコードでアカウントにアクセスできます。各コードは一度だけ使用できます。安全に保管してください。</value>
+  </data>
+  <data name="Settings_TwoFactorNotEnabled" xml:space="preserve">
+    <value>二要素認証が有効になっていません</value>
+  </data>
+  <data name="Settings_TwoFactorIntro" xml:space="preserve">
+    <value>二要素認証を有効にして、アカウントのセキュリティを強化しましょう。</value>
+  </data>
+  <data name="Settings_Enable2FA" xml:space="preserve">
+    <value>2FA を有効化</value>
+  </data>
+  <data name="Settings_AddSSHKey" xml:space="preserve">
+    <value>SSH キーを追加</value>
+  </data>
+  <data name="Settings_NoSSHKeys" xml:space="preserve">
+    <value>SSH キーが設定されていません</value>
+  </data>
+  <data name="Settings_Added" xml:space="preserve">
+    <value>追加日</value>
+  </data>
+  <data name="Settings_AddGPGKey" xml:space="preserve">
+    <value>GPG キーを追加</value>
+  </data>
+  <data name="Settings_NoGPGKeys" xml:space="preserve">
+    <value>GPG キーが設定されていません。コミットの署名と検証のために GPG キーを追加してください。</value>
+  </data>
+  <data name="Settings_Verified" xml:space="preserve">
+    <value>検証済み</value>
+  </data>
+  <data name="Settings_KeyId" xml:space="preserve">
+    <value>キー ID：</value>
+  </data>
+  <data name="Settings_Email" xml:space="preserve">
+    <value>メール：</value>
+  </data>
+  <data name="Settings_Expires" xml:space="preserve">
+    <value>有効期限</value>
+  </data>
+  <data name="Settings_PersonalAccessTokens" xml:space="preserve">
+    <value>個人用アクセストークン</value>
+  </data>
+  <data name="Settings_YourNewToken" xml:space="preserve">
+    <value>新しいトークン：</value>
+  </data>
+  <data name="Settings_CopyTokenNow" xml:space="preserve">
+    <value>今すぐコピーしてください。再表示されません。</value>
+  </data>
+  <data name="Settings_NoTokens" xml:space="preserve">
+    <value>個人用アクセストークンがありません</value>
+  </data>
+  <data name="Settings_Created" xml:space="preserve">
+    <value>作成日</value>
+  </data>
+  <data name="Settings_ActiveSessions" xml:space="preserve">
+    <value>アクティブなセッション</value>
+  </data>
+  <data name="Settings_NoActiveSessions" xml:space="preserve">
+    <value>アクティブなセッションがありません</value>
+  </data>
+  <data name="Settings_Started" xml:space="preserve">
+    <value>開始</value>
+  </data>
+  <data name="Settings_Revoke" xml:space="preserve">
+    <value>取り消し</value>
+  </data>
+  <data name="Settings_WebAuthnUnsupported" xml:space="preserve">
+    <value>お使いのブラウザは WebAuthn/パスキーに対応していません。</value>
+  </data>
+  <data name="Settings_Registered" xml:space="preserve">
+    <value>登録日</value>
+  </data>
+  <data name="Settings_NotificationPreferences" xml:space="preserve">
+    <value>通知の設定</value>
+  </data>
+  <data name="Settings_PushNotifications" xml:space="preserve">
+    <value>プッシュ通知 (ntfy/Gotify)</value>
+  </data>
+  <data name="Settings_PushNotificationsHelp" xml:space="preserve">
+    <value>管理者が設定した場合、外部プッシュサービスに通知を送信します</value>
+  </data>
+  <data name="Settings_EmailNotifications" xml:space="preserve">
+    <value>メール通知</value>
+  </data>
+  <data name="Settings_EmailNotificationsHelp" xml:space="preserve">
+    <value>管理者が SMTP を設定した場合、メール通知を受信します</value>
+  </data>
+  <data name="Settings_PullRequestNotifications" xml:space="preserve">
+    <value>プルリクエストの通知</value>
+  </data>
+  <data name="Settings_IssueNotifications" xml:space="preserve">
+    <value>イシューの通知</value>
+  </data>
+  <data name="Settings_MentionNotifications" xml:space="preserve">
+    <value>メンションの通知</value>
+  </data>
+  <data name="Settings_CommentNotifications" xml:space="preserve">
+    <value>コメントの通知</value>
+  </data>
+  <data name="Settings_SavePreferences" xml:space="preserve">
+    <value>設定を保存</value>
+  </data>
+  <data name="Settings_UserSecrets" xml:space="preserve">
+    <value>ユーザーシークレット</value>
+  </data>
+  <data name="Settings_UserSecretsHelp" xml:space="preserve">
+    <value>ユーザーレベルのシークレットは、リポジトリのすべてのワークフロー実行で利用できます。リポジトリレベルのシークレットがこれらを上書きします。</value>
+  </data>
+  <data name="Settings_Updated" xml:space="preserve">
+    <value>更新日</value>
+  </data>
+  <data name="Settings_NoUserSecrets" xml:space="preserve">
+    <value>ユーザーシークレットが設定されていません。</value>
+  </data>
+  <data name="Settings_UpdateSecret" xml:space="preserve">
+    <value>シークレットを更新</value>
+  </data>
+  <data name="Settings_AddSecret" xml:space="preserve">
+    <value>シークレットを追加</value>
+  </data>
+  <data name="Settings_Update" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="Settings_LinkedAccountsHelp" xml:space="preserve">
+    <value>シングルサインオンのために MyPersonalGit プロフィールに連携した外部アカウントを管理します。</value>
+  </data>
+  <data name="Settings_Linked" xml:space="preserve">
+    <value>連携日</value>
+  </data>
+  <data name="Settings_Unlink" xml:space="preserve">
+    <value>連携解除</value>
+  </data>
+  <data name="Settings_NoLinkedAccounts" xml:space="preserve">
+    <value>連携アカウントがありません。</value>
+  </data>
+  <data name="Settings_LinkNewAccount" xml:space="preserve">
+    <value>新しいアカウントを連携</value>
+  </data>
+  <data name="Settings_Link" xml:space="preserve">
+    <value>連携</value>
+  </data>
+  <data name="Settings_Title_TitleLabel" xml:space="preserve">
+    <value>タイトル</value>
+  </data>
+  <data name="Settings_Key" xml:space="preserve">
+    <value>キー</value>
+  </data>
+  <data name="Settings_GeneratePersonalAccessToken" xml:space="preserve">
+    <value>個人用アクセストークンを生成</value>
+  </data>
+  <data name="Settings_TokenName" xml:space="preserve">
+    <value>トークン名</value>
+  </data>
+  <data name="Settings_Scopes" xml:space="preserve">
+    <value>スコープ</value>
+  </data>
+  <data name="Settings_ScopeRepo" xml:space="preserve">
+    <value>repo - リポジトリへのフルアクセス</value>
+  </data>
+  <data name="Settings_ScopeUser" xml:space="preserve">
+    <value>user - ユーザープロフィールへのアクセス</value>
+  </data>
+  <data name="Settings_ScopeAdmin" xml:space="preserve">
+    <value>admin - 管理者アクセス</value>
+  </data>
+  <data name="Settings_ExpirationDays" xml:space="preserve">
+    <value>有効期限（日）</value>
+  </data>
+  <data name="Settings_RouteRestrictions" xml:space="preserve">
+    <value>ルート制限</value>
+  </data>
+  <data name="Settings_RouteRestrictionsHelp" xml:space="preserve">
+    <value>1 行につき 1 つの glob パターン。空の場合、トークンはそのスコープに一致するすべてのルートにアクセスできます。</value>
+  </data>
+  <data name="Settings_GPGPublicKey" xml:space="preserve">
+    <value>GPG 公開鍵</value>
+  </data>
+  <data name="Settings_OptionalBadge" xml:space="preserve">
+    <value>任意</value>
+  </data>
+  <data name="Settings_RouteRestrictionsMatchHelp" xml:space="preserve">
+    <value>任意のサブパスに一致させるには &lt;code&gt;**&lt;/code&gt; を使用します（例：&lt;code&gt;/api/packages/**&lt;/code&gt;）。</value>
+  </data>
+  <data name="Settings_GPGPublicKeyHelp" xml:space="preserve">
+    <value>ASCII アーマー形式の GPG 公開鍵を貼り付けてください。</value>
+  </data>
+  <data name="Admin_ProjectRootLabel" xml:space="preserve">
+    <value>プロジェクトルート:</value>
+  </data>
+  <data name="Admin_AuthenticationLabel" xml:space="preserve">
+    <value>認証:</value>
+  </data>
+  <data name="Admin_UserRegistrationLabel" xml:space="preserve">
+    <value>ユーザー登録:</value>
+  </data>
+  <data name="Admin_ActionsCiCdLabel" xml:space="preserve">
+    <value>Actions/CI-CD:</value>
+  </data>
+  <data name="Admin_PrometheusMetricsLabel" xml:space="preserve">
+    <value>Prometheus メトリクス:</value>
+  </data>
+  <data name="Admin_ActiveProviderLabel" xml:space="preserve">
+    <value>アクティブなプロバイダー:</value>
+  </data>
+  <data name="Admin_DatabaseProvider" xml:space="preserve">
+    <value>データベースプロバイダー</value>
+  </data>
+  <data name="Admin_SqliteOption" xml:space="preserve">
+    <value>SQLite（デフォルト — 設定不要）</value>
+  </data>
+  <data name="Admin_PostgresqlOption" xml:space="preserve">
+    <value>PostgreSQL（大規模な展開向け）</value>
+  </data>
+  <data name="Admin_ConnectionString" xml:space="preserve">
+    <value>接続文字列</value>
+  </data>
+  <data name="Admin_ExampleLabel" xml:space="preserve">
+    <value>例:</value>
+  </data>
+  <data name="Admin_SaveDatabaseSettings" xml:space="preserve">
+    <value>データベース設定を保存</value>
+  </data>
+  <data name="Admin_RequiresRestartHint" xml:space="preserve">
+    <value>反映するにはアプリケーションの再起動が必要です</value>
+  </data>
+  <data name="Admin_General" xml:space="preserve">
+    <value>全般</value>
+  </data>
+  <data name="Admin_ProjectRootDirectory" xml:space="preserve">
+    <value>プロジェクトルートディレクトリ</value>
+  </data>
+  <data name="Admin_ProjectRootHelp" xml:space="preserve">
+    <value>リポジトリが保存されるルートディレクトリ</value>
+  </data>
+  <data name="Admin_RequireAuthentication" xml:space="preserve">
+    <value>認証を必須にする</value>
+  </data>
+  <data name="Admin_AllowUserRegistration" xml:space="preserve">
+    <value>ユーザー登録を許可する</value>
+  </data>
+  <data name="Admin_RequireEmailVerification" xml:space="preserve">
+    <value>メール認証を必須にする</value>
+  </data>
+  <data name="Admin_MaxReposPerUser" xml:space="preserve">
+    <value>ユーザーあたりの最大リポジトリ数</value>
+  </data>
+  <data name="Admin_MaxRepoSizeBytes" xml:space="preserve">
+    <value>最大リポジトリサイズ（バイト）</value>
+  </data>
+  <data name="Admin_CurrentLabel" xml:space="preserve">
+    <value>現在:</value>
+  </data>
+  <data name="Admin_ActionsCiCd" xml:space="preserve">
+    <value>Actions / CI-CD</value>
+  </data>
+  <data name="Admin_Wiki" xml:space="preserve">
+    <value>Wiki</value>
+  </data>
+  <data name="Admin_Issues" xml:space="preserve">
+    <value>Issue</value>
+  </data>
+  <data name="Admin_Projects" xml:space="preserve">
+    <value>プロジェクト</value>
+  </data>
+  <data name="Admin_EnableEmailNotifications" xml:space="preserve">
+    <value>メール通知を有効にする</value>
+  </data>
+  <data name="Admin_SmtpServer" xml:space="preserve">
+    <value>SMTP サーバー</value>
+  </data>
+  <data name="Admin_SmtpPort" xml:space="preserve">
+    <value>SMTP ポート</value>
+  </data>
+  <data name="Admin_SmtpUsername" xml:space="preserve">
+    <value>SMTP ユーザー名</value>
+  </data>
+  <data name="Admin_SmtpPassword" xml:space="preserve">
+    <value>SMTP パスワード</value>
+  </data>
+  <data name="Admin_EnableSslTls" xml:space="preserve">
+    <value>SSL/TLS を有効にする</value>
+  </data>
+  <data name="Admin_FromAddress" xml:space="preserve">
+    <value>差出人アドレス</value>
+  </data>
+  <data name="Admin_FromName" xml:space="preserve">
+    <value>差出人名</value>
+  </data>
+  <data name="Admin_SendTestEmail" xml:space="preserve">
+    <value>テストメールを送信</value>
+  </data>
+  <data name="Admin_EnablePushNotifications" xml:space="preserve">
+    <value>プッシュ通知を有効にする</value>
+  </data>
+  <data name="Admin_ServerUrl" xml:space="preserve">
+    <value>サーバー URL</value>
+  </data>
+  <data name="Admin_Topic" xml:space="preserve">
+    <value>トピック</value>
+  </data>
+  <data name="Admin_AccessToken" xml:space="preserve">
+    <value>アクセストークン</value>
+  </data>
+  <data name="Admin_AppToken" xml:space="preserve">
+    <value>アプリトークン</value>
+  </data>
+  <data name="Admin_SiteName" xml:space="preserve">
+    <value>サイト名</value>
+  </data>
+  <data name="Admin_Preview" xml:space="preserve">
+    <value>（プレビュー）</value>
+  </data>
+  <data name="Admin_Documentation" xml:space="preserve">
+    <value>ドキュメント</value>
+  </data>
+  <data name="Admin_Contact" xml:space="preserve">
+    <value>連絡先</value>
+  </data>
+  <data name="Admin_AiCodeCompletion" xml:space="preserve">
+    <value>AI コード補完</value>
+  </data>
+  <data name="Admin_AiCompletionHelp" xml:space="preserve">
+    <value>Web IDE で AI によるインラインコード補完を有効にします。OpenAI 互換の API エンドポイントを使用します。</value>
+  </data>
+  <data name="Admin_EnableAiCompletion" xml:space="preserve">
+    <value>AI 補完を有効にする</value>
+  </data>
+  <data name="Admin_ApiEndpoint" xml:space="preserve">
+    <value>API エンドポイント</value>
+  </data>
+  <data name="Admin_ApiEndpointHelp" xml:space="preserve">
+    <value>OpenAI 互換の API ベース URL（例: OpenAI、Ollama、LM Studio）</value>
+  </data>
+  <data name="Admin_ApiKey" xml:space="preserve">
+    <value>API キー</value>
+  </data>
+  <data name="Admin_Model" xml:space="preserve">
+    <value>モデル</value>
+  </data>
+  <data name="Admin_ModelHelp" xml:space="preserve">
+    <value>モデル名（例: gpt-4o-mini、codestral-latest、deepseek-coder）</value>
+  </data>
+  <data name="Admin_AiChatAssistant" xml:space="preserve">
+    <value>AI チャット &amp; アシスタント</value>
+  </data>
+  <data name="Admin_AiChatHelp" xml:space="preserve">
+    <value>Web IDE で AI チャット、インライン説明、リファクタリング、テスト生成を有効にします。上記の AI 補完を有効にする必要があります（同じ API エンドポイントを使用します）。</value>
+  </data>
+  <data name="Admin_EnableAiChatAssistant" xml:space="preserve">
+    <value>AI チャット &amp; アシスタントを有効にする</value>
+  </data>
+  <data name="Admin_RealtimeCollaboration" xml:space="preserve">
+    <value>リアルタイムコラボレーション</value>
+  </data>
+  <data name="Admin_CollaborationHelp" xml:space="preserve">
+    <value>Web IDE でリアルタイムの共同編集を有効にします。複数のユーザーがライブカーソル追跡とプレゼンスインジケーターを使って同じファイルを同時に編集できます。</value>
+  </data>
+  <data name="Admin_EnableRealtimeCollaboration" xml:space="preserve">
+    <value>リアルタイムコラボレーションを有効にする</value>
+  </data>
+  <data name="Admin_SshServerHelp" xml:space="preserve">
+    <value>システムの OpenSSH を必要とせずに Git 操作用のネイティブ SSH サーバーを実行します。ユーザーは次の方法でクローン/プッシュできます</value>
+  </data>
+  <data name="Admin_EnableBuiltInSsh" xml:space="preserve">
+    <value>組み込み SSH サーバーを有効にする</value>
+  </data>
+  <data name="Admin_SshPort" xml:space="preserve">
+    <value>SSH ポート</value>
+  </data>
+  <data name="Admin_SshPortHelp" xml:space="preserve">
+    <value>デフォルト: 2222。システム SSH を実行していない場合は 22 を使用します。再起動が必要です。</value>
+  </data>
+  <data name="Admin_MergeSigningHelp" xml:space="preserve">
+    <value>Web UI で作成されたマージ、スカッシュ、リベースのコミットを GPG で署名します。GPG キーをサーバーのキーリングにインポートする必要があります（</value>
+  </data>
+  <data name="Admin_SignMergeCommits" xml:space="preserve">
+    <value>マージコミットを GPG で署名する</value>
+  </data>
+  <data name="Admin_ServerGpgKeyId" xml:space="preserve">
+    <value>サーバー GPG キー ID</value>
+  </data>
+  <data name="Admin_ServerGpgKeyIdHelp" xml:space="preserve">
+    <value>署名に使用する GPG キーの長いまたは短いキー ID</value>
+  </data>
+  <data name="Admin_LdapAuthHelp" xml:space="preserve">
+    <value>LDAP/AD 認証を有効にして、ユーザーがドメイン資格情報でサインインできるようにします。ユーザーは初回ログイン時に自動プロビジョニングされます。</value>
+  </data>
+  <data name="Admin_EnableLdapAuth" xml:space="preserve">
+    <value>LDAP 認証を有効にする</value>
+  </data>
+  <data name="Admin_LdapServer" xml:space="preserve">
+    <value>LDAP サーバー</value>
+  </data>
+  <data name="Admin_Port" xml:space="preserve">
+    <value>ポート</value>
+  </data>
+  <data name="Admin_LdapPortHelp" xml:space="preserve">
+    <value>389（LDAP）または 636（LDAPS）</value>
+  </data>
+  <data name="Admin_UseSslLdaps" xml:space="preserve">
+    <value>SSL（LDAPS）を使用する</value>
+  </data>
+  <data name="Admin_UseStartTls" xml:space="preserve">
+    <value>StartTLS を使用する</value>
+  </data>
+  <data name="Admin_SkipCertValidation" xml:space="preserve">
+    <value>証明書の検証をスキップする</value>
+  </data>
+  <data name="Admin_BindDn" xml:space="preserve">
+    <value>バインド DN</value>
+  </data>
+  <data name="Admin_ServiceAccount" xml:space="preserve">
+    <value>（サービスアカウント）</value>
+  </data>
+  <data name="Admin_AnonymousBindHelp" xml:space="preserve">
+    <value>匿名バインドの場合は空欄のままにします</value>
+  </data>
+  <data name="Admin_BindPassword" xml:space="preserve">
+    <value>バインドパスワード</value>
+  </data>
+  <data name="Admin_SearchBaseDn" xml:space="preserve">
+    <value>検索ベース DN</value>
+  </data>
+  <data name="Admin_UserSearchFilter" xml:space="preserve">
+    <value>ユーザー検索フィルター</value>
+  </data>
+  <data name="Admin_UserFilterHelp" xml:space="preserve">
+    <value>はユーザー名に置き換えられます。例:</value>
+  </data>
+  <data name="Admin_UsernameAttribute" xml:space="preserve">
+    <value>ユーザー名属性</value>
+  </data>
+  <data name="Admin_EmailAttribute" xml:space="preserve">
+    <value>メール属性</value>
+  </data>
+  <data name="Admin_DisplayNameAttribute" xml:space="preserve">
+    <value>表示名属性</value>
+  </data>
+  <data name="Admin_AdminGroupDn" xml:space="preserve">
+    <value>管理者グループ DN</value>
+  </data>
+  <data name="Admin_AdminGroupHelp" xml:space="preserve">
+    <value>このグループのメンバーは自動的に管理者に昇格されます。スキップする場合は空欄のままにします。</value>
+  </data>
+  <data name="Admin_TestLdapConnection" xml:space="preserve">
+    <value>LDAP 接続をテスト</value>
+  </data>
+  <data name="Admin_SaveAllSettings" xml:space="preserve">
+    <value>すべての設定を保存</value>
+  </data>
+  <data name="Admin_AdminRole" xml:space="preserve">
+    <value>管理者</value>
+  </data>
+  <data name="Admin_UserRole" xml:space="preserve">
+    <value>ユーザー</value>
+  </data>
+  <data name="Admin_StatusActive" xml:space="preserve">
+    <value>アクティブ</value>
+  </data>
+  <data name="Admin_StatusInactive" xml:space="preserve">
+    <value>非アクティブ</value>
+  </data>
+  <data name="Admin_GlobalSecretsHelp" xml:space="preserve">
+    <value>グローバルシークレットはすべてのワークフロー実行で利用できます。同じ名前のリポジトリレベルのシークレットはグローバルシークレットを上書きします。</value>
+  </data>
+  <data name="Admin_UpdatedPrefix" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="Admin_NoGlobalSecrets" xml:space="preserve">
+    <value>グローバルシークレットが設定されていません。</value>
+  </data>
+  <data name="Admin_Name" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="Admin_Value" xml:space="preserve">
+    <value>値</value>
+  </data>
+  <data name="Admin_SecretValuePlaceholder" xml:space="preserve">
+    <value>シークレットの値</value>
+  </data>
+  <data name="Admin_DownloadBackupHelp" xml:space="preserve">
+    <value>すべてのリポジトリとデータベースの完全なバックアップを次の形式でダウンロードします</value>
+  </data>
+  <data name="Admin_BackupArchiveSuffix" xml:space="preserve">
+    <value>。</value>
+  </data>
+  <data name="Admin_RestoreWarningLabel" xml:space="preserve">
+    <value>警告:</value>
+  </data>
+  <data name="Admin_RestoreWarningText" xml:space="preserve">
+    <value>バックアップを復元すると、現在のすべてのデータが上書きされます。復元後はアプリケーションを再起動してください。</value>
+  </data>
+  <data name="Admin_RestoreApiHelp" xml:space="preserve">
+    <value>復元には API を直接使用します:</value>
+  </data>
+  <data name="Admin_RestoreApiSuffix" xml:space="preserve">
+    <value>に tar.gz ファイルを指定します。</value>
+  </data>
+  <data name="Admin_OAuthProvidersHelp" xml:space="preserve">
+    <value>外部認証プロバイダーを構成します。Client ID と Client Secret の両方が入力されたプロバイダーのみがログインページに表示されます。</value>
+  </data>
+  <data name="Admin_OAuthEnabled" xml:space="preserve">
+    <value>有効</value>
+  </data>
+  <data name="Admin_OAuthNotConfigured" xml:space="preserve">
+    <value>未構成</value>
+  </data>
+  <data name="Admin_ClientId" xml:space="preserve">
+    <value>クライアント ID</value>
+  </data>
+  <data name="Admin_ClientSecret" xml:space="preserve">
+    <value>クライアントシークレット</value>
+  </data>
+  <data name="Admin_EnableThisProvider" xml:space="preserve">
+    <value>このプロバイダーを有効にする</value>
+  </data>
+  <data name="Admin_CallbackUrlLabel" xml:space="preserve">
+    <value>コールバック URL:</value>
+  </data>
+  <data name="Admin_CallbackUrlHelp" xml:space="preserve">
+    <value>各プロバイダーはコールバック URL で構成する必要があります:</value>
+  </data>
+  <data name="Admin_CallbackReplaceHelp" xml:space="preserve">
+    <value>を次のいずれかに置き換えます: github、google、microsoft、gitlab、bitbucket、facebook、discord、または twitter</value>
+  </data>
+  <data name="Admin_EmailLabel" xml:space="preserve">
+    <value>メール</value>
+  </data>
+  <data name="Admin_Password" xml:space="preserve">
+    <value>パスワード</value>
+  </data>
+  <data name="Admin_Administrator" xml:space="preserve">
+    <value>管理者</value>
+  </data>
+  <data name="Admin_EditUserTitle" xml:space="preserve">
+    <value>ユーザーを編集:</value>
+  </data>
+  <data name="Admin_ActiveLabel" xml:space="preserve">
+    <value>アクティブ</value>
+  </data>
+  <data name="Admin_NewPassword" xml:space="preserve">
+    <value>新しいパスワード</value>
+  </data>
+  <data name="Admin_LeaveBlankKeep" xml:space="preserve">
+    <value>（現在のものを保持する場合は空欄のままにします）</value>
+  </data>
+  <data name="Org_SecretsTab" xml:space="preserve">
+    <value>シークレット</value>
+  </data>
+  <data name="Org_RoleMember" xml:space="preserve">
+    <value>メンバー</value>
+  </data>
+  <data name="Org_RoleOwner" xml:space="preserve">
+    <value>オーナー</value>
+  </data>
+  <data name="Org_MembersCount" xml:space="preserve">
+    <value>メンバー</value>
+  </data>
+  <data name="Org_RepositoriesCount" xml:space="preserve">
+    <value>リポジトリ</value>
+  </data>
+  <data name="Org_SecretsHeader" xml:space="preserve">
+    <value>組織のシークレット</value>
+  </data>
+  <data name="Org_SecretsDescription" xml:space="preserve">
+    <value>組織のシークレットは、この組織が所有するすべてのリポジトリのワークフロー実行で利用できます。ユーザーおよびリポジトリレベルのシークレットがこれらより優先されます。</value>
+  </data>
+  <data name="Org_SecretUpdatedPrefix" xml:space="preserve">
+    <value>更新日</value>
+  </data>
+  <data name="Org_NoSecrets" xml:space="preserve">
+    <value>組織のシークレットが設定されていません。</value>
+  </data>
+  <data name="Org_UpdateSecret" xml:space="preserve">
+    <value>シークレットを更新</value>
+  </data>
+  <data name="Org_AddSecret" xml:space="preserve">
+    <value>シークレットを追加</value>
+  </data>
+  <data name="Org_Update" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="Org_PermRead" xml:space="preserve">
+    <value>読み取り</value>
+  </data>
+  <data name="Org_PermWrite" xml:space="preserve">
+    <value>書き込み</value>
+  </data>
+  <data name="Org_PermAdmin" xml:space="preserve">
+    <value>管理者</value>
+  </data>
 </root>

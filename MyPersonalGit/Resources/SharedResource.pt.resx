@@ -3979,4 +3979,655 @@
   <data name="Stats_Subtitle" xml:space="preserve">
     <value>Estatísticas ao vivo desta instância do Personal Git</value>
   </data>
+  <data name="Settings_Secrets" xml:space="preserve">
+    <value>Segredos</value>
+  </data>
+  <data name="Settings_AvatarPreview" xml:space="preserve">
+    <value>Pré-visualização do avatar</value>
+  </data>
+  <data name="Settings_Or" xml:space="preserve">
+    <value>ou</value>
+  </data>
+  <data name="Settings_UploadImage" xml:space="preserve">
+    <value>Carregar imagem</value>
+  </data>
+  <data name="Settings_AvatarFormatHelp" xml:space="preserve">
+    <value>JPEG, PNG, GIF ou WebP. Máx. 5 MB.</value>
+  </data>
+  <data name="Settings_TwoFactorEnabled" xml:space="preserve">
+    <value>A autenticação de dois fatores está ativada</value>
+  </data>
+  <data name="Settings_EnabledOn" xml:space="preserve">
+    <value>Ativada em</value>
+  </data>
+  <data name="Settings_RecoveryCodes" xml:space="preserve">
+    <value>Códigos de recuperação</value>
+  </data>
+  <data name="Settings_RecoveryCodesSaveHint" xml:space="preserve">
+    <value>Guarde estes códigos num local seguro. Cada código só pode ser usado uma vez.</value>
+  </data>
+  <data name="Settings_RegenerateRecoveryCodes" xml:space="preserve">
+    <value>Regenerar códigos de recuperação</value>
+  </data>
+  <data name="Settings_Disable2FA" xml:space="preserve">
+    <value>Desativar 2FA</value>
+  </data>
+  <data name="Settings_Disable2FAPrompt" xml:space="preserve">
+    <value>Introduza o seu código TOTP atual para desativar a 2FA:</value>
+  </data>
+  <data name="Settings_2FAStep1" xml:space="preserve">
+    <value>Passo 1: Adicione à sua app de autenticação</value>
+  </data>
+  <data name="Settings_2FAScanPrompt" xml:space="preserve">
+    <value>Leia o código QR com a sua app de autenticação:</value>
+  </data>
+  <data name="Settings_2FACantScan" xml:space="preserve">
+    <value>Não consegue ler? Introduza manualmente</value>
+  </data>
+  <data name="Settings_SecretKey" xml:space="preserve">
+    <value>Chave secreta:</value>
+  </data>
+  <data name="Settings_FullUri" xml:space="preserve">
+    <value>URI completo:</value>
+  </data>
+  <data name="Settings_2FAStep2" xml:space="preserve">
+    <value>Passo 2: Verifique a configuração</value>
+  </data>
+  <data name="Settings_2FAVerifyPrompt" xml:space="preserve">
+    <value>Introduza o código de 6 dígitos da sua app de autenticação para confirmar a configuração:</value>
+  </data>
+  <data name="Settings_SaveRecoveryCodes" xml:space="preserve">
+    <value>Guarde os seus códigos de recuperação!</value>
+  </data>
+  <data name="Settings_RecoveryCodesLongHint" xml:space="preserve">
+    <value>Estes códigos podem ser usados para aceder à sua conta caso perca o seu dispositivo de autenticação. Cada código só pode ser usado uma vez. Guarde-os em segurança.</value>
+  </data>
+  <data name="Settings_TwoFactorNotEnabled" xml:space="preserve">
+    <value>A autenticação de dois fatores não está ativada</value>
+  </data>
+  <data name="Settings_TwoFactorIntro" xml:space="preserve">
+    <value>Adicione uma camada extra de segurança à sua conta ativando a autenticação de dois fatores.</value>
+  </data>
+  <data name="Settings_Enable2FA" xml:space="preserve">
+    <value>Ativar 2FA</value>
+  </data>
+  <data name="Settings_AddSSHKey" xml:space="preserve">
+    <value>Adicionar chave SSH</value>
+  </data>
+  <data name="Settings_NoSSHKeys" xml:space="preserve">
+    <value>Nenhuma chave SSH configurada</value>
+  </data>
+  <data name="Settings_Added" xml:space="preserve">
+    <value>Adicionado</value>
+  </data>
+  <data name="Settings_AddGPGKey" xml:space="preserve">
+    <value>Adicionar chave GPG</value>
+  </data>
+  <data name="Settings_NoGPGKeys" xml:space="preserve">
+    <value>Nenhuma chave GPG configurada. Adicione uma chave GPG para assinar e verificar commits.</value>
+  </data>
+  <data name="Settings_Verified" xml:space="preserve">
+    <value>Verificada</value>
+  </data>
+  <data name="Settings_KeyId" xml:space="preserve">
+    <value>ID da chave:</value>
+  </data>
+  <data name="Settings_Email" xml:space="preserve">
+    <value>E-mail:</value>
+  </data>
+  <data name="Settings_Expires" xml:space="preserve">
+    <value>Expira</value>
+  </data>
+  <data name="Settings_PersonalAccessTokens" xml:space="preserve">
+    <value>Tokens de acesso pessoal</value>
+  </data>
+  <data name="Settings_YourNewToken" xml:space="preserve">
+    <value>O seu novo token:</value>
+  </data>
+  <data name="Settings_CopyTokenNow" xml:space="preserve">
+    <value>Copie-o agora — não voltará a vê-lo.</value>
+  </data>
+  <data name="Settings_NoTokens" xml:space="preserve">
+    <value>Nenhum token de acesso pessoal</value>
+  </data>
+  <data name="Settings_Created" xml:space="preserve">
+    <value>Criado</value>
+  </data>
+  <data name="Settings_ActiveSessions" xml:space="preserve">
+    <value>Sessões ativas</value>
+  </data>
+  <data name="Settings_NoActiveSessions" xml:space="preserve">
+    <value>Nenhuma sessão ativa</value>
+  </data>
+  <data name="Settings_Started" xml:space="preserve">
+    <value>Iniciada</value>
+  </data>
+  <data name="Settings_Revoke" xml:space="preserve">
+    <value>Revogar</value>
+  </data>
+  <data name="Settings_WebAuthnUnsupported" xml:space="preserve">
+    <value>O seu navegador não suporta WebAuthn/Passkeys.</value>
+  </data>
+  <data name="Settings_Registered" xml:space="preserve">
+    <value>Registada</value>
+  </data>
+  <data name="Settings_NotificationPreferences" xml:space="preserve">
+    <value>Preferências de notificação</value>
+  </data>
+  <data name="Settings_PushNotifications" xml:space="preserve">
+    <value>Notificações push (ntfy/Gotify)</value>
+  </data>
+  <data name="Settings_PushNotificationsHelp" xml:space="preserve">
+    <value>Enviar notificações para serviços push externos quando configurado pelo administrador</value>
+  </data>
+  <data name="Settings_EmailNotifications" xml:space="preserve">
+    <value>Notificações por e-mail</value>
+  </data>
+  <data name="Settings_EmailNotificationsHelp" xml:space="preserve">
+    <value>Receber notificações por e-mail quando o SMTP for configurado pelo administrador</value>
+  </data>
+  <data name="Settings_PullRequestNotifications" xml:space="preserve">
+    <value>Notificações de pull request</value>
+  </data>
+  <data name="Settings_IssueNotifications" xml:space="preserve">
+    <value>Notificações de issues</value>
+  </data>
+  <data name="Settings_MentionNotifications" xml:space="preserve">
+    <value>Notificações de menções</value>
+  </data>
+  <data name="Settings_CommentNotifications" xml:space="preserve">
+    <value>Notificações de comentários</value>
+  </data>
+  <data name="Settings_SavePreferences" xml:space="preserve">
+    <value>Guardar preferências</value>
+  </data>
+  <data name="Settings_UserSecrets" xml:space="preserve">
+    <value>Segredos do utilizador</value>
+  </data>
+  <data name="Settings_UserSecretsHelp" xml:space="preserve">
+    <value>Os segredos ao nível do utilizador estão disponíveis em todas as execuções de fluxos de trabalho dos seus repositórios. Os segredos ao nível do repositório sobrepõem-se a estes.</value>
+  </data>
+  <data name="Settings_Updated" xml:space="preserve">
+    <value>Atualizado</value>
+  </data>
+  <data name="Settings_NoUserSecrets" xml:space="preserve">
+    <value>Nenhum segredo do utilizador configurado.</value>
+  </data>
+  <data name="Settings_UpdateSecret" xml:space="preserve">
+    <value>Atualizar segredo</value>
+  </data>
+  <data name="Settings_AddSecret" xml:space="preserve">
+    <value>Adicionar segredo</value>
+  </data>
+  <data name="Settings_Update" xml:space="preserve">
+    <value>Atualizar</value>
+  </data>
+  <data name="Settings_LinkedAccountsHelp" xml:space="preserve">
+    <value>Gerir contas externas associadas ao seu perfil MyPersonalGit para início de sessão único.</value>
+  </data>
+  <data name="Settings_Linked" xml:space="preserve">
+    <value>Associada</value>
+  </data>
+  <data name="Settings_Unlink" xml:space="preserve">
+    <value>Desassociar</value>
+  </data>
+  <data name="Settings_NoLinkedAccounts" xml:space="preserve">
+    <value>Nenhuma conta associada.</value>
+  </data>
+  <data name="Settings_LinkNewAccount" xml:space="preserve">
+    <value>Associar uma nova conta</value>
+  </data>
+  <data name="Settings_Link" xml:space="preserve">
+    <value>Associar</value>
+  </data>
+  <data name="Settings_Title_TitleLabel" xml:space="preserve">
+    <value>Título</value>
+  </data>
+  <data name="Settings_Key" xml:space="preserve">
+    <value>Chave</value>
+  </data>
+  <data name="Settings_GeneratePersonalAccessToken" xml:space="preserve">
+    <value>Gerar token de acesso pessoal</value>
+  </data>
+  <data name="Settings_TokenName" xml:space="preserve">
+    <value>Nome do token</value>
+  </data>
+  <data name="Settings_Scopes" xml:space="preserve">
+    <value>Escopos</value>
+  </data>
+  <data name="Settings_ScopeRepo" xml:space="preserve">
+    <value>repo - Acesso total ao repositório</value>
+  </data>
+  <data name="Settings_ScopeUser" xml:space="preserve">
+    <value>user - Acesso ao perfil do utilizador</value>
+  </data>
+  <data name="Settings_ScopeAdmin" xml:space="preserve">
+    <value>admin - Acesso administrativo</value>
+  </data>
+  <data name="Settings_ExpirationDays" xml:space="preserve">
+    <value>Validade (dias)</value>
+  </data>
+  <data name="Settings_RouteRestrictions" xml:space="preserve">
+    <value>Restrições de rotas</value>
+  </data>
+  <data name="Settings_RouteRestrictionsHelp" xml:space="preserve">
+    <value>Um padrão glob por linha. Se vazio, o token pode aceder a todas as rotas correspondentes aos seus escopos.</value>
+  </data>
+  <data name="Settings_GPGPublicKey" xml:space="preserve">
+    <value>Chave pública GPG</value>
+  </data>
+  <data name="Settings_OptionalBadge" xml:space="preserve">
+    <value>Opcional</value>
+  </data>
+  <data name="Settings_RouteRestrictionsMatchHelp" xml:space="preserve">
+    <value>Use &lt;code&gt;**&lt;/code&gt; para corresponder a qualquer subcaminho (ex.: &lt;code&gt;/api/packages/**&lt;/code&gt;).</value>
+  </data>
+  <data name="Settings_GPGPublicKeyHelp" xml:space="preserve">
+    <value>Cole a sua chave pública GPG em formato ASCII armored.</value>
+  </data>
+  <data name="Admin_ProjectRootLabel" xml:space="preserve">
+    <value>Raiz do projeto:</value>
+  </data>
+  <data name="Admin_AuthenticationLabel" xml:space="preserve">
+    <value>Autenticação:</value>
+  </data>
+  <data name="Admin_UserRegistrationLabel" xml:space="preserve">
+    <value>Registro de usuários:</value>
+  </data>
+  <data name="Admin_ActionsCiCdLabel" xml:space="preserve">
+    <value>Actions/CI-CD:</value>
+  </data>
+  <data name="Admin_PrometheusMetricsLabel" xml:space="preserve">
+    <value>Métricas do Prometheus:</value>
+  </data>
+  <data name="Admin_ActiveProviderLabel" xml:space="preserve">
+    <value>Provedor ativo:</value>
+  </data>
+  <data name="Admin_DatabaseProvider" xml:space="preserve">
+    <value>Provedor de banco de dados</value>
+  </data>
+  <data name="Admin_SqliteOption" xml:space="preserve">
+    <value>SQLite (padrão — sem configuração)</value>
+  </data>
+  <data name="Admin_PostgresqlOption" xml:space="preserve">
+    <value>PostgreSQL (para implantações maiores)</value>
+  </data>
+  <data name="Admin_ConnectionString" xml:space="preserve">
+    <value>Cadeia de conexão</value>
+  </data>
+  <data name="Admin_ExampleLabel" xml:space="preserve">
+    <value>Exemplo:</value>
+  </data>
+  <data name="Admin_SaveDatabaseSettings" xml:space="preserve">
+    <value>Salvar configurações do banco de dados</value>
+  </data>
+  <data name="Admin_RequiresRestartHint" xml:space="preserve">
+    <value>Requer reinício do aplicativo para entrar em vigor</value>
+  </data>
+  <data name="Admin_General" xml:space="preserve">
+    <value>Geral</value>
+  </data>
+  <data name="Admin_ProjectRootDirectory" xml:space="preserve">
+    <value>Diretório raiz do projeto</value>
+  </data>
+  <data name="Admin_ProjectRootHelp" xml:space="preserve">
+    <value>O diretório raiz onde os repositórios são armazenados</value>
+  </data>
+  <data name="Admin_RequireAuthentication" xml:space="preserve">
+    <value>Exigir autenticação</value>
+  </data>
+  <data name="Admin_AllowUserRegistration" xml:space="preserve">
+    <value>Permitir registro de usuários</value>
+  </data>
+  <data name="Admin_RequireEmailVerification" xml:space="preserve">
+    <value>Exigir verificação de e-mail</value>
+  </data>
+  <data name="Admin_MaxReposPerUser" xml:space="preserve">
+    <value>Máx. de repositórios por usuário</value>
+  </data>
+  <data name="Admin_MaxRepoSizeBytes" xml:space="preserve">
+    <value>Tamanho máx. do repositório (bytes)</value>
+  </data>
+  <data name="Admin_CurrentLabel" xml:space="preserve">
+    <value>Atual:</value>
+  </data>
+  <data name="Admin_ActionsCiCd" xml:space="preserve">
+    <value>Actions / CI-CD</value>
+  </data>
+  <data name="Admin_Wiki" xml:space="preserve">
+    <value>Wiki</value>
+  </data>
+  <data name="Admin_Issues" xml:space="preserve">
+    <value>Issues</value>
+  </data>
+  <data name="Admin_Projects" xml:space="preserve">
+    <value>Projetos</value>
+  </data>
+  <data name="Admin_EnableEmailNotifications" xml:space="preserve">
+    <value>Ativar notificações por e-mail</value>
+  </data>
+  <data name="Admin_SmtpServer" xml:space="preserve">
+    <value>Servidor SMTP</value>
+  </data>
+  <data name="Admin_SmtpPort" xml:space="preserve">
+    <value>Porta SMTP</value>
+  </data>
+  <data name="Admin_SmtpUsername" xml:space="preserve">
+    <value>Nome de usuário SMTP</value>
+  </data>
+  <data name="Admin_SmtpPassword" xml:space="preserve">
+    <value>Senha SMTP</value>
+  </data>
+  <data name="Admin_EnableSslTls" xml:space="preserve">
+    <value>Ativar SSL/TLS</value>
+  </data>
+  <data name="Admin_FromAddress" xml:space="preserve">
+    <value>Endereço do remetente</value>
+  </data>
+  <data name="Admin_FromName" xml:space="preserve">
+    <value>Nome do remetente</value>
+  </data>
+  <data name="Admin_SendTestEmail" xml:space="preserve">
+    <value>Enviar e-mail de teste</value>
+  </data>
+  <data name="Admin_EnablePushNotifications" xml:space="preserve">
+    <value>Ativar notificações push</value>
+  </data>
+  <data name="Admin_ServerUrl" xml:space="preserve">
+    <value>URL do servidor</value>
+  </data>
+  <data name="Admin_Topic" xml:space="preserve">
+    <value>Tópico</value>
+  </data>
+  <data name="Admin_AccessToken" xml:space="preserve">
+    <value>Token de acesso</value>
+  </data>
+  <data name="Admin_AppToken" xml:space="preserve">
+    <value>Token do aplicativo</value>
+  </data>
+  <data name="Admin_SiteName" xml:space="preserve">
+    <value>Nome do site</value>
+  </data>
+  <data name="Admin_Preview" xml:space="preserve">
+    <value>(visualizar)</value>
+  </data>
+  <data name="Admin_Documentation" xml:space="preserve">
+    <value>Documentação</value>
+  </data>
+  <data name="Admin_Contact" xml:space="preserve">
+    <value>Contato</value>
+  </data>
+  <data name="Admin_AiCodeCompletion" xml:space="preserve">
+    <value>Conclusão de código com IA</value>
+  </data>
+  <data name="Admin_AiCompletionHelp" xml:space="preserve">
+    <value>Ative a conclusão de código em linha com IA no IDE web. Usa um endpoint de API compatível com OpenAI.</value>
+  </data>
+  <data name="Admin_EnableAiCompletion" xml:space="preserve">
+    <value>Ativar conclusão com IA</value>
+  </data>
+  <data name="Admin_ApiEndpoint" xml:space="preserve">
+    <value>Endpoint da API</value>
+  </data>
+  <data name="Admin_ApiEndpointHelp" xml:space="preserve">
+    <value>URL base da API compatível com OpenAI (por exemplo, OpenAI, Ollama, LM Studio)</value>
+  </data>
+  <data name="Admin_ApiKey" xml:space="preserve">
+    <value>Chave de API</value>
+  </data>
+  <data name="Admin_Model" xml:space="preserve">
+    <value>Modelo</value>
+  </data>
+  <data name="Admin_ModelHelp" xml:space="preserve">
+    <value>Nome do modelo (por exemplo, gpt-4o-mini, codestral-latest, deepseek-coder)</value>
+  </data>
+  <data name="Admin_AiChatAssistant" xml:space="preserve">
+    <value>Chat e assistente de IA</value>
+  </data>
+  <data name="Admin_AiChatHelp" xml:space="preserve">
+    <value>Ative o chat de IA, explicação em linha, refatoração e geração de testes no IDE web. Requer que a conclusão com IA esteja ativada acima (usa o mesmo endpoint de API).</value>
+  </data>
+  <data name="Admin_EnableAiChatAssistant" xml:space="preserve">
+    <value>Ativar chat e assistente de IA</value>
+  </data>
+  <data name="Admin_RealtimeCollaboration" xml:space="preserve">
+    <value>Colaboração em tempo real</value>
+  </data>
+  <data name="Admin_CollaborationHelp" xml:space="preserve">
+    <value>Ative a edição colaborativa em tempo real no IDE web. Vários usuários podem editar o mesmo arquivo simultaneamente com rastreamento de cursor ao vivo e indicadores de presença.</value>
+  </data>
+  <data name="Admin_EnableRealtimeCollaboration" xml:space="preserve">
+    <value>Ativar colaboração em tempo real</value>
+  </data>
+  <data name="Admin_SshServerHelp" xml:space="preserve">
+    <value>Execute um servidor SSH nativo para operações Git sem exigir o OpenSSH do sistema. Os usuários podem clonar/enviar via</value>
+  </data>
+  <data name="Admin_EnableBuiltInSsh" xml:space="preserve">
+    <value>Ativar servidor SSH integrado</value>
+  </data>
+  <data name="Admin_SshPort" xml:space="preserve">
+    <value>Porta SSH</value>
+  </data>
+  <data name="Admin_SshPortHelp" xml:space="preserve">
+    <value>Padrão: 2222. Use 22 se não estiver executando o SSH do sistema. Requer reinício.</value>
+  </data>
+  <data name="Admin_MergeSigningHelp" xml:space="preserve">
+    <value>Assine com GPG os commits de mesclagem, squash e rebase criados pela interface web. A chave GPG deve ser importada para o chaveiro do servidor (</value>
+  </data>
+  <data name="Admin_SignMergeCommits" xml:space="preserve">
+    <value>Assinar commits de mesclagem com GPG</value>
+  </data>
+  <data name="Admin_ServerGpgKeyId" xml:space="preserve">
+    <value>ID da chave GPG do servidor</value>
+  </data>
+  <data name="Admin_ServerGpgKeyIdHelp" xml:space="preserve">
+    <value>O ID de chave longo ou curto da chave GPG a ser usada para assinatura</value>
+  </data>
+  <data name="Admin_LdapAuthHelp" xml:space="preserve">
+    <value>Ative a autenticação LDAP/AD para permitir que os usuários entrem com suas credenciais de domínio. Os usuários são provisionados automaticamente no primeiro login.</value>
+  </data>
+  <data name="Admin_EnableLdapAuth" xml:space="preserve">
+    <value>Ativar autenticação LDAP</value>
+  </data>
+  <data name="Admin_LdapServer" xml:space="preserve">
+    <value>Servidor LDAP</value>
+  </data>
+  <data name="Admin_Port" xml:space="preserve">
+    <value>Porta</value>
+  </data>
+  <data name="Admin_LdapPortHelp" xml:space="preserve">
+    <value>389 (LDAP) ou 636 (LDAPS)</value>
+  </data>
+  <data name="Admin_UseSslLdaps" xml:space="preserve">
+    <value>Usar SSL (LDAPS)</value>
+  </data>
+  <data name="Admin_UseStartTls" xml:space="preserve">
+    <value>Usar StartTLS</value>
+  </data>
+  <data name="Admin_SkipCertValidation" xml:space="preserve">
+    <value>Ignorar validação de certificado</value>
+  </data>
+  <data name="Admin_BindDn" xml:space="preserve">
+    <value>Bind DN</value>
+  </data>
+  <data name="Admin_ServiceAccount" xml:space="preserve">
+    <value>(conta de serviço)</value>
+  </data>
+  <data name="Admin_AnonymousBindHelp" xml:space="preserve">
+    <value>Deixe vazio para bind anônimo</value>
+  </data>
+  <data name="Admin_BindPassword" xml:space="preserve">
+    <value>Senha de bind</value>
+  </data>
+  <data name="Admin_SearchBaseDn" xml:space="preserve">
+    <value>DN base de pesquisa</value>
+  </data>
+  <data name="Admin_UserSearchFilter" xml:space="preserve">
+    <value>Filtro de pesquisa de usuários</value>
+  </data>
+  <data name="Admin_UserFilterHelp" xml:space="preserve">
+    <value>é substituído pelo nome de usuário. Exemplos:</value>
+  </data>
+  <data name="Admin_UsernameAttribute" xml:space="preserve">
+    <value>Atributo de nome de usuário</value>
+  </data>
+  <data name="Admin_EmailAttribute" xml:space="preserve">
+    <value>Atributo de e-mail</value>
+  </data>
+  <data name="Admin_DisplayNameAttribute" xml:space="preserve">
+    <value>Atributo de nome de exibição</value>
+  </data>
+  <data name="Admin_AdminGroupDn" xml:space="preserve">
+    <value>DN do grupo de administradores</value>
+  </data>
+  <data name="Admin_AdminGroupHelp" xml:space="preserve">
+    <value>Os membros deste grupo são promovidos automaticamente a administrador. Deixe vazio para ignorar.</value>
+  </data>
+  <data name="Admin_TestLdapConnection" xml:space="preserve">
+    <value>Testar conexão LDAP</value>
+  </data>
+  <data name="Admin_SaveAllSettings" xml:space="preserve">
+    <value>Salvar todas as configurações</value>
+  </data>
+  <data name="Admin_AdminRole" xml:space="preserve">
+    <value>Administrador</value>
+  </data>
+  <data name="Admin_UserRole" xml:space="preserve">
+    <value>Usuário</value>
+  </data>
+  <data name="Admin_StatusActive" xml:space="preserve">
+    <value>Ativo</value>
+  </data>
+  <data name="Admin_StatusInactive" xml:space="preserve">
+    <value>Inativo</value>
+  </data>
+  <data name="Admin_GlobalSecretsHelp" xml:space="preserve">
+    <value>Os segredos globais estão disponíveis para todas as execuções de fluxo de trabalho. Segredos no nível do repositório com o mesmo nome substituirão os segredos globais.</value>
+  </data>
+  <data name="Admin_UpdatedPrefix" xml:space="preserve">
+    <value>Atualizado</value>
+  </data>
+  <data name="Admin_NoGlobalSecrets" xml:space="preserve">
+    <value>Nenhum segredo global configurado.</value>
+  </data>
+  <data name="Admin_Name" xml:space="preserve">
+    <value>Nome</value>
+  </data>
+  <data name="Admin_Value" xml:space="preserve">
+    <value>Valor</value>
+  </data>
+  <data name="Admin_SecretValuePlaceholder" xml:space="preserve">
+    <value>Valor do segredo</value>
+  </data>
+  <data name="Admin_DownloadBackupHelp" xml:space="preserve">
+    <value>Baixe um backup completo de todos os repositórios e do banco de dados como um arquivo</value>
+  </data>
+  <data name="Admin_BackupArchiveSuffix" xml:space="preserve">
+    <value>.</value>
+  </data>
+  <data name="Admin_RestoreWarningLabel" xml:space="preserve">
+    <value>Aviso:</value>
+  </data>
+  <data name="Admin_RestoreWarningText" xml:space="preserve">
+    <value>Restaurar um backup substituirá todos os dados atuais. O aplicativo deve ser reiniciado após uma restauração.</value>
+  </data>
+  <data name="Admin_RestoreApiHelp" xml:space="preserve">
+    <value>Use a API diretamente para restaurar:</value>
+  </data>
+  <data name="Admin_RestoreApiSuffix" xml:space="preserve">
+    <value>com um arquivo tar.gz.</value>
+  </data>
+  <data name="Admin_OAuthProvidersHelp" xml:space="preserve">
+    <value>Configure provedores de autenticação externos. Apenas os provedores com Client ID e Client Secret preenchidos aparecerão na página de login.</value>
+  </data>
+  <data name="Admin_OAuthEnabled" xml:space="preserve">
+    <value>Ativado</value>
+  </data>
+  <data name="Admin_OAuthNotConfigured" xml:space="preserve">
+    <value>Não configurado</value>
+  </data>
+  <data name="Admin_ClientId" xml:space="preserve">
+    <value>Client ID</value>
+  </data>
+  <data name="Admin_ClientSecret" xml:space="preserve">
+    <value>Client Secret</value>
+  </data>
+  <data name="Admin_EnableThisProvider" xml:space="preserve">
+    <value>Ativar este provedor</value>
+  </data>
+  <data name="Admin_CallbackUrlLabel" xml:space="preserve">
+    <value>URL de retorno de chamada:</value>
+  </data>
+  <data name="Admin_CallbackUrlHelp" xml:space="preserve">
+    <value>Cada provedor deve ser configurado com a URL de retorno de chamada:</value>
+  </data>
+  <data name="Admin_CallbackReplaceHelp" xml:space="preserve">
+    <value>por: github, google, microsoft, gitlab, bitbucket, facebook, discord ou twitter</value>
+  </data>
+  <data name="Admin_EmailLabel" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="Admin_Password" xml:space="preserve">
+    <value>Senha</value>
+  </data>
+  <data name="Admin_Administrator" xml:space="preserve">
+    <value>Administrador</value>
+  </data>
+  <data name="Admin_EditUserTitle" xml:space="preserve">
+    <value>Editar usuário:</value>
+  </data>
+  <data name="Admin_ActiveLabel" xml:space="preserve">
+    <value>Ativo</value>
+  </data>
+  <data name="Admin_NewPassword" xml:space="preserve">
+    <value>Nova senha</value>
+  </data>
+  <data name="Admin_LeaveBlankKeep" xml:space="preserve">
+    <value>(deixe em branco para manter a atual)</value>
+  </data>
+  <data name="Org_SecretsTab" xml:space="preserve">
+    <value>Segredos</value>
+  </data>
+  <data name="Org_RoleMember" xml:space="preserve">
+    <value>Membro</value>
+  </data>
+  <data name="Org_RoleOwner" xml:space="preserve">
+    <value>Proprietário</value>
+  </data>
+  <data name="Org_MembersCount" xml:space="preserve">
+    <value>Membros</value>
+  </data>
+  <data name="Org_RepositoriesCount" xml:space="preserve">
+    <value>Repositórios</value>
+  </data>
+  <data name="Org_SecretsHeader" xml:space="preserve">
+    <value>Segredos da organização</value>
+  </data>
+  <data name="Org_SecretsDescription" xml:space="preserve">
+    <value>Os segredos da organização estão disponíveis nas execuções de fluxo de trabalho para todos os repositórios pertencentes a esta organização. Os segredos de nível de usuário e de repositório têm prioridade sobre estes.</value>
+  </data>
+  <data name="Org_SecretUpdatedPrefix" xml:space="preserve">
+    <value>Atualizado</value>
+  </data>
+  <data name="Org_NoSecrets" xml:space="preserve">
+    <value>Nenhum segredo de organização configurado.</value>
+  </data>
+  <data name="Org_UpdateSecret" xml:space="preserve">
+    <value>Atualizar segredo</value>
+  </data>
+  <data name="Org_AddSecret" xml:space="preserve">
+    <value>Adicionar segredo</value>
+  </data>
+  <data name="Org_Update" xml:space="preserve">
+    <value>Atualizar</value>
+  </data>
+  <data name="Org_PermRead" xml:space="preserve">
+    <value>Leitura</value>
+  </data>
+  <data name="Org_PermWrite" xml:space="preserve">
+    <value>Escrita</value>
+  </data>
+  <data name="Org_PermAdmin" xml:space="preserve">
+    <value>Administrador</value>
+  </data>
 </root>

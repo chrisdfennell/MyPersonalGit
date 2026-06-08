@@ -3979,4 +3979,655 @@
   <data name="Stats_Subtitle" xml:space="preserve">
     <value>이 Personal Git 인스턴스의 실시간 통계</value>
   </data>
+  <data name="Settings_Secrets" xml:space="preserve">
+    <value>시크릿</value>
+  </data>
+  <data name="Settings_AvatarPreview" xml:space="preserve">
+    <value>아바타 미리보기</value>
+  </data>
+  <data name="Settings_Or" xml:space="preserve">
+    <value>또는</value>
+  </data>
+  <data name="Settings_UploadImage" xml:space="preserve">
+    <value>이미지 업로드</value>
+  </data>
+  <data name="Settings_AvatarFormatHelp" xml:space="preserve">
+    <value>JPEG, PNG, GIF 또는 WebP. 최대 5MB.</value>
+  </data>
+  <data name="Settings_TwoFactorEnabled" xml:space="preserve">
+    <value>2단계 인증이 활성화되어 있습니다</value>
+  </data>
+  <data name="Settings_EnabledOn" xml:space="preserve">
+    <value>활성화 날짜</value>
+  </data>
+  <data name="Settings_RecoveryCodes" xml:space="preserve">
+    <value>복구 코드</value>
+  </data>
+  <data name="Settings_RecoveryCodesSaveHint" xml:space="preserve">
+    <value>이 코드를 안전한 곳에 보관하세요. 각 코드는 한 번만 사용할 수 있습니다.</value>
+  </data>
+  <data name="Settings_RegenerateRecoveryCodes" xml:space="preserve">
+    <value>복구 코드 재생성</value>
+  </data>
+  <data name="Settings_Disable2FA" xml:space="preserve">
+    <value>2FA 비활성화</value>
+  </data>
+  <data name="Settings_Disable2FAPrompt" xml:space="preserve">
+    <value>2FA를 비활성화하려면 현재 TOTP 코드를 입력하세요:</value>
+  </data>
+  <data name="Settings_2FAStep1" xml:space="preserve">
+    <value>1단계: 인증 앱에 추가</value>
+  </data>
+  <data name="Settings_2FAScanPrompt" xml:space="preserve">
+    <value>인증 앱으로 QR 코드를 스캔하세요:</value>
+  </data>
+  <data name="Settings_2FACantScan" xml:space="preserve">
+    <value>스캔할 수 없나요? 수동으로 입력</value>
+  </data>
+  <data name="Settings_SecretKey" xml:space="preserve">
+    <value>비밀 키:</value>
+  </data>
+  <data name="Settings_FullUri" xml:space="preserve">
+    <value>전체 URI:</value>
+  </data>
+  <data name="Settings_2FAStep2" xml:space="preserve">
+    <value>2단계: 설정 확인</value>
+  </data>
+  <data name="Settings_2FAVerifyPrompt" xml:space="preserve">
+    <value>설정을 확인하려면 인증 앱의 6자리 코드를 입력하세요:</value>
+  </data>
+  <data name="Settings_SaveRecoveryCodes" xml:space="preserve">
+    <value>복구 코드를 저장하세요!</value>
+  </data>
+  <data name="Settings_RecoveryCodesLongHint" xml:space="preserve">
+    <value>인증 기기를 분실한 경우 이 코드로 계정에 접근할 수 있습니다. 각 코드는 한 번만 사용할 수 있습니다. 안전하게 보관하세요.</value>
+  </data>
+  <data name="Settings_TwoFactorNotEnabled" xml:space="preserve">
+    <value>2단계 인증이 활성화되어 있지 않습니다</value>
+  </data>
+  <data name="Settings_TwoFactorIntro" xml:space="preserve">
+    <value>2단계 인증을 활성화하여 계정에 보안 계층을 추가하세요.</value>
+  </data>
+  <data name="Settings_Enable2FA" xml:space="preserve">
+    <value>2FA 활성화</value>
+  </data>
+  <data name="Settings_AddSSHKey" xml:space="preserve">
+    <value>SSH 키 추가</value>
+  </data>
+  <data name="Settings_NoSSHKeys" xml:space="preserve">
+    <value>구성된 SSH 키가 없습니다</value>
+  </data>
+  <data name="Settings_Added" xml:space="preserve">
+    <value>추가됨</value>
+  </data>
+  <data name="Settings_AddGPGKey" xml:space="preserve">
+    <value>GPG 키 추가</value>
+  </data>
+  <data name="Settings_NoGPGKeys" xml:space="preserve">
+    <value>구성된 GPG 키가 없습니다. 커밋에 서명하고 검증하려면 GPG 키를 추가하세요.</value>
+  </data>
+  <data name="Settings_Verified" xml:space="preserve">
+    <value>검증됨</value>
+  </data>
+  <data name="Settings_KeyId" xml:space="preserve">
+    <value>키 ID:</value>
+  </data>
+  <data name="Settings_Email" xml:space="preserve">
+    <value>이메일:</value>
+  </data>
+  <data name="Settings_Expires" xml:space="preserve">
+    <value>만료</value>
+  </data>
+  <data name="Settings_PersonalAccessTokens" xml:space="preserve">
+    <value>개인 액세스 토큰</value>
+  </data>
+  <data name="Settings_YourNewToken" xml:space="preserve">
+    <value>새 토큰:</value>
+  </data>
+  <data name="Settings_CopyTokenNow" xml:space="preserve">
+    <value>지금 복사하세요 — 다시 표시되지 않습니다.</value>
+  </data>
+  <data name="Settings_NoTokens" xml:space="preserve">
+    <value>개인 액세스 토큰이 없습니다</value>
+  </data>
+  <data name="Settings_Created" xml:space="preserve">
+    <value>생성됨</value>
+  </data>
+  <data name="Settings_ActiveSessions" xml:space="preserve">
+    <value>활성 세션</value>
+  </data>
+  <data name="Settings_NoActiveSessions" xml:space="preserve">
+    <value>활성 세션이 없습니다</value>
+  </data>
+  <data name="Settings_Started" xml:space="preserve">
+    <value>시작됨</value>
+  </data>
+  <data name="Settings_Revoke" xml:space="preserve">
+    <value>취소</value>
+  </data>
+  <data name="Settings_WebAuthnUnsupported" xml:space="preserve">
+    <value>이 브라우저는 WebAuthn/패스키를 지원하지 않습니다.</value>
+  </data>
+  <data name="Settings_Registered" xml:space="preserve">
+    <value>등록됨</value>
+  </data>
+  <data name="Settings_NotificationPreferences" xml:space="preserve">
+    <value>알림 환경설정</value>
+  </data>
+  <data name="Settings_PushNotifications" xml:space="preserve">
+    <value>푸시 알림 (ntfy/Gotify)</value>
+  </data>
+  <data name="Settings_PushNotificationsHelp" xml:space="preserve">
+    <value>관리자가 구성한 경우 외부 푸시 서비스로 알림을 보냅니다</value>
+  </data>
+  <data name="Settings_EmailNotifications" xml:space="preserve">
+    <value>이메일 알림</value>
+  </data>
+  <data name="Settings_EmailNotificationsHelp" xml:space="preserve">
+    <value>관리자가 SMTP를 구성한 경우 이메일 알림을 받습니다</value>
+  </data>
+  <data name="Settings_PullRequestNotifications" xml:space="preserve">
+    <value>풀 리퀘스트 알림</value>
+  </data>
+  <data name="Settings_IssueNotifications" xml:space="preserve">
+    <value>이슈 알림</value>
+  </data>
+  <data name="Settings_MentionNotifications" xml:space="preserve">
+    <value>멘션 알림</value>
+  </data>
+  <data name="Settings_CommentNotifications" xml:space="preserve">
+    <value>댓글 알림</value>
+  </data>
+  <data name="Settings_SavePreferences" xml:space="preserve">
+    <value>환경설정 저장</value>
+  </data>
+  <data name="Settings_UserSecrets" xml:space="preserve">
+    <value>사용자 시크릿</value>
+  </data>
+  <data name="Settings_UserSecretsHelp" xml:space="preserve">
+    <value>사용자 수준 시크릿은 저장소의 모든 워크플로 실행에서 사용할 수 있습니다. 저장소 수준 시크릿이 이를 재정의합니다.</value>
+  </data>
+  <data name="Settings_Updated" xml:space="preserve">
+    <value>업데이트됨</value>
+  </data>
+  <data name="Settings_NoUserSecrets" xml:space="preserve">
+    <value>구성된 사용자 시크릿이 없습니다.</value>
+  </data>
+  <data name="Settings_UpdateSecret" xml:space="preserve">
+    <value>시크릿 업데이트</value>
+  </data>
+  <data name="Settings_AddSecret" xml:space="preserve">
+    <value>시크릿 추가</value>
+  </data>
+  <data name="Settings_Update" xml:space="preserve">
+    <value>업데이트</value>
+  </data>
+  <data name="Settings_LinkedAccountsHelp" xml:space="preserve">
+    <value>단일 로그인을 위해 MyPersonalGit 프로필에 연결된 외부 계정을 관리합니다.</value>
+  </data>
+  <data name="Settings_Linked" xml:space="preserve">
+    <value>연결됨</value>
+  </data>
+  <data name="Settings_Unlink" xml:space="preserve">
+    <value>연결 해제</value>
+  </data>
+  <data name="Settings_NoLinkedAccounts" xml:space="preserve">
+    <value>연결된 계정이 없습니다.</value>
+  </data>
+  <data name="Settings_LinkNewAccount" xml:space="preserve">
+    <value>새 계정 연결</value>
+  </data>
+  <data name="Settings_Link" xml:space="preserve">
+    <value>연결</value>
+  </data>
+  <data name="Settings_Title_TitleLabel" xml:space="preserve">
+    <value>제목</value>
+  </data>
+  <data name="Settings_Key" xml:space="preserve">
+    <value>키</value>
+  </data>
+  <data name="Settings_GeneratePersonalAccessToken" xml:space="preserve">
+    <value>개인 액세스 토큰 생성</value>
+  </data>
+  <data name="Settings_TokenName" xml:space="preserve">
+    <value>토큰 이름</value>
+  </data>
+  <data name="Settings_Scopes" xml:space="preserve">
+    <value>범위</value>
+  </data>
+  <data name="Settings_ScopeRepo" xml:space="preserve">
+    <value>repo - 전체 저장소 접근</value>
+  </data>
+  <data name="Settings_ScopeUser" xml:space="preserve">
+    <value>user - 사용자 프로필 접근</value>
+  </data>
+  <data name="Settings_ScopeAdmin" xml:space="preserve">
+    <value>admin - 관리자 접근</value>
+  </data>
+  <data name="Settings_ExpirationDays" xml:space="preserve">
+    <value>만료 (일)</value>
+  </data>
+  <data name="Settings_RouteRestrictions" xml:space="preserve">
+    <value>경로 제한</value>
+  </data>
+  <data name="Settings_RouteRestrictionsHelp" xml:space="preserve">
+    <value>한 줄에 하나의 glob 패턴. 비어 있으면 토큰은 해당 범위와 일치하는 모든 경로에 접근할 수 있습니다.</value>
+  </data>
+  <data name="Settings_GPGPublicKey" xml:space="preserve">
+    <value>GPG 공개 키</value>
+  </data>
+  <data name="Settings_OptionalBadge" xml:space="preserve">
+    <value>선택 사항</value>
+  </data>
+  <data name="Settings_RouteRestrictionsMatchHelp" xml:space="preserve">
+    <value>모든 하위 경로와 일치시키려면 &lt;code&gt;**&lt;/code&gt;를 사용하세요 (예: &lt;code&gt;/api/packages/**&lt;/code&gt;).</value>
+  </data>
+  <data name="Settings_GPGPublicKeyHelp" xml:space="preserve">
+    <value>ASCII로 보호된 GPG 공개 키를 붙여넣으세요.</value>
+  </data>
+  <data name="Admin_ProjectRootLabel" xml:space="preserve">
+    <value>프로젝트 루트:</value>
+  </data>
+  <data name="Admin_AuthenticationLabel" xml:space="preserve">
+    <value>인증:</value>
+  </data>
+  <data name="Admin_UserRegistrationLabel" xml:space="preserve">
+    <value>사용자 등록:</value>
+  </data>
+  <data name="Admin_ActionsCiCdLabel" xml:space="preserve">
+    <value>Actions/CI-CD:</value>
+  </data>
+  <data name="Admin_PrometheusMetricsLabel" xml:space="preserve">
+    <value>Prometheus 지표:</value>
+  </data>
+  <data name="Admin_ActiveProviderLabel" xml:space="preserve">
+    <value>활성 공급자:</value>
+  </data>
+  <data name="Admin_DatabaseProvider" xml:space="preserve">
+    <value>데이터베이스 공급자</value>
+  </data>
+  <data name="Admin_SqliteOption" xml:space="preserve">
+    <value>SQLite (기본값 — 설정 불필요)</value>
+  </data>
+  <data name="Admin_PostgresqlOption" xml:space="preserve">
+    <value>PostgreSQL (대규모 배포용)</value>
+  </data>
+  <data name="Admin_ConnectionString" xml:space="preserve">
+    <value>연결 문자열</value>
+  </data>
+  <data name="Admin_ExampleLabel" xml:space="preserve">
+    <value>예:</value>
+  </data>
+  <data name="Admin_SaveDatabaseSettings" xml:space="preserve">
+    <value>데이터베이스 설정 저장</value>
+  </data>
+  <data name="Admin_RequiresRestartHint" xml:space="preserve">
+    <value>적용하려면 애플리케이션을 재시작해야 합니다</value>
+  </data>
+  <data name="Admin_General" xml:space="preserve">
+    <value>일반</value>
+  </data>
+  <data name="Admin_ProjectRootDirectory" xml:space="preserve">
+    <value>프로젝트 루트 디렉터리</value>
+  </data>
+  <data name="Admin_ProjectRootHelp" xml:space="preserve">
+    <value>리포지토리가 저장되는 루트 디렉터리</value>
+  </data>
+  <data name="Admin_RequireAuthentication" xml:space="preserve">
+    <value>인증 필요</value>
+  </data>
+  <data name="Admin_AllowUserRegistration" xml:space="preserve">
+    <value>사용자 등록 허용</value>
+  </data>
+  <data name="Admin_RequireEmailVerification" xml:space="preserve">
+    <value>이메일 인증 필요</value>
+  </data>
+  <data name="Admin_MaxReposPerUser" xml:space="preserve">
+    <value>사용자당 최대 리포지토리 수</value>
+  </data>
+  <data name="Admin_MaxRepoSizeBytes" xml:space="preserve">
+    <value>최대 리포지토리 크기(바이트)</value>
+  </data>
+  <data name="Admin_CurrentLabel" xml:space="preserve">
+    <value>현재:</value>
+  </data>
+  <data name="Admin_ActionsCiCd" xml:space="preserve">
+    <value>Actions / CI-CD</value>
+  </data>
+  <data name="Admin_Wiki" xml:space="preserve">
+    <value>위키</value>
+  </data>
+  <data name="Admin_Issues" xml:space="preserve">
+    <value>이슈</value>
+  </data>
+  <data name="Admin_Projects" xml:space="preserve">
+    <value>프로젝트</value>
+  </data>
+  <data name="Admin_EnableEmailNotifications" xml:space="preserve">
+    <value>이메일 알림 활성화</value>
+  </data>
+  <data name="Admin_SmtpServer" xml:space="preserve">
+    <value>SMTP 서버</value>
+  </data>
+  <data name="Admin_SmtpPort" xml:space="preserve">
+    <value>SMTP 포트</value>
+  </data>
+  <data name="Admin_SmtpUsername" xml:space="preserve">
+    <value>SMTP 사용자 이름</value>
+  </data>
+  <data name="Admin_SmtpPassword" xml:space="preserve">
+    <value>SMTP 비밀번호</value>
+  </data>
+  <data name="Admin_EnableSslTls" xml:space="preserve">
+    <value>SSL/TLS 활성화</value>
+  </data>
+  <data name="Admin_FromAddress" xml:space="preserve">
+    <value>보내는 주소</value>
+  </data>
+  <data name="Admin_FromName" xml:space="preserve">
+    <value>보내는 사람 이름</value>
+  </data>
+  <data name="Admin_SendTestEmail" xml:space="preserve">
+    <value>테스트 이메일 보내기</value>
+  </data>
+  <data name="Admin_EnablePushNotifications" xml:space="preserve">
+    <value>푸시 알림 활성화</value>
+  </data>
+  <data name="Admin_ServerUrl" xml:space="preserve">
+    <value>서버 URL</value>
+  </data>
+  <data name="Admin_Topic" xml:space="preserve">
+    <value>주제</value>
+  </data>
+  <data name="Admin_AccessToken" xml:space="preserve">
+    <value>액세스 토큰</value>
+  </data>
+  <data name="Admin_AppToken" xml:space="preserve">
+    <value>앱 토큰</value>
+  </data>
+  <data name="Admin_SiteName" xml:space="preserve">
+    <value>사이트 이름</value>
+  </data>
+  <data name="Admin_Preview" xml:space="preserve">
+    <value>(미리보기)</value>
+  </data>
+  <data name="Admin_Documentation" xml:space="preserve">
+    <value>문서</value>
+  </data>
+  <data name="Admin_Contact" xml:space="preserve">
+    <value>연락처</value>
+  </data>
+  <data name="Admin_AiCodeCompletion" xml:space="preserve">
+    <value>AI 코드 자동 완성</value>
+  </data>
+  <data name="Admin_AiCompletionHelp" xml:space="preserve">
+    <value>웹 IDE에서 AI 기반 인라인 코드 자동 완성을 활성화합니다. OpenAI 호환 API 엔드포인트를 사용합니다.</value>
+  </data>
+  <data name="Admin_EnableAiCompletion" xml:space="preserve">
+    <value>AI 자동 완성 활성화</value>
+  </data>
+  <data name="Admin_ApiEndpoint" xml:space="preserve">
+    <value>API 엔드포인트</value>
+  </data>
+  <data name="Admin_ApiEndpointHelp" xml:space="preserve">
+    <value>OpenAI 호환 API 기본 URL(예: OpenAI, Ollama, LM Studio)</value>
+  </data>
+  <data name="Admin_ApiKey" xml:space="preserve">
+    <value>API 키</value>
+  </data>
+  <data name="Admin_Model" xml:space="preserve">
+    <value>모델</value>
+  </data>
+  <data name="Admin_ModelHelp" xml:space="preserve">
+    <value>모델 이름(예: gpt-4o-mini, codestral-latest, deepseek-coder)</value>
+  </data>
+  <data name="Admin_AiChatAssistant" xml:space="preserve">
+    <value>AI 채팅 및 어시스턴트</value>
+  </data>
+  <data name="Admin_AiChatHelp" xml:space="preserve">
+    <value>웹 IDE에서 AI 채팅, 인라인 설명, 리팩터링, 테스트 생성을 활성화합니다. 위의 AI 자동 완성이 활성화되어 있어야 합니다(동일한 API 엔드포인트 사용).</value>
+  </data>
+  <data name="Admin_EnableAiChatAssistant" xml:space="preserve">
+    <value>AI 채팅 및 어시스턴트 활성화</value>
+  </data>
+  <data name="Admin_RealtimeCollaboration" xml:space="preserve">
+    <value>실시간 협업</value>
+  </data>
+  <data name="Admin_CollaborationHelp" xml:space="preserve">
+    <value>웹 IDE에서 실시간 공동 편집을 활성화합니다. 여러 사용자가 실시간 커서 추적 및 현재 상태 표시기로 동일한 파일을 동시에 편집할 수 있습니다.</value>
+  </data>
+  <data name="Admin_EnableRealtimeCollaboration" xml:space="preserve">
+    <value>실시간 협업 활성화</value>
+  </data>
+  <data name="Admin_SshServerHelp" xml:space="preserve">
+    <value>시스템 OpenSSH 없이 Git 작업을 위한 네이티브 SSH 서버를 실행합니다. 사용자는 다음을 통해 클론/푸시할 수 있습니다</value>
+  </data>
+  <data name="Admin_EnableBuiltInSsh" xml:space="preserve">
+    <value>내장 SSH 서버 활성화</value>
+  </data>
+  <data name="Admin_SshPort" xml:space="preserve">
+    <value>SSH 포트</value>
+  </data>
+  <data name="Admin_SshPortHelp" xml:space="preserve">
+    <value>기본값: 2222. 시스템 SSH를 실행하지 않는 경우 22를 사용하세요. 재시작이 필요합니다.</value>
+  </data>
+  <data name="Admin_MergeSigningHelp" xml:space="preserve">
+    <value>웹 UI를 통해 생성된 병합, 스쿼시, 리베이스 커밋을 GPG로 서명합니다. GPG 키를 서버의 키링으로 가져와야 합니다(</value>
+  </data>
+  <data name="Admin_SignMergeCommits" xml:space="preserve">
+    <value>GPG로 병합 커밋 서명</value>
+  </data>
+  <data name="Admin_ServerGpgKeyId" xml:space="preserve">
+    <value>서버 GPG 키 ID</value>
+  </data>
+  <data name="Admin_ServerGpgKeyIdHelp" xml:space="preserve">
+    <value>서명에 사용할 GPG 키의 긴 또는 짧은 키 ID</value>
+  </data>
+  <data name="Admin_LdapAuthHelp" xml:space="preserve">
+    <value>LDAP/AD 인증을 활성화하여 사용자가 도메인 자격 증명으로 로그인할 수 있도록 합니다. 사용자는 첫 로그인 시 자동으로 프로비저닝됩니다.</value>
+  </data>
+  <data name="Admin_EnableLdapAuth" xml:space="preserve">
+    <value>LDAP 인증 활성화</value>
+  </data>
+  <data name="Admin_LdapServer" xml:space="preserve">
+    <value>LDAP 서버</value>
+  </data>
+  <data name="Admin_Port" xml:space="preserve">
+    <value>포트</value>
+  </data>
+  <data name="Admin_LdapPortHelp" xml:space="preserve">
+    <value>389(LDAP) 또는 636(LDAPS)</value>
+  </data>
+  <data name="Admin_UseSslLdaps" xml:space="preserve">
+    <value>SSL(LDAPS) 사용</value>
+  </data>
+  <data name="Admin_UseStartTls" xml:space="preserve">
+    <value>StartTLS 사용</value>
+  </data>
+  <data name="Admin_SkipCertValidation" xml:space="preserve">
+    <value>인증서 유효성 검사 건너뛰기</value>
+  </data>
+  <data name="Admin_BindDn" xml:space="preserve">
+    <value>바인드 DN</value>
+  </data>
+  <data name="Admin_ServiceAccount" xml:space="preserve">
+    <value>(서비스 계정)</value>
+  </data>
+  <data name="Admin_AnonymousBindHelp" xml:space="preserve">
+    <value>익명 바인드의 경우 비워 두세요</value>
+  </data>
+  <data name="Admin_BindPassword" xml:space="preserve">
+    <value>바인드 비밀번호</value>
+  </data>
+  <data name="Admin_SearchBaseDn" xml:space="preserve">
+    <value>검색 기준 DN</value>
+  </data>
+  <data name="Admin_UserSearchFilter" xml:space="preserve">
+    <value>사용자 검색 필터</value>
+  </data>
+  <data name="Admin_UserFilterHelp" xml:space="preserve">
+    <value>는 사용자 이름으로 대체됩니다. 예:</value>
+  </data>
+  <data name="Admin_UsernameAttribute" xml:space="preserve">
+    <value>사용자 이름 속성</value>
+  </data>
+  <data name="Admin_EmailAttribute" xml:space="preserve">
+    <value>이메일 속성</value>
+  </data>
+  <data name="Admin_DisplayNameAttribute" xml:space="preserve">
+    <value>표시 이름 속성</value>
+  </data>
+  <data name="Admin_AdminGroupDn" xml:space="preserve">
+    <value>관리자 그룹 DN</value>
+  </data>
+  <data name="Admin_AdminGroupHelp" xml:space="preserve">
+    <value>이 그룹의 구성원은 자동으로 관리자로 승격됩니다. 건너뛰려면 비워 두세요.</value>
+  </data>
+  <data name="Admin_TestLdapConnection" xml:space="preserve">
+    <value>LDAP 연결 테스트</value>
+  </data>
+  <data name="Admin_SaveAllSettings" xml:space="preserve">
+    <value>모든 설정 저장</value>
+  </data>
+  <data name="Admin_AdminRole" xml:space="preserve">
+    <value>관리자</value>
+  </data>
+  <data name="Admin_UserRole" xml:space="preserve">
+    <value>사용자</value>
+  </data>
+  <data name="Admin_StatusActive" xml:space="preserve">
+    <value>활성</value>
+  </data>
+  <data name="Admin_StatusInactive" xml:space="preserve">
+    <value>비활성</value>
+  </data>
+  <data name="Admin_GlobalSecretsHelp" xml:space="preserve">
+    <value>전역 시크릿은 모든 워크플로 실행에서 사용할 수 있습니다. 동일한 이름의 리포지토리 수준 시크릿이 전역 시크릿을 재정의합니다.</value>
+  </data>
+  <data name="Admin_UpdatedPrefix" xml:space="preserve">
+    <value>업데이트됨</value>
+  </data>
+  <data name="Admin_NoGlobalSecrets" xml:space="preserve">
+    <value>구성된 전역 시크릿이 없습니다.</value>
+  </data>
+  <data name="Admin_Name" xml:space="preserve">
+    <value>이름</value>
+  </data>
+  <data name="Admin_Value" xml:space="preserve">
+    <value>값</value>
+  </data>
+  <data name="Admin_SecretValuePlaceholder" xml:space="preserve">
+    <value>시크릿 값</value>
+  </data>
+  <data name="Admin_DownloadBackupHelp" xml:space="preserve">
+    <value>모든 리포지토리와 데이터베이스의 전체 백업을 다음 형식으로 다운로드합니다</value>
+  </data>
+  <data name="Admin_BackupArchiveSuffix" xml:space="preserve">
+    <value>.</value>
+  </data>
+  <data name="Admin_RestoreWarningLabel" xml:space="preserve">
+    <value>경고:</value>
+  </data>
+  <data name="Admin_RestoreWarningText" xml:space="preserve">
+    <value>백업을 복원하면 현재의 모든 데이터를 덮어씁니다. 복원 후 애플리케이션을 재시작해야 합니다.</value>
+  </data>
+  <data name="Admin_RestoreApiHelp" xml:space="preserve">
+    <value>복원하려면 API를 직접 사용하세요:</value>
+  </data>
+  <data name="Admin_RestoreApiSuffix" xml:space="preserve">
+    <value>에 tar.gz 파일을 함께 사용합니다.</value>
+  </data>
+  <data name="Admin_OAuthProvidersHelp" xml:space="preserve">
+    <value>외부 인증 공급자를 구성합니다. Client ID와 Client Secret이 모두 입력된 공급자만 로그인 페이지에 표시됩니다.</value>
+  </data>
+  <data name="Admin_OAuthEnabled" xml:space="preserve">
+    <value>활성화됨</value>
+  </data>
+  <data name="Admin_OAuthNotConfigured" xml:space="preserve">
+    <value>구성되지 않음</value>
+  </data>
+  <data name="Admin_ClientId" xml:space="preserve">
+    <value>클라이언트 ID</value>
+  </data>
+  <data name="Admin_ClientSecret" xml:space="preserve">
+    <value>클라이언트 시크릿</value>
+  </data>
+  <data name="Admin_EnableThisProvider" xml:space="preserve">
+    <value>이 공급자 활성화</value>
+  </data>
+  <data name="Admin_CallbackUrlLabel" xml:space="preserve">
+    <value>콜백 URL:</value>
+  </data>
+  <data name="Admin_CallbackUrlHelp" xml:space="preserve">
+    <value>각 공급자는 콜백 URL로 구성해야 합니다:</value>
+  </data>
+  <data name="Admin_CallbackReplaceHelp" xml:space="preserve">
+    <value>를 다음 중 하나로 바꾸세요: github, google, microsoft, gitlab, bitbucket, facebook, discord 또는 twitter</value>
+  </data>
+  <data name="Admin_EmailLabel" xml:space="preserve">
+    <value>이메일</value>
+  </data>
+  <data name="Admin_Password" xml:space="preserve">
+    <value>비밀번호</value>
+  </data>
+  <data name="Admin_Administrator" xml:space="preserve">
+    <value>관리자</value>
+  </data>
+  <data name="Admin_EditUserTitle" xml:space="preserve">
+    <value>사용자 편집:</value>
+  </data>
+  <data name="Admin_ActiveLabel" xml:space="preserve">
+    <value>활성</value>
+  </data>
+  <data name="Admin_NewPassword" xml:space="preserve">
+    <value>새 비밀번호</value>
+  </data>
+  <data name="Admin_LeaveBlankKeep" xml:space="preserve">
+    <value>(현재 비밀번호를 유지하려면 비워 두세요)</value>
+  </data>
+  <data name="Org_SecretsTab" xml:space="preserve">
+    <value>시크릿</value>
+  </data>
+  <data name="Org_RoleMember" xml:space="preserve">
+    <value>멤버</value>
+  </data>
+  <data name="Org_RoleOwner" xml:space="preserve">
+    <value>소유자</value>
+  </data>
+  <data name="Org_MembersCount" xml:space="preserve">
+    <value>멤버</value>
+  </data>
+  <data name="Org_RepositoriesCount" xml:space="preserve">
+    <value>리포지토리</value>
+  </data>
+  <data name="Org_SecretsHeader" xml:space="preserve">
+    <value>조직 시크릿</value>
+  </data>
+  <data name="Org_SecretsDescription" xml:space="preserve">
+    <value>조직 시크릿은 이 조직이 소유한 모든 리포지토리의 워크플로 실행에서 사용할 수 있습니다. 사용자 및 리포지토리 수준 시크릿이 이를 재정의합니다.</value>
+  </data>
+  <data name="Org_SecretUpdatedPrefix" xml:space="preserve">
+    <value>업데이트됨</value>
+  </data>
+  <data name="Org_NoSecrets" xml:space="preserve">
+    <value>구성된 조직 시크릿이 없습니다.</value>
+  </data>
+  <data name="Org_UpdateSecret" xml:space="preserve">
+    <value>시크릿 업데이트</value>
+  </data>
+  <data name="Org_AddSecret" xml:space="preserve">
+    <value>시크릿 추가</value>
+  </data>
+  <data name="Org_Update" xml:space="preserve">
+    <value>업데이트</value>
+  </data>
+  <data name="Org_PermRead" xml:space="preserve">
+    <value>읽기</value>
+  </data>
+  <data name="Org_PermWrite" xml:space="preserve">
+    <value>쓰기</value>
+  </data>
+  <data name="Org_PermAdmin" xml:space="preserve">
+    <value>관리자</value>
+  </data>
 </root>

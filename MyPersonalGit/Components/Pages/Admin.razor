@@ -130,23 +130,23 @@ else
                         <table class="table table-sm">
                             <tbody>
                                 <tr>
-                                    <td><strong>Project Root:</strong></td>
+                                    <td><strong>@L["Admin_ProjectRootLabel"]</strong></td>
                                     <td>@Settings.ProjectRoot</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Authentication:</strong></td>
+                                    <td><strong>@L["Admin_AuthenticationLabel"]</strong></td>
                                     <td>@(Settings.RequireAuth ? L["Admin_Enabled"] : L["Admin_Disabled"])</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>User Registration:</strong></td>
+                                    <td><strong>@L["Admin_UserRegistrationLabel"]</strong></td>
                                     <td>@(Settings.AllowUserRegistration ? L["Admin_Enabled"] : L["Admin_Disabled"])</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Actions/CI-CD:</strong></td>
+                                    <td><strong>@L["Admin_ActionsCiCdLabel"]</strong></td>
                                     <td>@(Settings.EnableActions ? L["Admin_Enabled"] : L["Admin_Disabled"])</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Prometheus Metrics:</strong></td>
+                                    <td><strong>@L["Admin_PrometheusMetricsLabel"]</strong></td>
                                     <td><a href="/metrics" target="_blank" class="text-decoration-none"><i class="bi bi-graph-up me-1"></i>/metrics</a></td>
                                 </tr>
                             </tbody>
@@ -196,27 +196,27 @@ else
                     </div>
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
-                            <strong>Active Provider:</strong>
+                            <strong>@L["Admin_ActiveProviderLabel"]</strong>
                             <span class="badge @(DbConfig.Provider != "sqlite" ? "bg-primary" : "bg-secondary") ms-2">@DbConfig.Provider.ToUpperInvariant()</span>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Database Provider</label>
+                            <label class="form-label">@L["Admin_DatabaseProvider"]</label>
                             <select class="form-select" @bind="DbConfig.Provider">
-                                <option value="sqlite">SQLite (default — zero config)</option>
-                                <option value="postgresql">PostgreSQL (for larger deployments)</option>
+                                <option value="sqlite">@L["Admin_SqliteOption"]</option>
+                                <option value="postgresql">@L["Admin_PostgresqlOption"]</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Connection String</label>
+                            <label class="form-label">@L["Admin_ConnectionString"]</label>
                             <input type="text" class="form-control font-monospace" @bind="DbConfig.ConnectionString" />
                             <small class="form-text text-muted">
                                 @if (DbConfig.Provider == "postgresql")
                                 {
-                                    <span>Example: <code>Host=localhost;Database=mypersonalgit;Username=mypg;Password=secret</code></span>
+                                    <span>@L["Admin_ExampleLabel"] <code>Host=localhost;Database=mypersonalgit;Username=mypg;Password=secret</code></span>
                                 }
                                 else
                                 {
-                                    <span>Example: <code>Data Source=/data/mypersonalgit.db</code></span>
+                                    <span>@L["Admin_ExampleLabel"] <code>Data Source=/data/mypersonalgit.db</code></span>
                                 }
                             </small>
                         </div>
@@ -225,10 +225,10 @@ else
                             <div class="alert @(DbConfigSuccess ? "alert-success" : "alert-danger") py-2">@DbConfigMessage</div>
                         }
                         <button type="button" class="btn btn-outline-primary" @onclick="SaveDatabaseConfig">
-                            <i class="bi bi-save me-1"></i> Save Database Settings
+                            <i class="bi bi-save me-1"></i> @L["Admin_SaveDatabaseSettings"]
                         </button>
                         <small class="text-muted ms-2">
-                            <i class="bi bi-exclamation-triangle text-warning"></i> Requires application restart to take effect
+                            <i class="bi bi-exclamation-triangle text-warning"></i> @L["Admin_RequiresRestartHint"]
                         </small>
                     </div>
                 </div>
@@ -238,13 +238,13 @@ else
                 <!-- General Settings -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-gear me-2"></i>General</h5>
+                        <h5 class="mb-0"><i class="bi bi-gear me-2"></i>@L["Admin_General"]</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label">Project Root Directory</label>
+                            <label class="form-label">@L["Admin_ProjectRootDirectory"]</label>
                             <InputText class="form-control" @bind-Value="Settings.ProjectRoot" />
-                            <small class="form-text text-muted">The root directory where repositories are stored</small>
+                            <small class="form-text text-muted">@L["Admin_ProjectRootHelp"]</small>
                         </div>
 
                         <div class="mb-3">
@@ -276,13 +276,13 @@ else
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Max Repositories Per User</label>
+                                <label class="form-label">@L["Admin_MaxReposPerUser"]</label>
                                 <InputNumber class="form-control" @bind-Value="Settings.MaxRepositoriesPerUser" />
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Max Repository Size (bytes)</label>
+                                <label class="form-label">@L["Admin_MaxRepoSizeBytes"]</label>
                                 <InputNumber class="form-control" @bind-Value="Settings.MaxRepositorySize" />
-                                <small class="form-text text-muted">Current: @FormatBytes(Settings.MaxRepositorySize)</small>
+                                <small class="form-text text-muted">@L["Admin_CurrentLabel"] @FormatBytes(Settings.MaxRepositorySize)</small>
                             </div>
                         </div>
                     </div>
@@ -348,22 +348,22 @@ else
 
                         <div class="row">
                             <div class="col-md-8 mb-3">
-                                <label class="form-label">SMTP Server</label>
+                                <label class="form-label">@L["Admin_SmtpServer"]</label>
                                 <InputText class="form-control" @bind-Value="Settings.SmtpServer" />
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">SMTP Port</label>
+                                <label class="form-label">@L["Admin_SmtpPort"]</label>
                                 <InputNumber class="form-control" @bind-Value="Settings.SmtpPort" />
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">SMTP Username</label>
+                                <label class="form-label">@L["Admin_SmtpUsername"]</label>
                                 <InputText class="form-control" @bind-Value="Settings.SmtpUsername" />
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">SMTP Password</label>
+                                <label class="form-label">@L["Admin_SmtpPassword"]</label>
                                 <InputText type="password" class="form-control" @bind-Value="Settings.SmtpPassword" />
                             </div>
                         </div>
@@ -379,12 +379,12 @@ else
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">From Address</label>
+                                <label class="form-label">@L["Admin_FromAddress"]</label>
                                 <InputText class="form-control" @bind-Value="Settings.SmtpFromAddress" placeholder="noreply@example.com" />
                                 <small class="form-text text-muted">@L["Admin_SmtpFromDefault"]</small>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">From Name</label>
+                                <label class="form-label">@L["Admin_FromName"]</label>
                                 <InputText class="form-control" @bind-Value="Settings.SmtpFromName" placeholder="MyPersonalGit" />
                             </div>
                         </div>
@@ -397,7 +397,7 @@ else
                                     {
                                         <span class="spinner-border spinner-border-sm me-1"></span>
                                     }
-                                    <i class="bi bi-envelope"></i> Send Test Email
+                                    <i class="bi bi-envelope"></i> @L["Admin_SendTestEmail"]
                                 </button>
                             </div>
                             @if (!string.IsNullOrEmpty(TestEmailMessage))
@@ -430,12 +430,12 @@ else
                                 <InputText class="form-control" @bind-Value="Settings.NtfyUrl" placeholder="https://ntfy.sh" />
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Topic</label>
+                                <label class="form-label">@L["Admin_Topic"]</label>
                                 <InputText class="form-control" @bind-Value="Settings.NtfyTopic" placeholder="mypersonalgit" />
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Access Token <span class="text-muted small">(optional)</span></label>
+                            <label class="form-label">@L["Admin_AccessToken"] <span class="text-muted small">@L["Common_Optional"]</span></label>
                             <InputText type="password" class="form-control" @bind-Value="Settings.NtfyAccessToken" />
                         </div>
 
@@ -448,7 +448,7 @@ else
                                 <InputText class="form-control" @bind-Value="Settings.GotifyUrl" placeholder="https://gotify.example.com" />
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">App Token</label>
+                                <label class="form-label">@L["Admin_AppToken"]</label>
                                 <InputText type="password" class="form-control" @bind-Value="Settings.GotifyAppToken" />
                             </div>
                         </div>
@@ -464,27 +464,27 @@ else
                         <p class="text-muted small mb-3">@L["Admin_BrandingHelp"]</p>
 
                         <div class="mb-3">
-                            <label class="form-label">Site Name</label>
+                            <label class="form-label">@L["Admin_SiteName"]</label>
                             <InputText class="form-control" @bind-Value="Settings.SiteName" placeholder="PersonalGit" />
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">@L["Admin_TermsOfService"] <a href="/terms" target="_blank" class="small">(preview)</a></label>
+                            <label class="form-label">@L["Admin_TermsOfService"] <a href="/terms" target="_blank" class="small">@L["Admin_Preview"]</a></label>
                             <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterTerms" rows="4" />
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">@L["Admin_PrivacyPolicy"] <a href="/privacy" target="_blank" class="small">(preview)</a></label>
+                            <label class="form-label">@L["Admin_PrivacyPolicy"] <a href="/privacy" target="_blank" class="small">@L["Admin_Preview"]</a></label>
                             <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterPrivacy" rows="4" />
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Documentation <a href="/docs" target="_blank" class="small">(preview)</a></label>
+                            <label class="form-label">@L["Admin_Documentation"] <a href="/docs" target="_blank" class="small">@L["Admin_Preview"]</a></label>
                             <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterDocs" rows="4" />
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Contact <a href="/contact" target="_blank" class="small">(preview)</a></label>
+                            <label class="form-label">@L["Admin_Contact"] <a href="/contact" target="_blank" class="small">@L["Admin_Preview"]</a></label>
                             <InputTextArea class="form-control font-monospace" @bind-Value="Settings.FooterContact" rows="4" />
                         </div>
                     </div>
@@ -493,15 +493,15 @@ else
                 <!-- AI Code Completion -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-stars me-2"></i>AI Code Completion</h5>
+                        <h5 class="mb-0"><i class="bi bi-stars me-2"></i>@L["Admin_AiCodeCompletion"]</h5>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted small mb-3">Enable AI-powered inline code completion in the web IDE. Uses an OpenAI-compatible API endpoint.</p>
+                        <p class="text-muted small mb-3">@L["Admin_AiCompletionHelp"]</p>
 
                         <div class="mb-3">
                             <div class="form-check form-switch">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.AiCompletionEnabled" />
-                                <label class="form-check-label">Enable AI Completion</label>
+                                <label class="form-check-label">@L["Admin_EnableAiCompletion"]</label>
                             </div>
                         </div>
 
@@ -509,18 +509,18 @@ else
                         {
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">API Endpoint</label>
+                                    <label class="form-label">@L["Admin_ApiEndpoint"]</label>
                                     <InputText class="form-control" @bind-Value="Settings.AiCompletionEndpoint" placeholder="https://api.openai.com/v1" />
-                                    <small class="form-text text-muted">OpenAI-compatible API base URL (e.g., OpenAI, Ollama, LM Studio)</small>
+                                    <small class="form-text text-muted">@L["Admin_ApiEndpointHelp"]</small>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">API Key</label>
+                                    <label class="form-label">@L["Admin_ApiKey"]</label>
                                     <InputText class="form-control" type="password" @bind-Value="Settings.AiCompletionApiKey" placeholder="sk-..." />
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Model</label>
+                                    <label class="form-label">@L["Admin_Model"]</label>
                                     <InputText class="form-control" @bind-Value="Settings.AiCompletionModel" placeholder="gpt-4o-mini" />
-                                    <small class="form-text text-muted">Model name (e.g., gpt-4o-mini, codestral-latest, deepseek-coder)</small>
+                                    <small class="form-text text-muted">@L["Admin_ModelHelp"]</small>
                                 </div>
                             </div>
                         }
@@ -530,15 +530,15 @@ else
                 <!-- AI Chat & Assistant -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>AI Chat & Assistant</h5>
+                        <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>@L["Admin_AiChatAssistant"]</h5>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted small mb-3">Enable AI chat, inline explain, refactoring, and test generation in the Web IDE. Requires AI Completion to be enabled above (uses the same API endpoint).</p>
+                        <p class="text-muted small mb-3">@L["Admin_AiChatHelp"]</p>
 
                         <div class="mb-3">
                             <div class="form-check form-switch">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.AiChatEnabled" />
-                                <label class="form-check-label">Enable AI Chat & Assistant</label>
+                                <label class="form-check-label">@L["Admin_EnableAiChatAssistant"]</label>
                             </div>
                         </div>
                     </div>
@@ -547,15 +547,15 @@ else
                 <!-- Real-time Collaboration -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-people me-2"></i>Real-time Collaboration</h5>
+                        <h5 class="mb-0"><i class="bi bi-people me-2"></i>@L["Admin_RealtimeCollaboration"]</h5>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted small mb-3">Enable real-time collaborative editing in the Web IDE. Multiple users can edit the same file simultaneously with live cursor tracking and presence indicators.</p>
+                        <p class="text-muted small mb-3">@L["Admin_CollaborationHelp"]</p>
 
                         <div class="mb-3">
                             <div class="form-check form-switch">
                                 <InputCheckbox class="form-check-input" @bind-Value="Settings.CollaborationEnabled" />
-                                <label class="form-check-label">Enable Real-time Collaboration</label>
+                                <label class="form-check-label">@L["Admin_EnableRealtimeCollaboration"]</label>
                             </div>
                         </div>
                     </div>
@@ -669,7 +669,7 @@ else
                         <h5 class="mb-0"><i class="bi bi-terminal me-2"></i>@L["Admin_SSHServer"]</h5>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted small mb-3">Run a native SSH server for Git operations without requiring system OpenSSH. Users can clone/push via <code>git clone ssh://user@host:port/repo.git</code></p>
+                        <p class="text-muted small mb-3">@L["Admin_SshServerHelp"] <code>git clone ssh://user@host:port/repo.git</code></p>
 
                         <div class="mb-3">
                             <div class="form-check form-switch">
@@ -681,9 +681,9 @@ else
                         </div>
 
                         <div class="mb-0">
-                            <label class="form-label">SSH Port</label>
+                            <label class="form-label">@L["Admin_SshPort"]</label>
                             <InputNumber class="form-control" @bind-Value="Settings.SshServerPort" style="max-width: 200px;" />
-                            <small class="form-text text-muted">Default: 2222. Use 22 if not running system SSH. Requires restart.</small>
+                            <small class="form-text text-muted">@L["Admin_SshPortHelp"]</small>
                         </div>
                     </div>
                 </div>
@@ -694,7 +694,7 @@ else
                         <h5 class="mb-0"><i class="bi bi-shield-lock me-2"></i>@L["Admin_MergeCommitSigning"]</h5>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted small mb-3">GPG-sign merge, squash, and rebase commits created through the web UI. The GPG key must be imported into the server's keyring (<code>gpg --import</code>).</p>
+                        <p class="text-muted small mb-3">@L["Admin_MergeSigningHelp"]<code>gpg --import</code>).</p>
 
                         <div class="mb-3">
                             <div class="form-check form-switch">
@@ -706,9 +706,9 @@ else
                         </div>
 
                         <div class="mb-0">
-                            <label class="form-label">Server GPG Key ID</label>
+                            <label class="form-label">@L["Admin_ServerGpgKeyId"]</label>
                             <InputText class="form-control" @bind-Value="Settings.ServerGpgKeyId" placeholder="e.g. ABCD1234..." />
-                            <small class="form-text text-muted">The long or short key ID of the GPG key to use for signing</small>
+                            <small class="form-text text-muted">@L["Admin_ServerGpgKeyIdHelp"]</small>
                         </div>
                     </div>
                 </div>
@@ -719,7 +719,7 @@ else
                         <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>@L["Admin_LDAPAuth"]</h5>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted small mb-3">Enable LDAP/AD authentication to let users sign in with their domain credentials. Users are auto-provisioned on first login.</p>
+                        <p class="text-muted small mb-3">@L["Admin_LdapAuthHelp"]</p>
 
                         <div class="mb-3">
                             <div class="form-check form-switch">
@@ -732,13 +732,13 @@ else
 
                         <div class="row">
                             <div class="col-md-8 mb-3">
-                                <label class="form-label">LDAP Server</label>
+                                <label class="form-label">@L["Admin_LdapServer"]</label>
                                 <InputText class="form-control" @bind-Value="Settings.LdapServer" placeholder="ldap.example.com or dc01.corp.local" />
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">Port</label>
+                                <label class="form-label">@L["Admin_Port"]</label>
                                 <InputNumber class="form-control" @bind-Value="Settings.LdapPort" />
-                                <small class="form-text text-muted">389 (LDAP) or 636 (LDAPS)</small>
+                                <small class="form-text text-muted">@L["Admin_LdapPortHelp"]</small>
                             </div>
                         </div>
 
@@ -765,26 +765,26 @@ else
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Bind DN <span class="text-muted small">(service account)</span></label>
+                                <label class="form-label">@L["Admin_BindDn"] <span class="text-muted small">@L["Admin_ServiceAccount"]</span></label>
                                 <InputText class="form-control" @bind-Value="Settings.LdapBindDn" placeholder="CN=svc-git,OU=Service Accounts,DC=corp,DC=local" />
-                                <small class="form-text text-muted">Leave empty for anonymous bind</small>
+                                <small class="form-text text-muted">@L["Admin_AnonymousBindHelp"]</small>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Bind Password</label>
+                                <label class="form-label">@L["Admin_BindPassword"]</label>
                                 <InputText type="password" class="form-control" @bind-Value="Settings.LdapBindPassword" />
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Search Base DN</label>
+                            <label class="form-label">@L["Admin_SearchBaseDn"]</label>
                             <InputText class="form-control" @bind-Value="Settings.LdapSearchBase" placeholder="OU=Users,DC=corp,DC=local" />
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">User Search Filter</label>
+                            <label class="form-label">@L["Admin_UserSearchFilter"]</label>
                             <InputText class="form-control" @bind-Value="Settings.LdapUserFilter" placeholder="(sAMAccountName={0})" />
                             <small class="form-text text-muted">
-                                <code>{0}</code> is replaced with the username. Examples:
+                                <code>{0}</code> @L["Admin_UserFilterHelp"]
                                 AD: <code>(sAMAccountName={0})</code> &middot;
                                 OpenLDAP: <code>(uid={0})</code> &middot;
                                 Email: <code>(mail={0})</code>
@@ -793,23 +793,23 @@ else
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">Username Attribute</label>
+                                <label class="form-label">@L["Admin_UsernameAttribute"]</label>
                                 <InputText class="form-control" @bind-Value="Settings.LdapUsernameAttribute" placeholder="sAMAccountName" />
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">Email Attribute</label>
+                                <label class="form-label">@L["Admin_EmailAttribute"]</label>
                                 <InputText class="form-control" @bind-Value="Settings.LdapEmailAttribute" placeholder="mail" />
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">Display Name Attribute</label>
+                                <label class="form-label">@L["Admin_DisplayNameAttribute"]</label>
                                 <InputText class="form-control" @bind-Value="Settings.LdapDisplayNameAttribute" placeholder="displayName" />
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Admin Group DN <span class="text-muted small">(optional)</span></label>
+                            <label class="form-label">@L["Admin_AdminGroupDn"] <span class="text-muted small">@L["Common_Optional"]</span></label>
                             <InputText class="form-control" @bind-Value="Settings.LdapAdminGroupDn" placeholder="CN=GitAdmins,OU=Groups,DC=corp,DC=local" />
-                            <small class="form-text text-muted">Members of this group are auto-promoted to admin. Leave empty to skip.</small>
+                            <small class="form-text text-muted">@L["Admin_AdminGroupHelp"]</small>
                         </div>
 
                         <div class="mb-0">
@@ -818,7 +818,7 @@ else
                                 {
                                     <span class="spinner-border spinner-border-sm me-1"></span>
                                 }
-                                <i class="bi bi-plug"></i> Test LDAP Connection
+                                <i class="bi bi-plug"></i> @L["Admin_TestLdapConnection"]
                             </button>
                             @if (!string.IsNullOrEmpty(LdapTestMessage))
                             {
@@ -836,7 +836,7 @@ else
                             <div class="alert alert-success mb-0 py-2 flex-grow-1">@SettingsMessage</div>
                         }
                         <button type="submit" class="btn btn-primary btn-lg ms-auto">
-                            <i class="bi bi-save me-1"></i> Save All Settings
+                            <i class="bi bi-save me-1"></i> @L["Admin_SaveAllSettings"]
                         </button>
                     </div>
                 </div>
@@ -879,21 +879,21 @@ else
                                         <td>
                                             @if (user.IsAdmin)
                                             {
-                                                <span class="badge bg-danger">Admin</span>
+                                                <span class="badge bg-danger">@L["Admin_AdminRole"]</span>
                                             }
                                             else
                                             {
-                                                <span class="badge bg-secondary">User</span>
+                                                <span class="badge bg-secondary">@L["Admin_UserRole"]</span>
                                             }
                                         </td>
                                         <td>
                                             @if (user.IsActive)
                                             {
-                                                <span class="badge bg-success">Active</span>
+                                                <span class="badge bg-success">@L["Admin_StatusActive"]</span>
                                             }
                                             else
                                             {
-                                                <span class="badge bg-secondary">Inactive</span>
+                                                <span class="badge bg-secondary">@L["Admin_StatusInactive"]</span>
                                             }
                                         </td>
                                         <td>@user.CreatedAt.ToString("d")</td>
@@ -964,7 +964,7 @@ else
                         </button>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted small mb-3">Global secrets are available to all workflow runs. Repository-level secrets with the same name will override global secrets.</p>
+                        <p class="text-muted small mb-3">@L["Admin_GlobalSecretsHelp"]</p>
                         @if (!string.IsNullOrEmpty(globalSecretMessage))
                         {
                             <div class="alert alert-info py-2">@globalSecretMessage</div>
@@ -977,7 +977,7 @@ else
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
                                         <div>
                                             <code class="fw-bold">@secret.Name</code>
-                                            <small class="text-muted ms-2">Updated @secret.UpdatedAt.ToString("MMM d, yyyy")</small>
+                                            <small class="text-muted ms-2">@L["Admin_UpdatedPrefix"] @secret.UpdatedAt.ToString("MMM d, yyyy")</small>
                                         </div>
                                         <div class="btn-group btn-group-sm">
                                             <button class="btn btn-outline-primary" @onclick="() => StartEditGlobalSecret(secret.Name)">
@@ -993,20 +993,20 @@ else
                         }
                         else
                         {
-                            <p class="text-muted">No global secrets configured.</p>
+                            <p class="text-muted">@L["Admin_NoGlobalSecrets"]</p>
                         }
                         @if (showAddGlobalSecret)
                         {
                             <div class="card mt-3">
                                 <div class="card-body">
                                     <div class="mb-2">
-                                        <label class="form-label fw-bold small">Name</label>
+                                        <label class="form-label fw-bold small">@L["Admin_Name"]</label>
                                         <input type="text" class="form-control form-control-sm" @bind="newGlobalSecretName" placeholder="SECRET_NAME"
                                                disabled="@(!string.IsNullOrEmpty(editingGlobalSecretName))" />
                                     </div>
                                     <div class="mb-2">
-                                        <label class="form-label fw-bold small">Value</label>
-                                        <input type="password" class="form-control form-control-sm" @bind="newGlobalSecretValue" placeholder="Secret value" />
+                                        <label class="form-label fw-bold small">@L["Admin_Value"]</label>
+                                        <input type="password" class="form-control form-control-sm" @bind="newGlobalSecretValue" placeholder="@L["Admin_SecretValuePlaceholder"]" />
                                     </div>
                                     <div class="btn-group btn-group-sm">
                                         <button class="btn btn-success" @onclick="SaveGlobalSecret"
@@ -1032,7 +1032,7 @@ else
                         <h5 class="mb-0"><i class="bi bi-cloud-download"></i> @L["Admin_DownloadBackup"]</h5>
                     </div>
                     <div class="card-body">
-                        <p>Download a complete backup of all repositories and the database as a <code>.tar.gz</code> archive.</p>
+                        <p>@L["Admin_DownloadBackupHelp"] <code>.tar.gz</code> @L["Admin_BackupArchiveSuffix"]</p>
                         @if (!string.IsNullOrEmpty(BackupMessage))
                         {
                             <div class="alert alert-info">@BackupMessage</div>
@@ -1053,9 +1053,9 @@ else
                     </div>
                     <div class="card-body">
                         <div class="alert alert-warning">
-                            <i class="bi bi-exclamation-triangle"></i> <strong>Warning:</strong> Restoring a backup will overwrite all current data. The application should be restarted after a restore.
+                            <i class="bi bi-exclamation-triangle"></i> <strong>@L["Admin_RestoreWarningLabel"]</strong> @L["Admin_RestoreWarningText"]
                         </div>
-                        <p class="text-muted small">Use the API directly for restore: <code>POST /api/v1/admin/restore</code> with a tar.gz file.</p>
+                        <p class="text-muted small">@L["Admin_RestoreApiHelp"] <code>POST /api/v1/admin/restore</code> @L["Admin_RestoreApiSuffix"]</p>
                     </div>
                 </div>
             </div>
@@ -1070,7 +1070,7 @@ else
                         <h5 class="mb-0"><i class="bi bi-shield-check"></i> @L["Admin_OAuthSSOProviders"]</h5>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted">Configure external authentication providers. Only providers with both Client ID and Client Secret filled in will appear on the login page.</p>
+                        <p class="text-muted">@L["Admin_OAuthProvidersHelp"]</p>
 
                         @if (!string.IsNullOrEmpty(OAuthMessage))
                         {
@@ -1093,23 +1093,23 @@ else
                                             </div>
                                             @if (IsOAuthConfigured(provider))
                                             {
-                                                <span class="badge bg-success">Enabled</span>
+                                                <span class="badge bg-success">@L["Admin_OAuthEnabled"]</span>
                                             }
                                             else
                                             {
-                                                <span class="badge bg-secondary">Not configured</span>
+                                                <span class="badge bg-secondary">@L["Admin_OAuthNotConfigured"]</span>
                                             }
                                         </div>
                                         <div class="card-body">
                                             <div class="mb-2">
-                                                <label class="form-label small fw-bold mb-1">Client ID</label>
+                                                <label class="form-label small fw-bold mb-1">@L["Admin_ClientId"]</label>
                                                 <input type="text" class="form-control form-control-sm"
                                                        value="@provider.ClientId"
                                                        @onchange="e => provider.ClientId = e.Value?.ToString() ?? string.Empty"
                                                        placeholder="@L["Admin_EnterClientId"]" />
                                             </div>
                                             <div class="mb-2">
-                                                <label class="form-label small fw-bold mb-1">Client Secret</label>
+                                                <label class="form-label small fw-bold mb-1">@L["Admin_ClientSecret"]</label>
                                                 <input type="password" class="form-control form-control-sm"
                                                        value="@provider.ClientSecret"
                                                        @onchange="e => provider.ClientSecret = e.Value?.ToString() ?? string.Empty"
@@ -1124,7 +1124,7 @@ else
                                                 </label>
                                             </div>
                                             <button class="btn btn-sm btn-primary" @onclick="() => SaveOAuthProvider(provider)">
-                                                <i class="bi bi-check-lg me-1"></i>Save
+                                                <i class="bi bi-check-lg me-1"></i>@L["Admin_Save"]
                                             </button>
                                         </div>
                                     </div>
@@ -1134,9 +1134,9 @@ else
 
                         <div class="alert alert-info mt-3">
                             <i class="bi bi-info-circle me-1"></i>
-                            <strong>Callback URL:</strong> Each provider should be configured with the callback URL:
+                            <strong>@L["Admin_CallbackUrlLabel"]</strong> @L["Admin_CallbackUrlHelp"]
                             <code>@(Navigation.BaseUri)oauth/callback/{provider-name}</code>
-                            <br/><small class="text-muted">Replace <code>{provider-name}</code> with: github, google, microsoft, gitlab, bitbucket, facebook, discord, or twitter</small>
+                            <br/><small class="text-muted">@L["Admin_CallbackReplaceHelp"]</small>
                         </div>
                     </div>
                 </div>
@@ -1165,7 +1165,7 @@ else
                             <InputText type="email" class="form-control" @bind-Value="NewUser.Email" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Password</label>
+                            <label class="form-label">@L["Admin_Password"]</label>
                             <InputText type="password" class="form-control" @bind-Value="NewUserPassword" />
                         </div>
                         <div class="mb-3">
@@ -1196,7 +1196,7 @@ else
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Edit User: @EditingUser.Username</h5>
+                    <h5 class="modal-title">@L["Admin_EditUserTitle"] @EditingUser.Username</h5>
                     <button type="button" class="btn-close" aria-label="@L["Common_Close"]" @onclick="() => ShowEditUser = false"></button>
                 </div>
                 <div class="modal-body">
@@ -1227,7 +1227,7 @@ else
                         </div>
                         <hr />
                         <div class="mb-3">
-                            <label class="form-label">New Password <span class="text-muted small">(leave blank to keep current)</span></label>
+                            <label class="form-label">@L["Admin_NewPassword"] <span class="text-muted small">@L["Admin_LeaveBlankKeep"]</span></label>
                             <InputText type="password" class="form-control" @bind-Value="EditUserPassword" />
                         </div>
                         @if (!string.IsNullOrEmpty(EditUserMessage))

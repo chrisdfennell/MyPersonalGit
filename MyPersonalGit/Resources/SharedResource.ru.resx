@@ -3979,4 +3979,655 @@
   <data name="Stats_Subtitle" xml:space="preserve">
     <value>Статистика этого экземпляра Personal Git в реальном времени</value>
   </data>
+  <data name="Settings_Secrets" xml:space="preserve">
+    <value>Секреты</value>
+  </data>
+  <data name="Settings_AvatarPreview" xml:space="preserve">
+    <value>Предпросмотр аватара</value>
+  </data>
+  <data name="Settings_Or" xml:space="preserve">
+    <value>или</value>
+  </data>
+  <data name="Settings_UploadImage" xml:space="preserve">
+    <value>Загрузить изображение</value>
+  </data>
+  <data name="Settings_AvatarFormatHelp" xml:space="preserve">
+    <value>JPEG, PNG, GIF или WebP. Макс. 5 МБ.</value>
+  </data>
+  <data name="Settings_TwoFactorEnabled" xml:space="preserve">
+    <value>Двухфакторная аутентификация включена</value>
+  </data>
+  <data name="Settings_EnabledOn" xml:space="preserve">
+    <value>Включено</value>
+  </data>
+  <data name="Settings_RecoveryCodes" xml:space="preserve">
+    <value>Коды восстановления</value>
+  </data>
+  <data name="Settings_RecoveryCodesSaveHint" xml:space="preserve">
+    <value>Сохраните эти коды в надёжном месте. Каждый код можно использовать только один раз.</value>
+  </data>
+  <data name="Settings_RegenerateRecoveryCodes" xml:space="preserve">
+    <value>Создать новые коды восстановления</value>
+  </data>
+  <data name="Settings_Disable2FA" xml:space="preserve">
+    <value>Отключить 2FA</value>
+  </data>
+  <data name="Settings_Disable2FAPrompt" xml:space="preserve">
+    <value>Введите текущий TOTP-код, чтобы отключить 2FA:</value>
+  </data>
+  <data name="Settings_2FAStep1" xml:space="preserve">
+    <value>Шаг 1: Добавьте в приложение-аутентификатор</value>
+  </data>
+  <data name="Settings_2FAScanPrompt" xml:space="preserve">
+    <value>Отсканируйте QR-код приложением-аутентификатором:</value>
+  </data>
+  <data name="Settings_2FACantScan" xml:space="preserve">
+    <value>Не удаётся отсканировать? Введите вручную</value>
+  </data>
+  <data name="Settings_SecretKey" xml:space="preserve">
+    <value>Секретный ключ:</value>
+  </data>
+  <data name="Settings_FullUri" xml:space="preserve">
+    <value>Полный URI:</value>
+  </data>
+  <data name="Settings_2FAStep2" xml:space="preserve">
+    <value>Шаг 2: Подтвердите настройку</value>
+  </data>
+  <data name="Settings_2FAVerifyPrompt" xml:space="preserve">
+    <value>Введите 6-значный код из приложения-аутентификатора, чтобы подтвердить настройку:</value>
+  </data>
+  <data name="Settings_SaveRecoveryCodes" xml:space="preserve">
+    <value>Сохраните коды восстановления!</value>
+  </data>
+  <data name="Settings_RecoveryCodesLongHint" xml:space="preserve">
+    <value>Эти коды можно использовать для доступа к аккаунту, если вы потеряете устройство аутентификации. Каждый код можно использовать только один раз. Храните их в надёжном месте.</value>
+  </data>
+  <data name="Settings_TwoFactorNotEnabled" xml:space="preserve">
+    <value>Двухфакторная аутентификация не включена</value>
+  </data>
+  <data name="Settings_TwoFactorIntro" xml:space="preserve">
+    <value>Добавьте дополнительный уровень защиты аккаунта, включив двухфакторную аутентификацию.</value>
+  </data>
+  <data name="Settings_Enable2FA" xml:space="preserve">
+    <value>Включить 2FA</value>
+  </data>
+  <data name="Settings_AddSSHKey" xml:space="preserve">
+    <value>Добавить SSH-ключ</value>
+  </data>
+  <data name="Settings_NoSSHKeys" xml:space="preserve">
+    <value>SSH-ключи не настроены</value>
+  </data>
+  <data name="Settings_Added" xml:space="preserve">
+    <value>Добавлено</value>
+  </data>
+  <data name="Settings_AddGPGKey" xml:space="preserve">
+    <value>Добавить GPG-ключ</value>
+  </data>
+  <data name="Settings_NoGPGKeys" xml:space="preserve">
+    <value>GPG-ключи не настроены. Добавьте GPG-ключ для подписи и проверки коммитов.</value>
+  </data>
+  <data name="Settings_Verified" xml:space="preserve">
+    <value>Подтверждён</value>
+  </data>
+  <data name="Settings_KeyId" xml:space="preserve">
+    <value>ID ключа:</value>
+  </data>
+  <data name="Settings_Email" xml:space="preserve">
+    <value>Эл. почта:</value>
+  </data>
+  <data name="Settings_Expires" xml:space="preserve">
+    <value>Истекает</value>
+  </data>
+  <data name="Settings_PersonalAccessTokens" xml:space="preserve">
+    <value>Персональные токены доступа</value>
+  </data>
+  <data name="Settings_YourNewToken" xml:space="preserve">
+    <value>Ваш новый токен:</value>
+  </data>
+  <data name="Settings_CopyTokenNow" xml:space="preserve">
+    <value>Скопируйте сейчас — больше вы его не увидите.</value>
+  </data>
+  <data name="Settings_NoTokens" xml:space="preserve">
+    <value>Нет персональных токенов доступа</value>
+  </data>
+  <data name="Settings_Created" xml:space="preserve">
+    <value>Создан</value>
+  </data>
+  <data name="Settings_ActiveSessions" xml:space="preserve">
+    <value>Активные сеансы</value>
+  </data>
+  <data name="Settings_NoActiveSessions" xml:space="preserve">
+    <value>Нет активных сеансов</value>
+  </data>
+  <data name="Settings_Started" xml:space="preserve">
+    <value>Начат</value>
+  </data>
+  <data name="Settings_Revoke" xml:space="preserve">
+    <value>Отозвать</value>
+  </data>
+  <data name="Settings_WebAuthnUnsupported" xml:space="preserve">
+    <value>Ваш браузер не поддерживает WebAuthn/Passkeys.</value>
+  </data>
+  <data name="Settings_Registered" xml:space="preserve">
+    <value>Зарегистрирован</value>
+  </data>
+  <data name="Settings_NotificationPreferences" xml:space="preserve">
+    <value>Настройки уведомлений</value>
+  </data>
+  <data name="Settings_PushNotifications" xml:space="preserve">
+    <value>Push-уведомления (ntfy/Gotify)</value>
+  </data>
+  <data name="Settings_PushNotificationsHelp" xml:space="preserve">
+    <value>Отправлять уведомления во внешние push-сервисы, если они настроены администратором</value>
+  </data>
+  <data name="Settings_EmailNotifications" xml:space="preserve">
+    <value>Уведомления по эл. почте</value>
+  </data>
+  <data name="Settings_EmailNotificationsHelp" xml:space="preserve">
+    <value>Получать уведомления по эл. почте, если SMTP настроен администратором</value>
+  </data>
+  <data name="Settings_PullRequestNotifications" xml:space="preserve">
+    <value>Уведомления о pull request</value>
+  </data>
+  <data name="Settings_IssueNotifications" xml:space="preserve">
+    <value>Уведомления о задачах</value>
+  </data>
+  <data name="Settings_MentionNotifications" xml:space="preserve">
+    <value>Уведомления об упоминаниях</value>
+  </data>
+  <data name="Settings_CommentNotifications" xml:space="preserve">
+    <value>Уведомления о комментариях</value>
+  </data>
+  <data name="Settings_SavePreferences" xml:space="preserve">
+    <value>Сохранить настройки</value>
+  </data>
+  <data name="Settings_UserSecrets" xml:space="preserve">
+    <value>Секреты пользователя</value>
+  </data>
+  <data name="Settings_UserSecretsHelp" xml:space="preserve">
+    <value>Секреты уровня пользователя доступны во всех запусках рабочих процессов ваших репозиториев. Секреты уровня репозитория переопределяют их.</value>
+  </data>
+  <data name="Settings_Updated" xml:space="preserve">
+    <value>Обновлено</value>
+  </data>
+  <data name="Settings_NoUserSecrets" xml:space="preserve">
+    <value>Секреты пользователя не настроены.</value>
+  </data>
+  <data name="Settings_UpdateSecret" xml:space="preserve">
+    <value>Обновить секрет</value>
+  </data>
+  <data name="Settings_AddSecret" xml:space="preserve">
+    <value>Добавить секрет</value>
+  </data>
+  <data name="Settings_Update" xml:space="preserve">
+    <value>Обновить</value>
+  </data>
+  <data name="Settings_LinkedAccountsHelp" xml:space="preserve">
+    <value>Управляйте внешними аккаунтами, связанными с вашим профилем MyPersonalGit для единого входа.</value>
+  </data>
+  <data name="Settings_Linked" xml:space="preserve">
+    <value>Связан</value>
+  </data>
+  <data name="Settings_Unlink" xml:space="preserve">
+    <value>Отвязать</value>
+  </data>
+  <data name="Settings_NoLinkedAccounts" xml:space="preserve">
+    <value>Нет связанных аккаунтов.</value>
+  </data>
+  <data name="Settings_LinkNewAccount" xml:space="preserve">
+    <value>Связать новый аккаунт</value>
+  </data>
+  <data name="Settings_Link" xml:space="preserve">
+    <value>Связать</value>
+  </data>
+  <data name="Settings_Title_TitleLabel" xml:space="preserve">
+    <value>Название</value>
+  </data>
+  <data name="Settings_Key" xml:space="preserve">
+    <value>Ключ</value>
+  </data>
+  <data name="Settings_GeneratePersonalAccessToken" xml:space="preserve">
+    <value>Создать персональный токен доступа</value>
+  </data>
+  <data name="Settings_TokenName" xml:space="preserve">
+    <value>Имя токена</value>
+  </data>
+  <data name="Settings_Scopes" xml:space="preserve">
+    <value>Области действия</value>
+  </data>
+  <data name="Settings_ScopeRepo" xml:space="preserve">
+    <value>repo - Полный доступ к репозиторию</value>
+  </data>
+  <data name="Settings_ScopeUser" xml:space="preserve">
+    <value>user - Доступ к профилю пользователя</value>
+  </data>
+  <data name="Settings_ScopeAdmin" xml:space="preserve">
+    <value>admin - Административный доступ</value>
+  </data>
+  <data name="Settings_ExpirationDays" xml:space="preserve">
+    <value>Срок действия (дней)</value>
+  </data>
+  <data name="Settings_RouteRestrictions" xml:space="preserve">
+    <value>Ограничения маршрутов</value>
+  </data>
+  <data name="Settings_RouteRestrictionsHelp" xml:space="preserve">
+    <value>По одному glob-шаблону на строку. Если пусто, токен может обращаться ко всем маршрутам, соответствующим его областям действия.</value>
+  </data>
+  <data name="Settings_GPGPublicKey" xml:space="preserve">
+    <value>Открытый GPG-ключ</value>
+  </data>
+  <data name="Settings_OptionalBadge" xml:space="preserve">
+    <value>Необязательно</value>
+  </data>
+  <data name="Settings_RouteRestrictionsMatchHelp" xml:space="preserve">
+    <value>Используйте &lt;code&gt;**&lt;/code&gt; для совпадения с любым подпутём (напр. &lt;code&gt;/api/packages/**&lt;/code&gt;).</value>
+  </data>
+  <data name="Settings_GPGPublicKeyHelp" xml:space="preserve">
+    <value>Вставьте свой открытый GPG-ключ в формате ASCII-armored.</value>
+  </data>
+  <data name="Admin_ProjectRootLabel" xml:space="preserve">
+    <value>Корень проекта:</value>
+  </data>
+  <data name="Admin_AuthenticationLabel" xml:space="preserve">
+    <value>Аутентификация:</value>
+  </data>
+  <data name="Admin_UserRegistrationLabel" xml:space="preserve">
+    <value>Регистрация пользователей:</value>
+  </data>
+  <data name="Admin_ActionsCiCdLabel" xml:space="preserve">
+    <value>Actions/CI-CD:</value>
+  </data>
+  <data name="Admin_PrometheusMetricsLabel" xml:space="preserve">
+    <value>Метрики Prometheus:</value>
+  </data>
+  <data name="Admin_ActiveProviderLabel" xml:space="preserve">
+    <value>Активный поставщик:</value>
+  </data>
+  <data name="Admin_DatabaseProvider" xml:space="preserve">
+    <value>Поставщик базы данных</value>
+  </data>
+  <data name="Admin_SqliteOption" xml:space="preserve">
+    <value>SQLite (по умолчанию — без настройки)</value>
+  </data>
+  <data name="Admin_PostgresqlOption" xml:space="preserve">
+    <value>PostgreSQL (для крупных развёртываний)</value>
+  </data>
+  <data name="Admin_ConnectionString" xml:space="preserve">
+    <value>Строка подключения</value>
+  </data>
+  <data name="Admin_ExampleLabel" xml:space="preserve">
+    <value>Пример:</value>
+  </data>
+  <data name="Admin_SaveDatabaseSettings" xml:space="preserve">
+    <value>Сохранить настройки базы данных</value>
+  </data>
+  <data name="Admin_RequiresRestartHint" xml:space="preserve">
+    <value>Чтобы изменения вступили в силу, требуется перезапуск приложения</value>
+  </data>
+  <data name="Admin_General" xml:space="preserve">
+    <value>Общие</value>
+  </data>
+  <data name="Admin_ProjectRootDirectory" xml:space="preserve">
+    <value>Корневой каталог проекта</value>
+  </data>
+  <data name="Admin_ProjectRootHelp" xml:space="preserve">
+    <value>Корневой каталог, в котором хранятся репозитории</value>
+  </data>
+  <data name="Admin_RequireAuthentication" xml:space="preserve">
+    <value>Требовать аутентификацию</value>
+  </data>
+  <data name="Admin_AllowUserRegistration" xml:space="preserve">
+    <value>Разрешить регистрацию пользователей</value>
+  </data>
+  <data name="Admin_RequireEmailVerification" xml:space="preserve">
+    <value>Требовать подтверждение эл. почты</value>
+  </data>
+  <data name="Admin_MaxReposPerUser" xml:space="preserve">
+    <value>Макс. репозиториев на пользователя</value>
+  </data>
+  <data name="Admin_MaxRepoSizeBytes" xml:space="preserve">
+    <value>Макс. размер репозитория (байты)</value>
+  </data>
+  <data name="Admin_CurrentLabel" xml:space="preserve">
+    <value>Текущий:</value>
+  </data>
+  <data name="Admin_ActionsCiCd" xml:space="preserve">
+    <value>Actions / CI-CD</value>
+  </data>
+  <data name="Admin_Wiki" xml:space="preserve">
+    <value>Вики</value>
+  </data>
+  <data name="Admin_Issues" xml:space="preserve">
+    <value>Задачи</value>
+  </data>
+  <data name="Admin_Projects" xml:space="preserve">
+    <value>Проекты</value>
+  </data>
+  <data name="Admin_EnableEmailNotifications" xml:space="preserve">
+    <value>Включить уведомления по эл. почте</value>
+  </data>
+  <data name="Admin_SmtpServer" xml:space="preserve">
+    <value>SMTP-сервер</value>
+  </data>
+  <data name="Admin_SmtpPort" xml:space="preserve">
+    <value>Порт SMTP</value>
+  </data>
+  <data name="Admin_SmtpUsername" xml:space="preserve">
+    <value>Имя пользователя SMTP</value>
+  </data>
+  <data name="Admin_SmtpPassword" xml:space="preserve">
+    <value>Пароль SMTP</value>
+  </data>
+  <data name="Admin_EnableSslTls" xml:space="preserve">
+    <value>Включить SSL/TLS</value>
+  </data>
+  <data name="Admin_FromAddress" xml:space="preserve">
+    <value>Адрес отправителя</value>
+  </data>
+  <data name="Admin_FromName" xml:space="preserve">
+    <value>Имя отправителя</value>
+  </data>
+  <data name="Admin_SendTestEmail" xml:space="preserve">
+    <value>Отправить тестовое письмо</value>
+  </data>
+  <data name="Admin_EnablePushNotifications" xml:space="preserve">
+    <value>Включить push-уведомления</value>
+  </data>
+  <data name="Admin_ServerUrl" xml:space="preserve">
+    <value>URL сервера</value>
+  </data>
+  <data name="Admin_Topic" xml:space="preserve">
+    <value>Тема</value>
+  </data>
+  <data name="Admin_AccessToken" xml:space="preserve">
+    <value>Токен доступа</value>
+  </data>
+  <data name="Admin_AppToken" xml:space="preserve">
+    <value>Токен приложения</value>
+  </data>
+  <data name="Admin_SiteName" xml:space="preserve">
+    <value>Название сайта</value>
+  </data>
+  <data name="Admin_Preview" xml:space="preserve">
+    <value>(предпросмотр)</value>
+  </data>
+  <data name="Admin_Documentation" xml:space="preserve">
+    <value>Документация</value>
+  </data>
+  <data name="Admin_Contact" xml:space="preserve">
+    <value>Контакт</value>
+  </data>
+  <data name="Admin_AiCodeCompletion" xml:space="preserve">
+    <value>ИИ-автодополнение кода</value>
+  </data>
+  <data name="Admin_AiCompletionHelp" xml:space="preserve">
+    <value>Включите ИИ-автодополнение кода в веб-IDE. Использует API-эндпоинт, совместимый с OpenAI.</value>
+  </data>
+  <data name="Admin_EnableAiCompletion" xml:space="preserve">
+    <value>Включить ИИ-автодополнение</value>
+  </data>
+  <data name="Admin_ApiEndpoint" xml:space="preserve">
+    <value>API-эндпоинт</value>
+  </data>
+  <data name="Admin_ApiEndpointHelp" xml:space="preserve">
+    <value>Базовый URL API, совместимый с OpenAI (например, OpenAI, Ollama, LM Studio)</value>
+  </data>
+  <data name="Admin_ApiKey" xml:space="preserve">
+    <value>Ключ API</value>
+  </data>
+  <data name="Admin_Model" xml:space="preserve">
+    <value>Модель</value>
+  </data>
+  <data name="Admin_ModelHelp" xml:space="preserve">
+    <value>Название модели (например, gpt-4o-mini, codestral-latest, deepseek-coder)</value>
+  </data>
+  <data name="Admin_AiChatAssistant" xml:space="preserve">
+    <value>ИИ-чат и ассистент</value>
+  </data>
+  <data name="Admin_AiChatHelp" xml:space="preserve">
+    <value>Включите ИИ-чат, встроенные пояснения, рефакторинг и генерацию тестов в веб-IDE. Требуется включить ИИ-автодополнение выше (использует тот же API-эндпоинт).</value>
+  </data>
+  <data name="Admin_EnableAiChatAssistant" xml:space="preserve">
+    <value>Включить ИИ-чат и ассистент</value>
+  </data>
+  <data name="Admin_RealtimeCollaboration" xml:space="preserve">
+    <value>Совместная работа в реальном времени</value>
+  </data>
+  <data name="Admin_CollaborationHelp" xml:space="preserve">
+    <value>Включите совместное редактирование в реальном времени в веб-IDE. Несколько пользователей могут одновременно редактировать один файл с отслеживанием курсора и индикаторами присутствия.</value>
+  </data>
+  <data name="Admin_EnableRealtimeCollaboration" xml:space="preserve">
+    <value>Включить совместную работу в реальном времени</value>
+  </data>
+  <data name="Admin_SshServerHelp" xml:space="preserve">
+    <value>Запустите встроенный SSH-сервер для операций Git без системного OpenSSH. Пользователи могут клонировать/отправлять через</value>
+  </data>
+  <data name="Admin_EnableBuiltInSsh" xml:space="preserve">
+    <value>Включить встроенный SSH-сервер</value>
+  </data>
+  <data name="Admin_SshPort" xml:space="preserve">
+    <value>Порт SSH</value>
+  </data>
+  <data name="Admin_SshPortHelp" xml:space="preserve">
+    <value>По умолчанию: 2222. Используйте 22, если системный SSH не запущен. Требуется перезапуск.</value>
+  </data>
+  <data name="Admin_MergeSigningHelp" xml:space="preserve">
+    <value>Подписывайте GPG-подписью коммиты слияния, squash и rebase, созданные через веб-интерфейс. Ключ GPG должен быть импортирован в связку ключей сервера (</value>
+  </data>
+  <data name="Admin_SignMergeCommits" xml:space="preserve">
+    <value>Подписывать коммиты слияния через GPG</value>
+  </data>
+  <data name="Admin_ServerGpgKeyId" xml:space="preserve">
+    <value>ID ключа GPG сервера</value>
+  </data>
+  <data name="Admin_ServerGpgKeyIdHelp" xml:space="preserve">
+    <value>Длинный или короткий идентификатор ключа GPG для подписи</value>
+  </data>
+  <data name="Admin_LdapAuthHelp" xml:space="preserve">
+    <value>Включите аутентификацию LDAP/AD, чтобы пользователи могли входить с доменными учётными данными. Пользователи создаются автоматически при первом входе.</value>
+  </data>
+  <data name="Admin_EnableLdapAuth" xml:space="preserve">
+    <value>Включить аутентификацию LDAP</value>
+  </data>
+  <data name="Admin_LdapServer" xml:space="preserve">
+    <value>LDAP-сервер</value>
+  </data>
+  <data name="Admin_Port" xml:space="preserve">
+    <value>Порт</value>
+  </data>
+  <data name="Admin_LdapPortHelp" xml:space="preserve">
+    <value>389 (LDAP) или 636 (LDAPS)</value>
+  </data>
+  <data name="Admin_UseSslLdaps" xml:space="preserve">
+    <value>Использовать SSL (LDAPS)</value>
+  </data>
+  <data name="Admin_UseStartTls" xml:space="preserve">
+    <value>Использовать StartTLS</value>
+  </data>
+  <data name="Admin_SkipCertValidation" xml:space="preserve">
+    <value>Пропустить проверку сертификата</value>
+  </data>
+  <data name="Admin_BindDn" xml:space="preserve">
+    <value>Bind DN</value>
+  </data>
+  <data name="Admin_ServiceAccount" xml:space="preserve">
+    <value>(служебная учётная запись)</value>
+  </data>
+  <data name="Admin_AnonymousBindHelp" xml:space="preserve">
+    <value>Оставьте пустым для анонимного bind</value>
+  </data>
+  <data name="Admin_BindPassword" xml:space="preserve">
+    <value>Пароль bind</value>
+  </data>
+  <data name="Admin_SearchBaseDn" xml:space="preserve">
+    <value>Базовый DN поиска</value>
+  </data>
+  <data name="Admin_UserSearchFilter" xml:space="preserve">
+    <value>Фильтр поиска пользователей</value>
+  </data>
+  <data name="Admin_UserFilterHelp" xml:space="preserve">
+    <value>заменяется именем пользователя. Примеры:</value>
+  </data>
+  <data name="Admin_UsernameAttribute" xml:space="preserve">
+    <value>Атрибут имени пользователя</value>
+  </data>
+  <data name="Admin_EmailAttribute" xml:space="preserve">
+    <value>Атрибут эл. почты</value>
+  </data>
+  <data name="Admin_DisplayNameAttribute" xml:space="preserve">
+    <value>Атрибут отображаемого имени</value>
+  </data>
+  <data name="Admin_AdminGroupDn" xml:space="preserve">
+    <value>DN группы администраторов</value>
+  </data>
+  <data name="Admin_AdminGroupHelp" xml:space="preserve">
+    <value>Участники этой группы автоматически получают права администратора. Оставьте пустым, чтобы пропустить.</value>
+  </data>
+  <data name="Admin_TestLdapConnection" xml:space="preserve">
+    <value>Проверить подключение LDAP</value>
+  </data>
+  <data name="Admin_SaveAllSettings" xml:space="preserve">
+    <value>Сохранить все настройки</value>
+  </data>
+  <data name="Admin_AdminRole" xml:space="preserve">
+    <value>Администратор</value>
+  </data>
+  <data name="Admin_UserRole" xml:space="preserve">
+    <value>Пользователь</value>
+  </data>
+  <data name="Admin_StatusActive" xml:space="preserve">
+    <value>Активен</value>
+  </data>
+  <data name="Admin_StatusInactive" xml:space="preserve">
+    <value>Неактивен</value>
+  </data>
+  <data name="Admin_GlobalSecretsHelp" xml:space="preserve">
+    <value>Глобальные секреты доступны для всех запусков рабочих процессов. Секреты на уровне репозитория с тем же именем переопределяют глобальные секреты.</value>
+  </data>
+  <data name="Admin_UpdatedPrefix" xml:space="preserve">
+    <value>Обновлено</value>
+  </data>
+  <data name="Admin_NoGlobalSecrets" xml:space="preserve">
+    <value>Глобальные секреты не настроены.</value>
+  </data>
+  <data name="Admin_Name" xml:space="preserve">
+    <value>Имя</value>
+  </data>
+  <data name="Admin_Value" xml:space="preserve">
+    <value>Значение</value>
+  </data>
+  <data name="Admin_SecretValuePlaceholder" xml:space="preserve">
+    <value>Значение секрета</value>
+  </data>
+  <data name="Admin_DownloadBackupHelp" xml:space="preserve">
+    <value>Загрузите полную резервную копию всех репозиториев и базы данных в виде архива</value>
+  </data>
+  <data name="Admin_BackupArchiveSuffix" xml:space="preserve">
+    <value>.</value>
+  </data>
+  <data name="Admin_RestoreWarningLabel" xml:space="preserve">
+    <value>Предупреждение:</value>
+  </data>
+  <data name="Admin_RestoreWarningText" xml:space="preserve">
+    <value>Восстановление резервной копии перезапишет все текущие данные. После восстановления приложение следует перезапустить.</value>
+  </data>
+  <data name="Admin_RestoreApiHelp" xml:space="preserve">
+    <value>Используйте API напрямую для восстановления:</value>
+  </data>
+  <data name="Admin_RestoreApiSuffix" xml:space="preserve">
+    <value>с файлом tar.gz.</value>
+  </data>
+  <data name="Admin_OAuthProvidersHelp" xml:space="preserve">
+    <value>Настройте внешних поставщиков аутентификации. На странице входа появятся только поставщики с заполненными Client ID и Client Secret.</value>
+  </data>
+  <data name="Admin_OAuthEnabled" xml:space="preserve">
+    <value>Включено</value>
+  </data>
+  <data name="Admin_OAuthNotConfigured" xml:space="preserve">
+    <value>Не настроено</value>
+  </data>
+  <data name="Admin_ClientId" xml:space="preserve">
+    <value>Client ID</value>
+  </data>
+  <data name="Admin_ClientSecret" xml:space="preserve">
+    <value>Client Secret</value>
+  </data>
+  <data name="Admin_EnableThisProvider" xml:space="preserve">
+    <value>Включить этого поставщика</value>
+  </data>
+  <data name="Admin_CallbackUrlLabel" xml:space="preserve">
+    <value>URL обратного вызова:</value>
+  </data>
+  <data name="Admin_CallbackUrlHelp" xml:space="preserve">
+    <value>Каждый поставщик должен быть настроен с URL обратного вызова:</value>
+  </data>
+  <data name="Admin_CallbackReplaceHelp" xml:space="preserve">
+    <value>на: github, google, microsoft, gitlab, bitbucket, facebook, discord или twitter</value>
+  </data>
+  <data name="Admin_EmailLabel" xml:space="preserve">
+    <value>Эл. почта</value>
+  </data>
+  <data name="Admin_Password" xml:space="preserve">
+    <value>Пароль</value>
+  </data>
+  <data name="Admin_Administrator" xml:space="preserve">
+    <value>Администратор</value>
+  </data>
+  <data name="Admin_EditUserTitle" xml:space="preserve">
+    <value>Изменить пользователя:</value>
+  </data>
+  <data name="Admin_ActiveLabel" xml:space="preserve">
+    <value>Активен</value>
+  </data>
+  <data name="Admin_NewPassword" xml:space="preserve">
+    <value>Новый пароль</value>
+  </data>
+  <data name="Admin_LeaveBlankKeep" xml:space="preserve">
+    <value>(оставьте пустым, чтобы сохранить текущий)</value>
+  </data>
+  <data name="Org_SecretsTab" xml:space="preserve">
+    <value>Секреты</value>
+  </data>
+  <data name="Org_RoleMember" xml:space="preserve">
+    <value>Участник</value>
+  </data>
+  <data name="Org_RoleOwner" xml:space="preserve">
+    <value>Владелец</value>
+  </data>
+  <data name="Org_MembersCount" xml:space="preserve">
+    <value>Участники</value>
+  </data>
+  <data name="Org_RepositoriesCount" xml:space="preserve">
+    <value>Репозитории</value>
+  </data>
+  <data name="Org_SecretsHeader" xml:space="preserve">
+    <value>Секреты организации</value>
+  </data>
+  <data name="Org_SecretsDescription" xml:space="preserve">
+    <value>Секреты организации доступны при запуске рабочих процессов для всех репозиториев, принадлежащих этой организации. Секреты на уровне пользователя и репозитория имеют приоритет над ними.</value>
+  </data>
+  <data name="Org_SecretUpdatedPrefix" xml:space="preserve">
+    <value>Обновлено</value>
+  </data>
+  <data name="Org_NoSecrets" xml:space="preserve">
+    <value>Секреты организации не настроены.</value>
+  </data>
+  <data name="Org_UpdateSecret" xml:space="preserve">
+    <value>Обновить секрет</value>
+  </data>
+  <data name="Org_AddSecret" xml:space="preserve">
+    <value>Добавить секрет</value>
+  </data>
+  <data name="Org_Update" xml:space="preserve">
+    <value>Обновить</value>
+  </data>
+  <data name="Org_PermRead" xml:space="preserve">
+    <value>Чтение</value>
+  </data>
+  <data name="Org_PermWrite" xml:space="preserve">
+    <value>Запись</value>
+  </data>
+  <data name="Org_PermAdmin" xml:space="preserve">
+    <value>Администратор</value>
+  </data>
 </root>
