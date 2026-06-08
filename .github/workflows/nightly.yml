@@ -24,7 +24,7 @@ jobs:
           echo "$HOME/.dotnet" >> $GITHUB_PATH
           $HOME/.dotnet/dotnet --version
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.nuget/packages
           key: nuget-${{ hashFiles('**/*.csproj') }}

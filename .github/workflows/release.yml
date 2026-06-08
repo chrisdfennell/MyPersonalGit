@@ -22,7 +22,7 @@ jobs:
           ln -sf /usr/local/dotnet/dotnet /usr/local/bin/dotnet
           dotnet --version
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.nuget/packages
           key: nuget-${{ hashFiles('**/*.csproj') }}
