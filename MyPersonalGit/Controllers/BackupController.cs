@@ -2,6 +2,7 @@ using System.Formats.Tar;
 using System.IO.Compression;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -128,13 +129,28 @@ public class BackupController : ControllerBase
                     }
                     else if (entryName.StartsWith("repos/"))
                     {
+                        // Entry names come from the uploaded archive — route every segment
+                        // through SafePath so a "repos/../../etc/cron.d/x" entry (Zip-Slip)
+                        // can't escape projectRoot and overwrite arbitrary files.
                         var relativePath = entryName.Substring("repos/".Length);
-                        targetPath = Path.Combine(projectRoot, relativePath);
+                        var safe = SafePath.CombineUnder(projectRoot, relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries));
+                        if (safe == null)
+                        {
+                            _logger.LogWarning("Skipping unsafe backup entry: {Entry}", entry.Name);
+                            continue;
+                        }
+                        targetPath = safe;
                     }
                     else if (entryName.StartsWith("lfs/"))
                     {
                         var relativePath = entryName.Substring("lfs/".Length);
-                        targetPath = Path.Combine(projectRoot, ".lfs", relativePath);
+                        var safe = SafePath.CombineUnder(Path.Combine(projectRoot, ".lfs"), relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries));
+                        if (safe == null)
+                        {
+                            _logger.LogWarning("Skipping unsafe backup entry: {Entry}", entry.Name);
+                            continue;
+                        }
+                        targetPath = safe;
                     }
                     else
                     {

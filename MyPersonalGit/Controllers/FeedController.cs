@@ -26,12 +26,20 @@ public class FeedController : ControllerBase
 
     private string BaseUrl => $"{Request.Scheme}://{Request.Host}";
 
+    private bool IsOwner(string owner)
+    {
+        var currentUser = User.Identity?.Name;
+        return currentUser != null && owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase);
+    }
+
     // Repository commits feed
     [HttpGet("{repoName}/commits.atom")]
     public async Task<IActionResult> CommitsFeed(string repoName)
     {
         var repo = await _repoService.GetRepositoryAsync(repoName);
         if (repo == null) return NotFound();
+        // Don't serve a private repo's commit/tag history to non-owners.
+        if (repo.IsPrivate && !IsOwner(repo.Owner)) return NotFound();
 
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
         var repoPath = Path.Combine(projectRoot, repoName + ".git");
@@ -71,6 +79,10 @@ public class FeedController : ControllerBase
     [HttpGet("{repoName}/releases.atom")]
     public async Task<IActionResult> ReleasesFeed(string repoName)
     {
+        var repo = await _repoService.GetRepositoryAsync(repoName);
+        if (repo == null) return NotFound();
+        if (repo.IsPrivate && !IsOwner(repo.Owner)) return NotFound();
+
         var releases = await _releaseService.GetReleasesAsync(repoName);
         if (releases == null || !releases.Any()) return NotFound();
 
@@ -156,6 +168,8 @@ public class FeedController : ControllerBase
     {
         var repo = await _repoService.GetRepositoryAsync(repoName);
         if (repo == null) return NotFound();
+        // Don't serve a private repo's commit/tag history to non-owners.
+        if (repo.IsPrivate && !IsOwner(repo.Owner)) return NotFound();
 
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
         var repoPath = Path.Combine(projectRoot, repoName + ".git");

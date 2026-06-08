@@ -11,13 +11,28 @@ public class GpgKeysController : ControllerBase
 {
     private readonly IGpgKeyService _gpgKeyService;
     private readonly IAuthService _authService;
+    private readonly IRepositoryService _repoService;
     private readonly IConfiguration _config;
 
-    public GpgKeysController(IGpgKeyService gpgKeyService, IAuthService authService, IConfiguration config)
+    public GpgKeysController(IGpgKeyService gpgKeyService, IAuthService authService, IRepositoryService repoService, IConfiguration config)
     {
         _gpgKeyService = gpgKeyService;
         _authService = authService;
+        _repoService = repoService;
         _config = config;
+    }
+
+    // Don't disclose a private repo's commit/tag signer identity to non-owners.
+    private async Task<IActionResult?> EnsureCanReadRepoAsync(string repoName)
+    {
+        var repo = await _repoService.GetRepositoryAsync(repoName);
+        if (repo is { IsPrivate: true })
+        {
+            var currentUser = User.Identity?.Name;
+            if (currentUser == null || !repo.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))
+                return NotFound(new { error = $"Repository '{repoName}' not found" });
+        }
+        return null;
     }
 
     [HttpGet("user/gpg_keys")]
@@ -102,6 +117,9 @@ public class GpgKeysController : ControllerBase
     [HttpGet("repos/{repoName}/commits/{sha}/signature")]
     public async Task<IActionResult> VerifyCommitSignature(string repoName, string sha)
     {
+        var auth = await EnsureCanReadRepoAsync(repoName);
+        if (auth != null) return auth;
+
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
         var repoPath = Path.Combine(projectRoot, repoName);
         if (!LibGit2Sharp.Repository.IsValid(repoPath))
@@ -126,6 +144,9 @@ public class GpgKeysController : ControllerBase
     [HttpGet("repos/{repoName}/tags/{tagName}/signature")]
     public async Task<IActionResult> VerifyTagSignature(string repoName, string tagName)
     {
+        var auth = await EnsureCanReadRepoAsync(repoName);
+        if (auth != null) return auth;
+
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
         var repoPath = Path.Combine(projectRoot, repoName);
         if (!LibGit2Sharp.Repository.IsValid(repoPath))
