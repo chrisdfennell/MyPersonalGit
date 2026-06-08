@@ -15,11 +15,11 @@
 @inject IUserProfileService UserProfileService
 
 <div class="gh-app">
-    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <a class="skip-link" href="#main-content">@L["A11y_SkipToContent"]</a>
     <header class="gh-header">
         <div class="container-xl d-flex align-items-center py-2 px-3">
             <button class="btn btn-link text-white p-0 me-2 d-lg-none" type="button"
-                    @onclick="ToggleMobileNav" aria-label="Toggle navigation menu"
+                    @onclick="ToggleMobileNav" aria-label="@L["A11y_ToggleNav"]"
                     aria-controls="mobile-nav" aria-expanded="@(mobileNavOpen ? "true" : "false")">
                 <i class="bi @(mobileNavOpen ? "bi-x-lg" : "bi-list") fs-4" aria-hidden="true"></i>
             </button>
@@ -87,7 +87,7 @@
                         }
                     </a>
                     <div class="dropdown">
-                        <button class="btn btn-link text-white text-opacity-75 text-decoration-none p-0 d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Create new">
+                        <button class="btn btn-link text-white text-opacity-75 text-decoration-none p-0 d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="@L["A11y_CreateNew"]">
                             <i class="bi bi-plus-lg" aria-hidden="true"></i>
                             <i class="bi bi-caret-down-fill ms-1" style="font-size: 0.6rem;" aria-hidden="true"></i>
                         </button>
@@ -98,7 +98,7 @@
                         </ul>
                     </div>
                     <div class="dropdown">
-                        <button class="btn btn-link text-white text-decoration-none p-0 d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu">
+                        <button class="btn btn-link text-white text-decoration-none p-0 d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="@L["A11y_AccountMenu"]">
                             <img src="@(userAvatarUrl ?? GetAvatarUrl(UserService.Username, 24))" alt="" class="rounded-circle border border-white border-opacity-25" style="width: 24px; height: 24px; object-fit: cover;" />
                             <i class="bi bi-caret-down-fill ms-1 text-white text-opacity-75" style="font-size: 0.6rem;" aria-hidden="true"></i>
                         </button>
@@ -121,7 +121,7 @@
 
         @if (mobileNavOpen)
         {
-            <nav id="mobile-nav" class="gh-mobile-nav d-lg-none border-top border-secondary border-opacity-25" aria-label="Primary">
+            <nav id="mobile-nav" class="gh-mobile-nav d-lg-none border-top border-secondary border-opacity-25" aria-label="@L["A11y_PrimaryNav"]">
                 <div class="container-xl px-3 py-2">
                     <a href="/search?type=pulls" class="d-block py-2 px-2 text-white text-opacity-75 text-decoration-none">@L["Nav_PullRequests"]</a>
                     <a href="/search?type=issues" class="d-block py-2 px-2 text-white text-opacity-75 text-decoration-none">@L["Nav_Issues"]</a>
@@ -144,7 +144,7 @@
                 <div class="modal-content">
                     <div class="modal-header py-2">
                         <h5 class="modal-title" id="shortcuts-title"><i class="bi bi-keyboard me-2" aria-hidden="true"></i>@L["Shortcuts_Title"]</h5>
-                        <button class="btn-close" @onclick="() => showShortcutsHelp = false" aria-label="Close"></button>
+                        <button class="btn-close" @onclick="() => showShortcutsHelp = false" aria-label="@L["Common_Close"]"></button>
                     </div>
                     <div class="modal-body">
                         <table class="table table-sm mb-0">

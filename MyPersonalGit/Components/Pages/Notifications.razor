@@ -86,11 +86,11 @@ else
                         <div class="btn-group">
                             @if (!notification.IsRead)
                             {
-                                <button class="btn btn-sm btn-outline-primary" @onclick="() => MarkAsRead(notification.Id)" title="Mark as read" aria-label="Mark as read">
+                                <button class="btn btn-sm btn-outline-primary" @onclick="() => MarkAsRead(notification.Id)" title="@L["A11y_MarkRead"]" aria-label="@L["A11y_MarkRead"]">
                                     <i class="bi bi-check" aria-hidden="true"></i>
                                 </button>
                             }
-                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteNotification(notification.Id)" title="Delete notification" aria-label="Delete notification">
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteNotification(notification.Id)" title="@L["Common_Delete"]" aria-label="@L["Common_Delete"]">
                                 <i class="bi bi-trash" aria-hidden="true"></i>
                             </button>
                         </div>

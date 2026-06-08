@@ -160,13 +160,13 @@ else if (ViewMode == "create" || ViewMode == "edit")
                     <div class="card-header d-flex justify-content-between align-items-center py-1">
                         <div class="d-flex gap-2 align-items-center flex-grow-1">
                             <input type="text" class="form-control form-control-sm" style="max-width: 200px;"
-                                   placeholder="filename.ext" aria-label="Filename" @bind="EditFiles[index].Filename" />
+                                   placeholder="filename.ext" aria-label="@L["A11y_Filename"]" @bind="EditFiles[index].Filename" />
                             <input type="text" class="form-control form-control-sm" style="max-width: 120px;"
-                                   placeholder="language" aria-label="Language" @bind="EditFiles[index].Language" />
+                                   placeholder="language" aria-label="@L["Nav_Language"]" @bind="EditFiles[index].Language" />
                         </div>
                         @if (EditFiles.Count > 1)
                         {
-                            <button class="btn btn-sm btn-outline-danger" @onclick="() => EditFiles.RemoveAt(index)" aria-label="Remove file">
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => EditFiles.RemoveAt(index)" aria-label="@L["A11y_Remove"]">
                                 <i class="bi bi-x" aria-hidden="true"></i>
                             </button>
                         }

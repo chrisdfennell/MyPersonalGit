@@ -1112,7 +1112,7 @@ else
                                     {
                                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill d-flex align-items-center gap-1 py-1 px-2">
                                             @topic
-                                            <button type="button" class="btn-close" style="font-size: 8px;" @onclick="() => RemoveTopic(topic)" aria-label="Remove topic"></button>
+                                            <button type="button" class="btn-close" style="font-size: 8px;" @onclick="() => RemoveTopic(topic)" aria-label="@L["A11y_Remove"]"></button>
                                         </span>
                                     }
                                 </div>
@@ -3097,7 +3097,7 @@ else
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Upload files to @RepoName</h5>
-                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => showUploadModal = false"></button>
+                    <button type="button" class="btn-close" aria-label="@L["Common_Close"]" @onclick="() => showUploadModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="upload-zone @(isDragging ? "dragging" : "")"
@@ -3162,7 +3162,7 @@ else
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">@L["Repo_UploadFolderTo"] @RepoName</h5>
-                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => showFolderUploadModal = false"></button>
+                    <button type="button" class="btn-close" aria-label="@L["Common_Close"]" @onclick="() => showFolderUploadModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="text-center py-4 border rounded mb-3 bg-light">

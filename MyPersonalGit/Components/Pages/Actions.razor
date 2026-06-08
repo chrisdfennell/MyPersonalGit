@@ -515,7 +515,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">@L["Actions_CreateWorkflowRun"]</h5>
-                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => ShowWorkflowModal = false"></button>
+                    <button type="button" class="btn-close" aria-label="@L["Common_Close"]" @onclick="() => ShowWorkflowModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -551,7 +551,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">@(editingWebhookId.HasValue ? "Edit Webhook" : "Add Webhook")</h5>
-                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => ShowWebhookModal = false"></button>
+                    <button type="button" class="btn-close" aria-label="@L["Common_Close"]" @onclick="() => ShowWebhookModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">

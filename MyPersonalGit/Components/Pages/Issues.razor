@@ -274,7 +274,7 @@
                             </div>
                             <div class="input-group input-group-sm" style="max-width: 200px;">
                                 <input type="date" class="form-control" @bind="dueDateInput" />
-                                <button class="btn btn-outline-secondary" @onclick="SetDueDate" aria-label="Set due date"><i class="bi bi-calendar-check" aria-hidden="true"></i></button>
+                                <button class="btn btn-outline-secondary" @onclick="SetDueDate" aria-label="@L["A11y_SetDueDate"]"><i class="bi bi-calendar-check" aria-hidden="true"></i></button>
                             </div>
                         </div>
                     }
@@ -717,7 +717,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">@L["Issues_NewIssue"]</h5>
-                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => showNewIssueModal = false"></button>
+                    <button type="button" class="btn-close" aria-label="@L["Common_Close"]" @onclick="() => showNewIssueModal = false"></button>
                 </div>
                 <div class="modal-body">
                     @if (hasContributingFile)
@@ -792,7 +792,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="bi bi-arrow-left-right me-2"></i>@L["Issues_TransferIssue"]</h5>
-                    <button class="btn-close" aria-label="Close" @onclick="() => showTransferModal = false"></button>
+                    <button class="btn-close" aria-label="@L["Common_Close"]" @onclick="() => showTransferModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <p class="text-muted small">@L["Issues_TransferDescription"]</p>
@@ -1369,7 +1369,7 @@
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0">
                     <h5 class="modal-title fw-bold">@L["Issues_NewMilestone"]</h5>
-                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => showNewMilestoneModal = false"></button>
+                    <button type="button" class="btn-close" aria-label="@L["Common_Close"]" @onclick="() => showNewMilestoneModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -1401,7 +1401,7 @@
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0">
                     <h5 class="modal-title fw-bold">@L["Issues_NewIssueTemplate"]</h5>
-                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => showNewTemplateModal = false"></button>
+                    <button type="button" class="btn-close" aria-label="@L["Common_Close"]" @onclick="() => showNewTemplateModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">

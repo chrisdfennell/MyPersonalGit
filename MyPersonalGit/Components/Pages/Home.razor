@@ -80,7 +80,7 @@
                        @bind:event="oninput" />
                 @if (!string.IsNullOrEmpty(searchTerm))
                 {
-                    <button class="btn btn-outline-secondary btn-sm" @onclick="() => searchTerm = string.Empty" aria-label="Clear search">
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="() => searchTerm = string.Empty" aria-label="@L["A11y_ClearSearch"]">
                         <i class="bi bi-x" aria-hidden="true"></i>
                     </button>
                 }
@@ -240,7 +240,7 @@
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0">
                     <h5 class="modal-title fw-bold" id="createRepoTitle">@L["Home_CreateNewRepo"]</h5>
-                    <button type="button" class="btn-close shadow-none" @onclick="() => showModal = false" aria-label="Close"></button>
+                    <button type="button" class="btn-close shadow-none" @onclick="() => showModal = false" aria-label="@L["Common_Close"]"></button>
                 </div>
                 <div class="modal-body">
                     @if (templateRepos.Any())
