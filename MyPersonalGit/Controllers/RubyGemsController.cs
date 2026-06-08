@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -88,10 +89,11 @@ public class RubyGemsController : ControllerBase
 
         // Store the .gem file
         var normalizedName = name.ToLowerInvariant();
-        var pkgDir = Path.Combine(StorePath, normalizedName, version);
-        Directory.CreateDirectory(pkgDir);
         var filename = $"{name}-{version}.gem";
-        var destPath = Path.Combine(pkgDir, filename);
+        var destPath = SafePath.CombineUnder(StorePath, normalizedName, version, filename);
+        if (destPath == null)
+            return BadRequest(new { error = "Invalid gem name or version." });
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
         await System.IO.File.WriteAllBytesAsync(destPath, gemBytes);
 
@@ -152,12 +154,13 @@ public class RubyGemsController : ControllerBase
     {
         var normalizedName = name.ToLowerInvariant();
         var filename = $"{name}-{version}.gem";
-        var filePath = Path.Combine(StorePath, normalizedName, version, filename);
+        var pkgDir = SafePath.CombineUnder(StorePath, normalizedName, version);
+        if (pkgDir == null) return NotFound();
+        var filePath = Path.Combine(pkgDir, filename);
 
         if (!System.IO.File.Exists(filePath))
         {
             // Try case-insensitive lookup
-            var pkgDir = Path.Combine(StorePath, normalizedName, version);
             if (Directory.Exists(pkgDir))
             {
                 var files = Directory.GetFiles(pkgDir, "*.gem");

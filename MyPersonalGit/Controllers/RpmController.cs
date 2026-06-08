@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -35,9 +36,10 @@ public class RpmController : ControllerBase
             return BadRequest("Only .rpm packages are supported");
 
         // Store the file on disk
-        var diskDir = Path.Combine(StorePath, repo);
-        Directory.CreateDirectory(diskDir);
-        var destPath = Path.Combine(diskDir, filename);
+        var destPath = SafePath.CombineUnder(StorePath, repo, filename);
+        if (destPath == null)
+            return BadRequest(new { error = "Invalid repo or filename." });
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
         await using (var fs = new FileStream(destPath, FileMode.Create))
             await Request.Body.CopyToAsync(fs);
@@ -153,8 +155,8 @@ public class RpmController : ControllerBase
     [HttpGet("{repo}/{filename}")]
     public async Task<IActionResult> Download(string repo, string filename)
     {
-        var filePath = Path.Combine(StorePath, repo, filename);
-        if (!System.IO.File.Exists(filePath))
+        var filePath = SafePath.CombineUnder(StorePath, repo, filename);
+        if (filePath == null || !System.IO.File.Exists(filePath))
             return NotFound();
 
         // Derive package name from filename

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -32,10 +33,11 @@ public class VagrantController : ControllerBase
             return Unauthorized();
 
         // Store the .box file on disk
-        var boxDir = Path.Combine(StorePath, name.ToLowerInvariant(), version, provider);
-        Directory.CreateDirectory(boxDir);
         var filename = $"{name}_{version}_{provider}.box";
-        var destPath = Path.Combine(boxDir, filename);
+        var destPath = SafePath.CombineUnder(StorePath, name.ToLowerInvariant(), version, provider, filename);
+        if (destPath == null)
+            return BadRequest(new { error = "Invalid box name, version, or provider." });
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
         await using (var fs = new FileStream(destPath, FileMode.Create))
             await Request.Body.CopyToAsync(fs);
@@ -103,8 +105,8 @@ public class VagrantController : ControllerBase
     public async Task<IActionResult> Download(string name, string version, string provider)
     {
         var filename = $"{name}_{version}_{provider}.box";
-        var filePath = Path.Combine(StorePath, name.ToLowerInvariant(), version, provider, filename);
-        if (!System.IO.File.Exists(filePath))
+        var filePath = SafePath.CombineUnder(StorePath, name.ToLowerInvariant(), version, provider, filename);
+        if (filePath == null || !System.IO.File.Exists(filePath))
             return NotFound();
 
         await _packageService.IncrementDownloadAsync(name, "vagrant", version);

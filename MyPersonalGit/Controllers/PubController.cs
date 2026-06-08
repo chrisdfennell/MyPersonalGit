@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -78,10 +79,11 @@ public class PubController : ControllerBase
         }
 
         // Move to permanent storage
-        var pkgDir = Path.Combine(StorePath, name.ToLowerInvariant(), version);
-        Directory.CreateDirectory(pkgDir);
         var filename = $"{name}-{version}.tar.gz";
-        var destPath = Path.Combine(pkgDir, filename);
+        var destPath = SafePath.CombineUnder(StorePath, name.ToLowerInvariant(), version, filename);
+        if (destPath == null)
+            return BadRequest(new { error = "Invalid package name or version." });
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
         System.IO.File.Move(tempPath, destPath, overwrite: true);
 
         var fi = new FileInfo(destPath);
@@ -154,8 +156,8 @@ public class PubController : ControllerBase
     public async Task<IActionResult> Download(string name, string version)
     {
         var filename = $"{name}-{version}.tar.gz";
-        var filePath = Path.Combine(StorePath, name.ToLowerInvariant(), version, filename);
-        if (!System.IO.File.Exists(filePath))
+        var filePath = SafePath.CombineUnder(StorePath, name.ToLowerInvariant(), version, filename);
+        if (filePath == null || !System.IO.File.Exists(filePath))
             return NotFound();
 
         await _packageService.IncrementDownloadAsync(name, "pub", version);

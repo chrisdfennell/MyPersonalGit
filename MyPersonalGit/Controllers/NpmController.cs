@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -66,9 +67,10 @@ public class NpmController : ControllerBase
             if (string.IsNullOrEmpty(base64)) continue;
 
             var tarBytes = Convert.FromBase64String(base64);
-            var pkgDir = Path.Combine(StorePath, name.Replace("/", "__"), version);
-            Directory.CreateDirectory(pkgDir);
-            var filePath = Path.Combine(pkgDir, $"{name.Replace("/", "-")}-{version}.tgz");
+            var filePath = SafePath.CombineUnder(StorePath, name.Replace("/", "__"), version, $"{name.Replace("/", "-")}-{version}.tgz");
+            if (filePath == null)
+                return BadRequest(new { error = "Invalid package name or version." });
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
             await System.IO.File.WriteAllBytesAsync(filePath, tarBytes);
 
             var sha = BitConverter.ToString(SHA256.HashData(tarBytes)).Replace("-", "").ToLowerInvariant();
@@ -141,8 +143,8 @@ public class NpmController : ControllerBase
             var expectedTarball = $"{name.Replace("/", "-")}-{ver.Version}.tgz";
             if (tarball == expectedTarball)
             {
-                var filePath = Path.Combine(StorePath, name.Replace("/", "__"), ver.Version, tarball);
-                if (!System.IO.File.Exists(filePath)) return NotFound();
+                var filePath = SafePath.CombineUnder(StorePath, name.Replace("/", "__"), ver.Version, tarball);
+                if (filePath == null || !System.IO.File.Exists(filePath)) return NotFound();
                 await _packageService.IncrementDownloadAsync(name, "npm", ver.Version);
                 return PhysicalFile(filePath, "application/gzip", tarball);
             }

@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -99,9 +100,10 @@ public class PyPIController : ControllerBase
             return BadRequest("Missing required fields: name, version, content");
 
         // Store the file
-        var pkgDir = Path.Combine(StorePath, Normalize(name), version);
-        Directory.CreateDirectory(pkgDir);
-        var destPath = Path.Combine(pkgDir, file.FileName);
+        var destPath = SafePath.CombineUnder(StorePath, Normalize(name), version, file.FileName);
+        if (destPath == null)
+            return BadRequest(new { error = "Invalid package name, version, or filename." });
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
         await using (var fs = new FileStream(destPath, FileMode.Create))
             await file.CopyToAsync(fs);
@@ -137,8 +139,8 @@ public class PyPIController : ControllerBase
     [HttpGet("files/{name}/{version}/{filename}")]
     public async Task<IActionResult> Download(string name, string version, string filename)
     {
-        var filePath = Path.Combine(StorePath, Normalize(name), version, filename);
-        if (!System.IO.File.Exists(filePath))
+        var filePath = SafePath.CombineUnder(StorePath, Normalize(name), version, filename);
+        if (filePath == null || !System.IO.File.Exists(filePath))
             return NotFound();
 
         // Find the actual package name (may differ in casing)

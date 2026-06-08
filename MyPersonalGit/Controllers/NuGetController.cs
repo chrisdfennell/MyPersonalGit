@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -85,9 +86,10 @@ public class NuGetController : ControllerBase
                 packageId, "nuget", username, version, description);
 
             // Store the .nupkg file
-            var pkgDir = Path.Combine(StorePath, packageId.ToLower(), version.ToLower());
-            Directory.CreateDirectory(pkgDir);
-            var destPath = Path.Combine(pkgDir, $"{packageId.ToLower()}.{version.ToLower()}.nupkg");
+            var destPath = SafePath.CombineUnder(StorePath, packageId.ToLower(), version.ToLower(), $"{packageId.ToLower()}.{version.ToLower()}.nupkg");
+            if (destPath == null)
+                return BadRequest(new { error = "Invalid package id or version." });
+            Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
             System.IO.File.Copy(tempPath, destPath, overwrite: true);
 
             var fi = new FileInfo(destPath);
@@ -110,8 +112,8 @@ public class NuGetController : ControllerBase
     [HttpGet("flatcontainer/{id}/{version}/{filename}")]
     public async Task<IActionResult> Download(string id, string version, string filename)
     {
-        var filePath = Path.Combine(StorePath, id.ToLower(), version.ToLower(), filename.ToLower());
-        if (!System.IO.File.Exists(filePath))
+        var filePath = SafePath.CombineUnder(StorePath, id.ToLower(), version.ToLower(), filename.ToLower());
+        if (filePath == null || !System.IO.File.Exists(filePath))
             return NotFound();
 
         await _packageService.IncrementDownloadAsync(id, "nuget", version);

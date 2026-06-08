@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -32,7 +33,9 @@ public class SwiftController : ControllerBase
             return Unauthorized();
 
         var coordinate = $"{scope}.{name}";
-        var pkgDir = Path.Combine(StorePath, scope.ToLowerInvariant(), name.ToLowerInvariant(), version);
+        var pkgDir = SafePath.CombineUnder(StorePath, scope.ToLowerInvariant(), name.ToLowerInvariant(), version);
+        if (pkgDir == null)
+            return BadRequest(new { error = "Invalid scope, name, or version." });
         Directory.CreateDirectory(pkgDir);
         var filename = $"{name}-{version}.zip";
         var destPath = Path.Combine(pkgDir, filename);
@@ -122,8 +125,8 @@ public class SwiftController : ControllerBase
 
         // Try to read the manifest from disk
         string? manifest = null;
-        var manifestPath = Path.Combine(StorePath, scope.ToLowerInvariant(), name.ToLowerInvariant(), version, "Package.swift");
-        if (System.IO.File.Exists(manifestPath))
+        var manifestPath = SafePath.CombineUnder(StorePath, scope.ToLowerInvariant(), name.ToLowerInvariant(), version, "Package.swift");
+        if (manifestPath != null && System.IO.File.Exists(manifestPath))
             manifest = await System.IO.File.ReadAllTextAsync(manifestPath);
 
         return Ok(new
@@ -151,8 +154,8 @@ public class SwiftController : ControllerBase
     [HttpGet("{scope}/{name}/{version}/Package.swift")]
     public async Task<IActionResult> Manifest(string scope, string name, string version)
     {
-        var manifestPath = Path.Combine(StorePath, scope.ToLowerInvariant(), name.ToLowerInvariant(), version, "Package.swift");
-        if (!System.IO.File.Exists(manifestPath))
+        var manifestPath = SafePath.CombineUnder(StorePath, scope.ToLowerInvariant(), name.ToLowerInvariant(), version, "Package.swift");
+        if (manifestPath == null || !System.IO.File.Exists(manifestPath))
             return NotFound();
 
         var content = await System.IO.File.ReadAllTextAsync(manifestPath);
