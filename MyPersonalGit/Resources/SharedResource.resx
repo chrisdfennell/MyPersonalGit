@@ -3910,4 +3910,70 @@
   <data name="Dep_Dev" xml:space="preserve">
     <value>dev</value>
   </data>
+  <data name="Stats_Contributors" xml:space="preserve">
+    <value>Contributors</value>
+  </data>
+  <data name="Stats_Users" xml:space="preserve">
+    <value>Users</value>
+  </data>
+  <data name="Stats_Releases" xml:space="preserve">
+    <value>Releases</value>
+  </data>
+  <data name="Stats_WorkflowRuns" xml:space="preserve">
+    <value>Workflow Runs</value>
+  </data>
+  <data name="Stats_Health" xml:space="preserve">
+    <value>Repository Health</value>
+  </data>
+  <data name="Stats_Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Stats_RecentCommits" xml:space="preserve">
+    <value>Recent commits</value>
+  </data>
+  <data name="Stats_Suggestions" xml:space="preserve">
+    <value>Suggestions</value>
+  </data>
+  <data name="Stats_Languages" xml:space="preserve">
+    <value>Languages</value>
+  </data>
+  <data name="Stats_FileTypes" xml:space="preserve">
+    <value>File Types</value>
+  </data>
+  <data name="Stats_Extension" xml:space="preserve">
+    <value>Extension</value>
+  </data>
+  <data name="Stats_Lines" xml:space="preserve">
+    <value>Lines</value>
+  </data>
+  <data name="Stats_LinesSuffix" xml:space="preserve">
+    <value>lines</value>
+  </data>
+  <data name="Stats_Size" xml:space="preserve">
+    <value>Repository Size</value>
+  </data>
+  <data name="Stats_LargestDirs" xml:space="preserve">
+    <value>Largest directories</value>
+  </data>
+  <data name="Stats_LargestFiles" xml:space="preserve">
+    <value>Largest files</value>
+  </data>
+  <data name="Stats_FilesSuffix" xml:space="preserve">
+    <value>files</value>
+  </data>
+  <data name="Stats_TopContributors" xml:space="preserve">
+    <value>Top Contributors</value>
+  </data>
+  <data name="Stats_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Stats_Additions" xml:space="preserve">
+    <value>Additions</value>
+  </data>
+  <data name="Stats_Deletions" xml:space="preserve">
+    <value>Deletions</value>
+  </data>
+  <data name="Stats_Subtitle" xml:space="preserve">
+    <value>Live statistics for this Personal Git instance</value>
+  </data>
 </root>

@@ -3913,4 +3913,70 @@
   <data name="Dep_Dev" xml:space="preserve">
     <value>dev</value>
   </data>
+  <data name="Stats_Contributors" xml:space="preserve">
+    <value>贡献者</value>
+  </data>
+  <data name="Stats_Users" xml:space="preserve">
+    <value>用户</value>
+  </data>
+  <data name="Stats_Releases" xml:space="preserve">
+    <value>发布</value>
+  </data>
+  <data name="Stats_WorkflowRuns" xml:space="preserve">
+    <value>工作流运行</value>
+  </data>
+  <data name="Stats_Health" xml:space="preserve">
+    <value>仓库健康度</value>
+  </data>
+  <data name="Stats_Description" xml:space="preserve">
+    <value>描述</value>
+  </data>
+  <data name="Stats_RecentCommits" xml:space="preserve">
+    <value>最近的提交</value>
+  </data>
+  <data name="Stats_Suggestions" xml:space="preserve">
+    <value>建议</value>
+  </data>
+  <data name="Stats_Languages" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="Stats_FileTypes" xml:space="preserve">
+    <value>文件类型</value>
+  </data>
+  <data name="Stats_Extension" xml:space="preserve">
+    <value>扩展名</value>
+  </data>
+  <data name="Stats_Lines" xml:space="preserve">
+    <value>行数</value>
+  </data>
+  <data name="Stats_LinesSuffix" xml:space="preserve">
+    <value>行</value>
+  </data>
+  <data name="Stats_Size" xml:space="preserve">
+    <value>仓库大小</value>
+  </data>
+  <data name="Stats_LargestDirs" xml:space="preserve">
+    <value>最大的目录</value>
+  </data>
+  <data name="Stats_LargestFiles" xml:space="preserve">
+    <value>最大的文件</value>
+  </data>
+  <data name="Stats_FilesSuffix" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="Stats_TopContributors" xml:space="preserve">
+    <value>主要贡献者</value>
+  </data>
+  <data name="Stats_Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="Stats_Additions" xml:space="preserve">
+    <value>新增</value>
+  </data>
+  <data name="Stats_Deletions" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Stats_Subtitle" xml:space="preserve">
+    <value>此 Personal Git 实例的实时统计</value>
+  </data>
 </root>

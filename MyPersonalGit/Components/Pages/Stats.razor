@@ -50,7 +50,7 @@
                 <div class="card text-center border shadow-sm">
                     <div class="card-body py-3">
                         <div class="h2 fw-bold text-info mb-0">@commitCount.ToString("N0")</div>
-                        <small class="text-muted">Commits</small>
+                        <small class="text-muted">@L["Repo_Commits"]</small>
                     </div>
                 </div>
             </div>
@@ -58,7 +58,7 @@
                 <div class="card text-center border shadow-sm">
                     <div class="card-body py-3">
                         <div class="h2 fw-bold text-warning mb-0">@contributorCount</div>
-                        <small class="text-muted">Contributors</small>
+                        <small class="text-muted">@L["Stats_Contributors"]</small>
                     </div>
                 </div>
             </div>
@@ -69,7 +69,7 @@
                 <div class="card text-center border shadow-sm">
                     <div class="card-body py-3">
                         <div class="h3 fw-bold mb-0">@branchCount</div>
-                        <small class="text-muted">Branches</small>
+                        <small class="text-muted">@L["Repo_Branches"]</small>
                     </div>
                 </div>
             </div>
@@ -77,7 +77,7 @@
                 <div class="card text-center border shadow-sm">
                     <div class="card-body py-3">
                         <div class="h3 fw-bold mb-0">@tagCount</div>
-                        <small class="text-muted">Tags</small>
+                        <small class="text-muted">@L["Repo_Tags"]</small>
                     </div>
                 </div>
             </div>
@@ -85,7 +85,7 @@
                 <div class="card text-center border shadow-sm">
                     <div class="card-body py-3">
                         <div class="h3 fw-bold mb-0">@repoIssueCount</div>
-                        <small class="text-muted">Issues</small>
+                        <small class="text-muted">@L["Repo_Issues"]</small>
                     </div>
                 </div>
             </div>
@@ -93,7 +93,7 @@
                 <div class="card text-center border shadow-sm">
                     <div class="card-body py-3">
                         <div class="h3 fw-bold mb-0">@repoPRCount</div>
-                        <small class="text-muted">Pull Requests</small>
+                        <small class="text-muted">@L["Repo_PullRequests"]</small>
                     </div>
                 </div>
             </div>
@@ -103,7 +103,7 @@
         {
             <div class="card border shadow-sm mb-4">
                 <div class="card-header bg-light-subtle py-2 fw-bold small">
-                    <i class="bi bi-heart-pulse me-1"></i> Repository Health
+                    <i class="bi bi-heart-pulse me-1"></i> @L["Stats_Health"]
                 </div>
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-3 mb-3">
@@ -119,14 +119,14 @@
                         <div class="col-md-4"><span class="badge @(healthReport.HasReadme ? "bg-success" : "bg-danger") me-1">@(healthReport.HasReadme ? "✓" : "✗")</span> README</div>
                         <div class="col-md-4"><span class="badge @(healthReport.HasLicense ? "bg-success" : "bg-danger") me-1">@(healthReport.HasLicense ? "✓" : "✗")</span> LICENSE</div>
                         <div class="col-md-4"><span class="badge @(healthReport.HasCI ? "bg-success" : "bg-danger") me-1">@(healthReport.HasCI ? "✓" : "✗")</span> CI/CD</div>
-                        <div class="col-md-4"><span class="badge @(healthReport.HasDescription ? "bg-success" : "bg-danger") me-1">@(healthReport.HasDescription ? "✓" : "✗")</span> Description</div>
+                        <div class="col-md-4"><span class="badge @(healthReport.HasDescription ? "bg-success" : "bg-danger") me-1">@(healthReport.HasDescription ? "✓" : "✗")</span> @L["Stats_Description"]</div>
                         <div class="col-md-4"><span class="badge @(healthReport.HasContributing ? "bg-success" : "bg-danger") me-1">@(healthReport.HasContributing ? "✓" : "✗")</span> CONTRIBUTING</div>
-                        <div class="col-md-4"><span class="badge @(healthReport.HasRecentCommits ? "bg-success" : "bg-danger") me-1">@(healthReport.HasRecentCommits ? "✓" : "✗")</span> Recent commits</div>
+                        <div class="col-md-4"><span class="badge @(healthReport.HasRecentCommits ? "bg-success" : "bg-danger") me-1">@(healthReport.HasRecentCommits ? "✓" : "✗")</span> @L["Stats_RecentCommits"]</div>
                     </div>
                     @if (healthReport.Suggestions.Any())
                     {
                         <div class="mt-3">
-                            <h6 class="small fw-bold">Suggestions</h6>
+                            <h6 class="small fw-bold">@L["Stats_Suggestions"]</h6>
                             <ul class="small text-muted mb-0">
                                 @foreach (var suggestion in healthReport.Suggestions)
                                 {
@@ -143,7 +143,7 @@
         {
             <div class="card border shadow-sm mb-4">
                 <div class="card-header bg-light-subtle py-2 fw-bold small">
-                    <i class="bi bi-code-slash me-1"></i> Languages
+                    <i class="bi bi-code-slash me-1"></i> @L["Stats_Languages"]
                 </div>
                 <div class="card-body">
                     <div class="progress mb-3" style="height: 12px;">
@@ -159,7 +159,7 @@
                                 <span class="rounded-circle d-inline-block" style="width: 10px; height: 10px; background-color: @lang.Color;"></span>
                                 <strong>@lang.Name</strong>
                                 <span class="text-muted">@lang.Percentage.ToString("F1")%</span>
-                                <span class="text-muted">(@lang.Lines.ToString("N0") lines)</span>
+                                <span class="text-muted">(@lang.Lines.ToString("N0") @L["Stats_LinesSuffix"])</span>
                             </div>
                         }
                     </div>
@@ -171,11 +171,11 @@
         {
             <div class="card border shadow-sm mb-4">
                 <div class="card-header bg-light-subtle py-2 fw-bold small">
-                    <i class="bi bi-file-earmark me-1"></i> File Types
+                    <i class="bi bi-file-earmark me-1"></i> @L["Stats_FileTypes"]
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive"><table class="table table-sm mb-0">
-                        <thead><tr><th class="ps-3">Extension</th><th class="text-end">Files</th><th class="text-end pe-3">Lines</th></tr></thead>
+                        <thead><tr><th class="ps-3">@L["Stats_Extension"]</th><th class="text-end">@L["Stats_Files"]</th><th class="text-end pe-3">@L["Stats_Lines"]</th></tr></thead>
                         <tbody>
                             @foreach (var ft in fileTypeBreakdown.Take(15))
                             {
@@ -195,19 +195,19 @@
         {
             <div class="card border shadow-sm mb-4">
                 <div class="card-header bg-light-subtle py-2 fw-bold small">
-                    <i class="bi bi-hdd me-1"></i> Repository Size: @FormatBytes(totalSizeBytes)
+                    <i class="bi bi-hdd me-1"></i> @L["Stats_Size"]: @FormatBytes(totalSizeBytes)
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <h6 class="small fw-bold mb-2">Largest directories</h6>
+                            <h6 class="small fw-bold mb-2">@L["Stats_LargestDirs"]</h6>
                             <div class="table-responsive"><table class="table table-sm mb-0">
                                 <tbody>
                                     @foreach (var dir in dirSizes.Take(8))
                                     {
                                         <tr>
                                             <td><code class="small">@dir.Path</code></td>
-                                            <td class="text-end text-muted small">@dir.FileCount files</td>
+                                            <td class="text-end text-muted small">@dir.FileCount @L["Stats_FilesSuffix"]</td>
                                             <td class="text-end fw-bold small">@FormatBytes(dir.SizeBytes)</td>
                                         </tr>
                                     }
@@ -215,7 +215,7 @@
                             </table></div>
                         </div>
                         <div class="col-md-6">
-                            <h6 class="small fw-bold mb-2">Largest files</h6>
+                            <h6 class="small fw-bold mb-2">@L["Stats_LargestFiles"]</h6>
                             <div class="table-responsive"><table class="table table-sm mb-0">
                                 <tbody>
                                     @foreach (var file in largestFiles.Take(8))
@@ -237,11 +237,11 @@
         {
             <div class="card border shadow-sm mb-4">
                 <div class="card-header bg-light-subtle py-2 fw-bold small">
-                    <i class="bi bi-people me-1"></i> Top Contributors
+                    <i class="bi bi-people me-1"></i> @L["Stats_TopContributors"]
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive"><table class="table table-sm mb-0">
-                        <thead><tr><th class="ps-3">Name</th><th class="text-end">Commits</th><th class="text-end text-success">Additions</th><th class="text-end text-danger pe-3">Deletions</th></tr></thead>
+                        <thead><tr><th class="ps-3">@L["Stats_Name"]</th><th class="text-end">@L["Repo_Commits"]</th><th class="text-end text-success">@L["Stats_Additions"]</th><th class="text-end text-danger pe-3">@L["Stats_Deletions"]</th></tr></thead>
                         <tbody>
                             @foreach (var c in topContributors)
                             {
@@ -266,7 +266,7 @@
         @* Platform-level stats *@
         <div class="text-center mb-5">
             <h1 class="display-5 fw-bold mb-2"><i class="bi bi-bar-chart-line me-2"></i>@L["Stats_Title"]</h1>
-            <p class="text-muted lead">Live statistics for this Personal Git instance</p>
+            <p class="text-muted lead">@L["Stats_Subtitle"]</p>
         </div>
 
         <div class="row g-4 mb-5">
@@ -274,7 +274,7 @@
                 <div class="card text-center border shadow-sm h-100">
                     <div class="card-body py-4">
                         <div class="display-6 fw-bold text-primary">@platformRepoCount</div>
-                        <small class="text-muted">Repositories</small>
+                        <small class="text-muted">@L["Nav_Repositories"]</small>
                     </div>
                 </div>
             </div>
@@ -282,7 +282,7 @@
                 <div class="card text-center border shadow-sm h-100">
                     <div class="card-body py-4">
                         <div class="display-6 fw-bold text-success">@platformUserCount</div>
-                        <small class="text-muted">Users</small>
+                        <small class="text-muted">@L["Stats_Users"]</small>
                     </div>
                 </div>
             </div>
@@ -290,7 +290,7 @@
                 <div class="card text-center border shadow-sm h-100">
                     <div class="card-body py-4">
                         <div class="display-6 fw-bold text-info">@platformIssueCount</div>
-                        <small class="text-muted">Issues</small>
+                        <small class="text-muted">@L["Repo_Issues"]</small>
                     </div>
                 </div>
             </div>
@@ -298,7 +298,7 @@
                 <div class="card text-center border shadow-sm h-100">
                     <div class="card-body py-4">
                         <div class="display-6 fw-bold text-warning">@platformPRCount</div>
-                        <small class="text-muted">Pull Requests</small>
+                        <small class="text-muted">@L["Repo_PullRequests"]</small>
                     </div>
                 </div>
             </div>
@@ -309,7 +309,7 @@
                 <div class="card text-center border shadow-sm">
                     <div class="card-body py-3">
                         <div class="h3 fw-bold mb-0">@platformReleaseCount</div>
-                        <small class="text-muted">Releases</small>
+                        <small class="text-muted">@L["Stats_Releases"]</small>
                     </div>
                 </div>
             </div>
@@ -317,7 +317,7 @@
                 <div class="card text-center border shadow-sm">
                     <div class="card-body py-3">
                         <div class="h3 fw-bold mb-0">@platformOrgCount</div>
-                        <small class="text-muted">Organizations</small>
+                        <small class="text-muted">@L["Nav_Organizations"]</small>
                     </div>
                 </div>
             </div>
@@ -325,7 +325,7 @@
                 <div class="card text-center border shadow-sm">
                     <div class="card-body py-3">
                         <div class="h3 fw-bold mb-0">@platformWorkflowCount</div>
-                        <small class="text-muted">Workflow Runs</small>
+                        <small class="text-muted">@L["Stats_WorkflowRuns"]</small>
                     </div>
                 </div>
             </div>

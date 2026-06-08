@@ -3913,4 +3913,70 @@
   <data name="Dep_Dev" xml:space="preserve">
     <value>dev</value>
   </data>
+  <data name="Stats_Contributors" xml:space="preserve">
+    <value>Collaboratori</value>
+  </data>
+  <data name="Stats_Users" xml:space="preserve">
+    <value>Utenti</value>
+  </data>
+  <data name="Stats_Releases" xml:space="preserve">
+    <value>Rilasci</value>
+  </data>
+  <data name="Stats_WorkflowRuns" xml:space="preserve">
+    <value>Esecuzioni di workflow</value>
+  </data>
+  <data name="Stats_Health" xml:space="preserve">
+    <value>Salute del repository</value>
+  </data>
+  <data name="Stats_Description" xml:space="preserve">
+    <value>Descrizione</value>
+  </data>
+  <data name="Stats_RecentCommits" xml:space="preserve">
+    <value>Commit recenti</value>
+  </data>
+  <data name="Stats_Suggestions" xml:space="preserve">
+    <value>Suggerimenti</value>
+  </data>
+  <data name="Stats_Languages" xml:space="preserve">
+    <value>Linguaggi</value>
+  </data>
+  <data name="Stats_FileTypes" xml:space="preserve">
+    <value>Tipi di file</value>
+  </data>
+  <data name="Stats_Extension" xml:space="preserve">
+    <value>Estensione</value>
+  </data>
+  <data name="Stats_Lines" xml:space="preserve">
+    <value>Righe</value>
+  </data>
+  <data name="Stats_LinesSuffix" xml:space="preserve">
+    <value>righe</value>
+  </data>
+  <data name="Stats_Size" xml:space="preserve">
+    <value>Dimensione del repository</value>
+  </data>
+  <data name="Stats_LargestDirs" xml:space="preserve">
+    <value>Directory più grandi</value>
+  </data>
+  <data name="Stats_LargestFiles" xml:space="preserve">
+    <value>File più grandi</value>
+  </data>
+  <data name="Stats_FilesSuffix" xml:space="preserve">
+    <value>file</value>
+  </data>
+  <data name="Stats_TopContributors" xml:space="preserve">
+    <value>Principali collaboratori</value>
+  </data>
+  <data name="Stats_Name" xml:space="preserve">
+    <value>Nome</value>
+  </data>
+  <data name="Stats_Additions" xml:space="preserve">
+    <value>Aggiunte</value>
+  </data>
+  <data name="Stats_Deletions" xml:space="preserve">
+    <value>Eliminazioni</value>
+  </data>
+  <data name="Stats_Subtitle" xml:space="preserve">
+    <value>Statistiche in tempo reale di questa istanza Personal Git</value>
+  </data>
 </root>

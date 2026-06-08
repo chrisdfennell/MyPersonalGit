@@ -3913,4 +3913,70 @@
   <data name="Dep_Dev" xml:space="preserve">
     <value>dev</value>
   </data>
+  <data name="Stats_Contributors" xml:space="preserve">
+    <value>貢献者</value>
+  </data>
+  <data name="Stats_Users" xml:space="preserve">
+    <value>ユーザー</value>
+  </data>
+  <data name="Stats_Releases" xml:space="preserve">
+    <value>リリース</value>
+  </data>
+  <data name="Stats_WorkflowRuns" xml:space="preserve">
+    <value>ワークフロー実行</value>
+  </data>
+  <data name="Stats_Health" xml:space="preserve">
+    <value>リポジトリの健全性</value>
+  </data>
+  <data name="Stats_Description" xml:space="preserve">
+    <value>説明</value>
+  </data>
+  <data name="Stats_RecentCommits" xml:space="preserve">
+    <value>最近のコミット</value>
+  </data>
+  <data name="Stats_Suggestions" xml:space="preserve">
+    <value>提案</value>
+  </data>
+  <data name="Stats_Languages" xml:space="preserve">
+    <value>言語</value>
+  </data>
+  <data name="Stats_FileTypes" xml:space="preserve">
+    <value>ファイルタイプ</value>
+  </data>
+  <data name="Stats_Extension" xml:space="preserve">
+    <value>拡張子</value>
+  </data>
+  <data name="Stats_Lines" xml:space="preserve">
+    <value>行</value>
+  </data>
+  <data name="Stats_LinesSuffix" xml:space="preserve">
+    <value>行</value>
+  </data>
+  <data name="Stats_Size" xml:space="preserve">
+    <value>リポジトリサイズ</value>
+  </data>
+  <data name="Stats_LargestDirs" xml:space="preserve">
+    <value>最大のディレクトリ</value>
+  </data>
+  <data name="Stats_LargestFiles" xml:space="preserve">
+    <value>最大のファイル</value>
+  </data>
+  <data name="Stats_FilesSuffix" xml:space="preserve">
+    <value>ファイル</value>
+  </data>
+  <data name="Stats_TopContributors" xml:space="preserve">
+    <value>トップコントリビューター</value>
+  </data>
+  <data name="Stats_Name" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="Stats_Additions" xml:space="preserve">
+    <value>追加</value>
+  </data>
+  <data name="Stats_Deletions" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="Stats_Subtitle" xml:space="preserve">
+    <value>この Personal Git インスタンスのライブ統計</value>
+  </data>
 </root>

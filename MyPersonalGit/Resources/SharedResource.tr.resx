@@ -3913,4 +3913,70 @@
   <data name="Dep_Dev" xml:space="preserve">
     <value>dev</value>
   </data>
+  <data name="Stats_Contributors" xml:space="preserve">
+    <value>Katkıda bulunanlar</value>
+  </data>
+  <data name="Stats_Users" xml:space="preserve">
+    <value>Kullanıcılar</value>
+  </data>
+  <data name="Stats_Releases" xml:space="preserve">
+    <value>Sürümler</value>
+  </data>
+  <data name="Stats_WorkflowRuns" xml:space="preserve">
+    <value>İş akışı çalıştırmaları</value>
+  </data>
+  <data name="Stats_Health" xml:space="preserve">
+    <value>Depo sağlığı</value>
+  </data>
+  <data name="Stats_Description" xml:space="preserve">
+    <value>Açıklama</value>
+  </data>
+  <data name="Stats_RecentCommits" xml:space="preserve">
+    <value>Son commitler</value>
+  </data>
+  <data name="Stats_Suggestions" xml:space="preserve">
+    <value>Öneriler</value>
+  </data>
+  <data name="Stats_Languages" xml:space="preserve">
+    <value>Diller</value>
+  </data>
+  <data name="Stats_FileTypes" xml:space="preserve">
+    <value>Dosya türleri</value>
+  </data>
+  <data name="Stats_Extension" xml:space="preserve">
+    <value>Uzantı</value>
+  </data>
+  <data name="Stats_Lines" xml:space="preserve">
+    <value>Satırlar</value>
+  </data>
+  <data name="Stats_LinesSuffix" xml:space="preserve">
+    <value>satır</value>
+  </data>
+  <data name="Stats_Size" xml:space="preserve">
+    <value>Depo boyutu</value>
+  </data>
+  <data name="Stats_LargestDirs" xml:space="preserve">
+    <value>En büyük dizinler</value>
+  </data>
+  <data name="Stats_LargestFiles" xml:space="preserve">
+    <value>En büyük dosyalar</value>
+  </data>
+  <data name="Stats_FilesSuffix" xml:space="preserve">
+    <value>dosya</value>
+  </data>
+  <data name="Stats_TopContributors" xml:space="preserve">
+    <value>En çok katkıda bulunanlar</value>
+  </data>
+  <data name="Stats_Name" xml:space="preserve">
+    <value>Ad</value>
+  </data>
+  <data name="Stats_Additions" xml:space="preserve">
+    <value>Eklemeler</value>
+  </data>
+  <data name="Stats_Deletions" xml:space="preserve">
+    <value>Silmeler</value>
+  </data>
+  <data name="Stats_Subtitle" xml:space="preserve">
+    <value>Bu Personal Git örneği için canlı istatistikler</value>
+  </data>
 </root>
