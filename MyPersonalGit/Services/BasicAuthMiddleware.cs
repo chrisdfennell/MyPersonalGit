@@ -176,7 +176,7 @@ public sealed class BasicAuthMiddleware
         return repoSegment; // Keep the .git suffix for DB lookup
     }
 
-    private static bool IsReadOperation(HttpRequest request)
+    internal static bool IsReadOperation(HttpRequest request)
     {
         // git-upload-pack = fetch/clone (read), git-receive-pack = push (write)
         var path = request.Path.Value ?? "";

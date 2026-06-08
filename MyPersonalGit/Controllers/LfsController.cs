@@ -175,7 +175,7 @@ public class LfsController : ControllerBase
         return SafePath.CombineUnder(lfsBase, repoName, oid[..2], oid[2..4], oid);
     }
 
-    private static bool IsValidLfsOid(string? oid)
+    internal static bool IsValidLfsOid(string? oid)
         => !string.IsNullOrEmpty(oid)
            && oid.Length == 64
            && oid.All(c => (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'));
