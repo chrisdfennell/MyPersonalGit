@@ -59,12 +59,14 @@
             <h2 class="h5 fw-bold mb-0">@L["Home_Repositories"]</h2>
             @if (UserService.IsLoggedIn)
             {
-                <button class="btn btn-gh-primary shadow-sm" @onclick="ShowCreateModal">
-                    <i class="bi bi-journal-plus me-1"></i> @L["Home_NewRepo"]
-                </button>
-                <a href="/import" class="btn btn-outline-secondary shadow-sm ms-2">
-                    <i class="bi bi-box-arrow-in-down me-1"></i> @L["Home_Import"]
-                </a>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-gh-primary shadow-sm" @onclick="ShowCreateModal">
+                        <i class="bi bi-journal-plus me-1"></i> @L["Home_NewRepo"]
+                    </button>
+                    <a href="/import" class="btn btn-outline-secondary shadow-sm">
+                        <i class="bi bi-box-arrow-in-down me-1"></i> @L["Home_Import"]
+                    </a>
+                </div>
             }
         </div>
 
