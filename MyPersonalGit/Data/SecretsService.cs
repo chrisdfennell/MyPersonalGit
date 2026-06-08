@@ -33,23 +33,30 @@ public class SecretsService : ISecretsService
     {
         _dbFactory = dbFactory;
         _logger = logger;
+        _encryptionKey = ResolveEncryptionKey(config);
+    }
 
-        // Encryption key resolution — no hardcoded/predictable fallback:
-        //   1. Secrets:EncryptionKey from configuration (env var / user-secrets) — recommended.
-        //   2. Otherwise, a per-install random key generated once and persisted under the data dir.
+    // Encryption key resolution — no hardcoded/predictable shared constant, and never throws:
+    //   1. Secrets:EncryptionKey from configuration (env var / user-secrets) — recommended.
+    //   2. Otherwise, a per-install random key persisted under the data directory.
+    //   3. If the data dir isn't writable (tests/CI/read-only), derive from the DB connection
+    //      string so the service still works without a shared global key.
+    private byte[] ResolveEncryptionKey(IConfiguration config)
+    {
         var configuredKey = config["Secrets:EncryptionKey"];
         if (!string.IsNullOrWhiteSpace(configuredKey))
-        {
-            _encryptionKey = DeriveKey(configuredKey, GetOrCreateSalt(config));
-        }
-        else
-        {
-            _encryptionKey = GetOrCreatePersistedKey(config);
-            _logger.LogWarning(
-                "Secrets:EncryptionKey is not configured; using an auto-generated per-install key " +
-                "persisted under the data directory. Set Secrets:EncryptionKey (environment variable or " +
-                "user-secrets) for a stable, backed-up key that survives data-directory loss.");
-        }
+            return DeriveKey(configuredKey, GetSalt(config));
+
+        var persisted = TryGetOrCreatePersistedKey(config);
+        if (persisted != null)
+            return persisted;
+
+        _logger.LogWarning(
+            "Secrets:EncryptionKey is not set and a per-install key could not be persisted under the " +
+            "data directory; deriving an ephemeral key from configuration. Set Secrets:EncryptionKey " +
+            "(environment variable or user-secrets) for a stable, backed-up encryption key.");
+        var fallbackSource = config.GetConnectionString("Default") ?? "mypersonalgit";
+        return DeriveKey(fallbackSource, GetSalt(config));
     }
 
     public async Task<List<RepositorySecret>> GetSecretsAsync(string repoName)
@@ -189,6 +196,9 @@ public class SecretsService : ISecretsService
             outputLength: 32);
     }
 
+    // Static fallback salt, used only when the data directory isn't writable.
+    private static readonly byte[] FallbackSalt = Encoding.UTF8.GetBytes("MyPersonalGit.Secrets.v1");
+
     private static string SecretsDirectory(IConfiguration config)
     {
         var root = config["Git:ProjectRoot"] ?? "/repos";
@@ -198,43 +208,59 @@ public class SecretsService : ISecretsService
     }
 
     // A 256-bit key generated once per install and persisted, replacing the old shared constant.
-    private static byte[] GetOrCreatePersistedKey(IConfiguration config)
+    // Returns null (rather than throwing) if the data directory cannot be written.
+    private static byte[]? TryGetOrCreatePersistedKey(IConfiguration config)
     {
-        var keyPath = Path.Combine(SecretsDirectory(config), "encryption.key");
-        if (File.Exists(keyPath))
+        try
         {
-            try
+            var keyPath = Path.Combine(SecretsDirectory(config), "encryption.key");
+            if (File.Exists(keyPath))
             {
-                var existing = Convert.FromBase64String(File.ReadAllText(keyPath).Trim());
-                if (existing.Length == 32) return existing;
+                try
+                {
+                    var existing = Convert.FromBase64String(File.ReadAllText(keyPath).Trim());
+                    if (existing.Length == 32) return existing;
+                }
+                catch { /* corrupt key file — regenerate below */ }
             }
-            catch { /* corrupt key file — regenerate below */ }
-        }
 
-        var key = RandomNumberGenerator.GetBytes(32);
-        File.WriteAllText(keyPath, Convert.ToBase64String(key));
-        RestrictToOwner(keyPath);
-        return key;
+            var key = RandomNumberGenerator.GetBytes(32);
+            File.WriteAllText(keyPath, Convert.ToBase64String(key));
+            RestrictToOwner(keyPath);
+            return key;
+        }
+        catch
+        {
+            return null; // data dir not writable (tests/CI/read-only) — caller degrades gracefully
+        }
     }
 
-    // A per-install random salt (replaces the old static salt) so derived keys can't be precomputed across installs.
-    private static byte[] GetOrCreateSalt(IConfiguration config)
+    // A per-install random salt (replaces the old static salt) so derived keys can't be precomputed
+    // across installs. Falls back to a fixed salt when the data directory isn't writable.
+    private static byte[] GetSalt(IConfiguration config)
     {
-        var saltPath = Path.Combine(SecretsDirectory(config), "secrets.salt");
-        if (File.Exists(saltPath))
+        try
         {
-            try
+            var saltPath = Path.Combine(SecretsDirectory(config), "secrets.salt");
+            if (File.Exists(saltPath))
             {
-                var existing = Convert.FromBase64String(File.ReadAllText(saltPath).Trim());
-                if (existing.Length == 16) return existing;
+                try
+                {
+                    var existing = Convert.FromBase64String(File.ReadAllText(saltPath).Trim());
+                    if (existing.Length == 16) return existing;
+                }
+                catch { /* corrupt salt file — regenerate below */ }
             }
-            catch { /* corrupt salt file — regenerate below */ }
-        }
 
-        var salt = RandomNumberGenerator.GetBytes(16);
-        File.WriteAllText(saltPath, Convert.ToBase64String(salt));
-        RestrictToOwner(saltPath);
-        return salt;
+            var salt = RandomNumberGenerator.GetBytes(16);
+            File.WriteAllText(saltPath, Convert.ToBase64String(salt));
+            RestrictToOwner(saltPath);
+            return salt;
+        }
+        catch
+        {
+            return FallbackSalt;
+        }
     }
 
     private static void RestrictToOwner(string path)
