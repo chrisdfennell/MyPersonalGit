@@ -510,12 +510,12 @@
 
 @if (ShowWorkflowModal)
 {
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">@L["Actions_CreateWorkflowRun"]</h5>
-                    <button type="button" class="btn-close" @onclick="() => ShowWorkflowModal = false"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => ShowWorkflowModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -546,12 +546,12 @@
 
 @if (ShowWebhookModal)
 {
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">@(editingWebhookId.HasValue ? "Edit Webhook" : "Add Webhook")</h5>
-                    <button type="button" class="btn-close" @onclick="() => ShowWebhookModal = false"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => ShowWebhookModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">

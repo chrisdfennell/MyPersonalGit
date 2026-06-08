@@ -1076,7 +1076,7 @@ else
                         {
                             <div class="alert alert-success alert-dismissible fade show">
                                 @OAuthMessage
-                                <button type="button" class="btn-close" @onclick="() => OAuthMessage = null"></button>
+                                <button type="button" class="btn-close" aria-label="Close" @onclick="() => OAuthMessage = null"></button>
                             </div>
                         }
 
@@ -1147,12 +1147,12 @@ else
 
 @if (ShowAddUser)
 {
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">@L["Admin_AddNewUser"]</h5>
-                    <button type="button" class="btn-close" @onclick="() => ShowAddUser = false"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => ShowAddUser = false"></button>
                 </div>
                 <div class="modal-body">
                     <EditForm Model="NewUser" OnValidSubmit="AddUser">
@@ -1192,12 +1192,12 @@ else
 }
 @if (ShowEditUser)
 {
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal show d-block" tabindex="-1" role="dialog" aria-modal="true" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Edit User: @EditingUser.Username</h5>
-                    <button type="button" class="btn-close" @onclick="() => ShowEditUser = false"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => ShowEditUser = false"></button>
                 </div>
                 <div class="modal-body">
                     <EditForm Model="EditingUser" OnValidSubmit="SaveEditUser">
