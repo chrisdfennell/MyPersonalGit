@@ -3832,4 +3832,49 @@
   <data name="A11y_PrimaryNav" xml:space="preserve">
     <value>기본 탐색</value>
   </data>
+  <data name="Setup_Welcome" xml:space="preserve">
+    <value>MyPersonalGit에 오신 것을 환영합니다</value>
+  </data>
+  <data name="Setup_Subtitle" xml:space="preserve">
+    <value>최초 설정 — 시작하려면 관리자 계정을 만드세요.</value>
+  </data>
+  <data name="Setup_SiteName" xml:space="preserve">
+    <value>사이트 이름</value>
+  </data>
+  <data name="Setup_AdminAccount" xml:space="preserve">
+    <value>관리자 계정</value>
+  </data>
+  <data name="Setup_Username" xml:space="preserve">
+    <value>관리자 사용자 이름</value>
+  </data>
+  <data name="Setup_Email" xml:space="preserve">
+    <value>관리자 이메일</value>
+  </data>
+  <data name="Common_Optional" xml:space="preserve">
+    <value>(선택 사항)</value>
+  </data>
+  <data name="Setup_Password" xml:space="preserve">
+    <value>비밀번호</value>
+  </data>
+  <data name="Setup_PasswordHint" xml:space="preserve">
+    <value>8자 이상.</value>
+  </data>
+  <data name="Setup_ConfirmPassword" xml:space="preserve">
+    <value>비밀번호 확인</value>
+  </data>
+  <data name="Setup_InProgress" xml:space="preserve">
+    <value>설정 중…</value>
+  </data>
+  <data name="Setup_Submit" xml:space="preserve">
+    <value>관리자 생성 및 설정 완료</value>
+  </data>
+  <data name="Setup_ErrUsername" xml:space="preserve">
+    <value>사용자 이름은 필수입니다.</value>
+  </data>
+  <data name="Setup_ErrPasswordLen" xml:space="preserve">
+    <value>비밀번호는 8자 이상이어야 합니다.</value>
+  </data>
+  <data name="Setup_ErrPasswordMatch" xml:space="preserve">
+    <value>비밀번호가 일치하지 않습니다.</value>
+  </data>
 </root>

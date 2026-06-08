@@ -3832,4 +3832,49 @@
   <data name="A11y_PrimaryNav" xml:space="preserve">
     <value>主导航</value>
   </data>
+  <data name="Setup_Welcome" xml:space="preserve">
+    <value>欢迎使用 MyPersonalGit</value>
+  </data>
+  <data name="Setup_Subtitle" xml:space="preserve">
+    <value>首次设置 — 创建管理员账户以开始使用。</value>
+  </data>
+  <data name="Setup_SiteName" xml:space="preserve">
+    <value>站点名称</value>
+  </data>
+  <data name="Setup_AdminAccount" xml:space="preserve">
+    <value>管理员账户</value>
+  </data>
+  <data name="Setup_Username" xml:space="preserve">
+    <value>管理员用户名</value>
+  </data>
+  <data name="Setup_Email" xml:space="preserve">
+    <value>管理员邮箱</value>
+  </data>
+  <data name="Common_Optional" xml:space="preserve">
+    <value>（可选）</value>
+  </data>
+  <data name="Setup_Password" xml:space="preserve">
+    <value>密码</value>
+  </data>
+  <data name="Setup_PasswordHint" xml:space="preserve">
+    <value>至少 8 个字符。</value>
+  </data>
+  <data name="Setup_ConfirmPassword" xml:space="preserve">
+    <value>确认密码</value>
+  </data>
+  <data name="Setup_InProgress" xml:space="preserve">
+    <value>正在设置…</value>
+  </data>
+  <data name="Setup_Submit" xml:space="preserve">
+    <value>创建管理员并完成设置</value>
+  </data>
+  <data name="Setup_ErrUsername" xml:space="preserve">
+    <value>用户名为必填项。</value>
+  </data>
+  <data name="Setup_ErrPasswordLen" xml:space="preserve">
+    <value>密码至少需要 8 个字符。</value>
+  </data>
+  <data name="Setup_ErrPasswordMatch" xml:space="preserve">
+    <value>两次输入的密码不一致。</value>
+  </data>
 </root>

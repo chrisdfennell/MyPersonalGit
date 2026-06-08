@@ -3832,4 +3832,49 @@
   <data name="A11y_PrimaryNav" xml:space="preserve">
     <value>メインナビゲーション</value>
   </data>
+  <data name="Setup_Welcome" xml:space="preserve">
+    <value>MyPersonalGit へようこそ</value>
+  </data>
+  <data name="Setup_Subtitle" xml:space="preserve">
+    <value>初回セットアップ — 管理者アカウントを作成して始めましょう。</value>
+  </data>
+  <data name="Setup_SiteName" xml:space="preserve">
+    <value>サイト名</value>
+  </data>
+  <data name="Setup_AdminAccount" xml:space="preserve">
+    <value>管理者アカウント</value>
+  </data>
+  <data name="Setup_Username" xml:space="preserve">
+    <value>管理者ユーザー名</value>
+  </data>
+  <data name="Setup_Email" xml:space="preserve">
+    <value>管理者メール</value>
+  </data>
+  <data name="Common_Optional" xml:space="preserve">
+    <value>（任意）</value>
+  </data>
+  <data name="Setup_Password" xml:space="preserve">
+    <value>パスワード</value>
+  </data>
+  <data name="Setup_PasswordHint" xml:space="preserve">
+    <value>8文字以上。</value>
+  </data>
+  <data name="Setup_ConfirmPassword" xml:space="preserve">
+    <value>パスワードの確認</value>
+  </data>
+  <data name="Setup_InProgress" xml:space="preserve">
+    <value>セットアップ中…</value>
+  </data>
+  <data name="Setup_Submit" xml:space="preserve">
+    <value>管理者を作成してセットアップを完了</value>
+  </data>
+  <data name="Setup_ErrUsername" xml:space="preserve">
+    <value>ユーザー名は必須です。</value>
+  </data>
+  <data name="Setup_ErrPasswordLen" xml:space="preserve">
+    <value>パスワードは8文字以上である必要があります。</value>
+  </data>
+  <data name="Setup_ErrPasswordMatch" xml:space="preserve">
+    <value>パスワードが一致しません。</value>
+  </data>
 </root>

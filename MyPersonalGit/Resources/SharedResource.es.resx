@@ -3832,4 +3832,49 @@
   <data name="A11y_PrimaryNav" xml:space="preserve">
     <value>Navegación principal</value>
   </data>
+  <data name="Setup_Welcome" xml:space="preserve">
+    <value>Bienvenido a MyPersonalGit</value>
+  </data>
+  <data name="Setup_Subtitle" xml:space="preserve">
+    <value>Configuración inicial: cree la cuenta de administrador para empezar.</value>
+  </data>
+  <data name="Setup_SiteName" xml:space="preserve">
+    <value>Nombre del sitio</value>
+  </data>
+  <data name="Setup_AdminAccount" xml:space="preserve">
+    <value>Cuenta de administrador</value>
+  </data>
+  <data name="Setup_Username" xml:space="preserve">
+    <value>Nombre de usuario del administrador</value>
+  </data>
+  <data name="Setup_Email" xml:space="preserve">
+    <value>Correo del administrador</value>
+  </data>
+  <data name="Common_Optional" xml:space="preserve">
+    <value>(opcional)</value>
+  </data>
+  <data name="Setup_Password" xml:space="preserve">
+    <value>Contraseña</value>
+  </data>
+  <data name="Setup_PasswordHint" xml:space="preserve">
+    <value>Al menos 8 caracteres.</value>
+  </data>
+  <data name="Setup_ConfirmPassword" xml:space="preserve">
+    <value>Confirmar contraseña</value>
+  </data>
+  <data name="Setup_InProgress" xml:space="preserve">
+    <value>Configurando…</value>
+  </data>
+  <data name="Setup_Submit" xml:space="preserve">
+    <value>Crear administrador y finalizar</value>
+  </data>
+  <data name="Setup_ErrUsername" xml:space="preserve">
+    <value>El nombre de usuario es obligatorio.</value>
+  </data>
+  <data name="Setup_ErrPasswordLen" xml:space="preserve">
+    <value>La contraseña debe tener al menos 8 caracteres.</value>
+  </data>
+  <data name="Setup_ErrPasswordMatch" xml:space="preserve">
+    <value>Las contraseñas no coinciden.</value>
+  </data>
 </root>

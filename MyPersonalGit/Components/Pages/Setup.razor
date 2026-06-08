@@ -4,12 +4,15 @@
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.Extensions.Logging
 @using MyPersonalGit.Services
+@using MyPersonalGit.Resources
+@using Microsoft.Extensions.Localization
 @inject IDbContextFactory<AppDbContext> DbFactory
 @inject IAdminService AdminService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @inject ILogger<Setup> Logger
+@inject IStringLocalizer<SharedResource> L
 @* prerender disabled so the form runs on the interactive circuit (JS interop available) *@
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
@@ -18,10 +21,19 @@
 <div class="container" style="max-width: 560px;">
     <div class="card shadow mt-5">
         <div class="card-body p-4">
+            <div class="d-flex justify-content-end mb-1">
+                <select class="form-select form-select-sm w-auto" @onchange="OnLanguageChanged"
+                        aria-label="@L["Nav_Language"]" title="@L["Nav_Language"]">
+                    @foreach (var (langCode, name) in supportedLanguages)
+                    {
+                        <option value="@langCode" selected="@(currentCulture == langCode)">@name</option>
+                    }
+                </select>
+            </div>
             <div class="text-center mb-4">
                 <i class="bi bi-rocket-takeoff text-primary" style="font-size: 2.5rem;" aria-hidden="true"></i>
-                <h1 class="h3 fw-bold mt-2">Welcome to MyPersonalGit</h1>
-                <p class="text-muted mb-0">First-run setup — create the administrator account to get started.</p>
+                <h1 class="h3 fw-bold mt-2">@L["Setup_Welcome"]</h1>
+                <p class="text-muted mb-0">@L["Setup_Subtitle"]</p>
             </div>
 
             @if (!string.IsNullOrEmpty(ErrorMessage))
@@ -31,28 +43,28 @@
 
             <EditForm Model="@model" OnValidSubmit="CompleteSetup">
                 <div class="mb-3">
-                    <label for="siteName" class="form-label">Site name</label>
+                    <label for="siteName" class="form-label">@L["Setup_SiteName"]</label>
                     <input id="siteName" class="form-control" @bind="model.SiteName" placeholder="MyPersonalGit" />
                 </div>
 
                 <hr class="my-3" />
-                <h2 class="h6 fw-bold">Administrator account</h2>
+                <h2 class="h6 fw-bold">@L["Setup_AdminAccount"]</h2>
 
                 <div class="mb-3">
-                    <label for="username" class="form-label">Admin username</label>
+                    <label for="username" class="form-label">@L["Setup_Username"]</label>
                     <input id="username" class="form-control" @bind="model.Username" placeholder="admin" autocomplete="username" autofocus />
                 </div>
                 <div class="mb-3">
-                    <label for="email" class="form-label">Admin email <span class="text-muted fw-normal">(optional)</span></label>
+                    <label for="email" class="form-label">@L["Setup_Email"] <span class="text-muted fw-normal">@L["Common_Optional"]</span></label>
                     <input id="email" type="email" class="form-control" @bind="model.Email" placeholder="you@example.com" autocomplete="email" />
                 </div>
                 <div class="mb-3">
-                    <label for="password" class="form-label">Password</label>
+                    <label for="password" class="form-label">@L["Setup_Password"]</label>
                     <input id="password" type="password" class="form-control" @bind="model.Password" autocomplete="new-password" />
-                    <div class="form-text">At least 8 characters.</div>
+                    <div class="form-text">@L["Setup_PasswordHint"]</div>
                 </div>
                 <div class="mb-3">
-                    <label for="confirm" class="form-label">Confirm password</label>
+                    <label for="confirm" class="form-label">@L["Setup_ConfirmPassword"]</label>
                     <input id="confirm" type="password" class="form-control" @bind="model.ConfirmPassword" autocomplete="new-password" />
                 </div>
 
@@ -60,11 +72,11 @@
                     @if (IsBusy)
                     {
                         <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        <span>Setting up…</span>
+                        <span>@L["Setup_InProgress"]</span>
                     }
                     else
                     {
-                        <span>Create admin &amp; finish setup</span>
+                        <span>@L["Setup_Submit"]</span>
                     }
                 </button>
             </EditForm>
@@ -76,9 +88,30 @@
     private SetupModel model = new();
     private string? ErrorMessage;
     private bool IsBusy;
+    private string currentCulture = "en";
+
+    private static readonly (string Code, string Name)[] supportedLanguages = new[]
+    {
+        ("en", "English"), ("es", "Español"), ("fr", "Français"), ("de", "Deutsch"),
+        ("ja", "日本語"), ("ko", "한국어"), ("zh", "中文"), ("pt", "Português"),
+        ("ru", "Русский"), ("it", "Italiano"), ("tr", "Türkçe")
+    };
+
+    // Switch language live: persist the culture cookie and reload so RequestLocalization
+    // re-resolves the circuit's culture (same mechanism as the header switcher).
+    private async Task OnLanguageChanged(ChangeEventArgs e)
+    {
+        var culture = e.Value?.ToString();
+        if (string.IsNullOrEmpty(culture) || culture == currentCulture) return;
+        await JS.InvokeVoidAsync("eval",
+            $"document.cookie = '.AspNetCore.Culture=c%3D{culture}|uic%3D{culture};path=/;max-age=31536000'");
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    }
 
     protected override async Task OnInitializedAsync()
     {
+        currentCulture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+
         // Setup is one-time: if an admin already exists, the wizard is closed.
         await using var db = await DbFactory.CreateDbContextAsync();
         if (await db.Users.AnyAsync(u => u.IsAdmin))
@@ -99,9 +132,9 @@
     {
         ErrorMessage = null;
 
-        if (string.IsNullOrWhiteSpace(model.Username)) { ErrorMessage = "Username is required."; return; }
-        if (model.Password.Length < 8) { ErrorMessage = "Password must be at least 8 characters."; return; }
-        if (model.Password != model.ConfirmPassword) { ErrorMessage = "Passwords do not match."; return; }
+        if (string.IsNullOrWhiteSpace(model.Username)) { ErrorMessage = L["Setup_ErrUsername"]; return; }
+        if (model.Password.Length < 8) { ErrorMessage = L["Setup_ErrPasswordLen"]; return; }
+        if (model.Password != model.ConfirmPassword) { ErrorMessage = L["Setup_ErrPasswordMatch"]; return; }
 
         IsBusy = true;
         try

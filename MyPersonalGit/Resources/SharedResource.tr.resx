@@ -3832,4 +3832,49 @@
   <data name="A11y_PrimaryNav" xml:space="preserve">
     <value>Ana gezinme</value>
   </data>
+  <data name="Setup_Welcome" xml:space="preserve">
+    <value>MyPersonalGit'e hoş geldiniz</value>
+  </data>
+  <data name="Setup_Subtitle" xml:space="preserve">
+    <value>İlk kurulum — başlamak için yönetici hesabını oluşturun.</value>
+  </data>
+  <data name="Setup_SiteName" xml:space="preserve">
+    <value>Site adı</value>
+  </data>
+  <data name="Setup_AdminAccount" xml:space="preserve">
+    <value>Yönetici hesabı</value>
+  </data>
+  <data name="Setup_Username" xml:space="preserve">
+    <value>Yönetici kullanıcı adı</value>
+  </data>
+  <data name="Setup_Email" xml:space="preserve">
+    <value>Yönetici e-postası</value>
+  </data>
+  <data name="Common_Optional" xml:space="preserve">
+    <value>(isteğe bağlı)</value>
+  </data>
+  <data name="Setup_Password" xml:space="preserve">
+    <value>Parola</value>
+  </data>
+  <data name="Setup_PasswordHint" xml:space="preserve">
+    <value>En az 8 karakter.</value>
+  </data>
+  <data name="Setup_ConfirmPassword" xml:space="preserve">
+    <value>Parolayı onayla</value>
+  </data>
+  <data name="Setup_InProgress" xml:space="preserve">
+    <value>Kuruluyor…</value>
+  </data>
+  <data name="Setup_Submit" xml:space="preserve">
+    <value>Yönetici oluştur ve kurulumu bitir</value>
+  </data>
+  <data name="Setup_ErrUsername" xml:space="preserve">
+    <value>Kullanıcı adı gereklidir.</value>
+  </data>
+  <data name="Setup_ErrPasswordLen" xml:space="preserve">
+    <value>Parola en az 8 karakter olmalıdır.</value>
+  </data>
+  <data name="Setup_ErrPasswordMatch" xml:space="preserve">
+    <value>Parolalar eşleşmiyor.</value>
+  </data>
 </root>

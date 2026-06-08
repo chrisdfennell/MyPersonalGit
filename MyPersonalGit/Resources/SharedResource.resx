@@ -3829,4 +3829,49 @@
   <data name="A11y_PrimaryNav" xml:space="preserve">
     <value>Primary navigation</value>
   </data>
+  <data name="Setup_Welcome" xml:space="preserve">
+    <value>Welcome to MyPersonalGit</value>
+  </data>
+  <data name="Setup_Subtitle" xml:space="preserve">
+    <value>First-run setup — create the administrator account to get started.</value>
+  </data>
+  <data name="Setup_SiteName" xml:space="preserve">
+    <value>Site name</value>
+  </data>
+  <data name="Setup_AdminAccount" xml:space="preserve">
+    <value>Administrator account</value>
+  </data>
+  <data name="Setup_Username" xml:space="preserve">
+    <value>Admin username</value>
+  </data>
+  <data name="Setup_Email" xml:space="preserve">
+    <value>Admin email</value>
+  </data>
+  <data name="Common_Optional" xml:space="preserve">
+    <value>(optional)</value>
+  </data>
+  <data name="Setup_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Setup_PasswordHint" xml:space="preserve">
+    <value>At least 8 characters.</value>
+  </data>
+  <data name="Setup_ConfirmPassword" xml:space="preserve">
+    <value>Confirm password</value>
+  </data>
+  <data name="Setup_InProgress" xml:space="preserve">
+    <value>Setting up…</value>
+  </data>
+  <data name="Setup_Submit" xml:space="preserve">
+    <value>Create admin &amp; finish setup</value>
+  </data>
+  <data name="Setup_ErrUsername" xml:space="preserve">
+    <value>Username is required.</value>
+  </data>
+  <data name="Setup_ErrPasswordLen" xml:space="preserve">
+    <value>Password must be at least 8 characters.</value>
+  </data>
+  <data name="Setup_ErrPasswordMatch" xml:space="preserve">
+    <value>Passwords do not match.</value>
+  </data>
 </root>

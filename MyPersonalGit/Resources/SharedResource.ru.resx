@@ -3832,4 +3832,49 @@
   <data name="A11y_PrimaryNav" xml:space="preserve">
     <value>Основная навигация</value>
   </data>
+  <data name="Setup_Welcome" xml:space="preserve">
+    <value>Добро пожаловать в MyPersonalGit</value>
+  </data>
+  <data name="Setup_Subtitle" xml:space="preserve">
+    <value>Первоначальная настройка — создайте учётную запись администратора, чтобы начать.</value>
+  </data>
+  <data name="Setup_SiteName" xml:space="preserve">
+    <value>Название сайта</value>
+  </data>
+  <data name="Setup_AdminAccount" xml:space="preserve">
+    <value>Учётная запись администратора</value>
+  </data>
+  <data name="Setup_Username" xml:space="preserve">
+    <value>Имя пользователя администратора</value>
+  </data>
+  <data name="Setup_Email" xml:space="preserve">
+    <value>Электронная почта администратора</value>
+  </data>
+  <data name="Common_Optional" xml:space="preserve">
+    <value>(необязательно)</value>
+  </data>
+  <data name="Setup_Password" xml:space="preserve">
+    <value>Пароль</value>
+  </data>
+  <data name="Setup_PasswordHint" xml:space="preserve">
+    <value>Не менее 8 символов.</value>
+  </data>
+  <data name="Setup_ConfirmPassword" xml:space="preserve">
+    <value>Подтвердите пароль</value>
+  </data>
+  <data name="Setup_InProgress" xml:space="preserve">
+    <value>Настройка…</value>
+  </data>
+  <data name="Setup_Submit" xml:space="preserve">
+    <value>Создать администратора и завершить</value>
+  </data>
+  <data name="Setup_ErrUsername" xml:space="preserve">
+    <value>Имя пользователя обязательно.</value>
+  </data>
+  <data name="Setup_ErrPasswordLen" xml:space="preserve">
+    <value>Пароль должен содержать не менее 8 символов.</value>
+  </data>
+  <data name="Setup_ErrPasswordMatch" xml:space="preserve">
+    <value>Пароли не совпадают.</value>
+  </data>
 </root>
