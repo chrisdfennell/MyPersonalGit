@@ -3,6 +3,7 @@
 @using MyPersonalGit.Models
 @using MyPersonalGit.Services
 @using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Logging
 @using MyPersonalGit.Resources
 @inject CurrentUserService UserService
 @inject IOAuthService OAuthService
@@ -10,7 +11,9 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
-@rendermode InteractiveServer
+@inject ILogger<Login> Logger
+@* prerender disabled so the form always runs on the interactive circuit (JS interop available) *@
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Login - MyPersonalGit</PageTitle>
 
@@ -206,18 +209,30 @@
 
             // No 2FA — create session directly
             var sessionId = await UserService.CreateSessionForUserAsync(user);
-            if (sessionId != null)
-            {
-                await JS.InvokeVoidAsync("sessionHelper.set", "sessionId", sessionId);
-                Navigation.NavigateTo("/", forceLoad: true);
-            }
-            else
+            if (string.IsNullOrEmpty(sessionId))
             {
                 ErrorMessage = L["Login_Error"];
+                return;
             }
+
+            try
+            {
+                await JS.InvokeVoidAsync("sessionHelper.set", "sessionId", sessionId);
+            }
+            catch (Exception jsEx)
+            {
+                // Session was created server-side but couldn't be stored in the browser
+                // (e.g. JS interop unavailable). Log the real cause instead of hiding it.
+                Logger.LogError(jsEx, "Login succeeded but storing the session in the browser failed for {User}", loginModel.UsernameOrEmail);
+                ErrorMessage = L["Login_Error"];
+                return;
+            }
+
+            Navigation.NavigateTo("/", forceLoad: true);
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.LogError(ex, "Login failed for {User}", loginModel.UsernameOrEmail);
             ErrorMessage = L["Login_Error"];
         }
         finally
