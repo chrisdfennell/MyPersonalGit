@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -32,10 +33,11 @@ public class ChefController : ControllerBase
             return Unauthorized();
 
         // Store the file on disk
-        var diskDir = Path.Combine(StorePath, name, version);
-        Directory.CreateDirectory(diskDir);
         var filename = $"{name}-{version}.tar.gz";
-        var destPath = Path.Combine(diskDir, filename);
+        var destPath = SafePath.CombineUnder(StorePath, name, version, filename);
+        if (destPath == null)
+            return BadRequest(new { error = "Invalid cookbook name or version." });
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
         await using (var fs = new FileStream(destPath, FileMode.Create))
             await Request.Body.CopyToAsync(fs);
@@ -123,8 +125,8 @@ public class ChefController : ControllerBase
     public async Task<IActionResult> Download(string name, string version)
     {
         var filename = $"{name}-{version}.tar.gz";
-        var filePath = Path.Combine(StorePath, name, version, filename);
-        if (!System.IO.File.Exists(filePath))
+        var filePath = SafePath.CombineUnder(StorePath, name, version, filename);
+        if (filePath == null || !System.IO.File.Exists(filePath))
             return NotFound();
 
         await _packageService.IncrementDownloadAsync(name, "chef", version);

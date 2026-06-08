@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -26,8 +27,8 @@ public class ConanController : ControllerBase
     private static string CoordFromParts(string name, string version, string user, string channel) =>
         $"{name}/{version}@{user}/{channel}";
 
-    private string RecipePath(string name, string version, string user, string channel) =>
-        Path.Combine(StorePath, name, version, user, channel);
+    private string? RecipePath(string name, string version, string user, string channel) =>
+        SafePath.CombineUnder(StorePath, name, version, user, channel);
 
     // Health check
     [HttpGet("v1/ping")]
@@ -79,9 +80,10 @@ public class ConanController : ControllerBase
         if (string.IsNullOrEmpty(username))
             return Unauthorized();
 
-        var diskDir = RecipePath(name, version, user, channel);
-        Directory.CreateDirectory(diskDir);
-        var destPath = Path.Combine(diskDir, filename);
+        var destPath = SafePath.CombineUnder(StorePath, name, version, user, channel, filename);
+        if (destPath == null)
+            return BadRequest(new { error = "Invalid recipe coordinates or filename." });
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
         await using (var fs = new FileStream(destPath, FileMode.Create))
             await Request.Body.CopyToAsync(fs);
@@ -117,7 +119,7 @@ public class ConanController : ControllerBase
     public IActionResult RecipeInfo(string name, string version, string user, string channel)
     {
         var dir = RecipePath(name, version, user, channel);
-        if (!Directory.Exists(dir))
+        if (dir == null || !Directory.Exists(dir))
             return NotFound();
 
         var files = Directory.GetFiles(dir)
@@ -132,7 +134,7 @@ public class ConanController : ControllerBase
     public IActionResult DownloadUrls(string name, string version, string user, string channel)
     {
         var dir = RecipePath(name, version, user, channel);
-        if (!Directory.Exists(dir))
+        if (dir == null || !Directory.Exists(dir))
             return NotFound();
 
         var baseUrl = $"{Request.Scheme}://{Request.Host}/api/packages/conan/v1/files/{name}/{version}/{user}/{channel}";
@@ -146,8 +148,8 @@ public class ConanController : ControllerBase
     [HttpGet("v1/files/{name}/{version}/{user}/{channel}/{filename}")]
     public async Task<IActionResult> DownloadFile(string name, string version, string user, string channel, string filename)
     {
-        var filePath = Path.Combine(RecipePath(name, version, user, channel), filename);
-        if (!System.IO.File.Exists(filePath))
+        var filePath = SafePath.CombineUnder(StorePath, name, version, user, channel, filename);
+        if (filePath == null || !System.IO.File.Exists(filePath))
             return NotFound();
 
         var coordinate = CoordFromParts(name, version, user, channel);

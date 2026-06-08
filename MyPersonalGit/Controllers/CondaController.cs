@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Services;
 
 namespace MyPersonalGit.Controllers;
 
@@ -48,9 +49,10 @@ public class CondaController : ControllerBase
         var packageVersion = parts[1];
 
         // Store the file on disk
-        var diskDir = Path.Combine(StorePath, channel);
-        Directory.CreateDirectory(diskDir);
-        var destPath = Path.Combine(diskDir, filename);
+        var destPath = SafePath.CombineUnder(StorePath, channel, filename);
+        if (destPath == null)
+            return BadRequest(new { error = "Invalid channel or filename." });
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
 
         await using (var fs = new FileStream(destPath, FileMode.Create))
             await Request.Body.CopyToAsync(fs);
@@ -126,8 +128,8 @@ public class CondaController : ControllerBase
         if (filename == "repodata.json")
             return NotFound();
 
-        var filePath = Path.Combine(StorePath, channel, filename);
-        if (!System.IO.File.Exists(filePath))
+        var filePath = SafePath.CombineUnder(StorePath, channel, filename);
+        if (filePath == null || !System.IO.File.Exists(filePath))
             return NotFound();
 
         // Parse name/version for download tracking
