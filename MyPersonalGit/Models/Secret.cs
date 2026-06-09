@@ -6,6 +6,7 @@ public class RepositorySecret
     public required string RepoName { get; set; }
     public required string Name { get; set; }
     public required string EncryptedValue { get; set; }
+    public string? EnvironmentName { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

@@ -43,8 +43,25 @@ public class RegistryCleanupService : BackgroundService
                 _logger.LogError(ex, "Error executing registry retention cleanup");
             }
 
+            try
+            {
+                await CleanupArtifactsAsync(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error executing expired artifact cleanup");
+            }
+
             await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
         }
+    }
+
+    public async Task CleanupArtifactsAsync(CancellationToken ct)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var artifactService = scope.ServiceProvider.GetRequiredService<IArtifactService>();
+        _logger.LogInformation("Running expired artifact cleanup.");
+        await artifactService.CleanupExpiredArtifactsAsync();
     }
 
     public async Task CleanupRegistryAsync(CancellationToken ct)

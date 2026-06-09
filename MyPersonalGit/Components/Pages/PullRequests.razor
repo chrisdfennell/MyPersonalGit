@@ -1455,6 +1455,13 @@
         {
             await PRService.ToggleDraftAsync(RepoName, Number.Value);
             await LoadPRs();
+            currentPR = await PRService.GetPullRequestAsync(RepoName, Number.Value);
+            if (currentPR != null && currentPR.State == PullRequestState.Open)
+            {
+                var (cm, reason) = await PRService.CanMergeAsync(RepoName, currentPR.Number);
+                canMerge = cm;
+                mergeReason = reason;
+            }
         }
         finally
         {

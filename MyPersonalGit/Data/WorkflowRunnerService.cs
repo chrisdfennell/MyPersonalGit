@@ -434,10 +434,10 @@ public class WorkflowRunnerService : BackgroundService
             {
                 using var secretsScope = _scopeFactory.CreateScope();
                 var secretsService = secretsScope.ServiceProvider.GetRequiredService<ISecretsService>();
-                secrets = await secretsService.GetAllSecretsForRunAsync(run.RepoName);
+                secrets = await secretsService.GetAllSecretsForRunAsync(run.RepoName, job.Environment);
                 foreach (var (name, value) in secrets)
                     envVars.Add($"{name}={value}");
-                _logger.LogInformation("Loaded {Count} secret(s) for repo '{RepoName}'", secrets.Count, run.RepoName);
+                _logger.LogInformation("Loaded {Count} secret(s) for repo '{RepoName}' in environment '{Env}'", secrets.Count, run.RepoName, job.Environment ?? "global");
             }
             catch (Exception ex)
             {
@@ -675,7 +675,17 @@ public class WorkflowRunnerService : BackgroundService
                 };
 
                 var (exitCode, output) = await ExecInContainer(containerId,
-                    new string[] { shell ?? "sh", "-c", wrappedCommand }, execEnv, ct);
+                    new string[] { shell ?? "sh", "-c", wrappedCommand }, execEnv,
+                    async (progressOutput) =>
+                    {
+                        step.Output = MaskSecrets(progressOutput, secrets);
+                        try
+                        {
+                            await db.SaveChangesAsync(ct);
+                        }
+                        catch { }
+                    },
+                    ct);
 
                 step.Output = MaskSecrets(output, secrets);
                 step.CompletedAt = DateTime.UtcNow;
@@ -861,6 +871,12 @@ public class WorkflowRunnerService : BackgroundService
     private async Task<(long ExitCode, string Output)> ExecInContainer(
         string containerId, string[] cmd, Dictionary<string, string>? extraEnv, CancellationToken ct)
     {
+        return await ExecInContainer(containerId, cmd, extraEnv, null, ct);
+    }
+
+    private async Task<(long ExitCode, string Output)> ExecInContainer(
+        string containerId, string[] cmd, Dictionary<string, string>? extraEnv, Func<string, Task>? onChunkReceived, CancellationToken ct)
+    {
         var execParams = new ContainerExecCreateParameters
         {
             Cmd = cmd,
@@ -872,9 +888,49 @@ public class WorkflowRunnerService : BackgroundService
         var exec = await _docker!.Exec.ExecCreateContainerAsync(containerId, execParams, ct);
         using var stream = await _docker.Exec.StartAndAttachContainerExecAsync(exec.ID, false, ct);
 
-        var (stdout, stderr) = await stream.ReadOutputToEndAsync(ct);
-        var output = stdout + (string.IsNullOrEmpty(stderr) ? "" : $"\nSTDERR:\n{stderr}");
+        string stdout = "";
+        string stderr = "";
 
+        if (onChunkReceived != null)
+        {
+            var buffer = new byte[8192];
+            var lastUpdate = DateTime.UtcNow;
+
+            while (!ct.IsCancellationRequested)
+            {
+                var readResult = await stream.ReadOutputAsync(buffer, 0, buffer.Length, ct);
+                if (readResult.EOF)
+                    break;
+
+                var text = System.Text.Encoding.UTF8.GetString(buffer, 0, readResult.Count);
+                if (readResult.Target == MultiplexedStream.TargetStream.StandardOut)
+                {
+                    stdout += text;
+                }
+                else if (readResult.Target == MultiplexedStream.TargetStream.StandardError)
+                {
+                    stderr += text;
+                }
+
+                // Throttle updates to ~1 second to not flood the DB
+                if (DateTime.UtcNow - lastUpdate > TimeSpan.FromSeconds(1))
+                {
+                    await onChunkReceived(stdout + (string.IsNullOrEmpty(stderr) ? "" : $"\nSTDERR:\n{stderr}"));
+                    lastUpdate = DateTime.UtcNow;
+                }
+            }
+
+            // Final push of logs
+            await onChunkReceived(stdout + (string.IsNullOrEmpty(stderr) ? "" : $"\nSTDERR:\n{stderr}"));
+        }
+        else
+        {
+            var (outVal, errVal) = await stream.ReadOutputToEndAsync(ct);
+            stdout = outVal;
+            stderr = errVal;
+        }
+
+        var output = stdout + (string.IsNullOrEmpty(stderr) ? "" : $"\nSTDERR:\n{stderr}");
         var inspect = await _docker.Exec.InspectContainerExecAsync(exec.ID, ct);
         return (inspect.ExitCode, output);
     }

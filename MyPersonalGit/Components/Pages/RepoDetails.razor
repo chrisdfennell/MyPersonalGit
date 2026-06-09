@@ -1718,13 +1718,17 @@ else
                                         <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                                             <div>
                                                 <span class="fw-bold font-monospace">@secret.Name</span>
+                                                @if (!string.IsNullOrEmpty(secret.EnvironmentName))
+                                                {
+                                                    <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle ms-2">@secret.EnvironmentName</span>
+                                                }
                                                 <span class="text-muted small ms-2">Updated @secret.UpdatedAt.ToString("yyyy-MM-dd")</span>
                                             </div>
                                             <div class="d-flex gap-1">
-                                                <button class="btn btn-outline-secondary btn-sm" @onclick="() => StartEditSecret(secret.Name)" title="Update value">
+                                                <button class="btn btn-outline-secondary btn-sm" @onclick="() => StartEditSecret(secret.Name, secret.EnvironmentName)" title="Update value">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
-                                                <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteSecret(secret.Name)">
+                                                <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteSecret(secret.Name, secret.EnvironmentName)">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </div>
@@ -1746,6 +1750,12 @@ else
                                         <input type="text" class="form-control form-control-sm font-monospace" @bind="newSecretName"
                                                placeholder="MY_SECRET" disabled="@(editingSecretName != null)" style="max-width: 300px;" />
                                         <div class="form-text">Uppercase letters, numbers, and underscores only.</div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small fw-bold">Environment (Optional)</label>
+                                        <input type="text" class="form-control form-control-sm" @bind="newSecretEnvironment"
+                                               placeholder="production / staging" disabled="@(editingSecretName != null)" style="max-width: 300px;" />
+                                        <div class="form-text">Specify an environment scope for this secret.</div>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">Value</label>
@@ -3628,6 +3638,7 @@ else
     private bool showAddSecret = false;
     private string newSecretName = "";
     private string newSecretValue = "";
+    private string newSecretEnvironment = "";
     private string? editingSecretName = null;
     private string secretErrorMessage = "";
 
@@ -5150,10 +5161,11 @@ else
     }
 
     // --- Secrets management ---
-    private void StartEditSecret(string name)
+    private void StartEditSecret(string name, string? environmentName)
     {
         editingSecretName = name;
         newSecretName = name;
+        newSecretEnvironment = environmentName ?? "";
         newSecretValue = "";
         secretErrorMessage = "";
         showAddSecret = true;
@@ -5165,6 +5177,7 @@ else
         editingSecretName = null;
         newSecretName = "";
         newSecretValue = "";
+        newSecretEnvironment = "";
         secretErrorMessage = "";
     }
 
@@ -5172,8 +5185,9 @@ else
     {
         var dirName = System.IO.Path.GetFileName(RepoFullPath);
         var name = editingSecretName ?? newSecretName;
+        var env = string.IsNullOrWhiteSpace(newSecretEnvironment) ? null : newSecretEnvironment.Trim();
 
-        var success = await SecretsService.SetSecretAsync(dirName, name, newSecretValue);
+        var success = await SecretsService.SetSecretAsync(dirName, name, newSecretValue, env);
         if (success)
         {
             repoSecrets = await SecretsService.GetSecretsAsync(dirName);
@@ -5185,10 +5199,10 @@ else
         }
     }
 
-    private async Task DeleteSecret(string name)
+    private async Task DeleteSecret(string name, string? environmentName)
     {
         var dirName = System.IO.Path.GetFileName(RepoFullPath);
-        await SecretsService.DeleteSecretAsync(dirName, name);
+        await SecretsService.DeleteSecretAsync(dirName, name, environmentName);
         repoSecrets = await SecretsService.GetSecretsAsync(dirName);
     }
 

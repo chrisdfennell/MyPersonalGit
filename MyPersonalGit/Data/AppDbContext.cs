@@ -436,7 +436,7 @@ public class AppDbContext : DbContext
         // --- RepositorySecret ---
         modelBuilder.Entity<RepositorySecret>(e =>
         {
-            e.HasIndex(s => new { s.RepoName, s.Name }).IsUnique();
+            e.HasIndex(s => new { s.RepoName, s.Name, s.EnvironmentName }).IsUnique();
         });
 
         // --- UserSecret ---

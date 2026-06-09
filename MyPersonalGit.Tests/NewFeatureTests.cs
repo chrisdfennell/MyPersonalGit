@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using MyPersonalGit.Data;
 using MyPersonalGit.Models;
+using Microsoft.AspNetCore.Mvc;
+using MyPersonalGit.Controllers;
 
 namespace MyPersonalGit.Tests;
 
@@ -1468,3 +1470,217 @@ public class RegistryCleanupTests
         }
     }
 }
+
+// ============================================================================
+// Feature: Alignment & Governance Additional Tests
+// ============================================================================
+
+public class RegistryCleanupArtifactExpiryTests
+{
+    [Fact]
+    public async Task CleanupArtifactsAsync_CallsCleanupExpiredArtifactsAsync()
+    {
+        var services = new ServiceCollection();
+        var mockDbFactory = Substitute.For<IDbContextFactory<AppDbContext>>();
+        var mockAdminService = Substitute.For<IAdminService>();
+        var mockArtifactService = Substitute.For<IArtifactService>();
+        
+        services.AddSingleton(mockDbFactory);
+        services.AddSingleton(mockAdminService);
+        services.AddSingleton(mockArtifactService);
+        
+        var serviceProvider = services.BuildServiceProvider();
+        var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
+        
+        var logger = NullLogger<RegistryCleanupService>.Instance;
+        var config = Substitute.For<IConfiguration>();
+        
+        var cleanupService = new RegistryCleanupService(scopeFactory, logger, config);
+        
+        await cleanupService.CleanupArtifactsAsync(CancellationToken.None);
+        
+        await mockArtifactService.Received(1).CleanupExpiredArtifactsAsync();
+    }
+}
+
+public class WorkflowRunnerLogStreamingTests
+{
+    [Fact]
+    public async Task LogStreamingCallback_UpdatesStepOutputAndSavesToDb()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        var dbFactory = new TestDbContextFactory(options);
+        
+        using var db = dbFactory.CreateDbContext();
+        var step = new WorkflowStep
+        {
+            Name = "test-step",
+            Status = WorkflowStatus.InProgress,
+            Output = ""
+        };
+        db.WorkflowSteps.Add(step);
+        await db.SaveChangesAsync();
+
+        var secrets = new Dictionary<string, string>
+        {
+            ["SECRET"] = "my-secret-value"
+        };
+
+        Func<string, Task> onChunkReceived = async (progressOutput) =>
+        {
+            step.Output = WorkflowRunnerService.MaskSecrets(progressOutput, secrets);
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch { }
+        };
+
+        await onChunkReceived("Starting process... ");
+        
+        using (var dbVerify = dbFactory.CreateDbContext())
+        {
+            var stepInDb = await dbVerify.WorkflowSteps.FindAsync(step.Id);
+            Assert.Equal("Starting process... ", stepInDb!.Output);
+        }
+
+        await onChunkReceived("Starting process... API Key is my-secret-value");
+
+        using (var dbVerify = dbFactory.CreateDbContext())
+        {
+            var stepInDb = await dbVerify.WorkflowSteps.FindAsync(step.Id);
+            Assert.Equal("Starting process... API Key is ***", stepInDb!.Output);
+        }
+    }
+}
+
+public class HooksControllerPushProtectionTests
+{
+    [Fact]
+    public async Task PreReceive_BlocksPush_WhenSecretIsDetected()
+    {
+        var mockBranch = Substitute.For<IBranchProtectionService>();
+        var mockTag = Substitute.For<ITagProtectionService>();
+        var mockScan = Substitute.For<ISecretScanService>();
+        var mockConfig = Substitute.For<IConfiguration>();
+        
+        mockConfig["Git:ProjectRoot"].Returns(Path.GetTempPath());
+        
+        var controller = new HooksController(mockBranch, mockTag, mockScan, mockConfig);
+        
+        var request = new PreReceiveRequest
+        {
+            RepoName = "test-repo",
+            Updates = new List<RefUpdate>
+            {
+                new RefUpdate { RefName = "refs/heads/main", OldSha = "123", NewSha = "456" }
+            }
+        };
+        
+        var scanResults = new List<SecretScanResult>
+        {
+            new SecretScanResult
+            {
+                RepoName = "test-repo",
+                CommitSha = "456",
+                FilePath = "appsettings.json",
+                LineNumber = 10,
+                SecretType = "AWS Key",
+                MatchSnippet = "AKIA...",
+                State = SecretScanResultState.Open
+            }
+        };
+        
+        var repoDir = Path.Combine(Path.GetTempPath(), "test-repo.git");
+        Directory.CreateDirectory(repoDir);
+        
+        try
+        {
+            mockScan.ScanPushAsync("test-repo", repoDir, "456").Returns(scanResults);
+            
+            var result = await controller.PreReceive(request);
+            
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var response = Assert.IsType<PreReceiveResponse>(okResult.Value);
+            
+            Assert.False(response.Allowed);
+            Assert.Contains("Push Protection: push blocked", response.Message);
+            Assert.Contains("AWS Key in appsettings.json:10", response.Message);
+        }
+        finally
+        {
+            try { Directory.Delete(repoDir, true); } catch {}
+        }
+    }
+}
+
+public class SecretsServiceEnvironmentPriorityTests
+{
+    private readonly SecretsService _service;
+    private readonly IDbContextFactory<AppDbContext> _dbFactory;
+
+    public SecretsServiceEnvironmentPriorityTests()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        _dbFactory = new TestDbContextFactory(options);
+
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Secrets:EncryptionKey"] = "test-encryption-key-for-unit-tests"
+            })
+            .Build();
+
+        _service = new SecretsService(_dbFactory, NullLogger<SecretsService>.Instance, config);
+    }
+
+    [Fact]
+    public async Task GetAllSecretsForRunAsync_PriorityResolutionWorks()
+    {
+        await _service.SetSecretAsync("my-repo", "MY_SECRET", "repo-val", environmentName: null);
+        await _service.SetSecretAsync("my-repo", "MY_SECRET", "env-val", environmentName: "prod");
+
+        var secretsNoEnv = await _service.GetAllSecretsForRunAsync("my-repo", null);
+        Assert.Equal("repo-val", secretsNoEnv["MY_SECRET"]);
+
+        var secretsProdEnv = await _service.GetAllSecretsForRunAsync("my-repo", "prod");
+        Assert.Equal("env-val", secretsProdEnv["MY_SECRET"]);
+
+        var secretsStagingEnv = await _service.GetAllSecretsForRunAsync("my-repo", "staging");
+        Assert.Equal("repo-val", secretsStagingEnv["MY_SECRET"]);
+    }
+
+    [Fact]
+    public async Task SetSecretAsync_WithEnvironment_StoresAndDeletesCorrectly()
+    {
+        var set1 = await _service.SetSecretAsync("my-repo", "TEST_ENV_SEC", "val1", "staging");
+        var set2 = await _service.SetSecretAsync("my-repo", "TEST_ENV_SEC", "val2", "prod");
+        var set3 = await _service.SetSecretAsync("my-repo", "TEST_ENV_SEC", "val3", null);
+
+        Assert.True(set1);
+        Assert.True(set2);
+        Assert.True(set3);
+
+        using (var db = _dbFactory.CreateDbContext())
+        {
+            var allDbSecrets = await db.RepositorySecrets.Where(s => s.RepoName == "my-repo" && s.Name == "TEST_ENV_SEC").ToListAsync();
+            Assert.Equal(3, allDbSecrets.Count);
+        }
+
+        var deletedStaging = await _service.DeleteSecretAsync("my-repo", "TEST_ENV_SEC", "staging");
+        Assert.True(deletedStaging);
+
+        using (var db = _dbFactory.CreateDbContext())
+        {
+            var allDbSecrets = await db.RepositorySecrets.Where(s => s.RepoName == "my-repo" && s.Name == "TEST_ENV_SEC").ToListAsync();
+            Assert.Equal(2, allDbSecrets.Count);
+            Assert.Contains(allDbSecrets, s => s.EnvironmentName == "prod");
+            Assert.Contains(allDbSecrets, s => s.EnvironmentName == null);
+        }
+    }
+}
+

@@ -8,13 +8,13 @@ namespace MyPersonalGit.Data;
 public interface ISecretsService
 {
     Task<List<RepositorySecret>> GetSecretsAsync(string repoName);
-    Task<bool> SetSecretAsync(string repoName, string name, string value);
-    Task<bool> DeleteSecretAsync(string repoName, string name);
+    Task<bool> SetSecretAsync(string repoName, string name, string value, string? environmentName = null);
+    Task<bool> DeleteSecretAsync(string repoName, string name, string? environmentName = null);
     Task<Dictionary<string, string>> GetDecryptedSecretsAsync(string repoName);
     Task<List<GlobalSecret>> GetGlobalSecretsAsync();
     Task<bool> SetGlobalSecretAsync(string name, string value);
     Task<bool> DeleteGlobalSecretAsync(string name);
-    Task<Dictionary<string, string>> GetAllSecretsForRunAsync(string repoName);
+    Task<Dictionary<string, string>> GetAllSecretsForRunAsync(string repoName, string? environmentName = null);
     Task<List<UserSecret>> GetUserSecretsAsync(string username);
     Task<bool> SetUserSecretAsync(string username, string name, string value);
     Task<bool> DeleteUserSecretAsync(string username, string name);
@@ -68,7 +68,7 @@ public class SecretsService : ISecretsService
             .ToListAsync();
     }
 
-    public async Task<bool> SetSecretAsync(string repoName, string name, string value)
+    public async Task<bool> SetSecretAsync(string repoName, string name, string value, string? environmentName = null)
     {
         if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(value))
             return false;
@@ -83,7 +83,7 @@ public class SecretsService : ISecretsService
         var encrypted = Encrypt(value);
 
         var existing = await db.RepositorySecrets
-            .FirstOrDefaultAsync(s => s.RepoName == repoName && s.Name == trimmedName);
+            .FirstOrDefaultAsync(s => s.RepoName == repoName && s.Name == trimmedName && s.EnvironmentName == environmentName);
 
         if (existing != null)
         {
@@ -97,22 +97,23 @@ public class SecretsService : ISecretsService
                 RepoName = repoName,
                 Name = trimmedName,
                 EncryptedValue = encrypted,
+                EnvironmentName = environmentName,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             });
         }
 
         await db.SaveChangesAsync();
-        _logger.LogInformation("Secret '{Name}' set for repository {RepoName}", trimmedName, repoName);
+        _logger.LogInformation("Secret '{Name}' set for repository {RepoName} in environment '{Env}'", trimmedName, repoName, environmentName ?? "global");
         return true;
     }
 
-    public async Task<bool> DeleteSecretAsync(string repoName, string name)
+    public async Task<bool> DeleteSecretAsync(string repoName, string name, string? environmentName = null)
     {
         using var db = _dbFactory.CreateDbContext();
 
         var secret = await db.RepositorySecrets
-            .FirstOrDefaultAsync(s => s.RepoName == repoName && s.Name == name);
+            .FirstOrDefaultAsync(s => s.RepoName == repoName && s.Name == name && s.EnvironmentName == environmentName);
 
         if (secret == null)
             return false;
@@ -120,7 +121,7 @@ public class SecretsService : ISecretsService
         db.RepositorySecrets.Remove(secret);
         await db.SaveChangesAsync();
 
-        _logger.LogInformation("Secret '{Name}' deleted from repository {RepoName}", name, repoName);
+        _logger.LogInformation("Secret '{Name}' deleted from repository {RepoName} in environment '{Env}'", name, repoName, environmentName ?? "global");
         return true;
     }
 
@@ -330,7 +331,7 @@ public class SecretsService : ISecretsService
     /// <summary>
     /// Get all secrets for a workflow run: Global -> Org -> User -> Repo (each level overrides the previous).
     /// </summary>
-    public async Task<Dictionary<string, string>> GetAllSecretsForRunAsync(string repoName)
+    public async Task<Dictionary<string, string>> GetAllSecretsForRunAsync(string repoName, string? environmentName = null)
     {
         var result = new Dictionary<string, string>();
 
@@ -379,14 +380,27 @@ public class SecretsService : ISecretsService
             }
         }
 
-        // 4. Repo secrets (highest priority) — check both with and without .git suffix
+        // 4. Repo secrets (no environment) — check both with and without .git suffix
         var repoSecrets = await db.RepositorySecrets
-            .Where(s => s.RepoName == repoName || s.RepoName == repoNameAlt)
+            .Where(s => (s.RepoName == repoName || s.RepoName == repoNameAlt) && (s.EnvironmentName == null || s.EnvironmentName == ""))
             .ToListAsync();
         foreach (var secret in repoSecrets)
         {
             try { result[secret.Name] = Decrypt(secret.EncryptedValue); }
             catch { }
+        }
+
+        // 5. Repo secrets (matching environment, highest priority)
+        if (!string.IsNullOrEmpty(environmentName))
+        {
+            var envSecrets = await db.RepositorySecrets
+                .Where(s => (s.RepoName == repoName || s.RepoName == repoNameAlt) && s.EnvironmentName == environmentName)
+                .ToListAsync();
+            foreach (var secret in envSecrets)
+            {
+                try { result[secret.Name] = Decrypt(secret.EncryptedValue); }
+                catch { }
+            }
         }
 
         return result;

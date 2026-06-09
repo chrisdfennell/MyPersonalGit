@@ -122,7 +122,7 @@ public sealed class BuiltInSshServer : BackgroundService
             var session = new SshSession(
                 client, _hostKey!, _hostKeyBlob!, projectRoot,
                 sshAuthService, repoService, collaboratorService, deployKeyService, issueAutoCloseService,
-                workflowService, agitFlowService, _logger);
+                workflowService, agitFlowService, _scopeFactory, _logger);
 
             await session.RunAsync(ct);
         }

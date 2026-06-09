@@ -1,5 +1,8 @@
+using System.IO;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using MyPersonalGit.Data;
+using MyPersonalGit.Models;
 
 namespace MyPersonalGit.Controllers;
 
@@ -12,11 +15,15 @@ public class HooksController : ControllerBase
 {
     private readonly IBranchProtectionService _branchProtectionService;
     private readonly ITagProtectionService _tagProtectionService;
+    private readonly ISecretScanService _secretScanService;
+    private readonly IConfiguration _config;
 
-    public HooksController(IBranchProtectionService branchProtectionService, ITagProtectionService tagProtectionService)
+    public HooksController(IBranchProtectionService branchProtectionService, ITagProtectionService tagProtectionService, ISecretScanService secretScanService, IConfiguration config)
     {
         _branchProtectionService = branchProtectionService;
         _tagProtectionService = tagProtectionService;
+        _secretScanService = secretScanService;
+        _config = config;
     }
 
     /// <summary>
@@ -31,6 +38,27 @@ public class HooksController : ControllerBase
 
         foreach (var refUpdate in request.Updates)
         {
+            // Push protection for secrets
+            if (refUpdate.NewSha != "0000000000000000000000000000000000000000")
+            {
+                var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
+                var repoDir = Path.Combine(projectRoot, request.RepoName);
+                if (!repoDir.EndsWith(".git") && !Directory.Exists(repoDir)) repoDir += ".git";
+
+                if (Directory.Exists(repoDir))
+                {
+                    var scanResults = await _secretScanService.ScanPushAsync(request.RepoName, repoDir, refUpdate.NewSha);
+                    if (scanResults != null && scanResults.Any(r => r.State == SecretScanResultState.Open))
+                    {
+                        var secretsList = string.Join(", ", scanResults.Where(r => r.State == SecretScanResultState.Open).Select(r => $"{r.SecretType} in {r.FilePath}:{r.LineNumber}").Distinct());
+                        return Ok(new PreReceiveResponse
+                        {
+                            Allowed = false,
+                            Message = $"Push Protection: push blocked. Detected potential secrets: {secretsList}"
+                        });
+                    }
+                }
+            }
             // Check tag protection rules
             if (refUpdate.RefName.StartsWith("refs/tags/"))
             {

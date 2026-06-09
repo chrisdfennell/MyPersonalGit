@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using LibGit2Sharp;
 using MyPersonalGit.Data;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MyPersonalGit.Services.SshServer;
 
@@ -60,6 +61,7 @@ public sealed class SshSession : IDisposable
     private readonly IWorkflowService _workflowService;
     private readonly IAGitFlowService _agitFlowService;
     private readonly ILogger _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     // Protocol state
     private string _clientVersion = "";
@@ -87,7 +89,8 @@ public sealed class SshSession : IDisposable
         TcpClient client, ECDsa hostKey, byte[] hostKeyBlob, string projectRoot,
         ISshAuthService sshAuth, IRepositoryService repoService,
         ICollaboratorService collaboratorService, IDeployKeyService deployKeyService,
-        IIssueAutoCloseService issueAutoCloseService, IWorkflowService workflowService, IAGitFlowService agitFlowService, ILogger logger)
+        IIssueAutoCloseService issueAutoCloseService, IWorkflowService workflowService, IAGitFlowService agitFlowService,
+        IServiceScopeFactory scopeFactory, ILogger logger)
     {
         _client = client;
         _stream = client.GetStream();
@@ -101,6 +104,7 @@ public sealed class SshSession : IDisposable
         _issueAutoCloseService = issueAutoCloseService;
         _workflowService = workflowService;
         _agitFlowService = agitFlowService;
+        _scopeFactory = scopeFactory;
         _logger = logger;
 
         _client.ReceiveTimeout = 30000;
@@ -842,11 +846,19 @@ public sealed class SshSession : IDisposable
             return;
         }
 
-        // Track git operation
-        if (operation == "git-upload-pack")
-            GitOperationCounters.Increment("fetch");
-        else
-            GitOperationCounters.Increment("push");
+        if (operation == "git-receive-pack")
+        {
+            try
+            {
+                using var hookScope = _scopeFactory.CreateScope();
+                var branchProtectionService = hookScope.ServiceProvider.GetRequiredService<IBranchProtectionService>();
+                branchProtectionService.InstallPreReceiveHook(fullRepoPath, repoName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to auto-install pre-receive hook during SSH push.");
+            }
+        }
 
         // Spawn git process
         var psi = new ProcessStartInfo

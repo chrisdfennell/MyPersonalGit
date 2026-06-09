@@ -32,7 +32,7 @@ public sealed class GitHttpBackendMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, IIssueAutoCloseService issueAutoCloseService, IWorkflowService workflowService, IAGitFlowService agitFlowService, IRepositoryTrafficService trafficService, ISecretScanService secretScanService)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, IIssueAutoCloseService issueAutoCloseService, IWorkflowService workflowService, IAGitFlowService agitFlowService, IRepositoryTrafficService trafficService, ISecretScanService secretScanService, IBranchProtectionService branchProtectionService)
     {
         // Only handle /git/* paths; let everything else pass through.
         if (!context.Request.Path.StartsWithSegments("/git", out var remaining))
@@ -146,6 +146,25 @@ public sealed class GitHttpBackendMiddleware
         else if (service == "git-receive-pack" || pathInfo.EndsWith("/git-receive-pack"))
         {
             GitOperationCounters.Increment("push");
+            try
+            {
+                var segments = pathInfo.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                if (segments.Length >= 1)
+                {
+                    var repoName = segments[0];
+                    var repoDir = Path.Combine(projectRoot, repoName);
+                    if (!repoDir.EndsWith(".git") && !Directory.Exists(repoDir))
+                        repoDir += ".git";
+                    if (Directory.Exists(repoDir))
+                    {
+                        branchProtectionService.InstallPreReceiveHook(repoDir, repoName);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to auto-install pre-receive hook during HTTP push.");
+            }
         }
 
         using var process = Process.Start(psi);

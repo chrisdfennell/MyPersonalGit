@@ -567,6 +567,11 @@ using (var scope = app.Services.CreateScope())
     // SystemSettings.GenericPackageRetentionCount column
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""GenericPackageRetentionCount"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
 
+    // RepositorySecrets.EnvironmentName column
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""RepositorySecrets"" ADD COLUMN ""EnvironmentName"" TEXT NULL;"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"DROP INDEX IF EXISTS ""IX_RepositorySecrets_RepoName_Name"";"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_RepositorySecrets_RepoName_Name_EnvironmentName"" ON ""RepositorySecrets"" (""RepoName"", ""Name"", ""EnvironmentName"");"); } catch { }
+
     // One-time fixup: workflow runs stored with stripped ".git" suffix need to match the DB repo name
     try
     {
