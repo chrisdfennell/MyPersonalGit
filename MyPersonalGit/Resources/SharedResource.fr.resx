@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -4917,5 +4917,62 @@
   </data>
   <data name="Actions_Delivered" xml:space="preserve">
     <value>Livré</value>
+  </data>
+  <data name="Dep_ColStatus" xml:space="preserve">
+    <value>Statut</value>
+  </data>
+  <data name="Dep_Vulnerabilities" xml:space="preserve">
+    <value>Vulnérabilités</value>
+  </data>
+  <data name="Dep_VulnScanning" xml:space="preserve">
+    <value>Recherche d'avis de sécurité connus…</value>
+  </data>
+  <data name="Dep_VulnKnown" xml:space="preserve">
+    <value>Avis de sécurité connu</value>
+  </data>
+  <data name="Dep_Secure" xml:space="preserve">
+    <value>Aucun avis connu</value>
+  </data>
+  <data name="Dep_DownloadSbom" xml:space="preserve">
+    <value>Télécharger le SBOM</value>
+  </data>
+  <data name="Dep_Outdated" xml:space="preserve">
+    <value>Obsolètes</value>
+  </data>
+  <data name="Dep_UpdateAvailable" xml:space="preserve">
+    <value>Mise à jour disponible</value>
+  </data>
+  <data name="Dep_LastScanned" xml:space="preserve">
+    <value>Dernière analyse : {0}</value>
+  </data>
+  <data name="Dep_Sev_Critical" xml:space="preserve">
+    <value>Critique</value>
+  </data>
+  <data name="Dep_Sev_High" xml:space="preserve">
+    <value>Élevée</value>
+  </data>
+  <data name="Dep_Sev_Moderate" xml:space="preserve">
+    <value>Modérée</value>
+  </data>
+  <data name="Dep_Sev_Low" xml:space="preserve">
+    <value>Faible</value>
+  </data>
+  <data name="Dep_Sev_Unknown" xml:space="preserve">
+    <value>Inconnue</value>
+  </data>
+  <data name="Sec_DepAlerts" xml:space="preserve">
+    <value>Alertes de dépendances</value>
+  </data>
+  <data name="Sec_DepAlertsNone" xml:space="preserve">
+    <value>Aucune dépendance vulnérable détectée</value>
+  </data>
+  <data name="Sec_DepAlertsNotScanned" xml:space="preserve">
+    <value>Dépendances pas encore analysées</value>
+  </data>
+  <data name="Sec_DepViewAll" xml:space="preserve">
+    <value>Voir toutes les dépendances</value>
+  </data>
+  <data name="Sec_DepOutdatedNote" xml:space="preserve">
+    <value>{0} dépendances ont des mises à jour disponibles</value>
   </data>
 </root>

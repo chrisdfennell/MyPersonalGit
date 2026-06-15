@@ -181,6 +181,9 @@ public class AppDbContext : DbContext
     public DbSet<SecretScanResult> SecretScanResults => Set<SecretScanResult>();
     public DbSet<SecretScanPattern> SecretScanPatterns => Set<SecretScanPattern>();
 
+    // Dependency scans (vulnerability + outdated findings cache)
+    public DbSet<DependencyScan> DependencyScans => Set<DependencyScan>();
+
     // Dependency Updates
     public DbSet<DependencyUpdateConfig> DependencyUpdateConfigs => Set<DependencyUpdateConfig>();
     public DbSet<DependencyUpdateLog> DependencyUpdateLogs => Set<DependencyUpdateLog>();

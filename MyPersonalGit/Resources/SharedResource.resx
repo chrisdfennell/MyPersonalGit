@@ -3910,6 +3910,63 @@
   <data name="Dep_Dev" xml:space="preserve">
     <value>dev</value>
   </data>
+  <data name="Dep_ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Dep_Vulnerabilities" xml:space="preserve">
+    <value>Vulnerabilities</value>
+  </data>
+  <data name="Dep_VulnScanning" xml:space="preserve">
+    <value>Checking for known advisories…</value>
+  </data>
+  <data name="Dep_VulnKnown" xml:space="preserve">
+    <value>Known security advisory</value>
+  </data>
+  <data name="Dep_Secure" xml:space="preserve">
+    <value>No known advisories</value>
+  </data>
+  <data name="Dep_DownloadSbom" xml:space="preserve">
+    <value>Download SBOM</value>
+  </data>
+  <data name="Dep_Outdated" xml:space="preserve">
+    <value>Outdated</value>
+  </data>
+  <data name="Dep_UpdateAvailable" xml:space="preserve">
+    <value>Update available</value>
+  </data>
+  <data name="Dep_LastScanned" xml:space="preserve">
+    <value>Last scanned: {0}</value>
+  </data>
+  <data name="Dep_Sev_Critical" xml:space="preserve">
+    <value>Critical</value>
+  </data>
+  <data name="Dep_Sev_High" xml:space="preserve">
+    <value>High</value>
+  </data>
+  <data name="Dep_Sev_Moderate" xml:space="preserve">
+    <value>Moderate</value>
+  </data>
+  <data name="Dep_Sev_Low" xml:space="preserve">
+    <value>Low</value>
+  </data>
+  <data name="Dep_Sev_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="Sec_DepAlerts" xml:space="preserve">
+    <value>Dependency alerts</value>
+  </data>
+  <data name="Sec_DepAlertsNone" xml:space="preserve">
+    <value>No vulnerable dependencies detected</value>
+  </data>
+  <data name="Sec_DepAlertsNotScanned" xml:space="preserve">
+    <value>Dependencies not scanned yet</value>
+  </data>
+  <data name="Sec_DepViewAll" xml:space="preserve">
+    <value>View all dependencies</value>
+  </data>
+  <data name="Sec_DepOutdatedNote" xml:space="preserve">
+    <value>{0} dependencies have updates available</value>
+  </data>
   <data name="Stats_Contributors" xml:space="preserve">
     <value>Contributors</value>
   </data>

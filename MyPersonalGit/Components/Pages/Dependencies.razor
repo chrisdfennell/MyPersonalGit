@@ -1,8 +1,16 @@
 @page "/repo/{RepoName}/dependencies"
 @using MyPersonalGit.Data
+@using MyPersonalGit.Models
 @using MyPersonalGit.Resources
+@using MyPersonalGit.Services
 @using Microsoft.Extensions.Localization
+@using Microsoft.JSInterop
 @inject IDependencyService DependencyService
+@inject IDependencyScanService ScanService
+@inject IRepositoryService RepoService
+@inject ICollaboratorService CollaboratorService
+@inject CurrentUserService UserService
+@inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
 
@@ -19,14 +27,33 @@
     <div class="d-flex align-items-center mb-1">
         <i class="bi bi-diagram-3 fs-4 me-2 text-primary" aria-hidden="true"></i>
         <h1 class="h4 fw-bold mb-0">@L["Dep_Title"]</h1>
+        @if (!loading && accessible && deps.Count > 0)
+        {
+            <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" @onclick="DownloadSbomAsync">
+                <i class="bi bi-download me-1" aria-hidden="true"></i>@L["Dep_DownloadSbom"]
+            </button>
+        }
     </div>
-    <p class="text-muted">@L["Dep_Subtitle"]</p>
+    <p class="text-muted mb-1">@L["Dep_Subtitle"]</p>
+    @if (!loading && accessible && scannedAt != null)
+    {
+        <p class="text-muted small"><i class="bi bi-clock-history me-1" aria-hidden="true"></i>@L["Dep_LastScanned", scannedAt.Value.ToString("u")]</p>
+    }
 
     @if (loading)
     {
         <div class="d-flex align-items-center text-muted py-5">
             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
             <span>@L["Dep_Loading"]</span>
+        </div>
+    }
+    else if (!accessible)
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-lock fs-1 text-muted d-block mb-3" aria-hidden="true"></i>
+                <p class="mb-1 fw-semibold">@L["Dep_Empty"]</p>
+            </div>
         </div>
     }
     else if (deps.Count == 0)
@@ -60,6 +87,36 @@
                     <div class="text-muted small">@L["Dep_Manifests"]</div>
                 </div>
             </div>
+            <div class="card border-0 shadow-sm flex-fill text-center">
+                <div class="card-body py-3">
+                    @if (scanLoading)
+                    {
+                        <div class="h3 fw-bold mb-0 text-muted">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="h3 fw-bold mb-0 @(outdatedCount > 0 ? "text-warning" : "text-success")">@outdatedCount</div>
+                    }
+                    <div class="text-muted small">@L["Dep_Outdated"]</div>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm flex-fill text-center">
+                <div class="card-body py-3">
+                    @if (scanLoading)
+                    {
+                        <div class="h3 fw-bold mb-0 text-muted">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="h3 fw-bold mb-0 @(vulnCount > 0 ? "text-danger" : "text-success")">@vulnCount</div>
+                    }
+                    <div class="text-muted small">@L["Dep_Vulnerabilities"]</div>
+                </div>
+            </div>
         </div>
 
         @foreach (var manifest in deps.GroupBy(d => d.ManifestPath).OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase))
@@ -76,12 +133,14 @@
                             <tr>
                                 <th scope="col">@L["Dep_ColName"]</th>
                                 <th scope="col">@L["Dep_ColVersion"]</th>
+                                <th scope="col">@L["Dep_ColStatus"]</th>
                                 <th scope="col" class="text-end">@L["Dep_ColEcosystem"]</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var d in manifest.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
                             {
+                                var advisories = VulnsFor(d);
                                 <tr>
                                     <td>
                                         <span class="fw-medium">@d.Name</span>
@@ -90,7 +149,40 @@
                                             <span class="badge bg-info-subtle text-info-emphasis ms-2">@L["Dep_Dev"]</span>
                                         }
                                     </td>
-                                    <td><code class="small text-body-secondary">@(string.IsNullOrEmpty(d.Version) ? "—" : d.Version)</code></td>
+                                    <td>
+                                        <code class="small text-body-secondary">@(string.IsNullOrEmpty(d.Version) ? "—" : d.Version)</code>
+                                        @{ var od = OutdatedFor(d); }
+                                        @if (od != null)
+                                        {
+                                            <span class="badge bg-warning-subtle text-warning-emphasis ms-2" title="@L["Dep_UpdateAvailable"]">
+                                                <i class="bi bi-arrow-up-circle me-1" aria-hidden="true"></i>@od.Latest
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (scanLoading)
+                                        {
+                                            <span class="text-muted small">@L["Dep_VulnScanning"]</span>
+                                        }
+                                        else if (advisories.Count > 0)
+                                        {
+                                            var worst = WorstSeverity(advisories);
+                                            var sevLabel = SeverityLabel(worst);
+                                            var sevTitle = string.IsNullOrEmpty(advisories[0].Summary) ? sevLabel : $"{sevLabel} · {advisories[0].Summary}";
+                                            var sevText = advisories.Count > 1 ? $"{sevLabel} +{advisories.Count - 1}" : sevLabel;
+                                            <a href="@advisories[0].Url" target="_blank" rel="noopener noreferrer"
+                                               class="badge @SeverityClass(worst) text-decoration-none"
+                                               title="@sevTitle">
+                                                <i class="bi bi-shield-exclamation me-1" aria-hidden="true"></i>@sevText
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-success" title="@L["Dep_Secure"]" aria-label="@L["Dep_Secure"]">
+                                                <i class="bi bi-check-circle" aria-hidden="true"></i>
+                                            </span>
+                                        }
+                                    </td>
                                     <td class="text-end"><span class="badge rounded-pill @EcoClass(d.Ecosystem)">@d.Ecosystem</span></td>
                                 </tr>
                             }
@@ -106,22 +198,116 @@
     [Parameter] public string RepoName { get; set; } = "";
 
     private bool loading = true;
+    private bool accessible = true;
+    private bool scanLoading;
+    private int vulnCount;
+    private int outdatedCount;
+    private DateTime? scannedAt;
     private IReadOnlyList<DependencyItem> deps = Array.Empty<DependencyItem>();
     private HashSet<string> ecosystems = new();
     private HashSet<string> manifests = new();
+    private IReadOnlyDictionary<string, IReadOnlyList<DependencyVuln>> vulns =
+        new Dictionary<string, IReadOnlyList<DependencyVuln>>();
+    private IReadOnlyDictionary<string, OutdatedInfo> outdated =
+        new Dictionary<string, OutdatedInfo>();
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            if (!await IsRepoAccessibleAsync())
+            {
+                accessible = false;
+                return;
+            }
             deps = await DependencyService.GetDependenciesAsync(RepoName);
             ecosystems = deps.Select(d => d.Ecosystem).ToHashSet();
             manifests = deps.Select(d => d.ManifestPath).ToHashSet();
+
+            // Fast path: serve a cached scan if it matches the current HEAD and is recent.
+            var cached = await ScanService.GetCachedIfFreshAsync(RepoName);
+            if (cached != null)
+                ApplyScan(cached);
+            else
+                scanLoading = deps.Count > 0;
         }
         finally
         {
             loading = false;
         }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Cache miss: run the (network-bound) scan after the list is on screen, then
+        // persist + display it.
+        if (firstRender && accessible && scanLoading)
+        {
+            try
+            {
+                ApplyScan(await ScanService.ScanAndStoreAsync(RepoName));
+            }
+            catch { /* fail open — leave as "no findings" */ }
+            finally
+            {
+                scanLoading = false;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private void ApplyScan(DependencyScanData data)
+    {
+        vulns = data.VulnsByKey();
+        outdated = data.OutdatedByKey();
+        vulnCount = data.Findings.Sum(f => f.Advisories.Count);
+        outdatedCount = data.OutdatedCount;
+        scannedAt = data.ScannedAt;
+    }
+
+    private IReadOnlyList<DependencyVuln> VulnsFor(DependencyItem d) =>
+        vulns.TryGetValue(VulnerabilityService.Key(d), out var v) ? v : Array.Empty<DependencyVuln>();
+
+    private OutdatedInfo? OutdatedFor(DependencyItem d) =>
+        outdated.TryGetValue(VulnerabilityService.Key(d), out var o) ? o : null;
+
+    private static string WorstSeverity(IReadOnlyList<DependencyVuln> advisories) =>
+        advisories.OrderByDescending(a => VulnerabilityService.SeverityRank(a.Severity)).First().Severity;
+
+    private string SeverityLabel(string severity) => severity switch
+    {
+        "CRITICAL" => L["Dep_Sev_Critical"],
+        "HIGH" => L["Dep_Sev_High"],
+        "MODERATE" => L["Dep_Sev_Moderate"],
+        "LOW" => L["Dep_Sev_Low"],
+        _ => L["Dep_Sev_Unknown"]
+    };
+
+    private static string SeverityClass(string severity) => severity switch
+    {
+        "CRITICAL" => "bg-danger text-white",
+        "HIGH" => "bg-danger-subtle text-danger-emphasis",
+        "MODERATE" => "bg-warning-subtle text-warning-emphasis",
+        "LOW" => "bg-info-subtle text-info-emphasis",
+        _ => "bg-secondary-subtle text-secondary-emphasis"
+    };
+
+    private async Task<bool> IsRepoAccessibleAsync()
+    {
+        var meta = await RepoService.GetRepositoryAsync(RepoName);
+        if (meta == null) return false;
+        if (!meta.IsPrivate) return true;
+        if (!UserService.IsLoggedIn) return false;
+        if (meta.Owner.Equals(UserService.Username, StringComparison.OrdinalIgnoreCase)) return true;
+        return await CollaboratorService.HasPermissionAsync(RepoName, UserService.Username, CollaboratorPermission.Read);
+    }
+
+    private async Task DownloadSbomAsync()
+    {
+        var serial = "urn:uuid:" + Guid.NewGuid();
+        var sbom = SbomBuilder.BuildCycloneDx(RepoName, deps, DateTime.UtcNow, serial);
+        var fileName = $"{RepoName}-sbom.cyclonedx.json";
+        await JS.InvokeVoidAsync("mpgDownloadFile", fileName, sbom, "application/json");
     }
 
     private static string EcoClass(string ecosystem) => ecosystem switch

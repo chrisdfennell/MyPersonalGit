@@ -6,6 +6,7 @@
 @using MyPersonalGit.Resources
 @inject ISecurityService SecurityService
 @inject ISecretScanService SecretScanService
+@inject IDependencyScanService DependencyScanService
 @inject IConfiguration Config
 @inject IAdminService AdminService
 @inject CurrentUserService UserService
@@ -43,6 +44,15 @@
         <li class="nav-item">
             <button class="nav-link @(ActiveTab == "dependencies" ? "active" : "")" @onclick='() => ActiveTab = "dependencies"'>
                 <i class="bi bi-box-seam me-1"></i> @L["Security_Dependencies"]
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == "depalerts" ? "active" : "")" @onclick='() => ActiveTab = "depalerts"'>
+                <i class="bi bi-shield-exclamation me-1"></i> @L["Sec_DepAlerts"]
+                @if (depScan != null && depScan.VulnerableCount > 0)
+                {
+                    <span class="badge bg-danger ms-1">@depScan.VulnerableCount</span>
+                }
             </button>
         </li>
         <li class="nav-item">
@@ -328,6 +338,80 @@
             </div>
         }
     }
+    else if (ActiveTab == "depalerts")
+    {
+        @if (depScanData == null)
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-shield-exclamation" style="font-size: 4rem; color: #6c757d;"></i>
+                    <h3 class="mt-3">@L["Sec_DepAlertsNotScanned"]</h3>
+                    <a class="btn btn-primary" href="/repo/@RepoName/dependencies">
+                        <i class="bi bi-diagram-3 me-2"></i>@L["Sec_DepViewAll"]
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+            var vulnerable = depScanData.Findings.Where(f => f.Advisories.Count > 0).ToList();
+            <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <p class="text-muted mb-0">@L["Security_LastScanned"] @FormatDate(depScanData.ScannedAt)</p>
+                <a class="btn btn-sm btn-outline-secondary" href="/repo/@RepoName/dependencies">
+                    <i class="bi bi-diagram-3 me-1"></i>@L["Sec_DepViewAll"]
+                </a>
+            </div>
+
+            @if (vulnerable.Count == 0)
+            {
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-shield-check" style="font-size: 4rem; color: #198754;"></i>
+                        <h3 class="mt-3">@L["Sec_DepAlertsNone"]</h3>
+                        @if (depScanData.OutdatedCount > 0)
+                        {
+                            <p class="text-muted">@L["Sec_DepOutdatedNote", depScanData.OutdatedCount]</p>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="list-group">
+                    @foreach (var finding in vulnerable)
+                    {
+                        var worst = finding.Advisories.OrderByDescending(a => VulnerabilityService.SeverityRank(a.Severity)).First().Severity;
+                        <div class="list-group-item">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-box-seam me-2 text-muted"></i>
+                                <h6 class="mb-0">@finding.Name <span class="text-muted fw-normal">@finding.Version</span></h6>
+                                <span class="badge @DepSeverityBadgeClass(worst) ms-2">@worst</span>
+                                <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis ms-2">@finding.Ecosystem</span>
+                                @if (finding.Latest != null)
+                                {
+                                    <span class="badge bg-warning-subtle text-warning-emphasis ms-2"><i class="bi bi-arrow-up-circle me-1"></i>@finding.Latest</span>
+                                }
+                            </div>
+                            <small class="text-muted"><code>@finding.ManifestPath</code></small>
+                            <ul class="list-unstyled mt-2 mb-0">
+                                @foreach (var adv in finding.Advisories)
+                                {
+                                    <li class="mb-1">
+                                        <span class="badge @DepSeverityBadgeClass(adv.Severity) me-2">@adv.Severity</span>
+                                        <a href="@adv.Url" target="_blank" rel="noopener noreferrer">@adv.Id</a>
+                                        @if (!string.IsNullOrEmpty(adv.Summary))
+                                        {
+                                            <span class="text-muted">— @adv.Summary</span>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                </div>
+            }
+        }
+    }
 </div>
 
 @if (ShowAdvisoryModal)
@@ -388,11 +472,25 @@
     private SecretScanResultState? secretFilter = null;
     private bool isSecretScanning = false;
 
+    private DependencyScan? depScan;
+    private DependencyScanData? depScanData;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
         secretAlerts = await SecretScanService.GetResultsAsync(RepoName, secretFilter);
+        depScan = await DependencyScanService.GetLatestAsync(RepoName);
+        depScanData = depScan == null ? null : await DependencyScanService.GetLatestDataAsync(RepoName);
     }
+
+    private static string DepSeverityBadgeClass(string severity) => severity switch
+    {
+        "CRITICAL" => "bg-danger",
+        "HIGH" => "bg-danger-subtle text-danger-emphasis",
+        "MODERATE" => "bg-warning text-dark",
+        "LOW" => "bg-info text-dark",
+        _ => "bg-secondary"
+    };
 
     private async Task LoadData()
     {

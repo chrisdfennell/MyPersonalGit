@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -4917,5 +4917,62 @@
   </data>
   <data name="Actions_Delivered" xml:space="preserve">
     <value>已送达</value>
+  </data>
+  <data name="Dep_ColStatus" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="Dep_Vulnerabilities" xml:space="preserve">
+    <value>漏洞</value>
+  </data>
+  <data name="Dep_VulnScanning" xml:space="preserve">
+    <value>正在检查已知安全公告…</value>
+  </data>
+  <data name="Dep_VulnKnown" xml:space="preserve">
+    <value>已知安全公告</value>
+  </data>
+  <data name="Dep_Secure" xml:space="preserve">
+    <value>无已知公告</value>
+  </data>
+  <data name="Dep_DownloadSbom" xml:space="preserve">
+    <value>下载 SBOM</value>
+  </data>
+  <data name="Dep_Outdated" xml:space="preserve">
+    <value>过时</value>
+  </data>
+  <data name="Dep_UpdateAvailable" xml:space="preserve">
+    <value>有可用更新</value>
+  </data>
+  <data name="Dep_LastScanned" xml:space="preserve">
+    <value>上次扫描：{0}</value>
+  </data>
+  <data name="Dep_Sev_Critical" xml:space="preserve">
+    <value>严重</value>
+  </data>
+  <data name="Dep_Sev_High" xml:space="preserve">
+    <value>高</value>
+  </data>
+  <data name="Dep_Sev_Moderate" xml:space="preserve">
+    <value>中</value>
+  </data>
+  <data name="Dep_Sev_Low" xml:space="preserve">
+    <value>低</value>
+  </data>
+  <data name="Dep_Sev_Unknown" xml:space="preserve">
+    <value>未知</value>
+  </data>
+  <data name="Sec_DepAlerts" xml:space="preserve">
+    <value>依赖项警报</value>
+  </data>
+  <data name="Sec_DepAlertsNone" xml:space="preserve">
+    <value>未检测到易受攻击的依赖项</value>
+  </data>
+  <data name="Sec_DepAlertsNotScanned" xml:space="preserve">
+    <value>尚未扫描依赖项</value>
+  </data>
+  <data name="Sec_DepViewAll" xml:space="preserve">
+    <value>查看所有依赖项</value>
+  </data>
+  <data name="Sec_DepOutdatedNote" xml:space="preserve">
+    <value>{0} 个依赖项有可用更新</value>
   </data>
 </root>

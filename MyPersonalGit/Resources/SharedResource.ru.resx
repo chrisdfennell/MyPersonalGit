@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -4917,5 +4917,62 @@
   </data>
   <data name="Actions_Delivered" xml:space="preserve">
     <value>Доставлено</value>
+  </data>
+  <data name="Dep_ColStatus" xml:space="preserve">
+    <value>Состояние</value>
+  </data>
+  <data name="Dep_Vulnerabilities" xml:space="preserve">
+    <value>Уязвимости</value>
+  </data>
+  <data name="Dep_VulnScanning" xml:space="preserve">
+    <value>Проверка известных уязвимостей…</value>
+  </data>
+  <data name="Dep_VulnKnown" xml:space="preserve">
+    <value>Известная уязвимость безопасности</value>
+  </data>
+  <data name="Dep_Secure" xml:space="preserve">
+    <value>Известных уязвимостей нет</value>
+  </data>
+  <data name="Dep_DownloadSbom" xml:space="preserve">
+    <value>Скачать SBOM</value>
+  </data>
+  <data name="Dep_Outdated" xml:space="preserve">
+    <value>Устаревшие</value>
+  </data>
+  <data name="Dep_UpdateAvailable" xml:space="preserve">
+    <value>Доступно обновление</value>
+  </data>
+  <data name="Dep_LastScanned" xml:space="preserve">
+    <value>Последняя проверка: {0}</value>
+  </data>
+  <data name="Dep_Sev_Critical" xml:space="preserve">
+    <value>Критическая</value>
+  </data>
+  <data name="Dep_Sev_High" xml:space="preserve">
+    <value>Высокая</value>
+  </data>
+  <data name="Dep_Sev_Moderate" xml:space="preserve">
+    <value>Средняя</value>
+  </data>
+  <data name="Dep_Sev_Low" xml:space="preserve">
+    <value>Низкая</value>
+  </data>
+  <data name="Dep_Sev_Unknown" xml:space="preserve">
+    <value>Неизвестно</value>
+  </data>
+  <data name="Sec_DepAlerts" xml:space="preserve">
+    <value>Оповещения о зависимостях</value>
+  </data>
+  <data name="Sec_DepAlertsNone" xml:space="preserve">
+    <value>Уязвимые зависимости не обнаружены</value>
+  </data>
+  <data name="Sec_DepAlertsNotScanned" xml:space="preserve">
+    <value>Зависимости ещё не проверены</value>
+  </data>
+  <data name="Sec_DepViewAll" xml:space="preserve">
+    <value>Показать все зависимости</value>
+  </data>
+  <data name="Sec_DepOutdatedNote" xml:space="preserve">
+    <value>Доступны обновления для {0} зависимостей</value>
   </data>
 </root>

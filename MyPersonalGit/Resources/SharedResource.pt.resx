@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -4917,5 +4917,62 @@
   </data>
   <data name="Actions_Delivered" xml:space="preserve">
     <value>Entregue</value>
+  </data>
+  <data name="Dep_ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Dep_Vulnerabilities" xml:space="preserve">
+    <value>Vulnerabilidades</value>
+  </data>
+  <data name="Dep_VulnScanning" xml:space="preserve">
+    <value>Verificando avisos de segurança conhecidos…</value>
+  </data>
+  <data name="Dep_VulnKnown" xml:space="preserve">
+    <value>Aviso de segurança conhecido</value>
+  </data>
+  <data name="Dep_Secure" xml:space="preserve">
+    <value>Nenhum aviso conhecido</value>
+  </data>
+  <data name="Dep_DownloadSbom" xml:space="preserve">
+    <value>Baixar SBOM</value>
+  </data>
+  <data name="Dep_Outdated" xml:space="preserve">
+    <value>Desatualizadas</value>
+  </data>
+  <data name="Dep_UpdateAvailable" xml:space="preserve">
+    <value>Atualização disponível</value>
+  </data>
+  <data name="Dep_LastScanned" xml:space="preserve">
+    <value>Última varredura: {0}</value>
+  </data>
+  <data name="Dep_Sev_Critical" xml:space="preserve">
+    <value>Crítica</value>
+  </data>
+  <data name="Dep_Sev_High" xml:space="preserve">
+    <value>Alta</value>
+  </data>
+  <data name="Dep_Sev_Moderate" xml:space="preserve">
+    <value>Moderada</value>
+  </data>
+  <data name="Dep_Sev_Low" xml:space="preserve">
+    <value>Baixa</value>
+  </data>
+  <data name="Dep_Sev_Unknown" xml:space="preserve">
+    <value>Desconhecida</value>
+  </data>
+  <data name="Sec_DepAlerts" xml:space="preserve">
+    <value>Alertas de dependências</value>
+  </data>
+  <data name="Sec_DepAlertsNone" xml:space="preserve">
+    <value>Nenhuma dependência vulnerável detectada</value>
+  </data>
+  <data name="Sec_DepAlertsNotScanned" xml:space="preserve">
+    <value>Dependências ainda não verificadas</value>
+  </data>
+  <data name="Sec_DepViewAll" xml:space="preserve">
+    <value>Ver todas as dependências</value>
+  </data>
+  <data name="Sec_DepOutdatedNote" xml:space="preserve">
+    <value>{0} dependências têm atualizações disponíveis</value>
   </data>
 </root>

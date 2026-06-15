@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -4917,5 +4917,62 @@
   </data>
   <data name="Actions_Delivered" xml:space="preserve">
     <value>Zugestellt</value>
+  </data>
+  <data name="Dep_ColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Dep_Vulnerabilities" xml:space="preserve">
+    <value>Schwachstellen</value>
+  </data>
+  <data name="Dep_VulnScanning" xml:space="preserve">
+    <value>Suche nach bekannten Sicherheitshinweisen…</value>
+  </data>
+  <data name="Dep_VulnKnown" xml:space="preserve">
+    <value>Bekannter Sicherheitshinweis</value>
+  </data>
+  <data name="Dep_Secure" xml:space="preserve">
+    <value>Keine bekannten Hinweise</value>
+  </data>
+  <data name="Dep_DownloadSbom" xml:space="preserve">
+    <value>SBOM herunterladen</value>
+  </data>
+  <data name="Dep_Outdated" xml:space="preserve">
+    <value>Veraltet</value>
+  </data>
+  <data name="Dep_UpdateAvailable" xml:space="preserve">
+    <value>Update verfügbar</value>
+  </data>
+  <data name="Dep_LastScanned" xml:space="preserve">
+    <value>Zuletzt geprüft: {0}</value>
+  </data>
+  <data name="Dep_Sev_Critical" xml:space="preserve">
+    <value>Kritisch</value>
+  </data>
+  <data name="Dep_Sev_High" xml:space="preserve">
+    <value>Hoch</value>
+  </data>
+  <data name="Dep_Sev_Moderate" xml:space="preserve">
+    <value>Mittel</value>
+  </data>
+  <data name="Dep_Sev_Low" xml:space="preserve">
+    <value>Niedrig</value>
+  </data>
+  <data name="Dep_Sev_Unknown" xml:space="preserve">
+    <value>Unbekannt</value>
+  </data>
+  <data name="Sec_DepAlerts" xml:space="preserve">
+    <value>Abhängigkeitswarnungen</value>
+  </data>
+  <data name="Sec_DepAlertsNone" xml:space="preserve">
+    <value>Keine anfälligen Abhängigkeiten erkannt</value>
+  </data>
+  <data name="Sec_DepAlertsNotScanned" xml:space="preserve">
+    <value>Abhängigkeiten noch nicht geprüft</value>
+  </data>
+  <data name="Sec_DepViewAll" xml:space="preserve">
+    <value>Alle Abhängigkeiten anzeigen</value>
+  </data>
+  <data name="Sec_DepOutdatedNote" xml:space="preserve">
+    <value>{0} Abhängigkeiten haben verfügbare Updates</value>
   </data>
 </root>

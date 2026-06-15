@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -4917,5 +4917,62 @@
   </data>
   <data name="Actions_Delivered" xml:space="preserve">
     <value>配信済み</value>
+  </data>
+  <data name="Dep_ColStatus" xml:space="preserve">
+    <value>ステータス</value>
+  </data>
+  <data name="Dep_Vulnerabilities" xml:space="preserve">
+    <value>脆弱性</value>
+  </data>
+  <data name="Dep_VulnScanning" xml:space="preserve">
+    <value>既知のアドバイザリを確認しています…</value>
+  </data>
+  <data name="Dep_VulnKnown" xml:space="preserve">
+    <value>既知のセキュリティアドバイザリ</value>
+  </data>
+  <data name="Dep_Secure" xml:space="preserve">
+    <value>既知のアドバイザリはありません</value>
+  </data>
+  <data name="Dep_DownloadSbom" xml:space="preserve">
+    <value>SBOM をダウンロード</value>
+  </data>
+  <data name="Dep_Outdated" xml:space="preserve">
+    <value>更新可能</value>
+  </data>
+  <data name="Dep_UpdateAvailable" xml:space="preserve">
+    <value>更新があります</value>
+  </data>
+  <data name="Dep_LastScanned" xml:space="preserve">
+    <value>前回のスキャン: {0}</value>
+  </data>
+  <data name="Dep_Sev_Critical" xml:space="preserve">
+    <value>緊急</value>
+  </data>
+  <data name="Dep_Sev_High" xml:space="preserve">
+    <value>高</value>
+  </data>
+  <data name="Dep_Sev_Moderate" xml:space="preserve">
+    <value>中</value>
+  </data>
+  <data name="Dep_Sev_Low" xml:space="preserve">
+    <value>低</value>
+  </data>
+  <data name="Dep_Sev_Unknown" xml:space="preserve">
+    <value>不明</value>
+  </data>
+  <data name="Sec_DepAlerts" xml:space="preserve">
+    <value>依存関係アラート</value>
+  </data>
+  <data name="Sec_DepAlertsNone" xml:space="preserve">
+    <value>脆弱な依存関係は検出されませんでした</value>
+  </data>
+  <data name="Sec_DepAlertsNotScanned" xml:space="preserve">
+    <value>依存関係はまだスキャンされていません</value>
+  </data>
+  <data name="Sec_DepViewAll" xml:space="preserve">
+    <value>すべての依存関係を表示</value>
+  </data>
+  <data name="Sec_DepOutdatedNote" xml:space="preserve">
+    <value>{0} 件の依存関係に更新があります</value>
   </data>
 </root>

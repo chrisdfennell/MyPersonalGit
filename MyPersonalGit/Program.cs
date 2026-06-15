@@ -161,6 +161,10 @@ builder.Services.AddSingleton<IGpgKeyService, GpgKeyService>();
 builder.Services.AddSingleton<ITemplateService, TemplateService>();
 builder.Services.AddSingleton<ICodeOwnersService, CodeOwnersService>();
 builder.Services.AddSingleton<IDependencyService, DependencyService>();
+builder.Services.AddSingleton<IVulnerabilityService, VulnerabilityService>();
+builder.Services.AddSingleton<IOutdatedService, OutdatedService>();
+builder.Services.AddSingleton<IDependencyScanService, DependencyScanService>();
+builder.Services.AddHostedService<DependencyScanSchedulerService>();
 builder.Services.AddSingleton<ITwoFactorService, TwoFactorService>();
 builder.Services.AddHostedService<WorkflowSchedulerService>();
 builder.Services.AddSingleton<IOAuthService, OAuthService>();
@@ -438,6 +442,19 @@ using (var scope = app.Services.CreateScope())
             ""IsEnabled"" INTEGER NOT NULL DEFAULT 1,
             ""IsBuiltIn"" INTEGER NOT NULL DEFAULT 0
         );");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""DependencyScans"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""RepoName"" TEXT NOT NULL,
+            ""CommitSha"" TEXT NOT NULL,
+            ""ScannedAt"" TEXT NOT NULL,
+            ""TotalCount"" INTEGER NOT NULL DEFAULT 0,
+            ""VulnerableCount"" INTEGER NOT NULL DEFAULT 0,
+            ""OutdatedCount"" INTEGER NOT NULL DEFAULT 0,
+            ""ResultsJson"" TEXT NOT NULL DEFAULT '[]'
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_DependencyScans_RepoName"" ON ""DependencyScans"" (""RepoName"");");
 
     db.Database.ExecuteSqlRaw(@"
         CREATE TABLE IF NOT EXISTS ""DependencyUpdateConfigs"" (

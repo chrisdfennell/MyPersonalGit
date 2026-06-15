@@ -15,6 +15,9 @@ public interface IDependencyService
     /// <paramref name="branch"/> is given) and returns the declared dependencies.
     /// </summary>
     Task<IReadOnlyList<DependencyItem>> GetDependenciesAsync(string repoName, string? branch = null);
+
+    /// <summary>Returns the HEAD commit sha (used as a scan cache key), or null if unavailable.</summary>
+    Task<string?> GetHeadCommitShaAsync(string repoName);
 }
 
 public class DependencyService : IDependencyService
@@ -30,13 +33,34 @@ public class DependencyService : IDependencyService
         _logger = logger;
     }
 
-    public async Task<IReadOnlyList<DependencyItem>> GetDependenciesAsync(string repoName, string? branch = null)
+    private async Task<string> ResolveRepoPathAsync(string repoName)
     {
         var settings = await _adminService.GetSystemSettingsAsync();
         var projectRoot = !string.IsNullOrEmpty(settings.ProjectRoot)
             ? settings.ProjectRoot
             : _config["Git:ProjectRoot"] ?? "/repos";
-        var repoPath = Path.Combine(projectRoot, $"{repoName}.git");
+        return Path.Combine(projectRoot, $"{repoName}.git");
+    }
+
+    public async Task<string?> GetHeadCommitShaAsync(string repoName)
+    {
+        try
+        {
+            var repoPath = await ResolveRepoPathAsync(repoName);
+            if (!Repository.IsValid(repoPath)) return null;
+            using var repo = new Repository(repoPath);
+            return repo.Head?.Tip?.Sha;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Failed to read HEAD sha for {Repo}", repoName);
+            return null;
+        }
+    }
+
+    public async Task<IReadOnlyList<DependencyItem>> GetDependenciesAsync(string repoName, string? branch = null)
+    {
+        var repoPath = await ResolveRepoPathAsync(repoName);
 
         var result = new List<DependencyItem>();
         try

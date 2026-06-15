@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -4917,5 +4917,62 @@
   </data>
   <data name="Actions_Delivered" xml:space="preserve">
     <value>Teslim edildi</value>
+  </data>
+  <data name="Dep_ColStatus" xml:space="preserve">
+    <value>Durum</value>
+  </data>
+  <data name="Dep_Vulnerabilities" xml:space="preserve">
+    <value>Güvenlik Açıkları</value>
+  </data>
+  <data name="Dep_VulnScanning" xml:space="preserve">
+    <value>Bilinen güvenlik uyarıları kontrol ediliyor…</value>
+  </data>
+  <data name="Dep_VulnKnown" xml:space="preserve">
+    <value>Bilinen güvenlik uyarısı</value>
+  </data>
+  <data name="Dep_Secure" xml:space="preserve">
+    <value>Bilinen uyarı yok</value>
+  </data>
+  <data name="Dep_DownloadSbom" xml:space="preserve">
+    <value>SBOM indir</value>
+  </data>
+  <data name="Dep_Outdated" xml:space="preserve">
+    <value>Güncel değil</value>
+  </data>
+  <data name="Dep_UpdateAvailable" xml:space="preserve">
+    <value>Güncelleme mevcut</value>
+  </data>
+  <data name="Dep_LastScanned" xml:space="preserve">
+    <value>Son tarama: {0}</value>
+  </data>
+  <data name="Dep_Sev_Critical" xml:space="preserve">
+    <value>Kritik</value>
+  </data>
+  <data name="Dep_Sev_High" xml:space="preserve">
+    <value>Yüksek</value>
+  </data>
+  <data name="Dep_Sev_Moderate" xml:space="preserve">
+    <value>Orta</value>
+  </data>
+  <data name="Dep_Sev_Low" xml:space="preserve">
+    <value>Düşük</value>
+  </data>
+  <data name="Dep_Sev_Unknown" xml:space="preserve">
+    <value>Bilinmiyor</value>
+  </data>
+  <data name="Sec_DepAlerts" xml:space="preserve">
+    <value>Bağımlılık uyarıları</value>
+  </data>
+  <data name="Sec_DepAlertsNone" xml:space="preserve">
+    <value>Savunmasız bağımlılık bulunamadı</value>
+  </data>
+  <data name="Sec_DepAlertsNotScanned" xml:space="preserve">
+    <value>Bağımlılıklar henüz taranmadı</value>
+  </data>
+  <data name="Sec_DepViewAll" xml:space="preserve">
+    <value>Tüm bağımlılıkları görüntüle</value>
+  </data>
+  <data name="Sec_DepOutdatedNote" xml:space="preserve">
+    <value>{0} bağımlılık için güncelleme mevcut</value>
   </data>
 </root>
