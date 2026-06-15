@@ -8,6 +8,34 @@ namespace MyPersonalGit.Services;
 /// </summary>
 public static class SafePath
 {
+    public static bool IsSafeRepositoryName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return false;
+
+        if (name.Contains("..", StringComparison.Ordinal)) return false;
+        if (name.IndexOfAny(new[] { '/', '\\' }) >= 0) return false;
+        if (name.Contains(':')) return false;
+        if (Path.IsPathRooted(name)) return false;
+        if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return false;
+
+        return System.Text.RegularExpressions.Regex.IsMatch(name, @"^[a-zA-Z0-9._-]+$");
+    }
+
+    public static string? ToRepositoryFolderName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+
+        var trimmed = name.Trim();
+        if (!IsSafeRepositoryName(trimmed))
+            return null;
+
+        return trimmed.EndsWith(".git", StringComparison.OrdinalIgnoreCase)
+            ? trimmed
+            : $"{trimmed}.git";
+    }
+
     /// <summary>
     /// Combine <paramref name="segments"/> under <paramref name="baseDir"/>. Returns the
     /// absolute path only if every segment is a single safe path component AND the resolved

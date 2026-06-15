@@ -46,11 +46,12 @@ public sealed class BasicAuthMiddleware
         var repoName = ExtractRepoName(context.Request.Path);
         var isReadOperation = IsReadOperation(context.Request);
 
-        // For public repos, allow unauthenticated read (clone/fetch)
+        // For known public repos, allow unauthenticated read (clone/fetch). Unknown
+        // repos fail closed so DB/disk mismatches cannot expose repositories.
         if (isReadOperation && !string.IsNullOrEmpty(repoName))
         {
             var repoMeta = await repoService.GetRepositoryAsync(repoName);
-            if (repoMeta == null || !repoMeta.IsPrivate)
+            if (repoMeta != null && !repoMeta.IsPrivate)
             {
                 // Public repo — allow anonymous read
                 await _next(context);

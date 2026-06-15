@@ -1,6 +1,7 @@
 using LibGit2Sharp;
 using Microsoft.EntityFrameworkCore;
 using MyPersonalGit.Models;
+using MyPersonalGit.Services;
 using Repository = MyPersonalGit.Models.Repository;
 
 namespace MyPersonalGit.Data;
@@ -68,6 +69,9 @@ public class RepositoryService : IRepositoryService
 
     public async Task<Repository> CreateRepositoryAsync(string name, string owner, string? description = null, bool isPrivate = false)
     {
+        if (!SafePath.IsSafeRepositoryName(name))
+            throw new ArgumentException("Invalid repository name.", nameof(name));
+
         using var db = _dbFactory.CreateDbContext();
 
         var existing = await db.Repositories.FirstOrDefaultAsync(r => r.Name.ToLower() == name.ToLower());
@@ -614,7 +618,7 @@ public class RepositoryService : IRepositoryService
         newName = newName.Trim();
 
         // Allow alphanumeric, hyphens, underscores, dots, and .git suffix
-        if (!System.Text.RegularExpressions.Regex.IsMatch(newName, @"^[a-zA-Z0-9._-]+$"))
+        if (!SafePath.IsSafeRepositoryName(newName))
             return (false, "Repository name can only contain alphanumeric characters, hyphens, underscores, and dots.");
 
         if (string.Equals(oldName, newName, StringComparison.OrdinalIgnoreCase))

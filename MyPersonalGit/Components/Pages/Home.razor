@@ -683,8 +683,7 @@
     private string GetFullRepoPath()
     {
         var basePath = string.IsNullOrWhiteSpace(customRepoPath) ? RootPath : customRepoPath;
-        var folderName = string.IsNullOrWhiteSpace(newRepoName) ? "repo-name.git" :
-            (newRepoName.EndsWith(".git") ? newRepoName : $"{newRepoName}.git");
+        var folderName = MyPersonalGit.Services.SafePath.ToRepositoryFolderName(newRepoName) ?? "repo-name.git";
         return Path.Combine(basePath, folderName);
     }
 
@@ -700,8 +699,14 @@
         try
         {
             var basePath = string.IsNullOrWhiteSpace(customRepoPath) ? RootPath : customRepoPath;
-            var repoNameClean = newRepoName.EndsWith(".git") ? newRepoName[..^4] : newRepoName;
-            var folderName = $"{repoNameClean}.git";
+            var folderName = MyPersonalGit.Services.SafePath.ToRepositoryFolderName(newRepoName);
+            if (folderName == null)
+            {
+                createError = "Repository name can only contain alphanumeric characters, hyphens, underscores, and dots.";
+                return;
+            }
+
+            var repoNameClean = folderName.EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? folderName[..^4] : folderName;
 
             // If creating from a template, use the TemplateService
             if (selectedTemplateId > 0)
@@ -735,7 +740,12 @@
             if (!Directory.Exists(basePath))
                 Directory.CreateDirectory(basePath);
 
-            var fullPath = Path.Combine(basePath, folderName);
+            var fullPath = MyPersonalGit.Services.SafePath.CombineUnder(basePath, folderName);
+            if (fullPath == null)
+            {
+                createError = "Repository path is invalid.";
+                return;
+            }
 
             if (Directory.Exists(fullPath))
             {

@@ -11,7 +11,7 @@ public interface IReleaseService
     Task<bool> UpdateReleaseAsync(string repoName, int releaseId, string title, string? body, bool isDraft, bool isPrerelease);
     Task<bool> DeleteReleaseAsync(string repoName, int releaseId);
     Task<ReleaseAsset> AddAssetAsync(int releaseId, string fileName, long size, string contentType, byte[] data);
-    Task<(ReleaseAsset? asset, byte[]? data)> GetAssetAsync(int assetId);
+    Task<(ReleaseAsset? asset, byte[]? data)> GetAssetAsync(string repoName, int releaseId, int assetId);
     Task<bool> DeleteAssetAsync(int assetId);
 }
 
@@ -147,14 +147,16 @@ public class ReleaseService : IReleaseService
         return asset;
     }
 
-    public async Task<(ReleaseAsset? asset, byte[]? data)> GetAssetAsync(int assetId)
+    public async Task<(ReleaseAsset? asset, byte[]? data)> GetAssetAsync(string repoName, int releaseId, int assetId)
     {
         using var db = _dbFactory.CreateDbContext();
-        var asset = await db.ReleaseAssets.FindAsync(assetId);
-        if (asset == null) return (null, null);
-
-        var release = await db.Releases.FindAsync(asset.ReleaseId);
+        var release = await db.Releases
+            .FirstOrDefaultAsync(r => r.Id == releaseId && r.RepoName.ToLower() == repoName.ToLower());
         if (release == null) return (null, null);
+
+        var asset = await db.ReleaseAssets
+            .FirstOrDefaultAsync(a => a.Id == assetId && a.ReleaseId == releaseId);
+        if (asset == null) return (null, null);
 
         var filePath = GetAssetPath(asset.ReleaseId, asset.FileName);
         if (!File.Exists(filePath)) return (asset, null);

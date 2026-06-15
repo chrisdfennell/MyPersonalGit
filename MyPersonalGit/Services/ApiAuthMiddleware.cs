@@ -17,7 +17,7 @@ public sealed class ApiAuthMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config, ICollaboratorService collaboratorService, IAuthService authService, IDbContextFactory<AppDbContext> dbFactory)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, ICollaboratorService collaboratorService, IAuthService authService, IRepositoryService repoService, IDbContextFactory<AppDbContext> dbFactory)
     {
         if (!context.Request.Path.StartsWithSegments("/api"))
         {
@@ -25,12 +25,21 @@ public sealed class ApiAuthMiddleware
             return;
         }
 
-        // Allow unauthenticated downloads of release assets
+        // Allow unauthenticated downloads of public release assets. Private repo assets
+        // continue through token auth below.
         if (context.Request.Method == "GET" && context.Request.Path.Value != null
             && context.Request.Path.Value.Contains("/releases/") && context.Request.Path.Value.Contains("/assets/"))
         {
-            await _next(context);
-            return;
+            var segments = context.Request.Path.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (segments.Length >= 4)
+            {
+                var repoMeta = await repoService.GetRepositoryAsync(segments[3]);
+                if (repoMeta is { IsPrivate: false })
+                {
+                    await _next(context);
+                    return;
+                }
+            }
         }
 
         var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
@@ -130,18 +139,48 @@ public sealed class ApiAuthMiddleware
             {
                 var repoName = segments[3];
                 var isWriteMethod = context.Request.Method != "GET" && context.Request.Method != "HEAD";
-                var requiredPermission = isWriteMethod ? CollaboratorPermission.Write : CollaboratorPermission.Read;
 
                 var dbUser = await authService.GetUserByUsernameAsync(matchedToken.Username);
                 if (dbUser?.IsAdmin != true)
                 {
-                    var hasPermission = await collaboratorService.HasPermissionAsync(repoName, matchedToken.Username, requiredPermission);
-                    if (!hasPermission && isWriteMethod)
+                    if (isWriteMethod)
                     {
-                        context.Response.StatusCode = 403;
-                        context.Response.ContentType = "application/json";
-                        await context.Response.WriteAsync(JsonSerializer.Serialize(new { error = "You do not have write access to this repository" }));
-                        return;
+                        // Writes always require explicit write permission on the repo.
+                        var canWrite = await collaboratorService.HasPermissionAsync(repoName, matchedToken.Username, CollaboratorPermission.Write);
+                        if (!canWrite)
+                        {
+                            context.Response.StatusCode = 403;
+                            context.Response.ContentType = "application/json";
+                            await context.Response.WriteAsync(JsonSerializer.Serialize(new { error = "You do not have write access to this repository" }));
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        // Reads: only block when segments[3] resolves to a known PRIVATE repo
+                        // and the caller lacks read access. Non-repo subroutes (e.g. /templates)
+                        // and owner-first routes (e.g. /{owner}/{repo}/blame) leave repoMeta null
+                        // here and are authorized by the controller. Public repos are readable by
+                        // any valid token.
+                        Models.Repository? repoMeta = null;
+                        try
+                        {
+                            using var db = dbFactory.CreateDbContext();
+                            repoMeta = await db.Repositories.FirstOrDefaultAsync(r => r.Name.ToLower() == repoName.ToLower());
+                        }
+                        catch (Exception ex) { _logger.LogWarning(ex, "Failed to check repository metadata for token authorization"); }
+
+                        if (repoMeta is { IsPrivate: true })
+                        {
+                            var canRead = await collaboratorService.HasPermissionAsync(repoName, matchedToken.Username, CollaboratorPermission.Read);
+                            if (!canRead)
+                            {
+                                context.Response.StatusCode = 404;
+                                context.Response.ContentType = "application/json";
+                                await context.Response.WriteAsync(JsonSerializer.Serialize(new { error = "Repository not found" }));
+                                return;
+                            }
+                        }
                     }
                 }
             }

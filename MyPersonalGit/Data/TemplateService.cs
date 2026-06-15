@@ -1,6 +1,7 @@
 using LibGit2Sharp;
 using Microsoft.EntityFrameworkCore;
 using MyPersonalGit.Models;
+using MyPersonalGit.Services;
 using Repository = MyPersonalGit.Models.Repository;
 
 namespace MyPersonalGit.Data;
@@ -39,7 +40,10 @@ public class TemplateService : ITemplateService
             return null;
 
         // Check if repo already exists
-        var repoFolderName = newName.EndsWith(".git") ? newName : $"{newName}.git";
+        var repoFolderName = SafePath.ToRepositoryFolderName(newName);
+        if (repoFolderName == null)
+            return null;
+
         if (await db.Repositories.AnyAsync(r => r.Name.ToLower() == repoFolderName.ToLower()))
             return null;
 
@@ -52,7 +56,10 @@ public class TemplateService : ITemplateService
                 return null;
         }
 
-        var newRepoPath = Path.Combine(projectRoot, repoFolderName);
+        var newRepoPath = SafePath.CombineUnder(projectRoot, repoFolderName);
+        if (newRepoPath == null)
+            return null;
+
         if (Directory.Exists(newRepoPath))
             return null;
 

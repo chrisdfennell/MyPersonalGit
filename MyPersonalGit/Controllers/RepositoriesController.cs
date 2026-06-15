@@ -18,10 +18,11 @@ public class RepositoriesController : ControllerBase
     private readonly ICodeOwnersService _codeOwnersService;
     private readonly ITagProtectionService _tagProtectionService;
     private readonly IRepositoryLabelService _labelService;
+    private readonly ICollaboratorService _collaboratorService;
     private readonly IConfiguration _config;
     private readonly ILogger<RepositoriesController> _logger;
 
-    public RepositoriesController(IRepositoryService repoService, IReleaseService releaseService, IArchiveService archiveService, IBlameService blameService, ITemplateService templateService, ICodeOwnersService codeOwnersService, ITagProtectionService tagProtectionService, IRepositoryLabelService labelService, IConfiguration config, ILogger<RepositoriesController> logger)
+    public RepositoriesController(IRepositoryService repoService, IReleaseService releaseService, IArchiveService archiveService, IBlameService blameService, ITemplateService templateService, ICodeOwnersService codeOwnersService, ITagProtectionService tagProtectionService, IRepositoryLabelService labelService, ICollaboratorService collaboratorService, IConfiguration config, ILogger<RepositoriesController> logger)
     {
         _repoService = repoService;
         _releaseService = releaseService;
@@ -31,8 +32,32 @@ public class RepositoriesController : ControllerBase
         _codeOwnersService = codeOwnersService;
         _tagProtectionService = tagProtectionService;
         _labelService = labelService;
+        _collaboratorService = collaboratorService;
         _config = config;
         _logger = logger;
+    }
+
+    private async Task<bool> CanReadRepositoryAsync(string repoName)
+    {
+        var repo = await _repoService.GetRepositoryAsync(repoName);
+        if (repo == null)
+        {
+            // The DB name and on-disk folder can differ by a ".git" suffix; the read
+            // endpoints resolve by folder, so don't be stricter here — try the alternate
+            // form before failing closed.
+            var alt = repoName.EndsWith(".git", StringComparison.OrdinalIgnoreCase)
+                ? repoName[..^4]
+                : repoName + ".git";
+            repo = await _repoService.GetRepositoryAsync(alt);
+        }
+        if (repo == null) return false;
+        if (!repo.IsPrivate) return true;
+
+        var currentUser = User.Identity?.Name;
+        if (string.IsNullOrEmpty(currentUser)) return false;
+        if (repo.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase)) return true;
+
+        return await _collaboratorService.HasPermissionAsync(repo.Name, currentUser, Models.CollaboratorPermission.Read);
     }
 
     [HttpGet]
@@ -87,13 +112,9 @@ public class RepositoriesController : ControllerBase
         var repo = await _repoService.GetRepositoryAsync(repoName);
         if (repo == null) return NotFound(new { error = $"Repository '{repoName}' not found" });
 
-        // Enforce private repo access
-        if (repo.IsPrivate)
-        {
-            var currentUser = User.Identity?.Name;
-            if (currentUser == null || !repo.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))
-                return NotFound(new { error = $"Repository '{repoName}' not found" });
-        }
+        // Enforce private repo access (owner + collaborators)
+        if (!await CanReadRepositoryAsync(repoName))
+            return NotFound(new { error = $"Repository '{repoName}' not found" });
 
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
         var repoPath = Path.Combine(projectRoot, repoName);
@@ -135,8 +156,11 @@ public class RepositoriesController : ControllerBase
     }
 
     [HttpGet("{repoName}/branches")]
-    public IActionResult ListBranches(string repoName)
+    public async Task<IActionResult> ListBranches(string repoName)
     {
+        if (!await CanReadRepositoryAsync(repoName))
+            return NotFound(new { error = $"Repository '{repoName}' not found" });
+
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
         var repoPath = Path.Combine(projectRoot, repoName);
         if (!Repository.IsValid(repoPath)) return NotFound(new { error = $"Repository '{repoName}' not found" });
@@ -153,8 +177,11 @@ public class RepositoriesController : ControllerBase
     }
 
     [HttpGet("{repoName}/tags")]
-    public IActionResult ListTags(string repoName)
+    public async Task<IActionResult> ListTags(string repoName)
     {
+        if (!await CanReadRepositoryAsync(repoName))
+            return NotFound(new { error = $"Repository '{repoName}' not found" });
+
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
         var repoPath = Path.Combine(projectRoot, repoName);
         if (!Repository.IsValid(repoPath)) return NotFound(new { error = $"Repository '{repoName}' not found" });
@@ -170,8 +197,11 @@ public class RepositoriesController : ControllerBase
     }
 
     [HttpGet("{repoName}/commits")]
-    public IActionResult ListCommits(string repoName, [FromQuery] string? branch = null, [FromQuery] int limit = 30)
+    public async Task<IActionResult> ListCommits(string repoName, [FromQuery] string? branch = null, [FromQuery] int limit = 30)
     {
+        if (!await CanReadRepositoryAsync(repoName))
+            return NotFound(new { error = $"Repository '{repoName}' not found" });
+
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
         var repoPath = Path.Combine(projectRoot, repoName);
         if (!Repository.IsValid(repoPath)) return NotFound(new { error = $"Repository '{repoName}' not found" });
@@ -196,8 +226,11 @@ public class RepositoriesController : ControllerBase
     }
 
     [HttpGet("{repoName}/tree/{*path}")]
-    public IActionResult GetTree(string repoName, string? path = null, [FromQuery] string? branch = null)
+    public async Task<IActionResult> GetTree(string repoName, string? path = null, [FromQuery] string? branch = null)
     {
+        if (!await CanReadRepositoryAsync(repoName))
+            return NotFound(new { error = $"Repository '{repoName}' not found" });
+
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
         var repoPath = Path.Combine(projectRoot, repoName);
         if (!Repository.IsValid(repoPath)) return NotFound(new { error = $"Repository '{repoName}' not found" });
@@ -276,21 +309,15 @@ public class RepositoriesController : ControllerBase
 
     private async Task<IActionResult> DownloadArchive(string repoName, string? gitRef, ArchiveFormat format)
     {
+        if (!await CanReadRepositoryAsync(repoName))
+            return NotFound(new { error = $"Repository '{repoName}' not found" });
+
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
         var repoPath = Path.Combine(projectRoot, repoName);
         if (!Repository.IsValid(repoPath))
         {
             repoPath = Path.Combine(projectRoot, repoName + ".git");
             if (!Repository.IsValid(repoPath))
-                return NotFound(new { error = $"Repository '{repoName}' not found" });
-        }
-
-        // Enforce private repo access
-        var meta = await _repoService.GetRepositoryAsync(repoName);
-        if (meta is { IsPrivate: true })
-        {
-            var currentUser = User.Identity?.Name;
-            if (currentUser == null || !meta.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))
                 return NotFound(new { error = $"Repository '{repoName}' not found" });
         }
 
@@ -311,6 +338,9 @@ public class RepositoriesController : ControllerBase
     [HttpGet("{repoName}/releases")]
     public async Task<IActionResult> ListReleases(string repoName)
     {
+        if (!await CanReadRepositoryAsync(repoName))
+            return NotFound(new { error = $"Repository '{repoName}' not found" });
+
         var releases = await _releaseService.GetReleasesAsync(repoName);
         return Ok(releases.Select(r => new
         {
@@ -323,7 +353,10 @@ public class RepositoriesController : ControllerBase
     [HttpGet("{repoName}/releases/{releaseId}/assets/{assetId}")]
     public async Task<IActionResult> DownloadAsset(string repoName, int releaseId, int assetId)
     {
-        var (asset, data) = await _releaseService.GetAssetAsync(assetId);
+        if (!await CanReadRepositoryAsync(repoName))
+            return NotFound(new { error = $"Repository '{repoName}' not found" });
+
+        var (asset, data) = await _releaseService.GetAssetAsync(repoName, releaseId, assetId);
         if (asset == null || data == null) return NotFound(new { error = "Asset not found" });
         return File(data, asset.ContentType, asset.FileName);
     }
@@ -391,14 +424,8 @@ public class RepositoriesController : ControllerBase
         if (string.IsNullOrEmpty(path))
             return BadRequest(new { error = "File path is required" });
 
-        // Enforce private repo access
-        var meta = await _repoService.GetRepositoryAsync(repoName);
-        if (meta is { IsPrivate: true })
-        {
-            var currentUser = User.Identity?.Name;
-            if (currentUser == null || !meta.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))
-                return NotFound(new { error = $"Repository '{repoName}' not found" });
-        }
+        if (!await CanReadRepositoryAsync(repoName))
+            return NotFound(new { error = $"Repository '{repoName}' not found" });
 
         var hunks = _blameService.GetBlame(owner, repoName, branch, path);
         if (!hunks.Any())
@@ -431,14 +458,8 @@ public class RepositoriesController : ControllerBase
         if (string.IsNullOrEmpty(path))
             return BadRequest(new { error = "File path is required" });
 
-        // Enforce private repo access
-        var meta = await _repoService.GetRepositoryAsync(repoName);
-        if (meta is { IsPrivate: true })
-        {
-            var currentUser = User.Identity?.Name;
-            if (currentUser == null || !meta.Owner.Equals(currentUser, StringComparison.OrdinalIgnoreCase))
-                return NotFound(new { error = $"Repository '{repoName}' not found" });
-        }
+        if (!await CanReadRepositoryAsync(repoName))
+            return NotFound(new { error = $"Repository '{repoName}' not found" });
 
         var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
         var repoPath = Path.Combine(projectRoot, repoName);
@@ -476,6 +497,9 @@ public class RepositoriesController : ControllerBase
     [HttpGet("{repoName}/tag-protection")]
     public async Task<IActionResult> ListTagProtectionRules(string repoName)
     {
+        if (!await CanReadRepositoryAsync(repoName))
+            return NotFound(new { error = $"Repository '{repoName}' not found" });
+
         var rules = await _tagProtectionService.GetRulesAsync(repoName);
         return Ok(rules.Select(r => new
         {
@@ -533,6 +557,9 @@ public class RepositoriesController : ControllerBase
     [HttpGet("{repoName}/labels")]
     public async Task<IActionResult> ListLabels(string repoName)
     {
+        if (!await CanReadRepositoryAsync(repoName))
+            return NotFound(new { error = $"Repository '{repoName}' not found" });
+
         var labels = await _labelService.GetLabelsAsync(repoName);
         return Ok(labels.Select(l => new
         {
