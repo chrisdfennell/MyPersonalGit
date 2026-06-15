@@ -9,6 +9,13 @@ using MyPersonalGit.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// When hosted by the integration-test harness (WebApplicationFactory), skip the
+// inline startup work that needs a relational database / external resources:
+// the SQLite-specific migration + schema-patch block and any port-binding hosted
+// services. Read from an env var (not config) so it is set before this point
+// regardless of how the test host wires its configuration.
+bool isTestHost = Environment.GetEnvironmentVariable("MPG_TEST_HOST") == "1";
+
 // Remove request body size limit so large git pushes can succeed
 // Also configure HTTPS if enabled in system settings
 builder.WebHost.ConfigureKestrel(options =>
@@ -53,6 +60,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "MyPersonalGit API", Version = "v1", Description = "REST API for MyPersonalGit — self-hosted Git server" });
+    // Some endpoints intentionally bind both trailing-slash and non-trailing-slash
+    // routes (e.g. PEP 503 PyPI "/simple" and "/simple/"). Those collapse to the same
+    // OpenAPI path; pick the first so swagger.json generation doesn't throw.
+    c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
 });
 
 // Rate limiting for API endpoints
@@ -192,6 +203,8 @@ builder.Services.AddScoped<CurrentUserService>();
 var app = builder.Build();
 
 // Auto-migrate database and seed default admin on first run
+// Skipped under the integration-test host (relational-only; uses an in-memory provider).
+if (!isTestHost)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

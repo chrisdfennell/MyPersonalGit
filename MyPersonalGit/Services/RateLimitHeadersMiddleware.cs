@@ -15,25 +15,32 @@ public sealed class RateLimitHeadersMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        await _next(context);
-
-        // Only add headers to API responses
-        if (!context.Request.Path.StartsWithSegments("/api"))
-            return;
-
-        // Fixed window: 100 requests per minute
-        const int limit = 100;
-        var resetEpoch = DateTimeOffset.UtcNow.AddMinutes(1).ToUnixTimeSeconds();
-
-        context.Response.Headers["X-RateLimit-Limit"] = limit.ToString();
-        context.Response.Headers["X-RateLimit-Reset"] = resetEpoch.ToString();
-
-        // If we got a 429, remaining is 0
-        if (context.Response.StatusCode == StatusCodes.Status429TooManyRequests)
+        // Only add headers to API responses. Register the write via OnStarting so the
+        // headers are set just before the response is sent — setting them after _next
+        // returns throws once the response has started (e.g. when a downstream handler
+        // has already written a body, as TestServer surfaces immediately).
+        if (context.Request.Path.StartsWithSegments("/api"))
         {
-            context.Response.Headers["X-RateLimit-Remaining"] = "0";
-            context.Response.Headers["Retry-After"] = "60";
+            context.Response.OnStarting(() =>
+            {
+                // Fixed window: 100 requests per minute
+                const int limit = 100;
+                var resetEpoch = DateTimeOffset.UtcNow.AddMinutes(1).ToUnixTimeSeconds();
+
+                context.Response.Headers["X-RateLimit-Limit"] = limit.ToString();
+                context.Response.Headers["X-RateLimit-Reset"] = resetEpoch.ToString();
+
+                // If we got a 429, remaining is 0
+                if (context.Response.StatusCode == StatusCodes.Status429TooManyRequests)
+                {
+                    context.Response.Headers["X-RateLimit-Remaining"] = "0";
+                    context.Response.Headers["Retry-After"] = "60";
+                }
+                return Task.CompletedTask;
+            });
         }
+
+        await _next(context);
     }
 }
 
