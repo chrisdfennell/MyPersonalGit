@@ -166,12 +166,14 @@ public class RepositoriesController : ControllerBase
         if (!Repository.IsValid(repoPath)) return NotFound(new { error = $"Repository '{repoName}' not found" });
 
         using var repo = new Repository(repoPath);
+        // Materialize before the repo is disposed — a lazy IEnumerable would be enumerated
+        // by the JSON serializer after this method returns, against a disposed repo handle.
         var branches = repo.Branches.Select(b => new
         {
             name = b.FriendlyName,
             is_head = b.IsCurrentRepositoryHead,
             commit = b.Tip != null ? new { sha = b.Tip.Sha, message = b.Tip.MessageShort, author = b.Tip.Author.Name, date = b.Tip.Author.When.UtcDateTime } : null
-        });
+        }).ToList();
 
         return Ok(branches);
     }
@@ -187,11 +189,12 @@ public class RepositoriesController : ControllerBase
         if (!Repository.IsValid(repoPath)) return NotFound(new { error = $"Repository '{repoName}' not found" });
 
         using var repo = new Repository(repoPath);
+        // Materialize before the repo is disposed (see ListBranches).
         var tags = repo.Tags.Select(t => new
         {
             name = t.FriendlyName,
             target_sha = t.Target.Sha
-        });
+        }).ToList();
 
         return Ok(tags);
     }
@@ -207,9 +210,11 @@ public class RepositoriesController : ControllerBase
         if (!Repository.IsValid(repoPath)) return NotFound(new { error = $"Repository '{repoName}' not found" });
 
         using var repo = new Repository(repoPath);
-        var targetBranch = repo.Branches[branch ?? ""] ?? repo.Branches["main"] ?? repo.Branches["master"] ?? repo.Head;
+        var targetBranch = (!string.IsNullOrWhiteSpace(branch) ? repo.Branches[branch] : null)
+            ?? repo.Branches["main"] ?? repo.Branches["master"] ?? repo.Head;
         if (targetBranch?.Tip == null) return Ok(Array.Empty<object>());
 
+        // Materialize before the repo is disposed (see ListBranches).
         var commits = repo.Commits.QueryBy(new CommitFilter { IncludeReachableFrom = targetBranch.Tip })
             .Take(Math.Min(limit, 100))
             .Select(c => new
@@ -220,7 +225,7 @@ public class RepositoriesController : ControllerBase
                 author = c.Author.Name,
                 email = c.Author.Email,
                 date = c.Author.When.UtcDateTime
-            });
+            }).ToList();
 
         return Ok(commits);
     }
@@ -236,7 +241,8 @@ public class RepositoriesController : ControllerBase
         if (!Repository.IsValid(repoPath)) return NotFound(new { error = $"Repository '{repoName}' not found" });
 
         using var repo = new Repository(repoPath);
-        var targetBranch = repo.Branches[branch ?? ""] ?? repo.Branches["main"] ?? repo.Branches["master"] ?? repo.Head;
+        var targetBranch = (!string.IsNullOrWhiteSpace(branch) ? repo.Branches[branch] : null)
+            ?? repo.Branches["main"] ?? repo.Branches["master"] ?? repo.Head;
         if (targetBranch?.Tip == null) return Ok(Array.Empty<object>());
 
         Tree tree;
@@ -266,13 +272,14 @@ public class RepositoriesController : ControllerBase
             tree = (Tree)entry.Target;
         }
 
+        // Materialize before the repo is disposed (see ListBranches).
         var items = tree.Select(e => new
         {
             name = e.Name,
             type = e.TargetType == TreeEntryTargetType.Tree ? "dir" : "file",
             path = string.IsNullOrEmpty(path) ? e.Name : $"{path}/{e.Name}",
             size = e.TargetType == TreeEntryTargetType.Blob ? ((Blob)e.Target).Size : (long?)null
-        }).OrderByDescending(e => e.type == "dir").ThenBy(e => e.name);
+        }).OrderByDescending(e => e.type == "dir").ThenBy(e => e.name).ToList();
 
         return Ok(new { type = "dir", path = path ?? "/", entries = items });
     }

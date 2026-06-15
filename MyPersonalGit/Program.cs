@@ -561,8 +561,12 @@ using (var scope = app.Services.CreateScope())
     // WorkflowJobs.Environment column
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""WorkflowJobs"" ADD COLUMN ""Environment"" TEXT NULL;"); } catch { }
 
-    // SystemSettings.LdapGroupMappingsJson column
-    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""LdapGroupMappingsJson"" TEXT NULL;"); } catch { }
+    // SystemSettings.LdapGroupMappingsJson column. Must be NOT NULL DEFAULT '' to match the
+    // non-nullable model property — earlier builds added it as TEXT NULL, so existing rows
+    // hold NULL and crash EF when it materializes the string. The UPDATE backfills those rows
+    // (the ALTER is a no-op once the column already exists).
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""LdapGroupMappingsJson"" TEXT NOT NULL DEFAULT '';"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"UPDATE ""SystemSettings"" SET ""LdapGroupMappingsJson"" = '' WHERE ""LdapGroupMappingsJson"" IS NULL;"); } catch { }
 
     // SystemSettings.GenericPackageRetentionCount column
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""SystemSettings"" ADD COLUMN ""GenericPackageRetentionCount"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
