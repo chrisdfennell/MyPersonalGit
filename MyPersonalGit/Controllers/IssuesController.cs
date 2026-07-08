@@ -106,7 +106,7 @@ public class IssuesController : ControllerBase
     {
         if (request.State?.ToLower() == "closed")
         {
-            await _issueService.CloseIssueAsync(repoName, number);
+            await _issueService.CloseIssueAsync(repoName, number, User.Identity?.Name);
         }
         else if (request.State?.ToLower() == "open")
         {

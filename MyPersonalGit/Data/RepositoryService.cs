@@ -27,6 +27,8 @@ public interface IRepositoryService
     Task<bool> WatchRepositoryAsync(string repoName, string username);
     Task<bool> UnwatchRepositoryAsync(string repoName, string username);
     Task<bool> IsWatchingAsync(string repoName, string username);
+    Task SetWatchLevelAsync(string repoName, string username, WatchLevel? level);
+    Task<WatchLevel?> GetWatchLevelAsync(string repoName, string username);
     Task<List<ContributorInfo>> GetContributorsAsync(string repoPath, int maxCount = 20);
     Task<bool> TransferRepositoryAsync(string repoName, string newOwner, string projectRoot);
     Task<bool> SetDefaultBranchAsync(string repoName, string branchName, string projectRoot);
@@ -485,6 +487,49 @@ public class RepositoryService : IRepositoryService
     {
         using var db = _dbFactory.CreateDbContext();
         return await db.Set<RepositoryWatch>().AnyAsync(w => w.RepoName == repoName && w.Username == username);
+    }
+
+    /// <summary>
+    /// Sets the notification subscription level. Pass null to return to the default
+    /// (participating and mentions only), which removes the row. The repo's Watchers
+    /// count only tracks users at WatchLevel.All.
+    /// </summary>
+    public async Task SetWatchLevelAsync(string repoName, string username, WatchLevel? level)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var watch = await db.RepositoryWatches.FirstOrDefaultAsync(w => w.RepoName == repoName && w.Username == username);
+        var wasAll = watch is { Level: WatchLevel.All };
+
+        if (level == null)
+        {
+            if (watch == null) return;
+            db.RepositoryWatches.Remove(watch);
+        }
+        else if (watch == null)
+        {
+            db.RepositoryWatches.Add(new RepositoryWatch { RepoName = repoName, Username = username, Level = level.Value });
+        }
+        else
+        {
+            watch.Level = level.Value;
+        }
+
+        var isAll = level == WatchLevel.All;
+        if (wasAll != isAll)
+        {
+            var repo = await db.Repositories.FirstOrDefaultAsync(r => r.Name == repoName);
+            if (repo != null) repo.Watchers = Math.Max(0, repo.Watchers + (isAll ? 1 : -1));
+        }
+
+        await db.SaveChangesAsync();
+        _logger.LogInformation("Watch level for {User} on {Repo} set to {Level}", username, repoName, level?.ToString() ?? "Default");
+    }
+
+    public async Task<WatchLevel?> GetWatchLevelAsync(string repoName, string username)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var watch = await db.RepositoryWatches.FirstOrDefaultAsync(w => w.RepoName == repoName && w.Username == username);
+        return watch?.Level;
     }
 
     public Task<List<ContributorInfo>> GetContributorsAsync(string repoPath, int maxCount = 20)

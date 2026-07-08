@@ -206,6 +206,12 @@ public class AppDbContext : DbContext
     // Code Search Index
     public DbSet<CodeSearchIndex> CodeSearchIndices => Set<CodeSearchIndex>();
 
+    // Comment Attachments (pasted/dropped images)
+    public DbSet<CommentAttachment> CommentAttachments => Set<CommentAttachment>();
+
+    // Merge Queue
+    public DbSet<MergeQueueEntry> MergeQueueEntries => Set<MergeQueueEntry>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Shared JSON value converters + comparers for List<string> and string[]
@@ -749,6 +755,19 @@ public class AppDbContext : DbContext
         {
             e.HasIndex(i => i.RepoName);
             e.HasIndex(i => new { i.RepoName, i.FilePath }).IsUnique();
+        });
+
+        // --- CommentAttachment ---
+        modelBuilder.Entity<CommentAttachment>(e =>
+        {
+            e.HasIndex(a => a.Uuid).IsUnique();
+        });
+
+        // --- MergeQueueEntry ---
+        modelBuilder.Entity<MergeQueueEntry>(e =>
+        {
+            e.HasIndex(m => new { m.RepoName, m.State });
+            e.HasIndex(m => new { m.RepoName, m.PullRequestNumber });
         });
     }
 }

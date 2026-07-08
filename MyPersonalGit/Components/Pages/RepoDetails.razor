@@ -35,6 +35,7 @@
 @using MyPersonalGit.Resources
 @using RepositorySecret = MyPersonalGit.Models.RepositorySecret
 @using DeployKey = MyPersonalGit.Models.DeployKey
+@using WatchLevel = MyPersonalGit.Models.WatchLevel
 @inject CurrentUserService UserService
 @inject ICodeOwnersService CodeOwnersService
 @inject ITagProtectionService TagProtectionService
@@ -102,10 +103,46 @@ else
                 <div class="d-flex gap-2">
                     @if (UserService.IsLoggedIn)
                     {
-                        <button class="btn btn-light btn-sm border px-3" @onclick="ToggleWatch">
-                            <i class="bi @(repoIsWatched ? "bi-eye-fill" : "bi-eye") me-1"></i> @(repoIsWatched ? L["Repo_Unwatch"] : L["Repo_Watch"])
-                            @if (repoWatchCount > 0) { <span class="badge bg-secondary bg-opacity-10 text-body ms-1">@repoWatchCount</span> }
-                        </button>
+                        <div class="dropdown">
+                            <button class="btn btn-light btn-sm border px-3" @onclick="() => showWatchDropdown = !showWatchDropdown">
+                                <i class="bi @(repoWatchLevel == WatchLevel.All ? "bi-eye-fill" : repoWatchLevel == WatchLevel.Ignore ? "bi-eye-slash" : "bi-eye") me-1"></i>
+                                @(repoWatchLevel == WatchLevel.All ? "Watching" : repoWatchLevel == WatchLevel.Ignore ? "Ignoring" : L["Repo_Watch"])
+                                @if (repoWatchCount > 0) { <span class="badge bg-secondary bg-opacity-10 text-body ms-1">@repoWatchCount</span> }
+                                <i class="bi bi-caret-down-fill ms-1" style="font-size: 10px;"></i>
+                            </button>
+                            @if (showWatchDropdown)
+                            {
+                                <div class="dropdown-menu show shadow" style="display: block; position: absolute; z-index: 1000; min-width: 300px;">
+                                    <button class="dropdown-item py-2" @onclick="() => SetWatchLevel(null)">
+                                        <div class="d-flex align-items-start gap-2">
+                                            <i class="bi @(repoWatchLevel == null ? "bi-check2" : "") mt-1" style="width: 16px;"></i>
+                                            <div>
+                                                <div class="fw-semibold">Participating and @@mentions</div>
+                                                <div class="text-muted small text-wrap">Only notified when participating or @@mentioned.</div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                    <button class="dropdown-item py-2" @onclick="() => SetWatchLevel(WatchLevel.All)">
+                                        <div class="d-flex align-items-start gap-2">
+                                            <i class="bi @(repoWatchLevel == WatchLevel.All ? "bi-check2" : "") mt-1" style="width: 16px;"></i>
+                                            <div>
+                                                <div class="fw-semibold">All activity</div>
+                                                <div class="text-muted small text-wrap">Notified of all issue and pull request activity.</div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                    <button class="dropdown-item py-2" @onclick="() => SetWatchLevel(WatchLevel.Ignore)">
+                                        <div class="d-flex align-items-start gap-2">
+                                            <i class="bi @(repoWatchLevel == WatchLevel.Ignore ? "bi-check2" : "") mt-1" style="width: 16px;"></i>
+                                            <div>
+                                                <div class="fw-semibold">Ignore</div>
+                                                <div class="text-muted small text-wrap">Never notified for this repository.</div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </div>
+                            }
+                        </div>
                         <button class="btn btn-light btn-sm border px-3" @onclick="ToggleStar">
                             <i class="bi @(repoIsStarred ? "bi-star-fill text-warning" : "bi-star") me-1"></i> @(repoIsStarred ? L["Repo_Starred"] : L["Repo_Star"])
                             @if (repoStarCount > 0) { <span class="badge bg-secondary bg-opacity-10 text-body ms-1">@repoStarCount</span> }
@@ -3600,6 +3637,8 @@ else
     private int repoStarCount = 0;
     private bool repoIsWatched = false;
     private int repoWatchCount = 0;
+    private WatchLevel? repoWatchLevel = null; // null = default (participating & mentions)
+    private bool showWatchDropdown = false;
     private string repoWebsiteUrl = "";
     private List<ContributorInfo> repoContributors = new();
     private bool isSyncingFork = false;
@@ -3847,7 +3886,8 @@ else
         {
             repoIsForked = await RepoService.IsForkedAsync(dirName, UserService.Username);
             repoIsStarred = await RepoService.IsStarredAsync(dirName, UserService.Username);
-            repoIsWatched = await RepoService.IsWatchingAsync(dirName, UserService.Username);
+            repoWatchLevel = await RepoService.GetWatchLevelAsync(dirName, UserService.Username);
+            repoIsWatched = repoWatchLevel == WatchLevel.All;
         }
 
         // Load contributors from git history
@@ -5089,22 +5129,20 @@ else
         }
     }
 
-    private async Task ToggleWatch()
+    private async Task SetWatchLevel(WatchLevel? level)
     {
-        if (!UserService.IsLoggedIn) return;
+        showWatchDropdown = false;
+        if (!UserService.IsLoggedIn || repoWatchLevel == level) return;
+
         var dirName = System.IO.Path.GetFileName(RepoFullPath);
-        if (repoIsWatched)
-        {
-            await RepoService.UnwatchRepositoryAsync(dirName, UserService.Username);
-            repoIsWatched = false;
-            repoWatchCount = Math.Max(0, repoWatchCount - 1);
-        }
-        else
-        {
-            await RepoService.WatchRepositoryAsync(dirName, UserService.Username);
-            repoIsWatched = true;
-            repoWatchCount++;
-        }
+        await RepoService.SetWatchLevelAsync(dirName, UserService.Username, level);
+
+        // Only "All activity" subscribers count as watchers
+        if (repoWatchLevel == WatchLevel.All) repoWatchCount = Math.Max(0, repoWatchCount - 1);
+        if (level == WatchLevel.All) repoWatchCount++;
+
+        repoWatchLevel = level;
+        repoIsWatched = level == WatchLevel.All;
     }
 
     private static string GetDisplayUrl(string url)

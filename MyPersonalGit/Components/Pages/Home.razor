@@ -295,7 +295,35 @@
                     <p class="text-muted mt-2 x-small">Will be created at: <code>@GetFullRepoPath()</code></p>
 
                     <hr class="my-3 opacity-25" />
-                    <label class="form-label small fw-semibold">@L["Home_InitializeWithFiles"] <span class="fw-normal text-muted">@L["Home_Optional"]</span></label>
+                    <label class="form-label small fw-semibold">Initialize this repository with <span class="fw-normal text-muted">@L["Home_Optional"]</span></label>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="initReadme" @bind="initWithReadme" />
+                        <label class="form-check-label small" for="initReadme">Add a README file</label>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label x-small text-muted mb-1">.gitignore template</label>
+                            <select class="form-select form-select-sm" @bind="initGitignoreTemplate">
+                                <option value="">None</option>
+                                @foreach (var name in RepoInitTemplates.GitignoreTemplateNames)
+                                {
+                                    <option value="@name">@name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label x-small text-muted mb-1">License</label>
+                            <select class="form-select form-select-sm" @bind="initLicense">
+                                <option value="">None</option>
+                                @foreach (var (spdxId, displayName) in RepoInitTemplates.Licenses)
+                                {
+                                    <option value="@spdxId">@displayName</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <label class="form-label small fw-semibold mt-1">@L["Home_InitializeWithFiles"] <span class="fw-normal text-muted">@L["Home_Optional"]</span></label>
 
                     @if (initFileData.Any())
                     {
@@ -373,6 +401,11 @@
     private string initZipName = "";
     private string createError = "";
     private bool isCreating = false;
+
+    // Initialize-with state (README / .gitignore / license)
+    private bool initWithReadme = false;
+    private string initGitignoreTemplate = "";
+    private string initLicense = "";
 
     private IEnumerable<RepoSummary> FilteredRepos =>
         repositories.Where(r =>
@@ -723,6 +756,9 @@
                 newRepoDescription = "";
                 newRepoIsPrivate = false;
                 selectedTemplateId = 0;
+                initWithReadme = false;
+                initGitignoreTemplate = "";
+                initLicense = "";
                 ClearInitFiles();
                 Nav.NavigateTo($"/repo/{repoNameClean}");
                 return;
@@ -758,14 +794,14 @@
             // Create DB record for repository metadata
             await RepoService.CreateRepositoryAsync(folderName, UserService.Username, newRepoDescription, newRepoIsPrivate);
 
-            // Commit uploaded files if any
-            if (initFileData.Any())
-            {
-                CommitFolderToNewRepo(fullPath);
-            }
-            else if (initZipData != null)
+            // Commit uploaded and/or generated initialization files if any
+            if (initZipData != null)
             {
                 CommitZipToNewRepo(fullPath);
+            }
+            else if (initFileData.Any() || HasGeneratedInitFiles)
+            {
+                CommitFolderToNewRepo(fullPath);
             }
 
             // If using a non-default path, add it to tracked paths
@@ -779,6 +815,9 @@
             newRepoName = "";
             newRepoDescription = "";
             newRepoIsPrivate = false;
+            initWithReadme = false;
+            initGitignoreTemplate = "";
+            initLicense = "";
             ClearInitFiles();
             Nav.NavigateTo($"/repo/{repoNameWithoutGit}");
         }
@@ -806,11 +845,48 @@
             treeDef.Add(relativePath, blob, Mode.NonExecutableFile);
         }
 
+        AddGeneratedInitFiles(repo, treeDef);
+
         var tree = repo.ObjectDatabase.CreateTree(treeDef);
         var commit = repo.ObjectDatabase.CreateCommit(author, author, "Initial commit", tree, Array.Empty<Commit>(), true);
         repo.Branches.Add("main", commit);
         repo.Refs.UpdateTarget("HEAD", "refs/heads/main");
     }
+
+    /// <summary>
+    /// Adds the selected README / .gitignore / LICENSE files to the initial commit's tree,
+    /// skipping any path already provided by uploaded files.
+    /// </summary>
+    private void AddGeneratedInitFiles(Repository repo, TreeDefinition treeDef)
+    {
+        void AddIfAbsent(string path, string content)
+        {
+            if (treeDef[path] != null) return;
+            using var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(content));
+            var blob = repo.ObjectDatabase.CreateBlob(ms);
+            treeDef.Add(path, blob, Mode.NonExecutableFile);
+        }
+
+        var repoDisplayName = newRepoName.EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? newRepoName[..^4] : newRepoName;
+
+        if (initWithReadme)
+            AddIfAbsent("README.md", RepoInitTemplates.BuildReadme(repoDisplayName, newRepoDescription));
+
+        if (!string.IsNullOrEmpty(initGitignoreTemplate))
+        {
+            var gitignore = RepoInitTemplates.GetGitignore(initGitignoreTemplate);
+            if (gitignore != null) AddIfAbsent(".gitignore", gitignore);
+        }
+
+        if (!string.IsNullOrEmpty(initLicense))
+        {
+            var license = RepoInitTemplates.GetLicense(initLicense, UserService.DisplayName, DateTime.UtcNow.Year);
+            if (license != null) AddIfAbsent("LICENSE", license);
+        }
+    }
+
+    private bool HasGeneratedInitFiles =>
+        initWithReadme || !string.IsNullOrEmpty(initGitignoreTemplate) || !string.IsNullOrEmpty(initLicense);
 
     private void CommitZipToNewRepo(string repoPath)
     {
@@ -868,6 +944,8 @@
             var blob = repo.ObjectDatabase.CreateBlob(ms);
             treeDef.Add(relativePath, blob, Mode.NonExecutableFile);
         }
+
+        AddGeneratedInitFiles(repo, treeDef);
 
         var tree = repo.ObjectDatabase.CreateTree(treeDef);
         var commit = repo.ObjectDatabase.CreateCommit(author, author, "Initial commit", tree, Array.Empty<Commit>(), true);

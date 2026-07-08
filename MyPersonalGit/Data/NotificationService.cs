@@ -9,6 +9,14 @@ public interface INotificationService
     Task<List<Notification>> GetNotificationsAsync(string username, bool unreadOnly = false);
     Task<int> GetUnreadCountAsync(string username);
     Task CreateNotificationAsync(string username, string type, string title, string message, string repoName, string? url = null);
+
+    /// <summary>
+    /// Fans a repository event out to everyone subscribed to it: users watching the repo
+    /// at WatchLevel.All plus the given participants (author, assignees, commenters, ...).
+    /// The actor never notifies themselves, users ignoring the repo are skipped, and
+    /// usernames in <paramref name="exclude"/> are skipped (e.g. already notified directly).
+    /// </summary>
+    Task NotifyWatchersAsync(string repoName, string actor, IEnumerable<string> participants, string type, string title, string message, string? url = null, IEnumerable<string>? exclude = null);
     Task MarkAsReadAsync(string username, int notificationId);
     Task MarkAllAsReadAsync(string username);
     Task DeleteNotificationAsync(string username, int notificationId);
@@ -54,6 +62,14 @@ public class NotificationService : INotificationService
     {
         using var db = _dbFactory.CreateDbContext();
 
+        // Users who set a repo to "Ignore" receive nothing from it, mentions included.
+        if (!string.IsNullOrEmpty(repoName) &&
+            await db.RepositoryWatches.AnyAsync(w => w.RepoName == repoName && w.Username == username && w.Level == WatchLevel.Ignore))
+        {
+            _logger.LogDebug("Notification for {Username} suppressed: repo {RepoName} is ignored", username, repoName);
+            return;
+        }
+
         db.Notifications.Add(new Notification
         {
             Username = username,
@@ -82,6 +98,34 @@ public class NotificationService : INotificationService
             try { await DispatchEmailNotificationAsync(username, title, message, url); }
             catch (Exception ex) { _logger.LogWarning(ex, "Failed to dispatch email notification"); }
         });
+    }
+
+    public async Task NotifyWatchersAsync(string repoName, string actor, IEnumerable<string> participants, string type, string title, string message, string? url = null, IEnumerable<string>? exclude = null)
+    {
+        List<string> watchers;
+        using (var db = _dbFactory.CreateDbContext())
+        {
+            watchers = await db.RepositoryWatches
+                .Where(w => w.RepoName == repoName && w.Level == WatchLevel.All)
+                .Select(w => w.Username)
+                .ToListAsync();
+        }
+
+        var excluded = new HashSet<string>(exclude ?? Enumerable.Empty<string>(), StringComparer.OrdinalIgnoreCase)
+        {
+            actor
+        };
+
+        var recipients = watchers
+            .Concat(participants)
+            .Where(u => !string.IsNullOrEmpty(u) && !excluded.Contains(u))
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var recipient in recipients)
+        {
+            // CreateNotificationAsync applies the per-user Ignore check.
+            await CreateNotificationAsync(recipient, type, title, message, repoName, url);
+        }
     }
 
     private async Task DispatchPushNotificationAsync(string username, string title, string message)

@@ -172,13 +172,13 @@ public class PullRequestService : IPullRequestService
 
         await _activityService.RecordActivityAsync(author, "opened_pr", repoName, $"{author} opened PR #{pr.Number}: {title}", $"/repo/{repoName}/pulls/{pr.Number}");
 
-        await _notificationService.CreateNotificationAsync(
-            "current-user",
+        await _notificationService.NotifyWatchersAsync(
+            repoName, author, participants: Enumerable.Empty<string>(),
             NotificationType.PullRequestCreated,
-            $"New pull request #{pr.Number}",
+            $"New pull request #{pr.Number} in {repoName}",
             $"{author} created PR: {title}",
-            repoName,
-            $"/repo/{repoName}/pulls/{pr.Number}"
+            $"/repo/{repoName}/pulls/{pr.Number}",
+            exclude: pr.Reviewers // already notified with a review request above
         );
 
         // Trigger pull_request workflows
@@ -643,12 +643,18 @@ public class PullRequestService : IPullRequestService
 
         await _activityService.RecordActivityAsync(mergedBy, "merged_pr", repoName, $"{mergedBy} merged PR #{number}: {pr.Title}", $"/repo/{repoName}/pulls/{number}");
 
-        await _notificationService.CreateNotificationAsync(
-            "current-user",
+        var mergeParticipants = new List<string> { pr.Author };
+        mergeParticipants.AddRange(pr.Reviewers);
+        mergeParticipants.AddRange(await db.PullRequestReviews
+            .Where(r => r.PullRequestId == pr.Id).Select(r => r.Author).Distinct().ToListAsync());
+        mergeParticipants.AddRange(await db.IssueComments
+            .Where(c => c.PullRequestId == pr.Id).Select(c => c.Author).Distinct().ToListAsync());
+
+        await _notificationService.NotifyWatchersAsync(
+            repoName, mergedBy, mergeParticipants,
             NotificationType.PullRequestMerged,
-            $"Pull request #{number} merged",
+            $"Pull request #{number} merged in {repoName}",
             $"{mergedBy} merged PR: {pr.Title}",
-            repoName,
             $"/repo/{repoName}/pulls/{number}"
         );
 
@@ -738,12 +744,11 @@ public class PullRequestService : IPullRequestService
 
         _logger.LogInformation("Review ({State}) added to PR #{Number} in {RepoName} by {Author}", state, number, repoName, author);
 
-        await _notificationService.CreateNotificationAsync(
-            "current-user",
+        await _notificationService.NotifyWatchersAsync(
+            repoName, author, participants: new[] { pr.Author },
             NotificationType.PullRequestReview,
-            $"New review on PR #{number}",
+            $"New review on PR #{number} in {repoName}",
             $"{author} reviewed PR: {state}",
-            repoName,
             $"/repo/{repoName}/pulls/{number}"
         );
 

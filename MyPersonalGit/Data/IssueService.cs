@@ -13,13 +13,15 @@ public interface IIssueService
     Task<bool> AddCommentAsync(string repoName, int number, string author, string body);
     Task<bool> EditCommentAsync(int commentId, string body, string username);
     Task<bool> DeleteCommentAsync(int commentId, string username);
-    Task<bool> CloseIssueAsync(string repoName, int number);
+    Task<bool> CloseIssueAsync(string repoName, int number, string? closedBy = null);
     Task<bool> ReopenIssueAsync(string repoName, int number);
     Task<bool> TogglePinAsync(string repoName, int number);
     Task<bool> ToggleLockAsync(string repoName, int number, string? reason = null);
     Task<bool> SetAssigneesAsync(string repoName, int number, List<string> assignees);
     Task<bool> SetDueDateAsync(string repoName, int number, DateTime? dueDate);
     Task<(bool Success, string? Error, int? NewNumber)> TransferIssueAsync(string fromRepoName, int number, string toRepoName, string transferredBy);
+    Task<(bool Success, string? Error)> SetParentIssueAsync(string repoName, int number, int? parentNumber);
+    Task<List<Issue>> GetSubIssuesAsync(string repoName, int number);
 }
 
 public class IssueService : IIssueService
@@ -80,12 +82,11 @@ public class IssueService : IIssueService
 
         await _activityService.RecordActivityAsync(author, "opened_issue", repoName, $"{author} opened issue #{issue.Number}: {title}", $"/repo/{repoName}/issues/{issue.Number}");
 
-        await _notificationService.CreateNotificationAsync(
-            "current-user",
+        await _notificationService.NotifyWatchersAsync(
+            repoName, author, participants: Enumerable.Empty<string>(),
             NotificationType.IssueCreated,
-            $"New issue #{issue.Number}",
+            $"New issue #{issue.Number} in {repoName}",
             $"{author} created issue: {title}",
-            repoName,
             $"/repo/{repoName}/issues/{issue.Number}"
         );
 
@@ -130,20 +131,31 @@ public class IssueService : IIssueService
 
         _logger.LogInformation("Comment added to issue #{Number} in {RepoName} by {Author}", number, repoName, author);
 
-        await _notificationService.CreateNotificationAsync(
-            "current-user",
-            NotificationType.IssueComment,
-            $"New comment on issue #{number}",
-            $"{author} commented: {body[..Math.Min(100, body.Length)]}...",
-            repoName,
-            $"/repo/{repoName}/issues/{number}"
-        );
-
-        // Detect @mentions and notify mentioned users
+        // Detect @mentions first — mentioned users get a dedicated notification and are
+        // excluded from the general fan-out below so they aren't notified twice.
         var mentions = Regex.Matches(body, @"@([a-zA-Z0-9_-]+)")
             .Select(m => m.Groups[1].Value)
             .Where(u => !u.Equals(author, StringComparison.OrdinalIgnoreCase))
-            .Distinct(StringComparer.OrdinalIgnoreCase);
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        // Notify watchers and participants (issue author, assignees, prior commenters)
+        var commenters = await db.IssueComments
+            .Where(c => c.IssueId == issue.Id)
+            .Select(c => c.Author)
+            .Distinct()
+            .ToListAsync();
+        var participants = commenters.Append(issue.Author).Concat(issue.Assignees);
+
+        await _notificationService.NotifyWatchersAsync(
+            repoName, author, participants,
+            NotificationType.IssueComment,
+            $"New comment on issue #{number} in {repoName}",
+            $"{author} commented: {body[..Math.Min(100, body.Length)]}...",
+            $"/repo/{repoName}/issues/{number}",
+            exclude: mentions
+        );
+
         foreach (var mentioned in mentions)
         {
             var user = await db.Users.FirstOrDefaultAsync(u => u.Username == mentioned);
@@ -160,7 +172,7 @@ public class IssueService : IIssueService
         return true;
     }
 
-    public async Task<bool> CloseIssueAsync(string repoName, int number)
+    public async Task<bool> CloseIssueAsync(string repoName, int number, string? closedBy = null)
     {
         using var db = _dbFactory.CreateDbContext();
 
@@ -176,14 +188,20 @@ public class IssueService : IIssueService
 
         _logger.LogInformation("Issue #{Number} closed in {RepoName}", number, repoName);
 
-        await _activityService.RecordActivityAsync(issue.Author, "closed_issue", repoName, $"Issue #{number} closed: {issue.Title}", $"/repo/{repoName}/issues/{number}");
+        var actor = closedBy ?? issue.Author;
+        await _activityService.RecordActivityAsync(actor, "closed_issue", repoName, $"Issue #{number} closed: {issue.Title}", $"/repo/{repoName}/issues/{number}");
 
-        await _notificationService.CreateNotificationAsync(
-            "current-user",
+        var commenters = await db.IssueComments
+            .Where(c => c.IssueId == issue.Id)
+            .Select(c => c.Author)
+            .Distinct()
+            .ToListAsync();
+
+        await _notificationService.NotifyWatchersAsync(
+            repoName, actor, commenters.Append(issue.Author).Concat(issue.Assignees),
             NotificationType.IssueClosed,
-            $"Issue #{number} closed",
-            $"Issue closed: {issue.Title}",
-            repoName,
+            $"Issue #{number} closed in {repoName}",
+            $"{actor} closed issue: {issue.Title}",
             $"/repo/{repoName}/issues/{number}"
         );
 
@@ -289,6 +307,56 @@ public class IssueService : IIssueService
 
         _logger.LogInformation("Issue #{Number} in {RepoName} due date set to {DueDate}", number, repoName, dueDate);
         return true;
+    }
+
+    /// <summary>
+    /// Makes an issue a sub-issue of another issue in the same repository
+    /// (or detaches it when <paramref name="parentNumber"/> is null).
+    /// </summary>
+    public async Task<(bool Success, string? Error)> SetParentIssueAsync(string repoName, int number, int? parentNumber)
+    {
+        using var db = _dbFactory.CreateDbContext();
+
+        var issue = await db.Issues.FirstOrDefaultAsync(i => i.RepoName == repoName && i.Number == number);
+        if (issue == null) return (false, "Issue not found");
+
+        if (parentNumber == null)
+        {
+            issue.ParentIssueNumber = null;
+            await db.SaveChangesAsync();
+            return (true, null);
+        }
+
+        if (parentNumber == number) return (false, "An issue cannot be its own parent");
+
+        var parent = await db.Issues.FirstOrDefaultAsync(i => i.RepoName == repoName && i.Number == parentNumber);
+        if (parent == null) return (false, $"Issue #{parentNumber} not found");
+
+        // Walk up the ancestor chain to reject cycles (and runaway depth)
+        var ancestor = parent;
+        for (var depth = 0; ancestor?.ParentIssueNumber != null; depth++)
+        {
+            if (depth >= 20) return (false, "Sub-issue hierarchy is too deep");
+            if (ancestor.ParentIssueNumber == number)
+                return (false, $"Cannot add: #{parentNumber} is already a sub-issue of #{number}");
+            var parentNum = ancestor.ParentIssueNumber;
+            ancestor = await db.Issues.FirstOrDefaultAsync(i => i.RepoName == repoName && i.Number == parentNum);
+        }
+
+        issue.ParentIssueNumber = parentNumber;
+        await db.SaveChangesAsync();
+
+        _logger.LogInformation("Issue #{Number} in {RepoName} set as sub-issue of #{Parent}", number, repoName, parentNumber);
+        return (true, null);
+    }
+
+    public async Task<List<Issue>> GetSubIssuesAsync(string repoName, int number)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        return await db.Issues
+            .Where(i => i.RepoName == repoName && i.ParentIssueNumber == number)
+            .OrderBy(i => i.Number)
+            .ToListAsync();
     }
 
     public async Task<(bool Success, string? Error, int? NewNumber)> TransferIssueAsync(string fromRepoName, int number, string toRepoName, string transferredBy)

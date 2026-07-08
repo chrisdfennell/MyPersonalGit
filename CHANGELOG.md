@@ -5,6 +5,15 @@ All notable changes to MyPersonalGit are documented here.
 ## [Unreleased]
 
 ### Added
+- Merge Queue — add open PRs to a per-branch queue that merges them strictly one at a time: each PR's branch is updated with the current target head, required status checks re-run against the result, and the PR merges only when they pass. Failed entries drop out with the reason shown on the PR; the next entry proceeds automatically
+- Cross-Job Artifacts — `actions/upload-artifact` and `actions/download-artifact` now work in CI workflows: upload in one job, download in a dependent (`needs:`) job. Named artifacts also appear as downloadable zips in the Actions UI
+- `actions/cache` — dependency caching in CI workflows with `key`, `path`, `restore-keys`, `${{ hashFiles(...) }}` and `${{ runner.os }}` support, including `actions/cache/restore` and `actions/cache/save`. Caches are scoped per repository and saved via a synthetic post step (skipped on exact hit or job failure)
+- Sub-Issues — parent/child issue hierarchies with a progress bar on the parent, "Tracked by" backlink, cycle detection, and completion counts on the issue list
+- Task-List Progress — issues and PRs with markdown checklists (`- [ ]`) show "n of m" progress with a mini progress bar in the list views
+- Repository Initialization Options — the New Repository dialog can add a README, a `.gitignore` template (Visual Studio, Node, Python, Go, Rust, Java, Unity, C++), and a LICENSE (MIT, Apache-2.0, BSD-2/3-Clause, ISC, Unlicense) to the initial commit
+- Image Paste in Comments — paste or drag-and-drop images directly into issue/PR comment boxes, review forms, and issue/PR descriptions; images upload automatically and insert as markdown. Served from unguessable UUID URLs (GitHub user-images style), raster formats only, 10 MB limit
+- Watch Subscription Levels — the repository Watch button is now a dropdown with three levels: "Participating and @mentions" (default), "All activity" (notified of every issue/PR event), and "Ignore" (never notified, mentions included). Issue/PR notifications now fan out to watchers and participants (author, assignees, commenters, reviewers) instead of a placeholder
+- AI Pull Request Review — one-click "AI Review" button on open PRs posts an AI-generated review (summary, findings, suggestions) of the diff as a review comment. Uses the same OpenAI-compatible endpoint configured for the Web IDE AI features; never counts toward required approvals
 - Web IDE: Drag-to-resize panels — sidebar and bottom panel are draggable with visual resize handles
 - Web IDE: File nesting — related files group together (e.g., WebIde.razor + .css + .cs) with expandable chevrons and count badges
 - Web IDE: CSS color previews — inline color swatches next to hex/rgb/hsl values in CSS/SCSS/Less files

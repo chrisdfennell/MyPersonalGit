@@ -122,13 +122,15 @@ public class IssueServiceTests
     {
         await _service.CreateIssueAsync("repo", "Bug", null, "alice");
 
-        await _notifications.Received(1).CreateNotificationAsync(
-            Arg.Any<string>(),
+        await _notifications.Received(1).NotifyWatchersAsync(
+            Arg.Is("repo"),
+            Arg.Is("alice"),
+            Arg.Any<IEnumerable<string>>(),
             Arg.Is(NotificationType.IssueCreated),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Is("repo"),
-            Arg.Any<string?>()
+            Arg.Any<string?>(),
+            Arg.Any<IEnumerable<string>?>()
         );
     }
 
@@ -346,13 +348,15 @@ public class PullRequestServiceTests : IDisposable
     {
         await _service.CreatePullRequestAsync("repo", "New Feature", null, "alice", "feature", "main");
 
-        await _notifications.Received(1).CreateNotificationAsync(
-            Arg.Any<string>(),
+        await _notifications.Received(1).NotifyWatchersAsync(
+            Arg.Is("repo"),
+            Arg.Is("alice"),
+            Arg.Any<IEnumerable<string>>(),
             Arg.Is(NotificationType.PullRequestCreated),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Is("repo"),
-            Arg.Any<string?>()
+            Arg.Any<string?>(),
+            Arg.Any<IEnumerable<string>?>()
         );
     }
 
@@ -426,13 +430,15 @@ public class PullRequestServiceTests : IDisposable
         await _service.CreatePullRequestAsync("repo.git", "PR", null, "alice", "feature", _defaultBranch);
         await _service.MergePullRequestAsync("repo.git", 1, "bob");
 
-        await _notifications.Received(1).CreateNotificationAsync(
-            Arg.Any<string>(),
+        await _notifications.Received(1).NotifyWatchersAsync(
+            Arg.Is("repo.git"),
+            Arg.Is("bob"),
+            Arg.Any<IEnumerable<string>>(),
             Arg.Is(NotificationType.PullRequestMerged),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Is("repo.git"),
-            Arg.Any<string?>()
+            Arg.Any<string?>(),
+            Arg.Any<IEnumerable<string>?>()
         );
     }
 
@@ -484,13 +490,15 @@ public class PullRequestServiceTests : IDisposable
         await _service.CreatePullRequestAsync("repo", "PR", null, "alice", "feature", "main");
         await _service.AddReviewAsync("repo", 1, "bob", ReviewState.ChangesRequested, "Needs work");
 
-        await _notifications.Received(1).CreateNotificationAsync(
-            Arg.Any<string>(),
+        await _notifications.Received(1).NotifyWatchersAsync(
+            Arg.Is("repo"),
+            Arg.Is("bob"),
+            Arg.Any<IEnumerable<string>>(),
             Arg.Is(NotificationType.PullRequestReview),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Is("repo"),
-            Arg.Any<string?>()
+            Arg.Any<string?>(),
+            Arg.Any<IEnumerable<string>?>()
         );
     }
 }
@@ -524,6 +532,73 @@ public class NotificationServiceTests
         Assert.Equal("Bug report", notifications[0].Message);
         Assert.Equal("repo", notifications[0].RepoName);
         Assert.False(notifications[0].IsRead);
+    }
+
+    [Fact]
+    public async Task CreateNotificationAsync_SuppressedWhenUserIgnoresRepo()
+    {
+        using (var db = _factory.CreateDbContext())
+        {
+            db.RepositoryWatches.Add(new RepositoryWatch { RepoName = "repo", Username = "alice", Level = WatchLevel.Ignore });
+            await db.SaveChangesAsync();
+        }
+
+        await _service.CreateNotificationAsync("alice", NotificationType.Mention, "Mentioned", "msg", "repo");
+
+        Assert.Empty(await _service.GetNotificationsAsync("alice"));
+    }
+
+    [Fact]
+    public async Task NotifyWatchersAsync_NotifiesWatchersAndParticipants_NotActor()
+    {
+        using (var db = _factory.CreateDbContext())
+        {
+            db.RepositoryWatches.Add(new RepositoryWatch { RepoName = "repo", Username = "watcher", Level = WatchLevel.All });
+            db.RepositoryWatches.Add(new RepositoryWatch { RepoName = "repo", Username = "alice", Level = WatchLevel.All });
+            await db.SaveChangesAsync();
+        }
+
+        // alice is the actor — she watches the repo but must not notify herself
+        await _service.NotifyWatchersAsync("repo", "alice", new[] { "participant" },
+            NotificationType.IssueCreated, "New issue", "msg", "/repo/issues/1");
+
+        Assert.Single(await _service.GetNotificationsAsync("watcher"));
+        Assert.Single(await _service.GetNotificationsAsync("participant"));
+        Assert.Empty(await _service.GetNotificationsAsync("alice"));
+    }
+
+    [Fact]
+    public async Task NotifyWatchersAsync_SkipsIgnoringAndExcludedUsers()
+    {
+        using (var db = _factory.CreateDbContext())
+        {
+            db.RepositoryWatches.Add(new RepositoryWatch { RepoName = "repo", Username = "ignorer", Level = WatchLevel.Ignore });
+            await db.SaveChangesAsync();
+        }
+
+        await _service.NotifyWatchersAsync("repo", "alice", new[] { "ignorer", "mentioned", "participant" },
+            NotificationType.IssueComment, "New comment", "msg", "/repo/issues/1",
+            exclude: new[] { "mentioned" });
+
+        Assert.Empty(await _service.GetNotificationsAsync("ignorer"));
+        Assert.Empty(await _service.GetNotificationsAsync("mentioned"));
+        Assert.Single(await _service.GetNotificationsAsync("participant"));
+    }
+
+    [Fact]
+    public async Task NotifyWatchersAsync_DeduplicatesRecipients()
+    {
+        using (var db = _factory.CreateDbContext())
+        {
+            db.RepositoryWatches.Add(new RepositoryWatch { RepoName = "repo", Username = "bob", Level = WatchLevel.All });
+            await db.SaveChangesAsync();
+        }
+
+        // bob is both a watcher and a participant (with different casing) — one notification only
+        await _service.NotifyWatchersAsync("repo", "alice", new[] { "Bob" },
+            NotificationType.IssueCreated, "New issue", "msg");
+
+        Assert.Single(await _service.GetNotificationsAsync("bob"));
     }
 
     [Fact]
@@ -1006,6 +1081,56 @@ public class RepositoryServiceTests
             CreatedAt = DateTime.UtcNow
         });
         await db.SaveChangesAsync();
+    }
+
+    [Fact]
+    public async Task SetWatchLevelAsync_All_CountsAsWatcher()
+    {
+        await SeedRepo("repo");
+
+        await _service.SetWatchLevelAsync("repo", "alice", WatchLevel.All);
+
+        Assert.Equal(WatchLevel.All, await _service.GetWatchLevelAsync("repo", "alice"));
+        using var db = _factory.CreateDbContext();
+        Assert.Equal(1, (await db.Repositories.FirstAsync(r => r.Name == "repo")).Watchers);
+    }
+
+    [Fact]
+    public async Task SetWatchLevelAsync_Ignore_DoesNotCountAsWatcher()
+    {
+        await SeedRepo("repo");
+
+        await _service.SetWatchLevelAsync("repo", "alice", WatchLevel.Ignore);
+
+        Assert.Equal(WatchLevel.Ignore, await _service.GetWatchLevelAsync("repo", "alice"));
+        using var db = _factory.CreateDbContext();
+        Assert.Equal(0, (await db.Repositories.FirstAsync(r => r.Name == "repo")).Watchers);
+    }
+
+    [Fact]
+    public async Task SetWatchLevelAsync_Null_ResetsToDefaultAndDecrementsCount()
+    {
+        await SeedRepo("repo");
+        await _service.SetWatchLevelAsync("repo", "alice", WatchLevel.All);
+
+        await _service.SetWatchLevelAsync("repo", "alice", null);
+
+        Assert.Null(await _service.GetWatchLevelAsync("repo", "alice"));
+        using var db = _factory.CreateDbContext();
+        Assert.Equal(0, (await db.Repositories.FirstAsync(r => r.Name == "repo")).Watchers);
+    }
+
+    [Fact]
+    public async Task SetWatchLevelAsync_TransitionAllToIgnore_DecrementsCount()
+    {
+        await SeedRepo("repo");
+        await _service.SetWatchLevelAsync("repo", "alice", WatchLevel.All);
+
+        await _service.SetWatchLevelAsync("repo", "alice", WatchLevel.Ignore);
+
+        Assert.Equal(WatchLevel.Ignore, await _service.GetWatchLevelAsync("repo", "alice"));
+        using var db = _factory.CreateDbContext();
+        Assert.Equal(0, (await db.Repositories.FirstAsync(r => r.Name == "repo")).Watchers);
     }
 
     [Fact]
@@ -4438,5 +4563,82 @@ public class DatabaseConfigModelTests
     {
         var config = new DatabaseConfig();
         Assert.StartsWith("Data Source=", config.ConnectionString);
+    }
+}
+
+public class AttachmentServiceTests : IDisposable
+{
+    private readonly AttachmentService _service;
+    private readonly string _tempRoot;
+
+    public AttachmentServiceTests()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        _tempRoot = Path.Combine(Path.GetTempPath(), "mpg-attach-tests-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(_tempRoot);
+
+        var factory = new TestDbContextFactory(options);
+        var adminService = Substitute.For<IAdminService>();
+        adminService.GetSystemSettingsAsync().Returns(new SystemSettings { ProjectRoot = _tempRoot });
+        var config = new ConfigurationBuilder().Build();
+
+        _service = new AttachmentService(factory, adminService, config, NullLogger<AttachmentService>.Instance);
+    }
+
+    public void Dispose()
+    {
+        try { Directory.Delete(_tempRoot, recursive: true); } catch { }
+    }
+
+    [Fact]
+    public async Task SaveAttachmentAsync_SavesPngAndServesItBack()
+    {
+        var data = new byte[] { 0x89, 0x50, 0x4E, 0x47 };
+
+        var attachment = await _service.SaveAttachmentAsync("screenshot.png", "image/png", data, "alice", "repo");
+
+        Assert.NotNull(attachment);
+        Assert.Equal("screenshot.png", attachment!.FileName);
+        Assert.Equal("alice", attachment.UploadedBy);
+
+        var fetched = await _service.GetAttachmentAsync(attachment.Uuid);
+        Assert.NotNull(fetched);
+        Assert.Equal(data, await File.ReadAllBytesAsync(fetched!.Value.FilePath));
+    }
+
+    [Fact]
+    public async Task SaveAttachmentAsync_RejectsNonImageContentTypes()
+    {
+        Assert.Null(await _service.SaveAttachmentAsync("evil.svg", "image/svg+xml", new byte[] { 1 }, "alice"));
+        Assert.Null(await _service.SaveAttachmentAsync("evil.html", "text/html", new byte[] { 1 }, "alice"));
+        Assert.Null(await _service.SaveAttachmentAsync("evil.exe", "application/octet-stream", new byte[] { 1 }, "alice"));
+    }
+
+    [Fact]
+    public async Task SaveAttachmentAsync_RejectsOversizedUploads()
+    {
+        var tooBig = new byte[AttachmentService.MaxSizeBytes + 1];
+        Assert.Null(await _service.SaveAttachmentAsync("big.png", "image/png", tooBig, "alice"));
+    }
+
+    [Fact]
+    public async Task GetAttachmentAsync_RejectsMalformedUuids()
+    {
+        Assert.Null(await _service.GetAttachmentAsync("../../etc/passwd"));
+        Assert.Null(await _service.GetAttachmentAsync("not-a-uuid"));
+        Assert.Null(await _service.GetAttachmentAsync(new string('g', 32)));
+    }
+
+    [Fact]
+    public async Task SaveAttachmentAsync_SanitizesFileName()
+    {
+        var attachment = await _service.SaveAttachmentAsync(@"..\..\bad<name>.png", "image/png", new byte[] { 1 }, "alice");
+
+        Assert.NotNull(attachment);
+        Assert.DoesNotContain("\\", attachment!.FileName);
+        Assert.DoesNotContain("<", attachment.FileName);
     }
 }

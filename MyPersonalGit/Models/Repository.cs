@@ -44,6 +44,20 @@ public class RepositoryWatch
     public required string RepoName { get; set; }
     public required string Username { get; set; }
     public DateTime WatchedAt { get; set; } = DateTime.UtcNow;
+    public WatchLevel Level { get; set; } = WatchLevel.All;
+}
+
+/// <summary>
+/// Notification subscription level for a repository. Users with no RepositoryWatch row
+/// get the default behavior: notified only when participating (author, assignee,
+/// commenter, reviewer) or @mentioned.
+/// </summary>
+public enum WatchLevel
+{
+    /// <summary>Notified of all issue/PR activity in the repository.</summary>
+    All = 0,
+    /// <summary>Never notified for this repository, not even for mentions.</summary>
+    Ignore = 1
 }
 
 public class RepositoryFork

@@ -508,6 +508,12 @@ public class WorkflowRunnerService : BackgroundService
                 binds.Add($"{nugetCacheDir}:/root/.nuget/packages");
                 binds.Add($"{npmCacheDir}:/root/.npm");
                 binds.Add($"{pipCacheDir}:/root/.cache/pip");
+
+                // actions/cache backing store, scoped per repository
+                var safeRepoName = string.Concat(run.RepoName.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
+                var actionsCacheDir = Path.Combine(cacheBaseDir, "actions", safeRepoName);
+                Directory.CreateDirectory(actionsCacheDir);
+                binds.Add($"{actionsCacheDir}:/mnt/actions-cache");
             }
             catch (Exception ex)
             {
@@ -729,7 +735,8 @@ public class WorkflowRunnerService : BackgroundService
                 remaining.CompletedAt = DateTime.UtcNow;
             }
 
-            // Collect artifacts
+            // Collect artifacts: top-level files, plus named directories written by the
+            // actions/upload-artifact translation (each becomes a downloadable {name}.zip)
             if (artifactHostDir != null && Directory.Exists(artifactHostDir))
             {
                 try
@@ -738,8 +745,27 @@ public class WorkflowRunnerService : BackgroundService
                     var artService = artScope.ServiceProvider.GetRequiredService<IArtifactService>();
                     foreach (var file in Directory.GetFiles(artifactHostDir))
                     {
+                        if (file.EndsWith(".zip") && Directory.Exists(file[..^4]))
+                            continue; // zip we created for a named artifact directory below
+
                         using var fs = File.OpenRead(file);
                         await artService.SaveArtifactAsync(run.Id, Path.GetFileName(file), fs);
+                    }
+
+                    foreach (var dir in Directory.GetDirectories(artifactHostDir))
+                    {
+                        var artifactName = Path.GetFileName(dir);
+                        var zipPath = Path.Combine(Path.GetTempPath(), $"wf-artifact-{run.Id}-{Guid.NewGuid():N}.zip");
+                        try
+                        {
+                            System.IO.Compression.ZipFile.CreateFromDirectory(dir, zipPath);
+                            using var zs = File.OpenRead(zipPath);
+                            await artService.SaveArtifactAsync(run.Id, artifactName + ".zip", zs);
+                        }
+                        finally
+                        {
+                            try { if (File.Exists(zipPath)) File.Delete(zipPath); } catch { }
+                        }
                     }
                 }
                 catch (Exception ex)

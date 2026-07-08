@@ -21,6 +21,8 @@ public class Issue
     public bool IsPinned { get; set; }
     public bool IsLocked { get; set; }
     public string? LockReason { get; set; }
+    /// <summary>Issue number (same repo) of the parent issue when this is a sub-issue.</summary>
+    public int? ParentIssueNumber { get; set; }
 }
 
 public enum IssueState

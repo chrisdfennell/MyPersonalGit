@@ -173,9 +173,28 @@ public class WorkflowService : IWorkflowService
                 // Resolve the effective working directory for steps
                 var defaultWorkDir = definition.DefaultWorkingDirectory;
 
+                // actions/cache steps restore at their position and save via a synthetic
+                // step appended at the end of the job (mirrors GitHub's post action)
+                var cachePostSteps = new List<(string Name, string Command)>();
+                var cacheIdx = 0;
+
                 foreach (var stepDef in stepsToProcess)
                 {
-                    var command = stepDef.Run ?? TranslateUsesAction(stepDef);
+                    string? command;
+                    if (!string.IsNullOrEmpty(stepDef.Uses) &&
+                        stepDef.Uses.StartsWith("actions/cache", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var (restoreCmd, saveCmd) = TranslateCacheAction(stepDef, cacheIdx);
+                        command = restoreCmd;
+                        if (saveCmd != null)
+                            cachePostSteps.Add(($"Post {stepDef.Name ?? "Cache"}", saveCmd));
+                        cacheIdx++;
+                    }
+                    else
+                    {
+                        command = stepDef.Run ?? TranslateUsesAction(stepDef);
+                    }
+
                     if (command != null)
                         command = SubstituteMatrixVars(command, matrixValues);
 
@@ -197,6 +216,17 @@ public class WorkflowService : IWorkflowService
                         Command = command,
                         Condition = stepDef.If,
                         ContinueOnError = stepDef.ContinueOnError,
+                        Status = WorkflowStatus.Queued
+                    });
+                }
+
+                foreach (var (postName, postCmd) in cachePostSteps)
+                {
+                    job.Steps.Add(new WorkflowStep
+                    {
+                        Name = postName,
+                        Command = postCmd,
+                        ContinueOnError = true, // a failed cache save must never fail the job
                         Status = WorkflowStatus.Queued
                     });
                 }
@@ -693,8 +723,158 @@ public class WorkflowService : IWorkflowService
                    $"echo '--- Release metadata written ---' && cat /tmp/release_meta";
         }
 
+        // actions/upload-artifact — copy files into the run-shared /artifacts mount.
+        // Dependent jobs (needs:) can read them back with actions/download-artifact,
+        // and the runner registers each named directory as a downloadable zip.
+        if (uses.StartsWith("actions/upload-artifact"))
+        {
+            var name = SanitizeArtifactName(TranslateExpression(with.GetValueOrDefault("name", "artifact")));
+            var paths = ParsePathList(TranslateExpression(with.GetValueOrDefault("path", ".")));
+            var pathArgs = string.Join(" ", paths);
+            return $"mkdir -p '/artifacts/{name}' && " +
+                   $"for p in {pathArgs}; do " +
+                   $"if [ -e \"$p\" ]; then cp -r \"$p\" '/artifacts/{name}/'; " +
+                   $"else cp -r $p '/artifacts/{name}/' 2>/dev/null || echo \"Warning: no files matched: $p\"; fi; done && " +
+                   $"echo \"Uploaded artifact '{name}':\" && ls -la '/artifacts/{name}'";
+        }
+
+        // actions/download-artifact — copy files back out of the /artifacts mount
+        if (uses.StartsWith("actions/download-artifact"))
+        {
+            var name = SanitizeArtifactName(TranslateExpression(with.GetValueOrDefault("name", "")));
+            var path = TranslateExpression(with.GetValueOrDefault("path", "."));
+            if (string.IsNullOrEmpty(name))
+                return $"mkdir -p '{path}' && cp -r /artifacts/. '{path}/' && " +
+                       $"echo 'Downloaded all artifacts:' && ls -la '{path}'";
+            return $"if [ -d '/artifacts/{name}' ]; then mkdir -p '{path}' && cp -r '/artifacts/{name}/.' '{path}/' && " +
+                   $"echo \"Downloaded artifact '{name}' to {path}\" && ls -la '{path}'; " +
+                   $"else echo \"Artifact '{name}' not found — did the producing job run first (needs:)?\" && exit 1; fi";
+        }
+
         // Unknown action — log and skip
         return $"echo 'Skipping unsupported action: {step.Uses}'";
+    }
+
+    /// <summary>Artifact names become directory names inside the /artifacts mount.</summary>
+    private static string SanitizeArtifactName(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars().Concat(new[] { '\'', '"', '`', '$', ';', '&', '|' }).ToArray();
+        return new string(name.Select(c => invalid.Contains(c) ? '_' : c).ToArray());
+    }
+
+    /// <summary>Splits a with.path value (newline-separated, possibly multiline YAML) into path tokens.</summary>
+    private static List<string> ParsePathList(string pathValue) =>
+        pathValue.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => p.Trim())
+            .Where(p => !string.IsNullOrEmpty(p) && !p.StartsWith("!")) // exclusion patterns unsupported
+            .Select(p => p.StartsWith("~/") ? "$HOME/" + p[2..] : p)
+            .ToList();
+
+    /// <summary>
+    /// Translates actions/cache (and cache/restore, cache/save) into shell commands against the
+    /// host-mounted /mnt/actions-cache directory. For the combined actions/cache the returned
+    /// SaveCmd must run as a synthetic step at the end of the job (mirrors GitHub's post action:
+    /// it saves only when the job succeeded and the key wasn't an exact hit).
+    /// Each with.path entry is stored under an index inside the key directory, so restore and
+    /// save must be generated from the same step definition. Paths should be directories.
+    /// </summary>
+    private static (string RestoreCmd, string? SaveCmd) TranslateCacheAction(StepDefinition step, int cacheIdx)
+    {
+        var with = step.With ?? new Dictionary<string, string>();
+        var key = TranslateCacheKey(with.GetValueOrDefault("key", "default"));
+        var paths = ParsePathList(TranslateExpression(with.GetValueOrDefault("path", "")));
+        var restoreKeys = with.GetValueOrDefault("restore-keys", "")
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(k => TranslateCacheKey(k.Trim()))
+            .Where(k => !string.IsNullOrEmpty(k))
+            .ToList();
+
+        var pathArgs = string.Join(" ", paths.Select(p => $"\"{p}\""));
+        var keyFile = $"/tmp/mpg_cache_key_{cacheIdx}";
+        var hitFile = $"/tmp/mpg_cache_hit_{cacheIdx}";
+
+        var saveBody =
+            $"if [ -d \"/mnt/actions-cache/$KEY\" ]; then echo \"Cache already exists: $KEY\"; " +
+            $"else TMP=\"/mnt/actions-cache/.tmp-$$\"; i=0; saved=0; " +
+            $"for p in {pathArgs}; do " +
+            $"if [ -d \"$p\" ]; then mkdir -p \"$TMP/$i\" && cp -a \"$p/.\" \"$TMP/$i/\" && saved=1; " +
+            $"elif [ -f \"$p\" ]; then mkdir -p \"$TMP/$i\" && cp -a \"$p\" \"$TMP/$i/\" && saved=1; fi; " +
+            $"i=$((i+1)); done; " +
+            $"if [ \"$saved\" = \"1\" ]; then mv \"$TMP\" \"/mnt/actions-cache/$KEY\" && echo \"Cache saved: $KEY\"; " +
+            $"else rm -rf \"$TMP\"; echo 'Nothing to cache'; fi; fi";
+
+        // Standalone save (actions/cache/save): compute the key and save immediately
+        if (step.Uses!.StartsWith("actions/cache/save", StringComparison.OrdinalIgnoreCase))
+            return ($"KEY={key}; KEY=$(echo \"$KEY\" | tr '/: ' '___'); {saveBody}", null);
+
+        var restoreFallback = restoreKeys.Count == 0 ? "" :
+            $"if [ -z \"$HIT\" ]; then for rk in {string.Join(" ", restoreKeys.Select(k => $"\"{k}\""))}; do " +
+            $"rk=$(echo \"$rk\" | tr '/: ' '___'); " +
+            $"M=$(ls -td \"/mnt/actions-cache/$rk\"* 2>/dev/null | head -1); " +
+            $"if [ -n \"$M\" ]; then HIT=\"$M\"; break; fi; done; fi; ";
+
+        var restoreCmd =
+            $"mkdir -p /mnt/actions-cache; KEY={key}; KEY=$(echo \"$KEY\" | tr '/: ' '___'); " +
+            $"echo \"$KEY\" > {keyFile}; HIT=\"\"; " +
+            $"if [ -d \"/mnt/actions-cache/$KEY\" ]; then HIT=\"/mnt/actions-cache/$KEY\"; touch {hitFile}; fi; " +
+            restoreFallback +
+            $"if [ -n \"$HIT\" ]; then i=0; for p in {pathArgs}; do " +
+            $"if [ -d \"$HIT/$i\" ]; then mkdir -p \"$p\" && cp -a \"$HIT/$i/.\" \"$p/\"; fi; i=$((i+1)); done; " +
+            $"echo \"Cache restored from $(basename \"$HIT\")\"; " +
+            $"else echo \"Cache miss for key: $KEY\"; fi";
+
+        // Standalone restore (actions/cache/restore): no post save step
+        if (step.Uses.StartsWith("actions/cache/restore", StringComparison.OrdinalIgnoreCase))
+            return (restoreCmd, null);
+
+        var saveCmd =
+            $"KEY=$(cat {keyFile} 2>/dev/null); " +
+            $"if [ -z \"$KEY\" ]; then echo 'No cache key recorded — skipping save'; " +
+            $"elif [ -f {hitFile} ]; then echo 'Exact cache hit — skipping save'; " +
+            $"else {saveBody}; fi";
+
+        return (restoreCmd, saveCmd);
+    }
+
+    /// <summary>
+    /// Translates expressions inside a cache key into shell:
+    /// ${{ runner.os }} -> Linux, ${{ hashFiles('glob') }} -> $(find ... | sha256sum),
+    /// plus the standard secrets/needs/steps expression translation.
+    /// </summary>
+    private static string TranslateCacheKey(string key)
+    {
+        if (string.IsNullOrEmpty(key)) return "default";
+
+        key = System.Text.RegularExpressions.Regex.Replace(
+            key, @"\$\{\{\s*runner\.os\s*\}\}", "Linux");
+
+        key = System.Text.RegularExpressions.Regex.Replace(
+            key, @"\$\{\{\s*hashFiles\(([^)]*)\)\s*\}\}", m =>
+            {
+                var patterns = m.Groups[1].Value
+                    .Split(',')
+                    .Select(p => p.Trim().Trim('\'', '"'))
+                    .Where(p => !string.IsNullOrEmpty(p))
+                    .Select(GlobToFindArgs);
+                var finds = string.Join("; ", patterns.Select(f => $"find /workspace -type f {f} 2>/dev/null"));
+                return $"$( ({finds}) | sort | xargs cat 2>/dev/null | sha256sum | cut -c1-16)";
+            });
+
+        key = TranslateExpression(key);
+
+        // Anything still unresolved becomes a literal — strip the expression syntax
+        key = System.Text.RegularExpressions.Regex.Replace(key, @"\$\{\{[^}]*\}\}", "");
+
+        return $"\"{key}\"";
+    }
+
+    /// <summary>Converts a hashFiles glob into find(1) arguments: '**/x' -> -name 'x', otherwise -path.</summary>
+    private static string GlobToFindArgs(string glob)
+    {
+        if (glob.StartsWith("**/") && !glob[3..].Contains('/'))
+            return $"-name '{glob[3..]}'";
+        var pathPattern = glob.Replace("**", "*");
+        return $"-path '*{pathPattern}'";
     }
 
     /// <summary>

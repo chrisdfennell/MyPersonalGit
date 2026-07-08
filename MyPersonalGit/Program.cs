@@ -196,6 +196,10 @@ builder.Services.AddSingleton<IWebIdeService, WebIdeService>();
 builder.Services.AddSingleton<LspProcessManager>();
 builder.Services.AddSingleton<IAiCompletionService, AiCompletionService>();
 builder.Services.AddSingleton<IAiChatService, AiChatService>();
+builder.Services.AddSingleton<IAiPrReviewService, AiPrReviewService>();
+builder.Services.AddSingleton<IAttachmentService, AttachmentService>();
+builder.Services.AddSingleton<IMergeQueueService, MergeQueueService>();
+builder.Services.AddHostedService<MergeQueueProcessorService>();
 builder.Services.AddSingleton<DapSessionManager>();
 builder.Services.AddSignalR();
 builder.Services.AddHttpClient();
@@ -605,6 +609,44 @@ using (var scope = app.Services.CreateScope())
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""RepositorySecrets"" ADD COLUMN ""EnvironmentName"" TEXT NULL;"); } catch { }
     try { db.Database.ExecuteSqlRaw(@"DROP INDEX IF EXISTS ""IX_RepositorySecrets_RepoName_Name"";"); } catch { }
     try { db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_RepositorySecrets_RepoName_Name_EnvironmentName"" ON ""RepositorySecrets"" (""RepoName"", ""Name"", ""EnvironmentName"");"); } catch { }
+
+    // CommentAttachments table (pasted/dropped images in issue & PR comments)
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""CommentAttachments"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""Uuid"" TEXT NOT NULL,
+            ""FileName"" TEXT NOT NULL,
+            ""ContentType"" TEXT NOT NULL,
+            ""SizeBytes"" INTEGER NOT NULL,
+            ""UploadedBy"" TEXT NOT NULL,
+            ""RepoName"" TEXT NULL,
+            ""CreatedAt"" TEXT NOT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_CommentAttachments_Uuid"" ON ""CommentAttachments"" (""Uuid"");");
+
+    // RepositoryWatches.Level column (watch subscription levels: 0 = All, 1 = Ignore)
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""RepositoryWatches"" ADD COLUMN ""Level"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
+
+    // Issues.ParentIssueNumber column (sub-issues)
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Issues"" ADD COLUMN ""ParentIssueNumber"" INTEGER NULL;"); } catch { }
+
+    // MergeQueueEntries table
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""MergeQueueEntries"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""RepoName"" TEXT NOT NULL,
+            ""PullRequestNumber"" INTEGER NOT NULL,
+            ""TargetBranch"" TEXT NOT NULL,
+            ""EnqueuedBy"" TEXT NOT NULL,
+            ""State"" INTEGER NOT NULL DEFAULT 0,
+            ""MergeStrategy"" TEXT NOT NULL DEFAULT 'MergeCommit',
+            ""FailureReason"" TEXT NULL,
+            ""EnqueuedAt"" TEXT NOT NULL,
+            ""StartedAt"" TEXT NULL,
+            ""CompletedAt"" TEXT NULL
+        );");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_MergeQueueEntries_RepoName_State"" ON ""MergeQueueEntries"" (""RepoName"", ""State"");");
+    db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_MergeQueueEntries_RepoName_PullRequestNumber"" ON ""MergeQueueEntries"" (""RepoName"", ""PullRequestNumber"");");
 
     // One-time fixup: workflow runs stored with stripped ".git" suffix need to match the DB repo name
     try

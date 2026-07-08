@@ -1,0 +1,46 @@
+@using MyPersonalGit.Data
+@using MyPersonalGit.Services
+@inject IJSRuntime JS
+@inject IAttachmentService AttachmentService
+@inject CurrentUserService UserService
+@implements IAsyncDisposable
+
+@* Invisible helper: enables paste/drop image upload on any <textarea data-attach-upload>
+   rendered by the hosting page. Uploaded images are inserted as markdown at the cursor. *@
+
+@code {
+    [Parameter] public string? RepoName { get; set; }
+
+    private DotNetObjectReference<AttachmentUploader>? _selfRef;
+    private bool _initialized;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _initialized) return;
+        _initialized = true;
+        _selfRef = DotNetObjectReference.Create(this);
+        try { await JS.InvokeVoidAsync("commentAttachments.init", _selfRef); } catch { }
+    }
+
+    [JSInvokable]
+    public async Task<string?> UploadPastedImage(string fileName, string contentType, string base64)
+    {
+        if (!UserService.IsLoggedIn) return null;
+
+        byte[] data;
+        try { data = Convert.FromBase64String(base64); }
+        catch (FormatException) { return null; }
+
+        var attachment = await AttachmentService.SaveAttachmentAsync(fileName, contentType, data, UserService.Username, RepoName);
+        return attachment == null ? null : AttachmentService.GetAttachmentUrl(attachment);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_selfRef != null)
+        {
+            try { await JS.InvokeVoidAsync("commentAttachments.dispose"); } catch { }
+            _selfRef.Dispose();
+        }
+    }
+}

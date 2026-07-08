@@ -54,6 +54,7 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 
 ### Code & Repositories
 - **Repository Management** — Create, browse, and delete Git repositories with a full code browser, file editor, commit history, branches, and tags
+- **Repository Initialization** — Start new repositories with a README, a `.gitignore` template (Visual Studio, Node, Python, Go, Rust, Java, Unity, C++), and a license (MIT, Apache-2.0, BSD, ISC, Unlicense) in the initial commit
 - **Repository Import/Migration** — Import repositories from GitHub, GitLab, Bitbucket, Gitea/Forgejo/Gogs, or any Git URL with optional issue and PR import. Background processing with progress tracking
 - **Repository Archiving** — Mark repositories as read-only with visual badges; pushes are blocked for archived repos
 - **Git Smart HTTP** — Clone, fetch, and push over HTTP with Basic Auth
@@ -82,6 +83,9 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Issue Dependencies** — Define "blocked by" and "blocks" relationships between issues with circular dependency detection
 - **Issue Pinning & Locking** — Pin important issues to the top of the list and lock conversations to prevent further comments
 - **Comment Editing & Deletion** — Edit or delete your own comments on issues and pull requests with "(edited)" indicator
+- **Image Paste in Comments** — Paste or drag-and-drop images into issue/PR comment boxes and descriptions; images upload automatically and insert as markdown (PNG, JPEG, GIF, WebP, BMP up to 10 MB)
+- **Watch Subscription Levels** — Per-repository notification levels: Participating and @mentions (default), All activity, or Ignore. Issue and PR events notify watchers plus participants (author, assignees, commenters, reviewers)
+- **AI Pull Request Review** — One-click AI-generated code review of a PR's diff (summary, findings, suggestions) posted as a review comment, powered by the same OpenAI-compatible endpoint as the Web IDE AI features
 - **@Mention Notifications** — @mention users in comments to send them a direct notification
 - **Merge Conflict Resolution** — Resolve merge conflicts directly in the browser with a visual editor showing base/ours/theirs views, quick accept buttons, and conflict marker validation
 - **Squash Commit Message** — Customize the commit message when squash-merging a pull request
@@ -94,6 +98,9 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Diff Syntax Highlighting** — Language-aware syntax coloring in pull request and compare diffs via Prism.js
 - **Reaction Emoji** — React to issues, PRs, discussions, and comments with thumbs up/down, heart, laugh, hooray, confused, rocket, and eyes
 - **Auto-Merge** — Enable auto-merge on pull requests to automatically merge when all required status checks pass and reviews are approved
+- **Merge Queue** — Queue PRs for serialized merging: each queued PR is updated with the current target branch head, required checks re-run against the result, and the PR merges only when green. Failed entries drop out with the reason shown; the next PR proceeds automatically
+- **Sub-Issues** — Parent/child issue hierarchies with progress bars, "Tracked by" backlinks, cycle detection, and completion counts on the issue list
+- **Task-List Progress** — Markdown checklists (`- [ ]`) in issue and PR descriptions show "n of m" completion with progress bars in list views
 - **CI Status on PR List** — Pull request list shows green/red/yellow CI status icons next to each PR title
 - **Cherry-Pick / Revert via UI** — Cherry-pick any commit to another branch or revert a commit, either directly or as a new pull request, from the web interface
 - **Transfer Issues** — Move issues between repositories, preserving title, body, comments, matching labels, and linking the original with a transfer note
@@ -177,6 +184,8 @@ A self-hosted Git server with a GitHub-like web interface built with ASP.NET Cor
 - **Workflow Environment Variables** — Set `env:` at workflow, job, or step level in YAML
 - **Status Badges** — Embeddable SVG badges for workflow and commit status (`/api/badge/{repo}/workflow`)
 - **Artifact Downloads** — Download build artifacts directly from the Actions UI
+- **Cross-Job Artifacts** — `actions/upload-artifact` in one job, `actions/download-artifact` in a dependent `needs:` job; named artifacts also become downloadable zips in the Actions UI
+- **Dependency Caching (`actions/cache`)** — Per-repository CI caches with `key`, `path`, `restore-keys`, `${{ hashFiles(...) }}` support, plus `actions/cache/restore` and `actions/cache/save`
 - **Secrets Management** — Encrypted repository secrets (AES-256) injected as environment variables into CI/CD workflow runs
 - **Webhooks** — Trigger external services on repository events
 - **Prometheus Metrics** — Built-in `/metrics` endpoint for monitoring
@@ -618,6 +627,9 @@ The same workflow YAML also works on GitHub Actions — no changes needed. MyPer
 | `docker/login-action@v3` | `docker login` with stdin password |
 | `docker/build-push-action@v6` | `docker build && docker push` |
 | `docker/setup-buildx-action@v3` | No-op (uses default builder) |
+| `actions/upload-artifact@v4` | Copies files to the run-shared artifact store |
+| `actions/download-artifact@v4` | Copies files back in dependent jobs |
+| `actions/cache@v4` | Restores/saves a per-repo cache keyed by `key`/`restore-keys` |
 | `softprops/action-gh-release@v2` | Creates a real Release entity in the database |
 | `${{ secrets.X }}` | `$X` environment variable |
 | `${{ steps.X.outputs.Y }}` | `$Y` environment variable |
