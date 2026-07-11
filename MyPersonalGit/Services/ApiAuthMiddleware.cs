@@ -25,6 +25,16 @@ public sealed class ApiAuthMiddleware
             return;
         }
 
+        // Pre-receive hooks call back into the app over loopback from inside the
+        // container and have no PAT. Loopback-only so the endpoint stays private.
+        if (context.Request.Path.StartsWithSegments("/api/v1/hooks") &&
+            context.Connection.RemoteIpAddress != null &&
+            System.Net.IPAddress.IsLoopback(context.Connection.RemoteIpAddress))
+        {
+            await _next(context);
+            return;
+        }
+
         // Allow unauthenticated downloads of public release assets. Private repo assets
         // continue through token auth below.
         if (context.Request.Method == "GET" && context.Request.Path.Value != null

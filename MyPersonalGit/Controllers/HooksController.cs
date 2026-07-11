@@ -17,13 +17,15 @@ public class HooksController : ControllerBase
     private readonly ITagProtectionService _tagProtectionService;
     private readonly ISecretScanService _secretScanService;
     private readonly IConfiguration _config;
+    private readonly IAdminService _adminService;
 
-    public HooksController(IBranchProtectionService branchProtectionService, ITagProtectionService tagProtectionService, ISecretScanService secretScanService, IConfiguration config)
+    public HooksController(IBranchProtectionService branchProtectionService, ITagProtectionService tagProtectionService, ISecretScanService secretScanService, IConfiguration config, IAdminService adminService)
     {
         _branchProtectionService = branchProtectionService;
         _tagProtectionService = tagProtectionService;
         _secretScanService = secretScanService;
         _config = config;
+        _adminService = adminService;
     }
 
     /// <summary>
@@ -41,7 +43,11 @@ public class HooksController : ControllerBase
             // Push protection for secrets
             if (refUpdate.NewSha != "0000000000000000000000000000000000000000")
             {
-                var projectRoot = _config["Git:ProjectRoot"] ?? "/repos";
+                // Same resolution order as the git middleware: DB setting, then config.
+                var systemSettings = await _adminService.GetSystemSettingsAsync();
+                var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot)
+                    ? systemSettings.ProjectRoot
+                    : _config["Git:ProjectRoot"] ?? "/repos";
                 var repoDir = Path.Combine(projectRoot, request.RepoName);
                 if (!repoDir.EndsWith(".git") && !Directory.Exists(repoDir)) repoDir += ".git";
 

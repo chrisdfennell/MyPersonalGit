@@ -1567,8 +1567,11 @@ public class HooksControllerPushProtectionTests
         var mockConfig = Substitute.For<IConfiguration>();
         
         mockConfig["Git:ProjectRoot"].Returns(Path.GetTempPath());
-        
-        var controller = new HooksController(mockBranch, mockTag, mockScan, mockConfig);
+
+        var mockAdmin = Substitute.For<IAdminService>();
+        mockAdmin.GetSystemSettingsAsync().Returns(new SystemSettings());
+
+        var controller = new HooksController(mockBranch, mockTag, mockScan, mockConfig, mockAdmin);
         
         var request = new PreReceiveRequest
         {
