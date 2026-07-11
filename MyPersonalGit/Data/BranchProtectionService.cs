@@ -130,7 +130,8 @@ REPO_NAME=""{repoName}""
 APP_URL=""http://localhost:8080""
 PUSH_USER=""${{REMOTE_USER:-unknown}}""
 
-UPDATES=""[]""
+UPDATES=""[""
+SEP=""""
 while read oldrev newrev refname; do
     # Detect force push (non-fast-forward)
     IS_FORCE=""false""
@@ -139,13 +140,12 @@ while read oldrev newrev refname; do
             IS_FORCE=""true""
         fi
     fi
-    UPDATES=$(echo ""$UPDATES"" | sed ""s/]$/,\{{\\""oldSha\\"":\\""$oldrev\\"",\\""newSha\\"":\\""$newrev\\"",\\""refName\\"":\\""$refname\\"",\\""isForcePush\\"":$IS_FORCE\}}]/"")
+    UPDATES=""$UPDATES$SEP{{\""oldSha\"":\""$oldrev\"",\""newSha\"":\""$newrev\"",\""refName\"":\""$refname\"",\""isForcePush\"":$IS_FORCE}}""
+    SEP="",""
 done
+UPDATES=""$UPDATES]""
 
-# Fix leading comma
-UPDATES=$(echo ""$UPDATES"" | sed 's/\[,/[/')
-
-PAYLOAD=""\{{\\""repoName\\"":\\""$REPO_NAME\\"",\\""pushUser\\"":\\""$PUSH_USER\\"",\\""updates\\"":$UPDATES\}}""
+PAYLOAD=""{{\""repoName\"":\""$REPO_NAME\"",\""pushUser\"":\""$PUSH_USER\"",\""updates\"":$UPDATES}}""
 
 RESPONSE=$(curl -s -X POST ""$APP_URL/api/v1/hooks/pre-receive"" \
     -H ""Content-Type: application/json"" \
