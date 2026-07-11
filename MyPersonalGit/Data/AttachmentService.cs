@@ -112,13 +112,21 @@ public class AttachmentService : IAttachmentService
         return Path.Combine(projectRoot, ".mypersonalgit", "attachments");
     }
 
+    // Windows-invalid chars so results are identical on Linux, where
+    // GetInvalidFileNameChars() is only '/' and '\0'.
+    private static readonly char[] InvalidFileNameChars =
+        Path.GetInvalidFileNameChars()
+            .Concat(new[] { '\\', '/', ':', '*', '?', '"', '<', '>', '|' })
+            .Distinct().ToArray();
+
     private static string SanitizeFileName(string fileName, string fallbackExtension)
     {
-        var name = Path.GetFileName(fileName ?? "").Trim();
+        var name = (fileName ?? "").Trim();
+        var lastSep = name.LastIndexOfAny(new[] { '/', '\\' });
+        if (lastSep >= 0) name = name[(lastSep + 1)..];
         if (string.IsNullOrEmpty(name)) name = "image" + fallbackExtension;
 
-        var invalid = Path.GetInvalidFileNameChars();
-        var sanitized = new string(name.Select(c => invalid.Contains(c) ? '_' : c).ToArray());
+        var sanitized = new string(name.Select(c => InvalidFileNameChars.Contains(c) ? '_' : c).ToArray());
         return sanitized.Length > 200 ? sanitized[..200] : sanitized;
     }
 }
