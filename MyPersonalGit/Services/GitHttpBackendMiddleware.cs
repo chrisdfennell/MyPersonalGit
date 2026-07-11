@@ -63,6 +63,20 @@ public sealed class GitHttpBackendMiddleware
             return;
         }
 
+        // Some repos are stored on disk as "{name}.git", others as plain "{name}".
+        // Clone URLs always say "{name}.git"; if that directory is missing but the
+        // suffix-less one exists, rewrite PATH_INFO so http-backend finds it.
+        var urlRepoSegment = pathInfo.Split('/', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+        if (urlRepoSegment != null && urlRepoSegment.EndsWith(".git", StringComparison.OrdinalIgnoreCase))
+        {
+            var bareName = urlRepoSegment[..^4];
+            if (!Directory.Exists(Path.Combine(projectRoot, urlRepoSegment)) &&
+                Directory.Exists(Path.Combine(projectRoot, bareName)))
+            {
+                pathInfo = "/" + bareName + pathInfo[(urlRepoSegment.Length + 1)..];
+            }
+        }
+
         // Block push to archived repos
         var reqService = context.Request.Query["service"].FirstOrDefault() ?? "";
         if (pathInfo.Contains("git-receive-pack") || reqService == "git-receive-pack")
