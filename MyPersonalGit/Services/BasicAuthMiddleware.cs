@@ -174,7 +174,10 @@ public sealed class BasicAuthMiddleware
         var segments = path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (segments == null || segments.Length < 2) return null;
         var repoSegment = segments[1]; // e.g., "myrepo.git"
-        return repoSegment; // Keep the .git suffix for DB lookup
+        // DB stores repo names without the .git suffix
+        return repoSegment.EndsWith(".git", StringComparison.OrdinalIgnoreCase)
+            ? repoSegment[..^4]
+            : repoSegment;
     }
 
     internal static bool IsReadOperation(HttpRequest request)

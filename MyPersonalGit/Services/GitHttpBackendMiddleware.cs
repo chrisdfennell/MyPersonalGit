@@ -64,7 +64,11 @@ public sealed class GitHttpBackendMiddleware
             var segments = pathInfo.Split('/', StringSplitOptions.RemoveEmptyEntries);
             if (segments.Length >= 1)
             {
-                var repoMeta = await repoService.GetRepositoryAsync(segments[0]);
+                // DB stores repo names without the .git suffix
+                var lookupName = segments[0].EndsWith(".git", StringComparison.OrdinalIgnoreCase)
+                    ? segments[0][..^4]
+                    : segments[0];
+                var repoMeta = await repoService.GetRepositoryAsync(lookupName);
                 if (repoMeta?.IsArchived == true)
                 {
                     context.Response.StatusCode = StatusCodes.Status403Forbidden;
