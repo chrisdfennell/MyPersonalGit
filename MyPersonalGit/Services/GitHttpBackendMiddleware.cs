@@ -32,7 +32,7 @@ public sealed class GitHttpBackendMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, IIssueAutoCloseService issueAutoCloseService, IWorkflowService workflowService, IAGitFlowService agitFlowService, IRepositoryTrafficService trafficService, ISecretScanService secretScanService, IBranchProtectionService branchProtectionService)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, IIssueAutoCloseService issueAutoCloseService, IWorkflowService workflowService, IAGitFlowService agitFlowService, IRepositoryTrafficService trafficService, ISecretScanService secretScanService, IBranchProtectionService branchProtectionService, IAdminService adminService)
     {
         // Only handle /git/* paths; let everything else pass through.
         if (!context.Request.Path.StartsWithSegments("/git", out var remaining))
@@ -44,7 +44,13 @@ public sealed class GitHttpBackendMiddleware
         // Example:
         //   Request.Path: /git/MyRepo.git/info/refs
         //   remaining:    /MyRepo.git/info/refs
-        var projectRoot = config["Git:ProjectRoot"] ?? "/repos";
+        // Resolve the repo root the same way the UI does (Home.razor, AttachmentService):
+        // admin-configured SystemSettings.ProjectRoot wins over appsettings. Otherwise repos
+        // created through the UI live somewhere http-backend never looks and pushes 404.
+        var systemSettings = await adminService.GetSystemSettingsAsync();
+        var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot)
+            ? systemSettings.ProjectRoot
+            : config["Git:ProjectRoot"] ?? "/repos";
         var pathInfo = remaining.Value ?? "/";
         if (string.IsNullOrWhiteSpace(pathInfo))
             pathInfo = "/";
