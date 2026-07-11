@@ -177,6 +177,13 @@ else
                         <h5 class="mb-0">@L["Settings_ChangePassword"]</h5>
                     </div>
                     <div class="card-body">
+                        @if (!string.IsNullOrEmpty(PasswordMessage))
+                        {
+                            <div class="alert @(PasswordMessageIsError ? "alert-danger" : "alert-success") alert-dismissible">
+                                @PasswordMessage
+                                <button type="button" class="btn-close" aria-label="@L["Common_Close"]" @onclick='() => PasswordMessage = ""'></button>
+                            </div>
+                        }
                         <div class="mb-3">
                             <label class="form-label">@L["Settings_CurrentPassword"]</label>
                             <input type="password" class="form-control" @bind="CurrentPassword" />
@@ -906,6 +913,8 @@ else
     private string CurrentPassword = "";
     private string NewPassword = "";
     private string ConfirmPassword = "";
+    private string PasswordMessage = "";
+    private bool PasswordMessageIsError;
 
     // 2FA setup state
     private bool ShowTwoFactorSetup = false;
@@ -1087,13 +1096,42 @@ else
         }
     }
 
-    private Task ChangePassword()
+    private async Task ChangePassword()
     {
+        PasswordMessage = "";
+        if (string.IsNullOrEmpty(CurrentPassword) || string.IsNullOrEmpty(NewPassword))
+        {
+            PasswordMessage = "Please fill in all password fields.";
+            PasswordMessageIsError = true;
+            return;
+        }
         if (NewPassword != ConfirmPassword)
         {
-            return Task.CompletedTask;
+            PasswordMessage = "New password and confirmation do not match.";
+            PasswordMessageIsError = true;
+            return;
         }
-        return Task.CompletedTask;
+        if (NewPassword.Length < 6)
+        {
+            PasswordMessage = "Password must be at least 6 characters long.";
+            PasswordMessageIsError = true;
+            return;
+        }
+
+        var success = await AuthService.ChangePasswordAsync(UserService.Username, CurrentPassword, NewPassword);
+        if (success)
+        {
+            PasswordMessage = "Password updated successfully.";
+            PasswordMessageIsError = false;
+            CurrentPassword = "";
+            NewPassword = "";
+            ConfirmPassword = "";
+        }
+        else
+        {
+            PasswordMessage = "Current password is incorrect.";
+            PasswordMessageIsError = true;
+        }
     }
 
     private async Task Enable2FA()
