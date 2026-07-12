@@ -215,6 +215,39 @@ public class PatAndTransportTests : IClassFixture<GitSmokeFactory>
         Assert.Contains("expired", await resp.Content.ReadAsStringAsync(), StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public async Task Api_Create_Repo_Then_Push_With_Pat_Round_Trips()
+    {
+        var token = await CreatePatAsync(new[] { "repo" });
+        using var http = new HttpClient { BaseAddress = new Uri(_serverAddress) };
+
+        var req = new HttpRequestMessage(HttpMethod.Post, "/api/v1/repos")
+        {
+            Content = new StringContent(
+                JsonSerializer.Serialize(new { name = "api-created", description = "made via API" }),
+                System.Text.Encoding.UTF8, "application/json")
+        };
+        req.Headers.Add("Authorization", $"Bearer {token}");
+        var resp = await http.SendAsync(req);
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        var body = await resp.Content.ReadAsStringAsync();
+        Assert.Contains("api-created", body);
+
+        // Duplicate create conflicts rather than clobbering.
+        var dup = new HttpRequestMessage(HttpMethod.Post, "/api/v1/repos")
+        {
+            Content = new StringContent(JsonSerializer.Serialize(new { name = "api-created" }),
+                System.Text.Encoding.UTF8, "application/json")
+        };
+        dup.Headers.Add("Authorization", $"Bearer {token}");
+        Assert.Equal(HttpStatusCode.Conflict, (await http.SendAsync(dup)).StatusCode);
+
+        // The repo the API just created accepts a real push with the same PAT.
+        var work = CreateLocalCommit(Path.Combine(_factory.ProjectRoot, "work-api-created"));
+        var push = RunGit($"push {UrlWith(GitUser, token, "api-created.git")} main", work);
+        Assert.True(push.ExitCode == 0, $"push to API-created repo failed:\n{push.Output}");
+    }
+
     // ---------------------------------------------------------------
     // Private repo reads over smart HTTP
     // ---------------------------------------------------------------

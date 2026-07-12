@@ -106,6 +106,67 @@ public class RepositoriesController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost]
+    public async Task<IActionResult> CreateRepository([FromBody] CreateRepositoryRequest request, [FromServices] IAdminService adminService)
+    {
+        var currentUser = User.Identity?.Name;
+        if (string.IsNullOrEmpty(currentUser))
+            return Unauthorized(new { error = "Authentication required" });
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { error = "Repository name is required" });
+
+        var folderName = Services.SafePath.ToRepositoryFolderName(request.Name);
+        if (folderName == null)
+            return BadRequest(new { error = "Invalid repository name" });
+
+        // Project root: admin-configured value wins over appsettings (same
+        // resolution as the git endpoints — see the .git-suffix/project-root gotchas).
+        var systemSettings = await adminService.GetSystemSettingsAsync();
+        var projectRoot = !string.IsNullOrEmpty(systemSettings.ProjectRoot)
+            ? systemSettings.ProjectRoot
+            : _config["Git:ProjectRoot"] ?? "/repos";
+
+        var repoNameClean = folderName.EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? folderName[..^4] : folderName;
+        if (await _repoService.GetRepositoryAsync(repoNameClean) != null)
+            return Conflict(new { error = $"Repository '{repoNameClean}' already exists" });
+
+        if (!Directory.Exists(projectRoot))
+            Directory.CreateDirectory(projectRoot);
+
+        var fullPath = Services.SafePath.CombineUnder(projectRoot, folderName);
+        if (fullPath == null)
+            return BadRequest(new { error = "Repository path is invalid" });
+
+        // The folder may exist with or without the .git suffix — both layouts occur.
+        if (Directory.Exists(fullPath) || Directory.Exists(Path.Combine(projectRoot, repoNameClean)))
+            return Conflict(new { error = $"Repository '{repoNameClean}' already exists on disk" });
+
+        Services.BareRepo.Create(fullPath);
+        var repo = await _repoService.CreateRepositoryAsync(folderName, currentUser, request.Description, request.IsPrivate);
+
+        _logger.LogInformation("Repository '{Name}' created via API by {User}", repo.Name, currentUser);
+
+        return Created($"/api/v1/repos/{repo.Name}", new
+        {
+            repo.Id,
+            repo.Name,
+            repo.Description,
+            repo.Owner,
+            repo.IsPrivate,
+            default_branch = repo.DefaultBranch,
+            created_at = repo.CreatedAt,
+            clone_url = $"{Request.Scheme}://{Request.Host}/git/{repo.Name}.git"
+        });
+    }
+
+    public class CreateRepositoryRequest
+    {
+        public string Name { get; set; } = "";
+        public string? Description { get; set; }
+        public bool IsPrivate { get; set; }
+    }
+
     [HttpGet("{repoName}")]
     public async Task<IActionResult> GetRepository(string repoName)
     {
