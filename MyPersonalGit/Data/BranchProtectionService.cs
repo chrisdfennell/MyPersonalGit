@@ -165,7 +165,10 @@ fi
 
 exit 0
 ";
-            File.WriteAllText(hookPath, hookScript);
+            // The literal above inherits the source file's line endings; bash rejects
+            // CRLF scripts ("\r: command not found"), so force LF regardless of how
+            // this assembly was built.
+            File.WriteAllText(hookPath, hookScript.Replace("\r\n", "\n"));
 
             // Make executable on Unix
             if (!OperatingSystem.IsWindows())

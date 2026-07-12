@@ -109,7 +109,12 @@ public sealed class GitHttpBackendMiddleware
             ["PATH_INFO"] = pathInfo,
             ["QUERY_STRING"] = context.Request.QueryString.HasValue ? context.Request.QueryString.Value!.TrimStart('?') : "",
             ["CONTENT_TYPE"] = context.Request.ContentType ?? "",
-            ["REMOTE_USER"] = context.User?.Identity?.IsAuthenticated == true ? context.User.Identity!.Name : "",
+            // http-backend refuses receive-pack when REMOTE_USER is empty. With
+            // Git:RequireAuth=false (dev), no auth middleware runs, so pushes would be
+            // impossible; treat the caller as "anonymous" — the operator opted out of auth.
+            ["REMOTE_USER"] = context.User?.Identity?.IsAuthenticated == true
+                ? context.User.Identity!.Name
+                : (config.GetValue("Git:RequireAuth", true) ? "" : "anonymous"),
             // Optional, but helpful:
             ["REMOTE_ADDR"] = context.Connection.RemoteIpAddress?.ToString() ?? ""
         };
@@ -338,6 +343,16 @@ public sealed class GitHttpBackendMiddleware
                     {
                         using (var repo = new Repository(repoDir))
                         {
+                            // First push to an empty repo: bare init points HEAD at
+                            // master, but the pushed branch is usually main. Re-target
+                            // HEAD so clones check out the branch that actually exists.
+                            if (repo.Head?.Tip == null)
+                            {
+                                var firstBranch = repo.Branches.FirstOrDefault(b => !b.IsRemote && b.Tip != null);
+                                if (firstBranch != null)
+                                    repo.Refs.UpdateTarget("HEAD", firstBranch.CanonicalName);
+                            }
+
                             var defaultBranch = repo.Branches["main"] ?? repo.Branches["master"] ?? repo.Head;
                             if (defaultBranch?.Tip != null)
                             {

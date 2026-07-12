@@ -783,6 +783,25 @@ using (var scope = app.Services.CreateScope())
     {
         Console.WriteLine($"Warning: Fork cleanup failed: {ex.Message}");
     }
+
+    // From 20260711: canonicalize repo names — DB rows must never carry the ".git"
+    // suffix (it belongs to the on-disk folder only). Older UI code stored the folder
+    // name verbatim, which broke owner/permission lookups for non-admin users.
+    // Skip any row whose clean name would collide with an existing clean row.
+    try
+    {
+        db.Database.ExecuteSqlRaw(@"
+            UPDATE ""Repositories""
+            SET ""Name"" = substr(""Name"", 1, length(""Name"") - 4)
+            WHERE ""Name"" LIKE '%.git'
+              AND lower(substr(""Name"", 1, length(""Name"") - 4)) NOT IN (
+                  SELECT lower(""Name"") FROM ""Repositories"" WHERE ""Name"" NOT LIKE '%.git'
+              );");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Warning: Repo name normalization failed: {ex.Message}");
+    }
 }
 
 // Configure the HTTP request pipeline.

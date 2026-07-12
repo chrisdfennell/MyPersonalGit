@@ -63,14 +63,21 @@ public class RepositoryService : IRepositoryService
         return await db.Repositories.ToListAsync();
     }
 
+    // Canonical DB form is the bare name; ".git" belongs to the on-disk folder only.
+    // Callers pass whichever they have (folder name, URL segment), so normalize here.
+    private static string CanonicalName(string name)
+        => name.EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? name[..^4] : name;
+
     public async Task<Repository?> GetRepositoryAsync(string name)
     {
+        name = CanonicalName(name);
         using var db = _dbFactory.CreateDbContext();
         return await db.Repositories.FirstOrDefaultAsync(r => r.Name.ToLower() == name.ToLower());
     }
 
     public async Task<Repository> CreateRepositoryAsync(string name, string owner, string? description = null, bool isPrivate = false)
     {
+        name = CanonicalName(name);
         if (!SafePath.IsSafeRepositoryName(name))
             throw new ArgumentException("Invalid repository name.", nameof(name));
 
@@ -108,6 +115,7 @@ public class RepositoryService : IRepositoryService
 
     public async Task<Repository> EnsureRepositoryRecordAsync(string name, string owner)
     {
+        name = CanonicalName(name);
         using var db = _dbFactory.CreateDbContext();
 
         var existing = await db.Repositories.FirstOrDefaultAsync(r => r.Name.ToLower() == name.ToLower());
