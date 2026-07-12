@@ -62,7 +62,25 @@ public class CodeSearchService : ICodeSearchService
                 return results;
 
             var lowerQuery = query.ToLower();
-            IQueryable<CodeSearchIndex> dbQuery = db.CodeSearchIndices
+
+            // FTS5 (SQLite): index-backed substring search via the trigram tokenizer.
+            // Requires >= 3 chars; shorter queries and other providers use the LIKE scan.
+            IQueryable<CodeSearchIndex> baseQuery;
+            if (db.Database.IsSqlite() && query.Length >= 3)
+            {
+                // Quote the query so FTS operators (AND/OR/NEAR/*) in user input are literal.
+                var ftsQuery = "\"" + query.Replace("\"", "\"\"") + "\"";
+                baseQuery = db.CodeSearchIndices.FromSqlRaw(
+                    @"SELECT i.* FROM ""CodeSearchIndices"" i
+                      JOIN ""CodeSearchFts"" f ON f.rowid = i.""Id""
+                      WHERE ""CodeSearchFts"" MATCH {0}", ftsQuery);
+            }
+            else
+            {
+                baseQuery = db.CodeSearchIndices.Where(i => i.Content.ToLower().Contains(lowerQuery));
+            }
+
+            IQueryable<CodeSearchIndex> dbQuery = baseQuery
                 .Where(i => allowedRepoNames.Contains(i.RepoName));
 
             if (!string.IsNullOrEmpty(fileExtension))
@@ -72,13 +90,27 @@ public class CodeSearchService : ICodeSearchService
                 dbQuery = dbQuery.Where(i => i.FilePath.ToLower().EndsWith(lowerExt));
             }
 
-            dbQuery = dbQuery.Where(i => i.Content.ToLower().Contains(lowerQuery));
-
-            var matchedFiles = await dbQuery
-                .OrderBy(i => i.RepoName)
-                .ThenBy(i => i.FilePath)
-                .Take(maxResults)
-                .ToListAsync();
+            List<CodeSearchIndex> matchedFiles;
+            try
+            {
+                matchedFiles = await dbQuery
+                    .OrderBy(i => i.RepoName)
+                    .ThenBy(i => i.FilePath)
+                    .Take(maxResults)
+                    .ToListAsync();
+            }
+            catch (Exception ftsEx) when (db.Database.IsSqlite() && query.Length >= 3)
+            {
+                // FTS table missing or corrupt — fall back to the unindexed scan.
+                _logger.LogWarning(ftsEx, "FTS5 search failed; falling back to LIKE scan");
+                matchedFiles = await db.CodeSearchIndices
+                    .Where(i => allowedRepoNames.Contains(i.RepoName))
+                    .Where(i => i.Content.ToLower().Contains(lowerQuery))
+                    .OrderBy(i => i.RepoName)
+                    .ThenBy(i => i.FilePath)
+                    .Take(maxResults)
+                    .ToListAsync();
+            }
 
             foreach (var file in matchedFiles)
             {

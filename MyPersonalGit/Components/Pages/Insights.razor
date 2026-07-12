@@ -9,6 +9,7 @@
 @inject IConfiguration Config
 @inject IAdminService AdminService
 @inject IRepositoryTrafficService TrafficService
+@inject Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> DbFactory
 @inject NavigationManager Nav
 @inject IStringLocalizer<SharedResource> L
 @rendermode InteractiveServer
@@ -48,6 +49,9 @@
                 </button>
                 <button class="list-group-item list-group-item-action @(activeTab == "traffic" ? "active" : "")" @onclick='() => { activeTab = "traffic"; LoadTrafficData(); }'>
                     <i class="bi bi-graph-up-arrow me-2"></i> @L["Traffic_Title"]
+                </button>
+                <button class="list-group-item list-group-item-action @(activeTab == "health" ? "active" : "")" @onclick='() => { activeTab = "health"; LoadHealthData(); }'>
+                    <i class="bi bi-heart-pulse me-2"></i> Health
                 </button>
             </div>
         </div>
@@ -340,6 +344,120 @@
                     }
                 </div>
             }
+            else if (activeTab == "health")
+            {
+                <div class="health-view">
+                    <h4 class="mb-4"><i class="bi bi-heart-pulse me-2"></i>Repository health</h4>
+
+                    <div class="row mb-4">
+                        <div class="col-md-3 mb-2">
+                            <div class="card text-center h-100">
+                                <div class="card-body">
+                                    <div class="h3 mb-0 @(healthCiPassRate >= 90 ? "text-success" : healthCiPassRate >= 60 ? "text-warning" : healthCiRunCount == 0 ? "text-muted" : "text-danger")">
+                                        @(healthCiRunCount == 0 ? "—" : $"{healthCiPassRate:0}%")
+                                    </div>
+                                    <small class="text-muted">CI pass rate (last @healthCiRunCount runs)</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="card text-center h-100">
+                                <div class="card-body">
+                                    <div class="h3 mb-0 @(staleBranches.Count > 0 ? "text-warning" : "text-success")">@staleBranches.Count</div>
+                                    <small class="text-muted">stale branches (no commits in 60+ days)</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="card text-center h-100">
+                                <div class="card-body">
+                                    <div class="h3 mb-0 @(oldOpenPrs.Count > 0 ? "text-warning" : "text-success")">@oldOpenPrs.Count</div>
+                                    <small class="text-muted">open PRs older than 14 days</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="card text-center h-100">
+                                <div class="card-body">
+                                    <div class="h3 mb-0 text-body">@healthOpenIssues</div>
+                                    <small class="text-muted">open issues</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (staleBranches.Any())
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header"><i class="bi bi-git me-1"></i> Stale branches</div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive"><table class="table table-sm mb-0">
+                                    <thead><tr><th>Branch</th><th class="text-end">Last commit</th></tr></thead>
+                                    <tbody>
+                                        @foreach (var (name, lastCommit) in staleBranches.Take(15))
+                                        {
+                                            <tr>
+                                                <td><code>@name</code></td>
+                                                <td class="text-end text-muted">@lastCommit.ToString("MMM d, yyyy") (@((int)(DateTime.UtcNow - lastCommit).TotalDays) days ago)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table></div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (oldOpenPrs.Any())
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header"><i class="bi bi-hourglass-split me-1"></i> Long-running pull requests</div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive"><table class="table table-sm mb-0">
+                                    <thead><tr><th>PR</th><th>Author</th><th class="text-end">Open for</th></tr></thead>
+                                    <tbody>
+                                        @foreach (var pr in oldOpenPrs.Take(15))
+                                        {
+                                            <tr>
+                                                <td><a href="/repo/@RepoName/pull/@pr.Number">#@pr.Number @pr.Title</a></td>
+                                                <td>@pr.Author</td>
+                                                <td class="text-end text-muted">@((int)(DateTime.UtcNow - pr.CreatedAt).TotalDays) days</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table></div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (largestFiles.Any())
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header"><i class="bi bi-file-earmark-binary me-1"></i> Largest files (default branch)</div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive"><table class="table table-sm mb-0">
+                                    <thead><tr><th>File</th><th class="text-end">Size</th></tr></thead>
+                                    <tbody>
+                                        @foreach (var (path, size) in largestFiles)
+                                        {
+                                            <tr>
+                                                <td><a href="/repo/@RepoName/@path">@path</a></td>
+                                                <td class="text-end text-muted">@FormatSize(size)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table></div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (!staleBranches.Any() && !oldOpenPrs.Any() && healthLoaded)
+                    {
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle me-2"></i> No stale branches and no long-running pull requests. Looking healthy!
+                        </div>
+                    }
+                </div>
+            }
             else if (activeTab == "network")
             {
                 <div class="network-view">
@@ -393,6 +511,117 @@
     private List<(string Referrer, int Count)> topReferrers = new();
     private List<(string Path, int Count)> popularPages = new();
     private int trafficTotalClones, trafficUniqueCloners, trafficTotalViews, trafficUniqueVisitors;
+
+    // Health data
+    private bool healthLoaded;
+    private double healthCiPassRate;
+    private int healthCiRunCount;
+    private int healthOpenIssues;
+    private List<(string Name, DateTime LastCommit)> staleBranches = new();
+    private List<PullRequest> oldOpenPrs = new();
+    private List<(string Path, long Size)> largestFiles = new();
+
+    private async void LoadHealthData()
+    {
+        try
+        {
+            using var db = DbFactory.CreateDbContext();
+            var repoAlt = RepoName.EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? RepoName[..^4] : RepoName + ".git";
+
+            var recentRuns = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+                db.WorkflowRuns
+                    .Where(w => (w.RepoName == RepoName || w.RepoName == repoAlt)
+                             && w.Status != WorkflowStatus.Queued && w.Status != WorkflowStatus.InProgress)
+                    .OrderByDescending(w => w.CreatedAt)
+                    .Take(50));
+            healthCiRunCount = recentRuns.Count;
+            healthCiPassRate = recentRuns.Count == 0 ? 0
+                : 100.0 * recentRuns.Count(r => r.Status == WorkflowStatus.Success) / recentRuns.Count;
+
+            var cutoff = DateTime.UtcNow.AddDays(-14);
+            oldOpenPrs = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+                db.PullRequests
+                    .Where(p => (p.RepoName == RepoName || p.RepoName == repoAlt)
+                             && p.State == PullRequestState.Open && p.CreatedAt < cutoff)
+                    .OrderBy(p => p.CreatedAt));
+
+            healthOpenIssues = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
+                db.Issues.Where(i => (i.RepoName == RepoName || i.RepoName == repoAlt) && i.State == IssueState.Open));
+
+            LoadGitHealth();
+            healthLoaded = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading health data: {ex.Message}");
+        }
+    }
+
+    private void LoadGitHealth()
+    {
+        staleBranches = new();
+        largestFiles = new();
+        try
+        {
+            var projectRoot = "";
+            var systemSettings = AdminService.GetSystemSettingsAsync().GetAwaiter().GetResult();
+            if (!string.IsNullOrEmpty(systemSettings.ProjectRoot))
+                projectRoot = systemSettings.ProjectRoot;
+            if (string.IsNullOrEmpty(projectRoot))
+                projectRoot = Config["Git:ProjectRoot"] ?? "/repos";
+
+            var repoPath = Path.Combine(projectRoot, $"{RepoName}.git");
+            if (!Directory.Exists(repoPath))
+                repoPath = Path.Combine(projectRoot, RepoName);
+            if (!GitRepository.IsValid(repoPath))
+                return;
+
+            using var repo = new GitRepository(repoPath);
+            var defaultBranch = repo.Head;
+            var staleCutoff = DateTime.UtcNow.AddDays(-60);
+
+            foreach (var branch in repo.Branches.Where(b => !b.IsRemote))
+            {
+                if (branch.Tip == null) continue;
+                if (defaultBranch != null && branch.CanonicalName == defaultBranch.CanonicalName) continue;
+                var lastCommit = branch.Tip.Author.When.UtcDateTime;
+                if (lastCommit < staleCutoff)
+                    staleBranches.Add((branch.FriendlyName, lastCommit));
+            }
+            staleBranches = staleBranches.OrderBy(b => b.LastCommit).ToList();
+
+            if (defaultBranch?.Tip != null)
+            {
+                var files = new List<(string Path, long Size)>();
+                CollectBlobSizes(defaultBranch.Tip.Tree, "", files);
+                largestFiles = files.OrderByDescending(f => f.Size).Take(10).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading git health data: {ex.Message}");
+        }
+    }
+
+    private static void CollectBlobSizes(Tree tree, string prefix, List<(string Path, long Size)> files)
+    {
+        foreach (var entry in tree)
+        {
+            var entryPath = string.IsNullOrEmpty(prefix) ? entry.Name : $"{prefix}/{entry.Name}";
+            if (entry.TargetType == TreeEntryTargetType.Tree)
+                CollectBlobSizes((Tree)entry.Target, entryPath, files);
+            else if (entry.TargetType == TreeEntryTargetType.Blob)
+                files.Add((entryPath, ((Blob)entry.Target).Size));
+        }
+    }
+
+    private static string FormatSize(long bytes) => bytes switch
+    {
+        >= 1024 * 1024 => $"{bytes / (1024.0 * 1024):0.#} MB",
+        >= 1024 => $"{bytes / 1024.0:0.#} KB",
+        _ => $"{bytes} B"
+    };
 
     private async void LoadTrafficData()
     {

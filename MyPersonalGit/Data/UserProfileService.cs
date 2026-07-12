@@ -445,7 +445,9 @@ public class UserProfileService : IUserProfileService
         {
             Username = username,
             Name = name,
-            Token = token,
+            Token = string.Empty, // plaintext is returned once, never stored
+            TokenHash = PatTokenService.HashToken(token),
+            TokenPrefix = PatTokenService.TokenPrefix(token),
             Scopes = scopes,
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = expiresAt,

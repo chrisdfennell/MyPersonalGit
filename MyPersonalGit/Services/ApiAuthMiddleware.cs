@@ -17,7 +17,7 @@ public sealed class ApiAuthMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config, ICollaboratorService collaboratorService, IAuthService authService, IRepositoryService repoService, IDbContextFactory<AppDbContext> dbFactory)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, ICollaboratorService collaboratorService, IAuthService authService, IRepositoryService repoService, IDbContextFactory<AppDbContext> dbFactory, IPatTokenService patTokens)
     {
         if (!context.Request.Path.StartsWithSegments("/api"))
         {
@@ -69,38 +69,9 @@ public sealed class ApiAuthMiddleware
         }
 
         var token = authHeader["Bearer ".Length..].Trim();
-        var projectRoot = config["Git:ProjectRoot"] ?? "/repos";
-        var dataPath = Path.Combine(projectRoot, ".mypersonalgit");
 
-        // Search user token files for a match
-        PersonalAccessToken? matchedToken = null;
-        if (Directory.Exists(dataPath))
-        {
-        foreach (var file in Directory.GetFiles(dataPath, "*_tokens.json"))
-        {
-            try
-            {
-                var json = await File.ReadAllTextAsync(file);
-                var tokens = JsonSerializer.Deserialize<List<PersonalAccessToken>>(json);
-                if (tokens == null) continue;
-
-                matchedToken = tokens.FirstOrDefault(t => t.Token == token);
-                if (matchedToken != null) break;
-            }
-            catch (Exception ex) { _logger.LogWarning(ex, "Failed to read token file {File}", file); }
-        }
-        }
-
-        // Fallback: check database for tokens
-        if (matchedToken == null)
-        {
-            try
-            {
-                using var db = dbFactory.CreateDbContext();
-                matchedToken = await db.PersonalAccessTokens.FirstOrDefaultAsync(t => t.Token == token);
-            }
-            catch (Exception ex) { _logger.LogWarning(ex, "Failed to check database for token"); }
-        }
+        // Tokens are stored hashed; lookup is by SHA-256 of the presented value.
+        var matchedToken = await patTokens.ValidateAsync(token);
 
         if (matchedToken == null)
         {

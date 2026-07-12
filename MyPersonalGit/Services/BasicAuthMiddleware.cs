@@ -27,7 +27,7 @@ public sealed class BasicAuthMiddleware
 
     public BasicAuthMiddleware(RequestDelegate next) => _next = next;
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, ICollaboratorService collaboratorService, IAuthService authService, ILdapAuthService ldapAuthService)
+    public async Task InvokeAsync(HttpContext context, IConfiguration config, IRepositoryService repoService, ICollaboratorService collaboratorService, IAuthService authService, ILdapAuthService ldapAuthService, IPatTokenService patTokens)
     {
         if (!context.Request.Path.StartsWithSegments("/git"))
         {
@@ -106,6 +106,20 @@ public sealed class BasicAuthMiddleware
             if (dbUser != null && dbUser.IsActive && BCrypt.Net.BCrypt.Verify(pass, dbUser.PasswordHash))
             {
                 authenticated = true;
+            }
+            else if (pass.StartsWith("mypg_", StringComparison.Ordinal))
+            {
+                // Personal access token used as the password (like GitHub).
+                // The token must belong to the supplied username; if it carries
+                // scopes, "repo" (or "admin") is required for git access.
+                var pat = await patTokens.ValidateAsync(pass);
+                if (pat != null
+                    && pat.Username.Equals(user, StringComparison.OrdinalIgnoreCase)
+                    && (!pat.ExpiresAt.HasValue || pat.ExpiresAt.Value >= DateTime.UtcNow)
+                    && (pat.Scopes is not { Length: > 0 } scopes || scopes.Contains("repo") || scopes.Contains("admin")))
+                {
+                    authenticated = true;
+                }
             }
             else
             {

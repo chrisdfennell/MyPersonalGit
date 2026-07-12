@@ -72,7 +72,19 @@ public class PersonalAccessToken
     public int Id { get; set; }
     public string Username { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Legacy plaintext token. Only populated when deserializing pre-hashing token
+    /// files; blanked by the startup migration. New tokens never persist plaintext.
+    /// </summary>
     public string Token { get; set; } = string.Empty;
+
+    /// <summary>SHA-256 hex of the plaintext token; the value used for auth lookups.</summary>
+    public string TokenHash { get; set; } = string.Empty;
+
+    /// <summary>First characters of the token (e.g. "mypg_AbCd12") shown in the UI.</summary>
+    public string TokenPrefix { get; set; } = string.Empty;
+
     public string[] Scopes { get; set; } = Array.Empty<string>();
     public DateTime CreatedAt { get; set; }
     public DateTime? ExpiresAt { get; set; }

@@ -7,6 +7,15 @@ namespace MyPersonalGit.Data;
 
 public enum MergeStrategy { MergeCommit, Squash, Rebase }
 
+/// <summary>One PR in a stack (chain of PRs where each targets the previous one's source branch).</summary>
+public class PullRequestStackEntry
+{
+    public required PullRequest PullRequest { get; init; }
+    /// <summary>0 = bottom of the stack (targets a non-PR branch, e.g. main).</summary>
+    public int Depth { get; init; }
+    public bool IsCurrent { get; init; }
+}
+
 public interface IPullRequestService
 {
     Task<List<PullRequest>> GetPullRequestsAsync(string repoName);
@@ -24,6 +33,7 @@ public interface IPullRequestService
     Task<ReviewComment> AddReviewCommentAsync(string repoName, int number, string author, string body, string filePath, int lineNumber, string side = "RIGHT", int? replyToId = null);
     Task<bool> DeleteReviewCommentAsync(int commentId);
     Task<bool> UpdateReviewCommentSuggestionAsync(int commentId, string suggestionBody);
+    Task<List<PullRequestStackEntry>> GetStackAsync(string repoName, int number);
 }
 
 public class PullRequestService : IPullRequestService
@@ -641,6 +651,51 @@ public class PullRequestService : IPullRequestService
 
         _logger.LogInformation("PR #{Number} merged ({Strategy}) in {RepoName} by {MergedBy}", number, strategy, repoName, mergedBy);
 
+        // Stacked PRs: any open PR that was based on the just-merged branch now
+        // retargets to where that branch landed, so the stack keeps flowing.
+        try
+        {
+            if (!pr.SourceBranch.Equals(pr.TargetBranch, StringComparison.Ordinal))
+            {
+                var stackedChildren = await db.PullRequests
+                    .Where(p => p.RepoName == repoName && p.State == PullRequestState.Open
+                             && p.TargetBranch == pr.SourceBranch && p.Id != pr.Id)
+                    .ToListAsync();
+
+                foreach (var child in stackedChildren)
+                {
+                    var oldBase = child.TargetBranch;
+                    child.TargetBranch = pr.TargetBranch;
+                    db.IssueComments.Add(new IssueComment
+                    {
+                        PullRequestId = child.Id,
+                        Author = mergedBy,
+                        Body = $"Base automatically changed from `{oldBase}` to `{pr.TargetBranch}` because #{pr.Number} was merged."
+                    });
+                    _logger.LogInformation("Stacked PR #{Child} retargeted {Old} -> {New} after merge of #{Parent} in {RepoName}",
+                        child.Number, oldBase, pr.TargetBranch, pr.Number, repoName);
+                }
+
+                if (stackedChildren.Count > 0)
+                {
+                    await db.SaveChangesAsync();
+                    foreach (var child in stackedChildren)
+                    {
+                        await _notificationService.NotifyWatchersAsync(
+                            repoName, mergedBy, new List<string> { child.Author },
+                            NotificationType.PullRequestMerged,
+                            $"Pull request #{child.Number} retargeted in {repoName}",
+                            $"Base changed to {pr.TargetBranch} because PR #{pr.Number} was merged",
+                            $"/repo/{repoName}/pulls/{child.Number}");
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to retarget stacked PRs after merge of #{Number} in {RepoName}", number, repoName);
+        }
+
         await _activityService.RecordActivityAsync(mergedBy, "merged_pr", repoName, $"{mergedBy} merged PR #{number}: {pr.Title}", $"/repo/{repoName}/pulls/{number}");
 
         var mergeParticipants = new List<string> { pr.Author };
@@ -874,6 +929,52 @@ public class PullRequestService : IPullRequestService
         comment.SuggestionBody = suggestionBody;
         await db.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<List<PullRequestStackEntry>> GetStackAsync(string repoName, int number)
+    {
+        using var db = _dbFactory.CreateDbContext();
+
+        var current = await db.PullRequests.FirstOrDefaultAsync(p => p.RepoName == repoName && p.Number == number);
+        if (current == null) return new();
+
+        var openPrs = await db.PullRequests
+            .Where(p => p.RepoName == repoName && p.State == PullRequestState.Open)
+            .ToListAsync();
+
+        // Walk up: the parent is the open PR whose source branch is this PR's base.
+        var ancestors = new List<PullRequest>();
+        var visited = new HashSet<int> { current.Id };
+        var cursor = current;
+        while (ancestors.Count < 20)
+        {
+            var parent = openPrs.FirstOrDefault(p => p.SourceBranch == cursor.TargetBranch && !visited.Contains(p.Id));
+            if (parent == null) break;
+            visited.Add(parent.Id);
+            ancestors.Insert(0, parent);
+            cursor = parent;
+        }
+
+        // Walk down: children are open PRs based on this PR's source branch (DFS, cycle-safe).
+        var entries = new List<PullRequestStackEntry>();
+        for (int i = 0; i < ancestors.Count; i++)
+            entries.Add(new PullRequestStackEntry { PullRequest = ancestors[i], Depth = i, IsCurrent = false });
+        entries.Add(new PullRequestStackEntry { PullRequest = current, Depth = ancestors.Count, IsCurrent = true });
+
+        void AddDescendants(PullRequest parent, int depth)
+        {
+            if (depth > 20) return;
+            foreach (var child in openPrs.Where(p => p.TargetBranch == parent.SourceBranch && !visited.Contains(p.Id)).OrderBy(p => p.Number))
+            {
+                visited.Add(child.Id);
+                entries.Add(new PullRequestStackEntry { PullRequest = child, Depth = depth, IsCurrent = false });
+                AddDescendants(child, depth + 1);
+            }
+        }
+        AddDescendants(current, ancestors.Count + 1);
+
+        // A "stack" needs at least two PRs; a lone PR isn't stacked.
+        return entries.Count > 1 ? entries : new();
     }
 
     private async Task<string?> GetRepoPath(string repoName)

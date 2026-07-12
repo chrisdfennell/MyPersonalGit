@@ -188,6 +188,12 @@ public class GitHttpSmokeTests : IClassFixture<GitSmokeFactory>
         // Never prompt: fail fast instead of hanging the test on a credential dialog.
         psi.Environment["GIT_TERMINAL_PROMPT"] = "0";
         psi.Environment["GCM_INTERACTIVE"] = "never";
+        // Disable credential helpers: the system Git Credential Manager stores the
+        // credential from an authenticated push and would silently reuse it for
+        // "anonymous" requests, making auth-rejection tests pass vacuously.
+        psi.Environment["GIT_CONFIG_COUNT"] = "1";
+        psi.Environment["GIT_CONFIG_KEY_0"] = "credential.helper";
+        psi.Environment["GIT_CONFIG_VALUE_0"] = "";
 
         using var p = Process.Start(psi)!;
         var stdout = p.StandardOutput.ReadToEnd();

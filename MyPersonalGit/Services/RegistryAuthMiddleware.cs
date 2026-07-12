@@ -1,6 +1,5 @@
 using System.Security.Claims;
-using System.Text.Json;
-using MyPersonalGit.Models;
+using MyPersonalGit.Data;
 
 namespace MyPersonalGit.Services;
 
@@ -15,7 +14,7 @@ public sealed class RegistryAuthMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration config)
+    public async Task InvokeAsync(HttpContext context, IPatTokenService patTokens)
     {
         if (!context.Request.Path.StartsWithSegments("/v2"))
         {
@@ -26,7 +25,7 @@ public sealed class RegistryAuthMiddleware
         // /v2/ version check — try to auth but don't require it
         if (context.Request.Path.Value is "/v2/" or "/v2")
         {
-            TryAuthenticate(context, config);
+            await TryAuthenticateAsync(context, patTokens);
             await _next(context);
             return;
         }
@@ -35,7 +34,7 @@ public sealed class RegistryAuthMiddleware
 
         if (isWriteOp)
         {
-            if (!TryAuthenticate(context, config))
+            if (!await TryAuthenticateAsync(context, patTokens))
             {
                 Challenge(context);
                 return;
@@ -44,54 +43,36 @@ public sealed class RegistryAuthMiddleware
         else
         {
             // For reads, try to auth but allow anonymous (controller checks repo privacy)
-            TryAuthenticate(context, config);
+            await TryAuthenticateAsync(context, patTokens);
         }
 
         await _next(context);
     }
 
-    private static bool TryAuthenticate(HttpContext context, IConfiguration config)
+    private static async Task<bool> TryAuthenticateAsync(HttpContext context, IPatTokenService patTokens)
     {
         var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
         if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
             return false;
 
         var token = authHeader["Bearer ".Length..].Trim();
-        var projectRoot = config["Git:ProjectRoot"] ?? "/repos";
-        var dataPath = Path.Combine(projectRoot, ".mypersonalgit");
+        var matched = await patTokens.ValidateAsync(token);
+        if (matched == null)
+            return false;
 
-        if (!Directory.Exists(dataPath)) return false;
+        if (matched.ExpiresAt.HasValue && matched.ExpiresAt.Value < DateTime.UtcNow)
+            return false;
 
-        foreach (var file in Directory.GetFiles(dataPath, "*_tokens.json"))
+        var claims = new List<Claim>
         {
-            try
-            {
-                var json = File.ReadAllText(file);
-                var tokens = JsonSerializer.Deserialize<List<PersonalAccessToken>>(json);
-                if (tokens == null) continue;
+            new(ClaimTypes.Name, matched.Username),
+            new("token_id", matched.Id.ToString())
+        };
+        foreach (var scope in matched.Scopes ?? Array.Empty<string>())
+            claims.Add(new Claim("scope", scope));
 
-                var matched = tokens.FirstOrDefault(t => t.Token == token);
-                if (matched != null)
-                {
-                    if (matched.ExpiresAt.HasValue && matched.ExpiresAt.Value < DateTime.UtcNow)
-                        return false;
-
-                    var claims = new List<Claim>
-                    {
-                        new(ClaimTypes.Name, matched.Username),
-                        new("token_id", matched.Id.ToString())
-                    };
-                    foreach (var scope in matched.Scopes ?? Array.Empty<string>())
-                        claims.Add(new Claim("scope", scope));
-
-                    context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "RegistryToken"));
-                    return true;
-                }
-            }
-            catch { /* skip unreadable token files */ }
-        }
-
-        return false;
+        context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "RegistryToken"));
+        return true;
     }
 
     private static void Challenge(HttpContext context)

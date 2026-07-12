@@ -134,6 +134,7 @@ builder.Services.AddHostedService<WorkflowRunnerService>();
 builder.Services.AddSingleton<ISecurityService, SecurityService>();
 builder.Services.AddSingleton<IAdminService, AdminService>();
 builder.Services.AddSingleton<IUserProfileService, UserProfileService>();
+builder.Services.AddSingleton<IPatTokenService, PatTokenService>();
 builder.Services.AddSingleton<IBranchProtectionService, BranchProtectionService>();
 builder.Services.AddSingleton<ISnippetService, SnippetService>();
 builder.Services.AddSingleton<IMirrorService, MirrorService>();
@@ -300,6 +301,13 @@ using (var scope = app.Services.CreateScope())
 
     // From 20260318210000: Route-level scoped access tokens
     try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""PersonalAccessTokens"" ADD COLUMN ""AllowedRoutes"" TEXT NOT NULL DEFAULT '[]';"); } catch { }
+
+    // Hashed PAT storage: tokens are stored as SHA-256 hashes; plaintext Token is blanked,
+    // so the legacy unique index on Token must go before a second blank row is inserted.
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""PersonalAccessTokens"" ADD COLUMN ""TokenHash"" TEXT NOT NULL DEFAULT '';"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""PersonalAccessTokens"" ADD COLUMN ""TokenPrefix"" TEXT NOT NULL DEFAULT '';"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"DROP INDEX IF EXISTS ""IX_PersonalAccessTokens_Token"";"); } catch { }
+    try { db.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_PersonalAccessTokens_TokenHash"" ON ""PersonalAccessTokens"" (""TokenHash"");"); } catch { }
 
     // From 20260318220000: OAuth2 Provider, WebAuthn, SSPI, AGit Flow
     db.Database.ExecuteSqlRaw(@"
@@ -669,6 +677,27 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         Console.WriteLine($"Warning: Workflow run fixup failed: {ex.Message}");
+    }
+
+    // Full-text code search: FTS5 shadow table over CodeSearchIndices (SQLite only).
+    try
+    {
+        CodeSearchFts.EnsureCreated(db, Console.WriteLine);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Warning: FTS5 code search setup failed (falling back to LIKE search): {ex.Message}");
+    }
+
+    // One-time migration to hashed PAT storage (DB plaintext rows + legacy *_tokens.json files)
+    try
+    {
+        var patProjectRoot = app.Configuration["Git:ProjectRoot"] ?? "/repos";
+        PatTokenService.MigrateToHashedStorage(db, Path.Combine(patProjectRoot, ".mypersonalgit"), Console.WriteLine);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Warning: PAT hashing migration failed: {ex.Message}");
     }
 
     // Seed built-in secret scan patterns

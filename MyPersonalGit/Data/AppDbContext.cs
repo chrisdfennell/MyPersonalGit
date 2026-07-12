@@ -416,7 +416,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<PersonalAccessToken>(e =>
         {
-            e.HasIndex(t => t.Token).IsUnique();
+            e.HasIndex(t => t.TokenHash);
             e.Property(t => t.Scopes).HasConversion(arrayStringConverter, arrayStringComparer);
             e.Property(t => t.AllowedRoutes).HasConversion(arrayStringConverter, arrayStringComparer);
         });

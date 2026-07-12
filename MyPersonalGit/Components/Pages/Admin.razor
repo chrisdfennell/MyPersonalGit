@@ -72,6 +72,11 @@ else
             </a>
         </li>
         <li class="nav-item">
+            <a class="nav-link" href="/admin/tokens">
+                <i class="bi bi-key-fill"></i> Token audit
+            </a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link @(ActiveTab == "backups" ? "active" : "")" @onclick='() => ActiveTab = "backups"' style="cursor: pointer;">
                 <i class="bi bi-cloud-download"></i> @L["Admin_Backups"]
             </a>

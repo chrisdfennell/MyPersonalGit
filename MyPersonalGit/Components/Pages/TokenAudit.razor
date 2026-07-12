@@ -1,0 +1,165 @@
+@page "/admin/tokens"
+@using Microsoft.EntityFrameworkCore
+@using MyPersonalGit.Data
+@using MyPersonalGit.Models
+@using MyPersonalGit.Services
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IAdminService AdminService
+@inject CurrentUserService UserService
+@rendermode InteractiveServer
+
+<PageTitle>Token audit - MyPersonalGit</PageTitle>
+
+@if (!UserService.IsLoggedIn)
+{
+    <div class="container py-5 text-center">
+        <i class="bi bi-shield-lock" style="font-size: 4rem; color: #6c757d;"></i>
+        <h3 class="mt-3">Authentication required</h3>
+        <a href="/login" class="btn btn-primary">Sign in</a>
+    </div>
+}
+else if (!UserService.IsAdmin)
+{
+    <div class="container py-5 text-center">
+        <i class="bi bi-shield-exclamation" style="font-size: 4rem; color: #dc3545;"></i>
+        <h3 class="mt-3">Access denied</h3>
+        <a href="/" class="btn btn-primary">Back to home</a>
+    </div>
+}
+else
+{
+    <div class="container-xl mt-4">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h2 class="mb-0"><i class="bi bi-key"></i> Personal access token audit</h2>
+            <a href="/admin" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Admin</a>
+        </div>
+        <p class="text-muted">
+            All personal access tokens across all users. Tokens are stored as SHA-256 hashes —
+            the plaintext value is only shown once, at creation.
+        </p>
+
+        @if (tokens.Count == 0)
+        {
+            <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i> No personal access tokens exist.</div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive"><table class="table table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Name</th>
+                                <th>Token</th>
+                                <th>Scopes</th>
+                                <th>Created</th>
+                                <th>Expires</th>
+                                <th>Last used</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in tokens)
+                            {
+                                var expired = t.ExpiresAt.HasValue && t.ExpiresAt.Value < DateTime.UtcNow;
+                                var dormant = !expired && (t.LastUsed == null || t.LastUsed < DateTime.UtcNow.AddDays(-90));
+                                <tr class="@(expired ? "table-secondary" : "")">
+                                    <td>@t.Username</td>
+                                    <td>@t.Name</td>
+                                    <td><code class="small">@(string.IsNullOrEmpty(t.TokenPrefix) ? "?" : t.TokenPrefix)…</code></td>
+                                    <td>
+                                        @if (t.Scopes is { Length: > 0 })
+                                        {
+                                            <span class="badge bg-secondary">@string.Join(", ", t.Scopes)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">none</span>
+                                        }
+                                        @if (t.AllowedRoutes is { Length: > 0 })
+                                        {
+                                            <span class="badge bg-info ms-1" title="@string.Join(", ", t.AllowedRoutes)">
+                                                <i class="bi bi-shield-lock"></i> @t.AllowedRoutes.Length route(s)
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-muted small">@t.CreatedAt.ToString("MMM d, yyyy")</td>
+                                    <td class="small">
+                                        @if (expired)
+                                        {
+                                            <span class="badge bg-danger">expired @t.ExpiresAt!.Value.ToString("MMM d, yyyy")</span>
+                                        }
+                                        else if (t.ExpiresAt.HasValue)
+                                        {
+                                            @t.ExpiresAt.Value.ToString("MMM d, yyyy")
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark">never</span>
+                                        }
+                                    </td>
+                                    <td class="small">
+                                        @if (t.LastUsed.HasValue)
+                                        {
+                                            @t.LastUsed.Value.ToString("MMM d, yyyy HH:mm")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">never</span>
+                                        }
+                                        @if (dormant)
+                                        {
+                                            <span class="badge bg-warning text-dark ms-1" title="Not used in the last 90 days">dormant</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="btn btn-outline-danger btn-sm" @onclick="() => RevokeToken(t)" title="Revoke token">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table></div>
+                </div>
+            </div>
+            <p class="text-muted small mt-2">
+                @tokens.Count token(s) · @tokens.Count(t => t.ExpiresAt.HasValue && t.ExpiresAt.Value < DateTime.UtcNow) expired ·
+                @tokens.Count(t => !t.ExpiresAt.HasValue) without expiry
+            </p>
+        }
+    </div>
+}
+
+@code {
+    private List<PersonalAccessToken> tokens = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!UserService.IsAdmin) return;
+        await LoadTokens();
+    }
+
+    private async Task LoadTokens()
+    {
+        using var db = DbFactory.CreateDbContext();
+        tokens = await db.PersonalAccessTokens
+            .OrderBy(t => t.Username).ThenByDescending(t => t.CreatedAt)
+            .ToListAsync();
+    }
+
+    private async Task RevokeToken(PersonalAccessToken token)
+    {
+        using var db = DbFactory.CreateDbContext();
+        var row = await db.PersonalAccessTokens.FirstOrDefaultAsync(t => t.Id == token.Id);
+        if (row != null)
+        {
+            db.PersonalAccessTokens.Remove(row);
+            await db.SaveChangesAsync();
+            await AdminService.AddAuditLogAsync(UserService.Username, "REVOKE_TOKEN",
+                $"Revoked token '{token.Name}' ({token.TokenPrefix}…) of {token.Username}");
+        }
+        await LoadTokens();
+    }
+}

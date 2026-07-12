@@ -103,6 +103,57 @@
                     </div>
                 </div>
 
+                @if (prStack.Count > 1)
+                {
+                    <!-- Stacked PRs: chain of dependent pull requests -->
+                    <div class="card mb-3">
+                        <div class="card-header py-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-stack"></i>
+                            <strong>Stacked pull requests</strong>
+                            <span class="badge bg-secondary">@prStack.Count</span>
+                        </div>
+                        <div class="card-body py-2">
+                            @foreach (var entry in prStack)
+                            {
+                                <div class="d-flex align-items-center gap-2 py-1" style="padding-left: @(entry.Depth * 22)px">
+                                    @if (entry.PullRequest.State == PullRequestState.Merged)
+                                    {
+                                        <i class="bi bi-check2-all text-primary" title="Merged"></i>
+                                    }
+                                    else if (entry.PullRequest.State == PullRequestState.Closed)
+                                    {
+                                        <i class="bi bi-x-circle text-danger" title="Closed"></i>
+                                    }
+                                    else if (entry.PullRequest.IsDraft)
+                                    {
+                                        <i class="bi bi-pencil text-muted" title="Draft"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-git text-success" title="Open"></i>
+                                    }
+                                    @if (entry.IsCurrent)
+                                    {
+                                        <strong>#@entry.PullRequest.Number @entry.PullRequest.Title</strong>
+                                        <span class="badge bg-info">current</span>
+                                    }
+                                    else
+                                    {
+                                        <a href="/repo/@RepoName/pulls/@entry.PullRequest.Number">#@entry.PullRequest.Number @entry.PullRequest.Title</a>
+                                    }
+                                    <span class="text-muted small">
+                                        <code class="small">@entry.PullRequest.SourceBranch</code> → <code class="small">@entry.PullRequest.TargetBranch</code>
+                                    </span>
+                                </div>
+                            }
+                            <div class="text-muted small mt-1">
+                                <i class="bi bi-info-circle"></i>
+                                When a PR in the stack merges, PRs based on it automatically retarget to where it landed.
+                            </div>
+                        </div>
+                    </div>
+                }
+
                 <!-- Merge section for open PRs -->
                 @if (UserService.IsLoggedIn && currentPR.State == PullRequestState.Open)
                 {
@@ -1116,6 +1167,7 @@
 
     private List<PullRequest> prs = new();
     private PullRequest? currentPR;
+    private List<PullRequestStackEntry> prStack = new();
     private string filterState = "open";
     private string activeTab = "conversation";
     private bool showNewPRModal = false;
@@ -1256,6 +1308,7 @@
         }
         if (currentPR != null)
         {
+            try { prStack = await PRService.GetStackAsync(RepoName, currentPR.Number); } catch { prStack = new(); }
             try { aiReviewAvailable = await AiReviewService.IsAvailableAsync(); } catch { aiReviewAvailable = false; }
             await LoadMergeQueueState();
             LoadPRCommitsAndDiff();
