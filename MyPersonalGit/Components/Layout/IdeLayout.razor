@@ -67,7 +67,9 @@
             </button>
         </div>
     </div>
-    <div class="ide-body">
+    @* @key: recreate the routed page when the session is restored after first
+       render, so login-gated pages re-run their lifecycle (same fix as MainLayout). *@
+    <div @key="_bodyEpoch" class="ide-body">
         @Body
     </div>
 </div>
@@ -117,6 +119,7 @@
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
 
+    private int _bodyEpoch;
     private string RepoName = "";
     private string CurrentBranch = "main";
     private List<string> Branches = new();
@@ -157,6 +160,10 @@
                     if (!string.IsNullOrEmpty(sessionId))
                     {
                         await UserService.InitializeFromSessionAsync(sessionId);
+                        if (UserService.IsLoggedIn)
+                        {
+                            _bodyEpoch++; // page rendered anonymously — recreate it with the session
+                        }
                     }
                 }
 

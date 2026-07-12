@@ -167,7 +167,12 @@
     }
 
     <main id="main-content" class="gh-main" tabindex="-1">
-        <div class="container-xl py-4 px-3">
+        @* @key forces the routed page to be recreated when the session is restored
+           after first render — pages gate on IsLoggedIn during OnInitialized, which
+           runs before the layout can read the sessionId from localStorage. Without
+           this, a direct load / refresh of a gated page (e.g. /settings) shows
+           "Authentication required" forever even though the user is signed in. *@
+        <div @key="_bodyEpoch" class="container-xl py-4 px-3">
             @Body
         </div>
     </main>
@@ -387,6 +392,7 @@
 </style>
 
 @code {
+    private int _bodyEpoch;
     private string currentTheme = "light";
     private string currentCulture = "en";
     private int unreadNotificationCount;
@@ -444,7 +450,14 @@
                 var sessionId = await JS.InvokeAsync<string>("sessionHelper.get", "sessionId");
                 if (!string.IsNullOrEmpty(sessionId))
                 {
+                    var wasLoggedIn = UserService.IsLoggedIn;
                     await UserService.InitializeFromSessionAsync(sessionId);
+                    if (!wasLoggedIn && UserService.IsLoggedIn)
+                    {
+                        // Session restored after the page already rendered anonymously —
+                        // bump the body key so the routed page re-runs its lifecycle.
+                        _bodyEpoch++;
+                    }
                     if (UserService.IsLoggedIn)
                     {
                         try { unreadNotificationCount = await NotificationService.GetUnreadCountAsync(UserService.Username); } catch { }
