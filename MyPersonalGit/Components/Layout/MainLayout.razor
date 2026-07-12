@@ -180,6 +180,7 @@
             <a href="/docs" class="text-decoration-none text-primary-emphasis">@L["Footer_Docs"]</a>
             <a href="/contact" class="text-decoration-none text-primary-emphasis">@L["Footer_Contact"]</a>
             <a href="/stats" class="text-decoration-none text-primary-emphasis">@L["Footer_Stats"]</a>
+            <span class="text-muted" title="@(Environment.GetEnvironmentVariable("APP_COMMIT") ?? "")">@(Environment.GetEnvironmentVariable("APP_VERSION") ?? "dev")</span>
         </div>
     </footer>
 </div>

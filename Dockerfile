@@ -83,6 +83,12 @@ COPY entrypoint.sh /app/entrypoint.sh
 RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh \
     && mkdir -p /app/wwwroot/uploads && chown -R appuser:appuser /app/wwwroot/uploads
 
+# Build metadata, stamped by the release workflow (surfaced at /api/version)
+ARG APP_VERSION=dev
+ARG APP_COMMIT=""
+ENV APP_VERSION=$APP_VERSION
+ENV APP_COMMIT=$APP_COMMIT
+
 # Configure credentials via environment variables at runtime:
 #   docker run -e Git__Users__fennell=secret -e Git__RequireAuth=true ...
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080

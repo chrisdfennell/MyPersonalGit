@@ -10,7 +10,7 @@ namespace MyPersonalGit.Data;
 public interface IMigrationService
 {
     Task<MigrationTask> CreateMigrationTaskAsync(string sourceUrl, MigrationSource source, string targetRepoName,
-        string owner, bool importIssues, bool importPullRequests, bool makePrivate, string? authToken);
+        string owner, bool importIssues, bool importPullRequests, bool makePrivate, string? authToken, bool setupMirror = false);
     Task<List<MigrationTask>> GetMigrationTasksAsync(string owner);
     Task<MigrationTask?> GetMigrationTaskAsync(int id);
     Task CancelMigrationTaskAsync(int id);
@@ -34,6 +34,7 @@ public class MigrationService : IMigrationService
     private readonly IConfiguration _config;
     private readonly MigrationChannel _channel;
     private readonly ICodeSearchIndexerService _indexer;
+    private readonly IMirrorService _mirrorService;
     private readonly ILogger<MigrationService> _logger;
 
     public MigrationService(
@@ -45,6 +46,7 @@ public class MigrationService : IMigrationService
         IConfiguration config,
         MigrationChannel channel,
         ICodeSearchIndexerService indexer,
+        IMirrorService mirrorService,
         ILogger<MigrationService> logger)
     {
         _dbFactory = dbFactory;
@@ -55,11 +57,12 @@ public class MigrationService : IMigrationService
         _config = config;
         _channel = channel;
         _indexer = indexer;
+        _mirrorService = mirrorService;
         _logger = logger;
     }
 
     public async Task<MigrationTask> CreateMigrationTaskAsync(string sourceUrl, MigrationSource source,
-        string targetRepoName, string owner, bool importIssues, bool importPullRequests, bool makePrivate, string? authToken)
+        string targetRepoName, string owner, bool importIssues, bool importPullRequests, bool makePrivate, string? authToken, bool setupMirror = false)
     {
         using var db = _dbFactory.CreateDbContext();
 
@@ -72,6 +75,7 @@ public class MigrationService : IMigrationService
             ImportIssues = importIssues,
             ImportPullRequests = importPullRequests,
             MakePrivate = makePrivate,
+            SetupMirror = setupMirror,
             AuthToken = authToken,
             Status = MigrationStatus.Pending,
             StatusMessage = "Queued for processing"
@@ -173,6 +177,14 @@ public class MigrationService : IMigrationService
             // Create the repository record in the database
             await _repoService.CreateRepositoryAsync(task.TargetRepoName, task.Owner,
                 $"Imported from {task.SourceUrl}", task.MakePrivate);
+
+            // Keep syncing from the source if the import was set up as a mirror.
+            if (task.SetupMirror)
+            {
+                await _mirrorService.AddMirrorAsync(task.TargetRepoName, task.SourceUrl,
+                    MirrorDirection.Pull, intervalMinutes: 60, task.AuthToken);
+                _logger.LogInformation("Pull mirror registered for imported repo {Repo}", task.TargetRepoName);
+            }
 
             task.ProgressPercent = 50;
             await db.SaveChangesAsync();

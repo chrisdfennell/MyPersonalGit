@@ -833,7 +833,7 @@ public sealed class SshSession : IDisposable
         if (operation == "git-receive-pack" && !Directory.Exists(fullRepoPath))
         {
             // Auto-init bare repo for push
-            LibGit2Sharp.Repository.Init(fullRepoPath, true);
+            BareRepo.Create(fullRepoPath);
             _logger.LogInformation("Auto-created bare repo at {Path} via SSH push by {User}", fullRepoPath, _authenticatedUser);
         }
 

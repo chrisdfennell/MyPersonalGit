@@ -25,6 +25,13 @@ public sealed class ApiAuthMiddleware
             return;
         }
 
+        // Build info is public — deployments use it to verify what's running.
+        if (HttpMethods.IsGet(context.Request.Method) && context.Request.Path == "/api/version")
+        {
+            await _next(context);
+            return;
+        }
+
         // Pre-receive hooks call back into the app over loopback from inside the
         // container and have no PAT. Loopback-only so the endpoint stays private.
         if (context.Request.Path.StartsWithSegments("/api/v1/hooks") &&

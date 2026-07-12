@@ -96,7 +96,15 @@ public class MirrorService : IMirrorService
 
     public async Task SyncMirrorAsync(RepositoryMirror mirror, string projectRoot)
     {
+        // Repos live on disk as either "{name}" or "{name}.git".
         var repoPath = Path.Combine(projectRoot, mirror.RepoName);
+        if (!Directory.Exists(repoPath) && Directory.Exists(repoPath + ".git"))
+            repoPath += ".git";
+        if (!Directory.Exists(repoPath))
+        {
+            await UpdateSyncStatus(mirror.Id, "error", $"Local repository directory not found under {projectRoot}");
+            return;
+        }
 
         // Build the remote URL with auth token if provided
         var remoteUrl = mirror.RemoteUrl;

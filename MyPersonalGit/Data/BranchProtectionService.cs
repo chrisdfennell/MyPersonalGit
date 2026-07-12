@@ -1,4 +1,6 @@
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.EntityFrameworkCore;
 using MyPersonalGit.Models;
 
@@ -20,12 +22,38 @@ public class BranchProtectionService : IBranchProtectionService
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly ILogger<BranchProtectionService> _logger;
     private readonly IConfiguration _config;
+    private readonly IServer? _server;
 
-    public BranchProtectionService(IDbContextFactory<AppDbContext> dbFactory, ILogger<BranchProtectionService> logger, IConfiguration config)
+    public BranchProtectionService(IDbContextFactory<AppDbContext> dbFactory, ILogger<BranchProtectionService> logger, IConfiguration config, IServer? server = null)
     {
         _dbFactory = dbFactory;
         _logger = logger;
         _config = config;
+        _server = server;
+    }
+
+    /// <summary>The hook curls back into this app from inside the same host, so it
+    /// needs the port Kestrel is actually bound to — hardcoding 8080 silently broke
+    /// enforcement on any other binding (e.g. dev on 5146).</summary>
+    private string ResolveAppUrl()
+    {
+        try
+        {
+            var addresses = _server?.Features.Get<IServerAddressesFeature>()?.Addresses;
+            var first = addresses?.FirstOrDefault(a => a.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+                        ?? addresses?.FirstOrDefault();
+            if (!string.IsNullOrEmpty(first))
+            {
+                var uri = new Uri(first
+                    .Replace("0.0.0.0", "127.0.0.1")
+                    .Replace("[::]", "127.0.0.1")
+                    .Replace("*", "127.0.0.1")
+                    .Replace("+", "127.0.0.1"));
+                return $"http://127.0.0.1:{uri.Port}";
+            }
+        }
+        catch { /* fall through to default */ }
+        return "http://localhost:8080";
     }
 
     public async Task<List<BranchProtectionRule>> GetRulesAsync(string repoName)
@@ -127,7 +155,7 @@ public class BranchProtectionService : IBranchProtectionService
             var hookScript = $@"#!/bin/bash
 # Auto-installed by MyPersonalGit for branch protection enforcement
 REPO_NAME=""{repoName}""
-APP_URL=""http://localhost:8080""
+APP_URL=""{ResolveAppUrl()}""
 PUSH_USER=""${{REMOTE_USER:-unknown}}""
 
 UPDATES=""[""
@@ -158,7 +186,17 @@ fi
 
 ALLOWED=$(echo ""$RESPONSE"" | grep -o '""allowed"":true')
 if [ -z ""$ALLOWED"" ]; then
+    # Only block when the API explicitly denied. An empty or unexpected response
+    # (API down, proxy error page, auth interference) fails open, matching the
+    # curl-failure behaviour above.
+    DENIED=$(echo ""$RESPONSE"" | grep -o '""allowed"":false')
+    if [ -z ""$DENIED"" ]; then
+        exit 0
+    fi
     MESSAGE=$(echo ""$RESPONSE"" | grep -o '""message"":""[^""]*""' | sed 's/""message"":""//' | sed 's/""$//')
+    if [ -z ""$MESSAGE"" ]; then
+        MESSAGE=""push rejected by server policy: $RESPONSE""
+    fi
     echo ""*** $MESSAGE"" >&2
     exit 1
 fi

@@ -789,7 +789,7 @@
                 return;
             }
 
-            Repository.Init(fullPath, isBare: true);
+            MyPersonalGit.Services.BareRepo.Create(fullPath);
 
             // Create DB record for repository metadata
             await RepoService.CreateRepositoryAsync(folderName, UserService.Username, newRepoDescription, newRepoIsPrivate);

@@ -110,6 +110,13 @@ else
                             </label>
                         </div>
 
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" @bind="setupMirror" id="setupMirror" />
+                            <label class="form-check-label" for="setupMirror">
+                                Keep synced (pull mirror) — automatically fetch changes from the source every hour
+                            </label>
+                        </div>
+
                         <button class="btn btn-primary" @onclick="StartImport" disabled="@importing">
                             @if (importing)
                             {
@@ -243,6 +250,7 @@ else
     private bool importIssues = true;
     private bool importPullRequests;
     private bool makePrivate;
+    private bool setupMirror;
     private bool importing;
     private string? errorMessage;
     private List<MigrationTask> migrationTasks = new();
@@ -317,7 +325,8 @@ else
                 importIssues && source != MigrationSource.GitUrl,
                 importPullRequests && source != MigrationSource.GitUrl,
                 makePrivate,
-                string.IsNullOrWhiteSpace(authToken) ? null : authToken);
+                string.IsNullOrWhiteSpace(authToken) ? null : authToken,
+                setupMirror);
 
             // Reset form
             sourceUrl = "";

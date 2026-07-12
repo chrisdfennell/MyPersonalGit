@@ -33,6 +33,8 @@ public class MigrationTask
     public bool ImportIssues { get; set; }
     public bool ImportPullRequests { get; set; }
     public bool MakePrivate { get; set; }
+    // Register a pull mirror after import so the repo keeps syncing from the source.
+    public bool SetupMirror { get; set; }
     public string? AuthToken { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? CompletedAt { get; set; }

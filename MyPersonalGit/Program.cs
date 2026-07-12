@@ -802,6 +802,24 @@ using (var scope = app.Services.CreateScope())
     {
         Console.WriteLine($"Warning: Repo name normalization failed: {ex.Message}");
     }
+
+    // From 20260712: import-as-mirror — imports can register an ongoing pull mirror
+    try { db.Database.ExecuteSqlRaw(@"ALTER TABLE ""MigrationTasks"" ADD COLUMN ""SetupMirror"" INTEGER NOT NULL DEFAULT 0;"); } catch { }
+
+    // From 20260712: the admin-configured project root (SystemSettings.ProjectRoot)
+    // must win over appsettings everywhere. Dozens of call sites read
+    // config["Git:ProjectRoot"] directly, so instead of rewriting them all, project
+    // the DB value into configuration once here (and again on save in AdminService).
+    try
+    {
+        var dbProjectRoot = db.SystemSettings.Select(s => s.ProjectRoot).FirstOrDefault();
+        if (!string.IsNullOrEmpty(dbProjectRoot))
+            builder.Configuration["Git:ProjectRoot"] = dbProjectRoot;
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Warning: Project root config sync failed: {ex.Message}");
+    }
 }
 
 // Configure the HTTP request pipeline.
@@ -879,6 +897,14 @@ app.UseApiAuth();
 // NOTE: This uses `git http-backend` under the hood.
 app.UseBasicAuthForGit();
 app.UseGitHttpBackend();
+
+// Public build info — lets deployments verify which version is actually running
+// (no auth: it leaks nothing beyond what the release tags already publish).
+app.MapGet("/api/version", () => Results.Ok(new
+{
+    version = Environment.GetEnvironmentVariable("APP_VERSION") ?? "dev",
+    commit = Environment.GetEnvironmentVariable("APP_COMMIT") ?? ""
+}));
 
 // Health check endpoint
 app.MapGet("/health", async (IDbContextFactory<AppDbContext> dbFactory) =>

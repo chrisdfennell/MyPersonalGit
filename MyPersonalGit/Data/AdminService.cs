@@ -64,6 +64,13 @@ public class AdminService : IAdminService
         }
 
         await db.SaveChangesAsync();
+
+        // Keep config["Git:ProjectRoot"] in step with the DB value so every direct
+        // configuration read (middlewares, controllers, package stores) sees the
+        // admin-configured root without a restart. Mirrors the sync in Program.cs.
+        if (!string.IsNullOrEmpty(settings.ProjectRoot))
+            _configuration["Git:ProjectRoot"] = settings.ProjectRoot;
+
         _logger.LogInformation("System settings updated");
     }
 
