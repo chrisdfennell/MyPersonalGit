@@ -1170,6 +1170,18 @@ public class RepositoryServiceTests
     }
 
     [Fact]
+    public async Task UpdateRepositoryAsync_AcceptsGitSuffixedFolderName()
+    {
+        await SeedRepo("labby");
+
+        var updated = await _service.UpdateRepositoryAsync("labby.git", r => r.Description = "updated description");
+        Assert.True(updated);
+
+        var repo = await _service.GetRepositoryAsync("labby");
+        Assert.Equal("updated description", repo!.Description);
+    }
+
+    [Fact]
     public async Task StarRepositoryAsync_StarsRepo()
     {
         await SeedRepo("repo");

@@ -137,6 +137,7 @@ public class RepositoryService : IRepositoryService
 
     public async Task<bool> UpdateRepositoryAsync(string name, Action<Repository> updateAction)
     {
+        name = CanonicalName(name);
         using var db = _dbFactory.CreateDbContext();
 
         var repo = await db.Repositories.FirstOrDefaultAsync(r => r.Name.ToLower() == name.ToLower());
