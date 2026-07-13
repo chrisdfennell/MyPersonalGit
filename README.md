@@ -323,6 +323,16 @@ The app will be available at **http://localhost:8080**.
 >
 > **Change the default password immediately** via the Admin dashboard after first login.
 
+### Updating
+
+**Admin > System Settings > Software Update** shows the running version, checks Docker Hub for a newer release, and offers a one-click **Update** button. The update pulls the new image and recreates the container in place — name, ports, volumes, and environment are preserved. This requires the Docker socket to be mounted (`-v /var/run/docker.sock:/var/run/docker.sock`, included in the compose file).
+
+You can always update manually instead:
+
+```bash
+docker compose pull && docker compose up -d
+```
+
 ### Run Locally
 
 ```bash

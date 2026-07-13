@@ -1,5 +1,6 @@
 services:
   mypersonalgit:
+    image: fennch/mypersonalgit:latest
     build: .
     container_name: mypersonalgit
     restart: always

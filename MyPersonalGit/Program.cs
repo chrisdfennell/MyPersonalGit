@@ -7,6 +7,12 @@ using MyPersonalGit.Components;
 using MyPersonalGit.Data;
 using MyPersonalGit.Controllers;
 
+// Self-update helper mode: a short-lived container spawned by the Admin > Settings
+// "Update" button (see SelfUpdateService). It swaps the app container for the new
+// image version and exits instead of starting the web host.
+if (Environment.GetEnvironmentVariable("MPG_UPDATE_TARGET") is { Length: > 0 })
+    Environment.Exit(await SelfUpdater.RunAsync());
+
 var builder = WebApplication.CreateBuilder(args);
 
 // When hosted by the integration-test harness (WebApplicationFactory), skip the
@@ -133,6 +139,7 @@ builder.Services.AddSingleton<WorkflowYamlParser>();
 builder.Services.AddHostedService<WorkflowRunnerService>();
 builder.Services.AddSingleton<ISecurityService, SecurityService>();
 builder.Services.AddSingleton<IAdminService, AdminService>();
+builder.Services.AddSingleton<ISelfUpdateService, SelfUpdateService>();
 builder.Services.AddSingleton<IUserProfileService, UserProfileService>();
 builder.Services.AddSingleton<IPatTokenService, PatTokenService>();
 builder.Services.AddSingleton<IBranchProtectionService, BranchProtectionService>();

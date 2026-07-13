@@ -10,6 +10,7 @@
 @inject IOAuthService OAuthService
 @inject ILdapAuthService LdapAuthService
 @inject IDatabaseConfigService DatabaseConfigService
+@inject ISelfUpdateService SelfUpdateService
 @inject CurrentUserService UserService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
@@ -193,6 +194,60 @@ else
     {
         <div class="row">
             <div class="col-md-8">
+
+                <!-- Software Update -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-cloud-arrow-down me-2"></i>Software Update</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <strong>Current version:</strong>
+                            <span class="badge bg-secondary ms-2">@SelfUpdateService.CurrentVersion</span>
+                            @if (UpdateCheck?.LatestVersion != null)
+                            {
+                                <span class="ms-3 text-muted">Latest on Docker Hub:</span>
+                                <span class="badge @(UpdateCheck.UpdateAvailable ? "bg-success" : "bg-secondary") ms-2">@UpdateCheck.LatestVersion</span>
+                            }
+                        </div>
+
+                        @if (UpdateCheck?.Error != null)
+                        {
+                            <div class="alert alert-warning py-2">@UpdateCheck.Error</div>
+                        }
+                        @if (!string.IsNullOrEmpty(UpdateStatusMessage))
+                        {
+                            <div class="alert @(UpdateStatusIsError ? "alert-danger" : "alert-info") py-2">
+                                @if (!UpdateStatusIsError)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                @UpdateStatusMessage
+                            </div>
+                        }
+                        else if (UpdateCheck is { Error: null, UpdateAvailable: false, LatestVersion: not null })
+                        {
+                            <div class="alert alert-success py-2 mb-3"><i class="bi bi-check-circle me-1"></i> No update available.</div>
+                        }
+
+                        @if (UpdateCheck?.UpdateAvailable == true)
+                        {
+                            <button type="button" class="btn btn-success me-2" @onclick="StartUpdate" disabled="@UpdateStarting">
+                                <i class="bi bi-cloud-arrow-down me-1"></i> Update to @UpdateCheck.LatestVersion
+                            </button>
+                        }
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CheckForUpdates" disabled="@(UpdateChecking || UpdateStarting)">
+                            @if (UpdateChecking)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1"></span>
+                            }
+                            Check for updates
+                        </button>
+                        <small class="text-muted d-block mt-2">
+                            Updating pulls the new image and recreates this container in place — repos, database, and settings are preserved. The app will be briefly unavailable.
+                        </small>
+                    </div>
+                </div>
 
                 <!-- Database -->
                 <div class="card mb-4">
@@ -1302,9 +1357,53 @@ else
     private List<OAuthProviderConfig> oauthProviders = new();
     private string? OAuthMessage;
 
+    // Software update
+    private UpdateCheckResult? UpdateCheck;
+    private bool UpdateChecking;
+    private bool UpdateStarting;
+    private string? UpdateStatusMessage;
+    private bool UpdateStatusIsError;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
+
+        // Check Docker Hub in the background so the admin page isn't blocked on it
+        if (UserService.IsAdmin)
+        {
+            _ = Task.Run(async () =>
+            {
+                UpdateCheck = await SelfUpdateService.CheckForUpdateAsync();
+                await InvokeAsync(StateHasChanged);
+            });
+        }
+    }
+
+    private async Task CheckForUpdates()
+    {
+        UpdateChecking = true;
+        UpdateStatusMessage = null;
+        UpdateCheck = await SelfUpdateService.CheckForUpdateAsync();
+        UpdateChecking = false;
+    }
+
+    private async Task StartUpdate()
+    {
+        if (UpdateCheck?.LatestVersion == null) return;
+        UpdateStarting = true;
+        var (success, message) = await SelfUpdateService.StartUpdateAsync(UpdateCheck.LatestVersion);
+        UpdateStatusMessage = success
+            ? $"{message} Reload this page once it's back."
+            : message;
+        UpdateStatusIsError = !success;
+        if (success)
+        {
+            await AdminService.AddAuditLogAsync(UserService.Username, "SELF_UPDATE", $"Update to {UpdateCheck.LatestVersion} started");
+        }
+        else
+        {
+            UpdateStarting = false;
+        }
     }
 
     private async Task LoadData()
