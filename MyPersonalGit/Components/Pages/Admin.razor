@@ -1308,6 +1308,12 @@ else
 
 @code {
     private string ActiveTab = "overview";
+
+    // Deep-link support, e.g. /admin?tab=settings from the footer version number
+    [SupplyParameterFromQuery(Name = "tab")]
+    private string? TabParam { get; set; }
+    private string? _appliedTabParam;
+
     private SystemSettings Settings = new();
     private SystemStatistics Statistics = new();
     private List<AuditLog> AuditLogs = new();
@@ -1363,6 +1369,16 @@ else
     private bool UpdateStarting;
     private string? UpdateStatusMessage;
     private bool UpdateStatusIsError;
+
+    protected override void OnParametersSet()
+    {
+        // Apply ?tab= once per navigation; in-page tab clicks stay untouched
+        if (!string.IsNullOrEmpty(TabParam) && TabParam != _appliedTabParam)
+        {
+            ActiveTab = TabParam;
+            _appliedTabParam = TabParam;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
