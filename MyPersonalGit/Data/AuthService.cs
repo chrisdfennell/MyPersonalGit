@@ -45,6 +45,12 @@ public class AuthService : IAuthService
             return null;
         }
 
+        // The very first account on a fresh instance becomes the admin, so an
+        // operator who registers before finding /setup isn't locked out of admin.
+        // Deliberately "no users at all", not "no admin": on an established
+        // instance a missing admin must not let any new registrant claim it.
+        var isFirstUser = !await db.Users.AnyAsync();
+
         var newUser = new User
         {
             Username = username,
@@ -52,13 +58,17 @@ public class AuthService : IAuthService
             PasswordHash = HashPassword(password),
             FullName = fullName,
             CreatedAt = DateTime.UtcNow,
-            IsActive = true
+            IsActive = true,
+            IsAdmin = isFirstUser
         };
 
         db.Users.Add(newUser);
         await db.SaveChangesAsync();
 
-        _logger.LogInformation("User {Username} registered successfully", username);
+        if (isFirstUser)
+            _logger.LogInformation("User {Username} registered as the first account and was granted admin rights", username);
+        else
+            _logger.LogInformation("User {Username} registered successfully", username);
         return newUser;
     }
 

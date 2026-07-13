@@ -175,6 +175,16 @@ public class AuthServiceTests
     }
 
     [Fact]
+    public async Task RegisterAsync_FirstUserBecomesAdmin_LaterUsersDoNot()
+    {
+        var first = await _service.RegisterAsync("alice", "alice@test.com", "password123");
+        var second = await _service.RegisterAsync("bob", "bob@test.com", "password456");
+
+        Assert.True(first!.IsAdmin);
+        Assert.False(second!.IsAdmin);
+    }
+
+    [Fact]
     public async Task RegisterAsync_RejectsDuplicateUsername()
     {
         await _service.RegisterAsync("alice", "alice@test.com", "password123");
